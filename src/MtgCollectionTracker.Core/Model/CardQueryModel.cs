@@ -9,4 +9,6 @@ public class CardQueryModel
     public int[]? ContainerIds { get; set; }
 
     public bool NotInDecks { get; set; }
+
+    public bool NoProxies { get; set; }
 }

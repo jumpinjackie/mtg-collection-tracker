@@ -10,7 +10,9 @@ var result = await Parser.Default
         ListContainersCommand,
         ListDecksCommand,
         ImportCommand,
-        PrintDeckCommand
+        PrintDeckCommand,
+        DeleteCardSkuCommand,
+        CanIBuildThisDeckCommand
     >(args)
     .MapResult(
     (AddContainerCommand options) => options.ExecuteAsync(),
@@ -21,6 +23,8 @@ var result = await Parser.Default
     (ListDecksCommand options) => options.ExecuteAsync(),
     (ImportCommand options) => options.ExecuteAsync(),
     (PrintDeckCommand options) => options.ExecuteAsync(),
+    (DeleteCardSkuCommand options) => options.ExecuteAsync(),
+    (CanIBuildThisDeckCommand options) => options.ExecuteAsync(),
     errors => ValueTask.FromResult(1));
 
 return result;

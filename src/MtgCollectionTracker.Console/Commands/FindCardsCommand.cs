@@ -15,10 +15,13 @@ internal class FindCardsCommand : CommandBase
     [Option("not-in-decks", Required = false)]
     public bool NotInDecks { get; set; }
 
+    [Option("no-proxies", Required = false, HelpText = "If true, will omit card skus from results where it is a proxy")]
+    public bool NoProxies { get; set; }
+
     protected override async ValueTask<int> ExecuteInternalAsync(IServiceProvider serviceProvider)
     {
         var service = serviceProvider.GetRequiredService<CollectionTrackingService>();
-        var matches = service.GetCards(new() { SearchFilter = this.Name, NotInDecks = this.NotInDecks });
+        var matches = service.GetCards(new() { SearchFilter = this.Name, NotInDecks = this.NotInDecks, NoProxies = this.NoProxies });
 
         var table = new ConsoleTable(
             nameof(CardSkuModel.Id),

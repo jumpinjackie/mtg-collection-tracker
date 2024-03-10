@@ -17,6 +17,26 @@ public class CollectionTrackingService
 
     const int SIDEBOARD_LIMIT = 15;
 
+    /// <summary>
+    /// Checks the shortfall for the given card name.
+    /// </summary>
+    /// <param name="cardName">The name of the card</param>
+    /// <param name="wantQty">The quantity you are after</param>
+    /// <param name="noProxies">If true, excludes proxies and non-legal sets from the card search</param>
+    /// <param name="sparesOnly">If true, excludes from the card search skus that are part of an existing deck</param>
+    /// <returns>If positive, there is a shortfall in your collection. If 0 or negative, the requested <paramref name="wantQty"/> can be met by your collection</returns>
+    public async ValueTask<int> CheckQuantityShortfallAsync(string cardName, int wantQty, bool noProxies, bool sparesOnly)
+    {
+        var skus = _db.Cards.Where(s => s.CardName == cardName);
+        if (noProxies)
+            skus = skus.Where(s => !proxySets.Contains(s.Edition));
+        if (sparesOnly) // A spare is any sku not belonging to an existing deck
+            skus = skus.Where(S => S.DeckId == null);
+
+        var availableTotal = await skus.SumAsync(s => s.Quantity);
+        return wantQty - availableTotal;
+    }
+
     public IEnumerable<ContainerSummaryModel> GetContainers()
     {
         return _db
@@ -62,6 +82,10 @@ public class CollectionTrackingService
             queryable = queryable.Where(c => c.CardName.Contains(query.SearchFilter));
         if (query.ContainerIds?.Length > 0)
             queryable = queryable.Where(c => c.ContainerId != null && query.ContainerIds.Contains((int)c.ContainerId));
+
+        if (query.NoProxies)
+            queryable = queryable.Where(c => !proxySets.Contains(c.Edition));
+
         if (query.NotInDecks)
             queryable = queryable.Where(c => c.DeckId == null);
         else if (query.DeckIds?.Length > 0)
@@ -297,30 +321,26 @@ public class CollectionTrackingService
         return new DeckInfoModel { Cards = [], ContainerName = d.Container?.Name, Format = d.Format, Name = d.Name, Id = d.Id };
     }
 
-    static bool IsProxyEdition(string edition)
-    {
-        switch (edition?.ToUpper())
-        {
-            case "PROXY":
-            // World Championship decks
-            case "PTC":
-            case "WC97":
-            case "WC98":
-            case "WC99":
-            case "WC00":
-            case "WC01":
-            case "WC02":
-            case "WC03":
-            case "WC04":
-            // Collector's edition
-            case "CED":
-            case "CEI":
-            // 30th Anniversary Edition. 15 card proxy boosters, all for the low-low price of $1000 USD!
-            case "30A":
-                return true;
-        }
-        return false;
-    }
+    static HashSet<string> proxySets = [
+        "PROXY",
+        // World Championship decks
+        "PTC",
+        "WC97",
+        "WC98",
+        "WC99",
+        "WC00",
+        "WC01",
+        "WC02",
+        "WC03",
+        "WC04",
+        // Collector's edition
+        "CED",
+        "CEI",
+        // 30th Anniversary Edition. 15 card proxy boosters, all for the low-low price of $1000 USD!
+        "30A"
+    ];
+
+    static bool IsProxyEdition(string edition) => proxySets.Contains(edition);
 
     public string PrintDeck(int deckId, bool reportProxyUsage)
     {
@@ -397,5 +417,17 @@ public class CollectionTrackingService
             text.AppendLine("This deck cannot be played in DCI/Wizards sanctioned tournaments");
         }
         return text.ToString();
+    }
+
+    public async ValueTask<CardSkuModel> DeleteCardSkuAsync(int skuId)
+    {
+        var sku = await _db.Cards.FindAsync(skuId);
+        if (sku == null)
+            throw new Exception("Sku not found");
+
+        _db.Cards.Remove(sku);
+        await _db.SaveChangesAsync();
+
+        return CardSkuToModel(sku);
     }
 }
