@@ -1,6 +1,8 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Data;
+using System.Linq.Expressions;
+using System.Text;
 
 namespace MtgCollectionTracker.Core.Services;
 
@@ -19,19 +21,25 @@ public class CollectionTrackingService
     {
         return _db
             .Containers
+            .OrderBy(c => c.Name)
             .Select(c => new ContainerSummaryModel
             {
                 Id = c.Id,
                 Name = c.Name,
-                Total = c.Cards.Count
+                Total = c.Cards.Sum(c => c.Quantity)
             });
     }
 
-    public IEnumerable<DeckSummaryModel> GetDecks()
+    public IEnumerable<DeckSummaryModel> GetDecks(string? format)
     {
+        Expression<Func<Deck, bool>> predicate = string.IsNullOrEmpty(format)
+            ? d => true
+            : d => d.Format == format;
         return _db
             .Decks
+            .Where(predicate)
             .Include(d => d.Container)
+            .OrderBy(d => d.Name)
             .Select(d => new DeckSummaryModel
             {
                 Id = d.Id,
@@ -60,6 +68,7 @@ public class CollectionTrackingService
             queryable = queryable.Where(c => c.DeckId != null && query.DeckIds.Contains((int)c.DeckId));
 
         return queryable
+            .OrderBy(c => c.CardName)
             .Select(c => new CardSkuModel
             {
                 CardName = c.CardName,
@@ -184,15 +193,30 @@ public class CollectionTrackingService
         };
     }
 
-    public async ValueTask<int> AddMultipleToContainerAsync(IEnumerable<AddToContainerInputModel> items)
+    public async ValueTask<(int total, int rows)> AddMultipleToContainerOrDeckAsync(
+        int? containerId,
+        int? deckId,
+        IEnumerable<AddToContainerInputModel> items)
     {
+        Container? cnt = null;
+        Deck? dck = null;
+        if (containerId.HasValue)
+            cnt = await _db.Containers.FindAsync(containerId.Value);
+        if (deckId.HasValue)
+            dck = await _db.Decks.Include(d => d.Container).FirstOrDefaultAsync(d => d.Id == deckId.Value);
+
+        // Always take the deck's container
+        if (dck != null)
+            cnt = dck.Container;
+
         var cards = items.Select(model => new CardSku
         {
             CardName = model.CardName,
             Comments = model.Comments,
             Condition = model.Condition,
-            ContainerId = model.ContainerId,
-            //DeckId = model.DeckId,
+            ContainerId = containerId,
+            Deck = dck,
+            Container = cnt,
             Edition = model.Edition,
             IsFoil = model.IsFoil,
             IsLand = model.IsLand,
@@ -201,19 +225,25 @@ public class CollectionTrackingService
             Quantity = model.Quantity
         });
 
-        await _db.Cards.AddRangeAsync(cards);
+        var skus = new List<CardSku>();
+        foreach (var sku in cards)
+        {
+            await _db.Cards.AddAsync(sku);
+            skus.Add(sku); ;
+        }
+
         var res = await _db.SaveChangesAsync();
-        return res;
+        return (skus.Sum(s => s.Quantity), skus.Count);
     }
 
-    public async ValueTask<CardSkuModel> AddToContainerAsync(AddToContainerInputModel model)
+    public async ValueTask<CardSkuModel> AddToContainerAsync(int containerId, AddToContainerInputModel model)
     {
         var c = new CardSku
         {
             CardName = model.CardName,
             Comments = model.Comments,
             Condition = model.Condition,
-            ContainerId = model.ContainerId,
+            ContainerId = containerId,
             //DeckId = model.DeckId,
             Edition = model.Edition,
             IsFoil = model.IsFoil,
@@ -265,5 +295,107 @@ public class CollectionTrackingService
         await _db.SaveChangesAsync();
 
         return new DeckInfoModel { Cards = [], ContainerName = d.Container?.Name, Format = d.Format, Name = d.Name, Id = d.Id };
+    }
+
+    static bool IsProxyEdition(string edition)
+    {
+        switch (edition?.ToUpper())
+        {
+            case "PROXY":
+            // World Championship decks
+            case "PTC":
+            case "WC97":
+            case "WC98":
+            case "WC99":
+            case "WC00":
+            case "WC01":
+            case "WC02":
+            case "WC03":
+            case "WC04":
+            // Collector's edition
+            case "CED":
+            case "CEI":
+            // 30th Anniversary Edition. 15 card proxy boosters, all for the low-low price of $1000 USD!
+            case "30A":
+                return true;
+        }
+        return false;
+    }
+
+    public string PrintDeck(int deckId, bool reportProxyUsage)
+    {
+        var deck = _db.Decks.Include(d => d.Cards).FirstOrDefault(d => d.Id == deckId);
+        if (deck == null)
+            throw new Exception("Deck not found");
+
+        var cards = deck.Cards.ToList();
+        var deckTotal = cards.Sum(c => c.Quantity);
+        var proxyTotal = cards.Where(c => IsProxyEdition(c.Edition)).Sum(c => c.Quantity);
+        var mdNonLandTotal = cards.Where(c => !c.IsSideboard && !c.IsLand).Sum(c => c.Quantity);
+        var mdLandTotal = cards.Where(c => !c.IsSideboard && c.IsLand).Sum(c => c.Quantity);
+        var sbTotal = cards.Where(c => c.IsSideboard).Sum(c => c.Quantity);
+
+        var mdNonLand = cards.Where(c => !c.IsSideboard && !c.IsLand)
+            .GroupBy(c => new { c.CardName })
+            .Select(grp => new { Name = grp.Key.CardName, Count = grp.Sum(c => c.Quantity), ProxyCount = grp.Where(c => IsProxyEdition(c.Edition)).Sum(c => c.Quantity) });
+
+        var mdLand = cards.Where(c => !c.IsSideboard && c.IsLand)
+            .GroupBy(c => new { c.CardName })
+            .Select(grp => new { Name = grp.Key.CardName, Count = grp.Sum(c => c.Quantity), ProxyCount = grp.Where(c => IsProxyEdition(c.Edition)).Sum(c => c.Quantity) });
+
+        var sb = cards.Where(c => c.IsSideboard)
+            .GroupBy(c => new { c.CardName })
+            .Select(grp => new { Name = grp.Key.CardName, Count = grp.Sum(c => c.Quantity), ProxyCount = grp.Where(c => IsProxyEdition(c.Edition)).Sum(c => c.Quantity) });
+
+        var text = new StringBuilder();
+        text.AppendLine($"Deck Name: {deck.Name}");
+        if (!string.IsNullOrEmpty(deck.Format))
+            text.AppendLine($"Format: {deck.Format}");
+        text.AppendLine();
+
+        text.AppendLine($"// Main Deck ({mdNonLandTotal} / {mdNonLandTotal + mdLandTotal})");
+        foreach (var item in mdNonLand)
+        {
+            if (item.ProxyCount > 0 && reportProxyUsage)
+                text.AppendLine($"{item.Count} {item.Name} [{item.ProxyCount} proxies]");
+            else
+                text.AppendLine($"{item.Count} {item.Name}");
+        }
+        text.AppendLine($"// Lands ({mdLandTotal} / {mdNonLandTotal + mdLandTotal})");
+        foreach (var item in mdLand)
+        {
+            if (item.ProxyCount > 0 && reportProxyUsage)
+                text.AppendLine($"{item.Count} {item.Name} [{item.ProxyCount} proxies]");
+            else
+                text.AppendLine($"{item.Count} {item.Name}");
+        }
+
+        if (sbTotal > 0)
+        {
+            if (sbTotal < SIDEBOARD_LIMIT)
+                text.AppendLine($"// Sideboard ({sbTotal}, {SIDEBOARD_LIMIT - sbTotal} card(s) short!)");
+            else
+                text.AppendLine($"// Sideboard ({sbTotal})");
+            foreach (var item in sb)
+            {
+                if (item.ProxyCount > 0 && reportProxyUsage)
+                    text.AppendLine($"{item.Count} {item.Name} [{item.ProxyCount} proxies]");
+                else
+                    text.AppendLine($"{item.Count} {item.Name}");
+            }
+        }
+        else
+        {
+            text.AppendLine("// WARNING: This deck has no sideboard!");
+        }
+
+        if (proxyTotal > 0 && reportProxyUsage)
+        {
+            text.AppendLine();
+            text.AppendLine("Proxy stats:");
+            text.AppendLine($"  {proxyTotal} cards [{((double)proxyTotal / (double)deckTotal):P2} of the deck] is proxies or originates from sets not legal for sanctioned tournaments");
+            text.AppendLine("This deck cannot be played in DCI/Wizards sanctioned tournaments");
+        }
+        return text.ToString();
     }
 }

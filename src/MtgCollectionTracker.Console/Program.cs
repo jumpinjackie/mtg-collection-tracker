@@ -2,9 +2,25 @@
 using MtgCollectionTracker.Console.Commands;
 
 var result = await Parser.Default
-    .ParseArguments<AddToContainerCommand>(args)
+    .ParseArguments<
+        AddContainerCommand,
+        AddDeckCommand,
+        AddToContainerCommand,
+        FindCardsCommand,
+        ListContainersCommand,
+        ListDecksCommand,
+        ImportCommand,
+        PrintDeckCommand
+    >(args)
     .MapResult(
+    (AddContainerCommand options) => options.ExecuteAsync(),
+    (AddDeckCommand options) => options.ExecuteAsync(),
     (AddToContainerCommand options) => options.ExecuteAsync(),
+    (FindCardsCommand options) => options.ExecuteAsync(),
+    (ListContainersCommand options) => options.ExecuteAsync(),
+    (ListDecksCommand options) => options.ExecuteAsync(),
+    (ImportCommand options) => options.ExecuteAsync(),
+    (PrintDeckCommand options) => options.ExecuteAsync(),
     errors => ValueTask.FromResult(1));
 
 return result;

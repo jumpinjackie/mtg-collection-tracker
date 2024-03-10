@@ -12,8 +12,6 @@ public class AddToContainerInputModel
 
     public string? Language { get; set; }
 
-    public int? ContainerId { get; set; }
-
     public int? DeckId { get; set; }
 
     public bool IsSideboard { get; set; }

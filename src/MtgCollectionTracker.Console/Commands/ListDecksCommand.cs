@@ -9,21 +9,25 @@ namespace MtgCollectionTracker.Console.Commands;
 [Verb("list-decks")]
 internal class ListDecksCommand : CommandBase
 {
+    [Option("format", Required = false, HelpText = "Filter decks for the given format")]
+    public string? Format { get; set; }
+
     protected override async ValueTask<int> ExecuteInternalAsync(IServiceProvider serviceProvider)
     {
         var service = serviceProvider.GetRequiredService<CollectionTrackingService>();
 
-        var decks = service.GetDecks();
+        var decks = service.GetDecks(this.Format);
         var table = new ConsoleTable(
             nameof(DeckSummaryModel.Id),
             nameof(DeckSummaryModel.Name),
+            nameof(DeckSummaryModel.Format),
             nameof(DeckSummaryModel.ContainerName),
             nameof(DeckSummaryModel.MaindeckTotal),
             nameof(DeckSummaryModel.SideboardTotal));
 
         foreach (var m in decks)
         {
-            table.AddRow(m.Id, m.Name, m.ContainerName, m.MaindeckTotal, m.SideboardTotal);
+            table.AddRow(m.Id, m.Name, m.Format, m.ContainerName, m.MaindeckTotal, m.SideboardTotal);
         }
 
         table.Write();

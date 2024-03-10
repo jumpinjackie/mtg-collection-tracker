@@ -9,20 +9,20 @@ internal abstract class CommandBase
 {
     public void Stderr(string msg) => System.Console.Error.WriteLine(msg);
 
-    public void Stdout(string msg) => System.Console.WriteLine();
+    public void Stdout(string msg) => System.Console.WriteLine(msg);
 
     public async ValueTask<int> ExecuteAsync()
     {
         try
         {
             var serviceProvider = new ServiceCollection()
-                .AddDbContext<CardsDbContext>(o => o.UseSqlite("Data Source=collection.sqlite"))
+                .AddDbContext<CardsDbContext>(o => o.UseSqlite("Data Source=collection.sqlite"), ServiceLifetime.Transient)
                 .AddTransient<CollectionTrackingService>()
                 .BuildServiceProvider();
 
             await using (var db = serviceProvider.GetRequiredService<CardsDbContext>())
             {
-                Stdout("Creating database and applying migrations if required");
+                //Stdout("Creating database and applying migrations if required");
                 await db.Database.MigrateAsync();
             }
 
@@ -31,6 +31,7 @@ internal abstract class CommandBase
         }
         catch (Exception ex)
         {
+            Stderr($"ERROR: {ex.Message}");
             return 1;
         }
     }

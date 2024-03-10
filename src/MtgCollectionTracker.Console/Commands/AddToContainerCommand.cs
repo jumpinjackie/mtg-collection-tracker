@@ -23,12 +23,11 @@ internal class AddToContainerCommand : CommandBase
     {
         var service = serviceProvider.GetRequiredService<CollectionTrackingService>();
 
-        var res = await service.AddToContainerAsync(new()
+        var res = await service.AddToContainerAsync(this.ContainerId, new()
         {
             Quantity = this.Quantity,
             CardName = this.CardName,
-            Edition = this.Edition,
-            ContainerId = this.ContainerId
+            Edition = this.Edition
         });
 
         Stdout($"Added [{res.Quantity}x {res.CardName}, id: {res.Id}] to [{res.ContainerName}]");

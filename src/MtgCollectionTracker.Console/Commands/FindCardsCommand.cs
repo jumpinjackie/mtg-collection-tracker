@@ -12,16 +12,17 @@ internal class FindCardsCommand : CommandBase
     [Option("name", Required = true)]
     public required string Name { get; set; }
 
-    [Option("not-in-decks", Required = true)]
+    [Option("not-in-decks", Required = false)]
     public bool NotInDecks { get; set; }
 
     protected override async ValueTask<int> ExecuteInternalAsync(IServiceProvider serviceProvider)
     {
         var service = serviceProvider.GetRequiredService<CollectionTrackingService>();
-        var matches = service.GetCards(new() { SearchFilter = this.Name });
+        var matches = service.GetCards(new() { SearchFilter = this.Name, NotInDecks = this.NotInDecks });
 
         var table = new ConsoleTable(
             nameof(CardSkuModel.Id),
+            nameof(CardSkuModel.Quantity),
             nameof(CardSkuModel.CardName),
             nameof(CardSkuModel.Edition),
             nameof(CardSkuModel.Language),
@@ -30,7 +31,7 @@ internal class FindCardsCommand : CommandBase
 
         foreach (var m in matches)
         {
-            table.AddRow(m.Id, m.CardName, m.Edition, m.Language, m.DeckName, m.ContainerName);
+            table.AddRow(m.Id, m.Quantity, m.CardName, m.Edition, m.Language, m.DeckName, m.ContainerName);
         }
 
         table.Write();
