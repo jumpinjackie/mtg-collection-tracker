@@ -15,11 +15,11 @@ public class CollectionTrackingService
 
     const int SIDEBOARD_LIMIT = 15;
 
-    public IEnumerable<ContainerSummary> GetContainers()
+    public IEnumerable<ContainerSummaryModel> GetContainers()
     {
         return _db
             .Containers
-            .Select(c => new ContainerSummary
+            .Select(c => new ContainerSummaryModel
             {
                 Id = c.Id,
                 Name = c.Name,
@@ -27,12 +27,12 @@ public class CollectionTrackingService
             });
     }
 
-    public IEnumerable<DeckSummary> GetDecks()
+    public IEnumerable<DeckSummaryModel> GetDecks()
     {
         return _db
             .Decks
             .Include(d => d.Container)
-            .Select(d => new DeckSummary
+            .Select(d => new DeckSummaryModel
             {
                 Id = d.Id,
                 Name = d.Name,
@@ -54,7 +54,9 @@ public class CollectionTrackingService
             queryable = queryable.Where(c => c.CardName.Contains(query.SearchFilter));
         if (query.ContainerIds?.Length > 0)
             queryable = queryable.Where(c => c.ContainerId != null && query.ContainerIds.Contains((int)c.ContainerId));
-        if (query.DeckIds?.Length > 0)
+        if (query.NotInDecks)
+            queryable = queryable.Where(c => c.DeckId == null);
+        else if (query.DeckIds?.Length > 0)
             queryable = queryable.Where(c => c.DeckId != null && query.DeckIds.Contains((int)c.DeckId));
 
         return queryable
@@ -228,5 +230,40 @@ public class CollectionTrackingService
         _db.Entry(c).Reference(p => p.Deck).Load();
 
         return CardSkuToModel(c);
+    }
+
+    public async ValueTask<ContainerInfoModel> CreateContainerAsync(string name, string? description)
+    {
+        if (await _db.Containers.AnyAsync(c => c.Name == name))
+        {
+            throw new Exception($"A container with the name ({name}) already exists");
+        }
+
+        var c = new Container { Name = name, Description = description };
+        await _db.Containers.AddAsync(c);
+        await _db.SaveChangesAsync();
+
+        return new ContainerInfoModel { Name = c.Name, Description = c.Description, Id = c.Id };
+    }
+
+    public async ValueTask<DeckInfoModel> CreateDeckAsync(string name, string? format, int? containerId)
+    {
+        Container? cnt = null;
+        if (containerId.HasValue)
+        {
+            cnt = await _db.Containers.FindAsync(containerId);
+            if (cnt == null)
+                throw new Exception("No such container");
+        }
+        if (await _db.Decks.AnyAsync(d => d.Name == name))
+        {
+            throw new Exception($"A deck with the name ({name}) already exists");
+        }
+
+        var d = new Deck { Name = name, Format = format, Container = cnt };
+        await _db.Decks.AddAsync(d);
+        await _db.SaveChangesAsync();
+
+        return new DeckInfoModel { Cards = [], ContainerName = d.Container?.Name, Format = d.Format, Name = d.Name, Id = d.Id };
     }
 }

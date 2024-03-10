@@ -7,4 +7,6 @@ public class CardQueryModel
     public int[]? DeckIds { get; set; }
 
     public int[]? ContainerIds { get; set; }
+
+    public bool NotInDecks { get; set; }
 }
