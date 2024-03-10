@@ -75,7 +75,7 @@ public class CardSku
     public CardCondition? Condition { get; set; }
 
     /// <summary>
-    /// Indicates if this card is a land
+    /// Indicates if this card is a land. This is to assist in deck stats and decklist generation
     /// </summary>
     public bool IsLand { get; set; }
 
