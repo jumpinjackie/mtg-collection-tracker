@@ -1,0 +1,44 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{9C581D46-A54D-4C17-8058-5980122C7F1F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MtgCollectionTracker.Console", "src\MtgCollectionTracker.Console\MtgCollectionTracker.Console.csproj", "{B3B81381-A5F5-4B62-A77B-6FA63764FEC0}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MtgCollectionTracker.Data", "src\MtgCollectionTracker.Data\MtgCollectionTracker.Data.csproj", "{C14E6989-4D80-4C5B-9467-198555BBE811}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MtgCollectionTracker.Core", "src\MtgCollectionTracker.Core\MtgCollectionTracker.Core.csproj", "{C0936480-5200-498D-8B39-9E1E6D3C8A19}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B3B81381-A5F5-4B62-A77B-6FA63764FEC0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B3B81381-A5F5-4B62-A77B-6FA63764FEC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B3B81381-A5F5-4B62-A77B-6FA63764FEC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B3B81381-A5F5-4B62-A77B-6FA63764FEC0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C14E6989-4D80-4C5B-9467-198555BBE811}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C14E6989-4D80-4C5B-9467-198555BBE811}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C14E6989-4D80-4C5B-9467-198555BBE811}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C14E6989-4D80-4C5B-9467-198555BBE811}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C0936480-5200-498D-8B39-9E1E6D3C8A19}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C0936480-5200-498D-8B39-9E1E6D3C8A19}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C0936480-5200-498D-8B39-9E1E6D3C8A19}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C0936480-5200-498D-8B39-9E1E6D3C8A19}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B3B81381-A5F5-4B62-A77B-6FA63764FEC0} = {9C581D46-A54D-4C17-8058-5980122C7F1F}
+		{C14E6989-4D80-4C5B-9467-198555BBE811} = {9C581D46-A54D-4C17-8058-5980122C7F1F}
+		{C0936480-5200-498D-8B39-9E1E6D3C8A19} = {9C581D46-A54D-4C17-8058-5980122C7F1F}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D737EDAD-99D3-474F-9E39-6FF52EEFA06E}
+	EndGlobalSection
+EndGlobal
