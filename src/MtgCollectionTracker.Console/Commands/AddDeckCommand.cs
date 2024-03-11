@@ -4,16 +4,16 @@ using MtgCollectionTracker.Core.Services;
 
 namespace MtgCollectionTracker.Console.Commands;
 
-[Verb("add-deck", HelpText = "Add a new deck")]
+[Verb("add-deck", HelpText = "Add a new deck to your collection")]
 internal class AddDeckCommand : CommandBase
 {
-    [Option("name", Required = true)]
+    [Option("name", Required = true, HelpText = "The name of the deck")]
     public required string Name { get; set; }
 
-    [Option("format", Required = false)]
+    [Option("format", Required = false, HelpText = "The format that this deck can be played in")]
     public string? Format { get; set; }
 
-    [Option("container-id", Required = false)]
+    [Option("container-id", Required = false, HelpText = "The optional id of the container this deck belongs to")]
     public int? ContainerId { get; set; }
 
     protected override async ValueTask<int> ExecuteInternalAsync(IServiceProvider serviceProvider)

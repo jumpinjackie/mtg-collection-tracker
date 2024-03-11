@@ -6,7 +6,7 @@ using MtgCollectionTracker.Core.Services;
 
 namespace MtgCollectionTracker.Console.Commands;
 
-[Verb("list-containers")]
+[Verb("list-containers", HelpText = "Lists all containers in your collection")]
 internal class ListContainersCommand : CommandBase
 {
     protected override async ValueTask<int> ExecuteInternalAsync(IServiceProvider serviceProvider)

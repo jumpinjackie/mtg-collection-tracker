@@ -3,7 +3,7 @@
 namespace MtgCollectionTracker.Data;
 
 /// <summary>
-/// A <see cref="CardSku"/> defines a specific quantity of a particular card from a 
+/// A <see cref="CardSku"/> defines a specific quantity of a particular card in a 
 /// particular condition.
 /// 
 /// <see cref="CardSku"/> instances may belong to a <see cref="Container"/> or a <see cref="Deck"/>
@@ -25,7 +25,7 @@ public class CardSku
     public required string CardName { get; set; }
 
     /// <summary>
-    /// The code
+    /// The code for the card's edition
     /// </summary>
     [MaxLength(5)]
     public required string Edition { get; set; }
@@ -75,7 +75,7 @@ public class CardSku
     public CardCondition? Condition { get; set; }
 
     /// <summary>
-    /// Indicates if this card is a land. This is to assist in deck stats and decklist generation
+    /// Indicates if this card is a land. This is to assist in deck stats and decklist generation/presentation
     /// </summary>
     public bool IsLand { get; set; }
 
@@ -93,7 +93,7 @@ public class CardSku
         // Otherwise, subtract this quantity
         this.Quantity -= quantity;
 
-        // The clone this sku with the new quantity
+        // Then clone this sku with the new quantity
         return new CardSku
         {
             Quantity = quantity,

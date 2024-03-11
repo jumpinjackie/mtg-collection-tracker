@@ -7,16 +7,16 @@ namespace MtgCollectionTracker.Console.Commands;
 [Verb("add-to-container", HelpText = "Add cards to a container")]
 internal class AddToContainerCommand : CommandBase
 {
-    [Option("quantity", Required = true)]
+    [Option("quantity", Required = true, HelpText = "The quantity of the card")]
     public int Quantity { get; set; }
 
-    [Option("card-name", Required = true)]
+    [Option("card-name", Required = true, HelpText = "The name of the card")]
     public required string CardName { get; set; }
 
-    [Option("edition", Required = true)]
+    [Option("edition", Required = true, HelpText = "The edition of the card")]
     public required string Edition { get; set; }
 
-    [Option("container-id", Required = true)]
+    [Option("container-id", Required = true, HelpText = "The id of the container")]
     public int ContainerId { get; set; }
 
     protected override async ValueTask<int> ExecuteInternalAsync(IServiceProvider serviceProvider)

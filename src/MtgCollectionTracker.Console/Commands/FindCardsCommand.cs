@@ -6,13 +6,13 @@ using MtgCollectionTracker.Core.Services;
 
 namespace MtgCollectionTracker.Console.Commands;
 
-[Verb("find-cards")]
+[Verb("find-cards", HelpText = "Finds cards in your collection with the given name")]
 internal class FindCardsCommand : CommandBase
 {
-    [Option("name", Required = true)]
+    [Option("name", Required = true, HelpText = "The name of the card. Name can be partial.")]
     public required string Name { get; set; }
 
-    [Option("not-in-decks", Required = false)]
+    [Option("not-in-decks", Required = false, HelpText = "If true, will omit card skus from results where it is already in another deck")]
     public bool NotInDecks { get; set; }
 
     [Option("no-proxies", Required = false, HelpText = "If true, will omit card skus from results where it is a proxy")]

@@ -7,7 +7,7 @@ namespace MtgCollectionTracker.Console.Commands;
 [Verb("delete-card-sku", HelpText = "Delete a card sku from your collection. This is for if you entered a sku by mistake or you sold or traded away this quantity of cards")]
 internal class DeleteCardSkuCommand : CommandBase
 {
-    [Option("sku-id", Required = true)]
+    [Option("sku-id", Required = true, HelpText = "The id of the card sku")]
     public int SkuId { get; set; }
 
     protected override async ValueTask<int> ExecuteInternalAsync(IServiceProvider serviceProvider)

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "MtgCollectionTracker.Console": {
+      "commandName": "Project",
+      "commandLineArgs": "can-i-build-this-deck --decklist-path \"C:\\Users\\User\\Desktop\\Legacy_Initiative_Stompy_by_SHAKELION.txt\""
+    }
+  }
+}

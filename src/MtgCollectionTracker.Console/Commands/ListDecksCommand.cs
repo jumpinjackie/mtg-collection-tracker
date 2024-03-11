@@ -6,7 +6,7 @@ using MtgCollectionTracker.Core.Services;
 
 namespace MtgCollectionTracker.Console.Commands;
 
-[Verb("list-decks")]
+[Verb("list-decks", HelpText = "Lists all decks in your collection")]
 internal class ListDecksCommand : CommandBase
 {
     [Option("format", Required = false, HelpText = "Filter decks for the given format")]

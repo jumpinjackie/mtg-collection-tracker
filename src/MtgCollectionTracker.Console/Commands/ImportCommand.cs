@@ -11,16 +11,16 @@ namespace MtgCollectionTracker.Console.Commands;
 
 record CsvImportRecord(int Qty, string CardName, string Edition, string? Language, bool? IsFoil, bool? IsLand, bool? IsSideboard, string? Condition, string? Comments);
 
-[Verb("import", HelpText = "Import a CSV of cards into a given container or deck")]
+[Verb("import", HelpText = "Import a CSV of cards into your collection")]
 internal class ImportCommand : CommandBase
 {
     [Option("csv-path", Required = true, HelpText = "Path to CSV file. Must have schema of (Qty, CardName, Edition, Language?, IsSideboard?, IsFoil?, IsLand?, Condition?, Comments?)")]
     public required string CsvPath { get; set; }
 
-    [Option("container-id", Required = false)]
+    [Option("container-id", Required = false, HelpText = "The id of the container to associate your imported cards with")]
     public int? ContainerId { get; set; }
 
-    [Option("deck-id", Required = false)]
+    [Option("deck-id", Required = false, HelpText = "The id of the deck to associate your imported cards with")]
     public int? DeckId { get; set; }
 
     protected override async ValueTask<int> ExecuteInternalAsync(IServiceProvider serviceProvider)

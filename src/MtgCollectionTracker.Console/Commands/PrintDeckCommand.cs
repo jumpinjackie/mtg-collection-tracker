@@ -7,7 +7,7 @@ namespace MtgCollectionTracker.Console.Commands;
 [Verb("print-deck", HelpText = "Prints a given deck")]
 internal class PrintDeckCommand : CommandBase
 {
-    [Option("deck-id", Required = true)]
+    [Option("deck-id", Required = true, HelpText = "The id of the deck to print")]
     public int DeckId { get; set; }
 
     [Option("report-proxy-usage", Required = false, HelpText = "If true, will print proxy instances and stats as part of the decklist")]

@@ -8,16 +8,16 @@ namespace MtgCollectionTracker.Console.Commands;
 
 record DecklistEntry(int Quantity, string CardName, bool IsSideboard);
 
-[Verb("can-i-build-this-deck", HelpText = "Given a decklist, checks if you are able to build this deck with your current collection")]
+[Verb("can-i-build-this-deck", HelpText = "Given a decklist in MTGO format, checks if you are able to build this deck with your current collection")]
 internal class CanIBuildThisDeckCommand : CommandBase
 {
-    [Option("decklist-path", Required = true)]
+    [Option("decklist-path", Required = true, HelpText = "The path to the MTGO decklist")]
     public required string DecklistPath { get; set; }
 
-    [Option("no-proxies", Required = false)]
+    [Option("no-proxies", Required = false, HelpText = "If true, excludes proxies in your collection when determining availability")]
     public bool NoProxies { get; set; }
 
-    [Option("spares-only", Required = false)]
+    [Option("spares-only", Required = false, HelpText = "If true, only considers cards in your collection that do not currently belong to any decks")]
     public bool SparesOnly { get; set; }
 
     protected override async ValueTask<int> ExecuteInternalAsync(IServiceProvider serviceProvider)
