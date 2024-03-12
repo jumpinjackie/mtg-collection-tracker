@@ -6,7 +6,7 @@ var result = await Parser.Default
     .ParseArguments<
         AddContainerCommand,
         AddDeckCommand,
-        AddToContainerCommand,
+        AddCardSkuCommand,
         FindCardsCommand,
         ListContainersCommand,
         ListDecksCommand,

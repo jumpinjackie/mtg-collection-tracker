@@ -244,7 +244,7 @@ public class CollectionTrackingService
     public async ValueTask<(int total, int rows)> AddMultipleToContainerOrDeckAsync(
         int? containerId,
         int? deckId,
-        IEnumerable<AddToContainerInputModel> items)
+        IEnumerable<AddToDeckOrContainerInputModel> items)
     {
         Container? cnt = null;
         Deck? dck = null;
@@ -284,7 +284,7 @@ public class CollectionTrackingService
         return (skus.Sum(s => s.Quantity), skus.Count);
     }
 
-    public async ValueTask<CardSkuModel> AddToContainerAsync(int containerId, AddToContainerInputModel model)
+    public async ValueTask<CardSkuModel> AddToDeckOrContainerAsync(int? containerId, int? deckId, AddToDeckOrContainerInputModel model)
     {
         var c = new CardSku
         {
@@ -292,7 +292,7 @@ public class CollectionTrackingService
             Comments = model.Comments,
             Condition = model.Condition,
             ContainerId = containerId,
-            //DeckId = model.DeckId,
+            DeckId = deckId,
             Edition = model.Edition,
             IsFoil = model.IsFoil,
             IsLand = model.IsLand,
@@ -533,47 +533,48 @@ public class CollectionTrackingService
         return CardSkuToModel(newSku);
     }
 
-    public async ValueTask<CardSkuModel> UpdateCardSkuAsync(UpdateCardSkuInputModel model)
+    public async ValueTask<int> UpdateCardSkuAsync(UpdateCardSkuInputModel model)
     {
         if (model.Quantity.HasValue && model.Quantity <= 0)
             throw new Exception("Quantity cannot be 0");
 
-        var sku = await _db.Cards.FirstOrDefaultAsync(c => c.Id == model.Id);
-        if (sku == null)
-            throw new Exception("Card sku not found");
-
-        if (model.Condition != null)
-            sku.Condition = model.Condition;
-        if (model.Comments != null)
-            sku.Comments = model.Comments;
-        if (model.Edition != null)
-            sku.Comments = model.Edition;
-        if (model.Language != null)
-            sku.Language = model.Language;
-        if (model.Quantity != null)
-            sku.Quantity = model.Quantity.Value;
-        if (model.DeckId != null)
-            sku.DeckId = model.DeckId;
-        if (model.ContainerId != null)
-            sku.ContainerId = model.ContainerId;
-
-        if (model.UnsetDeck)
+        var skus = _db.Cards.Where(c => model.Ids.Contains(c.Id));
+        foreach (var sku in skus)
         {
-            sku.DeckId = null;
-            sku.Deck = null;
+            if (model.Condition != null)
+                sku.Condition = model.Condition;
+            if (model.Comments != null)
+                sku.Comments = model.Comments;
+            if (model.Edition != null)
+                sku.Comments = model.Edition;
+            if (model.Language != null)
+                sku.Language = model.Language;
+            if (model.Quantity != null)
+                sku.Quantity = model.Quantity.Value;
+            if (model.DeckId != null)
+                sku.DeckId = model.DeckId;
+            if (model.ContainerId != null)
+                sku.ContainerId = model.ContainerId;
+            if (model.IsLand.HasValue)
+                sku.IsLand = model.IsLand.Value;
+            if (model.IsSideboard.HasValue)
+                sku.IsSideboard = model.IsSideboard.Value;
+
+            if (model.UnsetDeck)
+            {
+                sku.DeckId = null;
+                sku.Deck = null;
+            }
+            if (model.UnsetContainer)
+            {
+                sku.ContainerId = null;
+                sku.Container = null;
+            }
         }
-        if (model.UnsetContainer)
-        {
-            sku.ContainerId = null;
-            sku.Container = null;
-        }
 
-        await _db.SaveChangesAsync();
+        var res = await _db.SaveChangesAsync();
 
-        _db.Entry(sku).Reference(p => p.Container).Load();
-        _db.Entry(sku).Reference(p => p.Deck).Load();
-
-        return CardSkuToModel(sku);
+        return res;
     }
 
     record struct CardIdentityKey(string name, string edition, string? language, CardCondition? condition, string? comments);

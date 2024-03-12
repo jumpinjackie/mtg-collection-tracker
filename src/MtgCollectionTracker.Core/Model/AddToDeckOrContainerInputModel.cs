@@ -2,7 +2,7 @@
 
 namespace MtgCollectionTracker.Core.Model;
 
-public class AddToContainerInputModel
+public class AddToDeckOrContainerInputModel
 {
     public int Quantity { get; set; }
 

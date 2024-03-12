@@ -4,7 +4,7 @@ namespace MtgCollectionTracker.Core.Model;
 
 public class UpdateCardSkuInputModel
 {
-    public int Id { get; set; }
+    public required IEnumerable<int> Ids { get; set; }
 
     public int? Quantity { get; set; }
 
@@ -19,6 +19,10 @@ public class UpdateCardSkuInputModel
     public int? DeckId { get; set; }
 
     public int? ContainerId { get; set; }
+
+    public bool? IsSideboard { get; set; }
+
+    public bool? IsLand { get; set; }
 
     public bool UnsetDeck { get; set; }
 

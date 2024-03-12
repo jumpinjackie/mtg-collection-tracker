@@ -30,7 +30,7 @@ internal class ImportCommand : CommandBase
         using var csvr = new CsvReader(sr, csvConf);
 
         var input = csvr.GetRecords<CsvImportRecord>()
-            .Select(c => new AddToContainerInputModel
+            .Select(c => new AddToDeckOrContainerInputModel
             {
                 Quantity = c.Qty,
                 CardName = c.CardName,
