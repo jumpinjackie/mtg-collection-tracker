@@ -27,4 +27,8 @@ public class CardSkuModel
     public CardCondition? Condition { get; set; }
 
     public bool IsLand { get; set; }
+
+    public string GetDescription(bool withId = true) => withId
+        ? $"({Quantity}x {CardName}, {Edition}, id: {Id})"
+        : $"({Quantity}x {CardName}, {Edition})";
 }

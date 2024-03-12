@@ -9,5 +9,5 @@ public class RemoveFromDeckInputModel
     /// <summary>
     /// The id of the container to return this quantity to
     /// </summary>
-    public int ContainerId { get; set; }
+    public int? ContainerId { get; set; }
 }

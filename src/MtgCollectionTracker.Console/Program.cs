@@ -1,4 +1,5 @@
 ﻿using CommandLine;
+using MtgCollectionTracker.Console;
 using MtgCollectionTracker.Console.Commands;
 
 var result = await Parser.Default
@@ -12,19 +13,15 @@ var result = await Parser.Default
         ImportCommand,
         PrintDeckCommand,
         DeleteCardSkuCommand,
-        CanIBuildThisDeckCommand
+        CanIBuildThisDeckCommand,
+        DismantleDeckCommand,
+        SplitCardSkuCommand,
+        UpdateCardSkuCommand,
+        RemoveFromDeckCommand,
+        ConsolidateSkusCommand
     >(args)
     .MapResult(
-    (AddContainerCommand options) => options.ExecuteAsync(),
-    (AddDeckCommand options) => options.ExecuteAsync(),
-    (AddToContainerCommand options) => options.ExecuteAsync(),
-    (FindCardsCommand options) => options.ExecuteAsync(),
-    (ListContainersCommand options) => options.ExecuteAsync(),
-    (ListDecksCommand options) => options.ExecuteAsync(),
-    (ImportCommand options) => options.ExecuteAsync(),
-    (PrintDeckCommand options) => options.ExecuteAsync(),
-    (DeleteCardSkuCommand options) => options.ExecuteAsync(),
-    (CanIBuildThisDeckCommand options) => options.ExecuteAsync(),
+    (CommandBase cmd) => cmd.ExecuteAsync(),
     errors => ValueTask.FromResult(1));
 
 return result;

@@ -11,7 +11,7 @@ namespace MtgCollectionTracker.Console.Commands;
 
 record CsvImportRecord(int Qty, string CardName, string Edition, string? Language, bool? IsFoil, bool? IsLand, bool? IsSideboard, string? Condition, string? Comments);
 
-[Verb("import", HelpText = "Import a CSV of cards into your collection")]
+[Verb("import", HelpText = "Import a CSV of cards into a container or deck in your collection")]
 internal class ImportCommand : CommandBase
 {
     [Option("csv-path", Required = true, HelpText = "Path to CSV file. Must have schema of (Qty, CardName, Edition, Language?, IsSideboard?, IsFoil?, IsLand?, Condition?, Comments?)")]

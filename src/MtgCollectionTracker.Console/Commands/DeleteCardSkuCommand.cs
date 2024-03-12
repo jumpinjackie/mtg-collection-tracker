@@ -16,7 +16,7 @@ internal class DeleteCardSkuCommand : CommandBase
         var res = await service.DeleteCardSkuAsync(this.SkuId);
         if (res != null)
         {
-            Stdout($"Card sku ({res.Quantity}x {res.CardName}, {res.Edition}) deleted");
+            Stdout($"Card sku {res.GetDescription(false)} deleted");
         }
         return 0;
     }

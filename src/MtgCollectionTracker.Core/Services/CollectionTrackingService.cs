@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Data;
+using System.Collections.Concurrent;
 using System.Linq.Expressions;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace MtgCollectionTracker.Core.Services;
@@ -17,6 +19,15 @@ public class CollectionTrackingService
 
     const int SIDEBOARD_LIMIT = 15;
 
+    static string FixCardName(string name)
+    {
+        // This card doesn't exist on paper. Use the paper name
+        if (string.Equals(name, "\"Name Sticker\" Goblin", StringComparison.OrdinalIgnoreCase))
+            return "_____ Goblin";
+
+        return name;
+    }
+
     /// <summary>
     /// Checks the shortfall for the given card name.
     /// </summary>
@@ -27,7 +38,8 @@ public class CollectionTrackingService
     /// <returns>If positive, there is a shortfall in your collection. If 0 or negative, the requested <paramref name="wantQty"/> can be met by your collection</returns>
     public async ValueTask<int> CheckQuantityShortfallAsync(string cardName, int wantQty, bool noProxies, bool sparesOnly)
     {
-        var skus = _db.Cards.Where(s => s.CardName == cardName);
+        var cn = FixCardName(cardName);
+        var skus = _db.Cards.Where(s => s.CardName == cn);
         if (noProxies)
             skus = skus.Where(s => !proxySets.Contains(s.Edition));
         if (sparesOnly) // A spare is any sku not belonging to an existing deck
@@ -79,7 +91,10 @@ public class CollectionTrackingService
             .Include(c => c.Container);
 
         if (!string.IsNullOrEmpty(query.SearchFilter))
-            queryable = queryable.Where(c => c.CardName.Contains(query.SearchFilter));
+        {
+            var s = FixCardName(query.SearchFilter);
+            queryable = queryable.Where(c => c.CardName.Contains(s));
+        }
         if (query.ContainerIds?.Length > 0)
             queryable = queryable.Where(c => c.ContainerId != null && query.ContainerIds.Contains((int)c.ContainerId));
 
@@ -110,11 +125,16 @@ public class CollectionTrackingService
             });
     }
 
-    public async ValueTask<CardSkuModel> RemoveFromDeckAsync(RemoveFromDeckInputModel model)
+    public async ValueTask<(CardSkuModel sku, bool wasMerged)> RemoveFromDeckAsync(RemoveFromDeckInputModel model)
     {
-        var container = await _db.Containers.FirstOrDefaultAsync(c => c.Id == model.ContainerId);
-        if (container == null)
-            throw new Exception("Container not found");
+        bool wasMerged = false;
+        Container? container = null;
+        if (model.ContainerId.HasValue)
+        {
+            container = await _db.Containers.FirstOrDefaultAsync(c => c.Id == model.ContainerId.Value);
+            if (container == null)
+                throw new Exception("Container not found");
+        }
         var sku = await _db.Cards.Include(c => c.Deck).FirstOrDefaultAsync(s => s.Id == model.CardSkuId);
         if (sku == null)
             throw new Exception("Card sku not found");
@@ -122,10 +142,13 @@ public class CollectionTrackingService
         if (model.Quantity > sku.Quantity)
             throw new Exception($"The specified quantiy {model.Quantity} to remove is greater than the sku quantity of {sku.Quantity}");
 
+        Expression<Func<CardSku, bool>> skuPredicate = c => c.DeckId == null && c.ContainerId == null;
+        if (container != null)
+            skuPredicate = c => c.DeckId == null && c.ContainerId == container.Id;
         var mergeSku = await _db.Cards
-            .Where(c => c.DeckId == null && c.ContainerId == model.ContainerId)
-            // Must match on [card name / edition / language / condition]
-            .Where(c => c.CardName == sku.CardName && c.Edition == sku.Edition && c.Language == sku.Language && c.Condition == sku.Condition)
+            .Where(skuPredicate)
+            // Must match on [card name / edition / language / condition / comments]
+            .Where(c => c.CardName == sku.CardName && c.Edition == sku.Edition && c.Language == sku.Language && c.Condition == sku.Condition && c.Comments == sku.Comments)
             .FirstOrDefaultAsync();
 
         CardSku theSku;
@@ -145,13 +168,14 @@ public class CollectionTrackingService
         {
             mergeSku.Quantity += model.Quantity;
             theSku = mergeSku;
+            wasMerged = true;
         }
 
         await _db.SaveChangesAsync();
         _db.Entry(theSku).Reference(p => p.Container).Load();
         _db.Entry(theSku).Reference(p => p.Deck).Load();
 
-        return CardSkuToModel(theSku);
+        return (CardSkuToModel(theSku), wasMerged);
     }
 
     public async ValueTask<CardSkuModel> AddToDeckAsync(AddToDeckInputModel model)
@@ -429,5 +453,177 @@ public class CollectionTrackingService
         await _db.SaveChangesAsync();
 
         return CardSkuToModel(sku);
+    }
+
+    public async ValueTask<DismantleDeckResult> DismantleDeckAsync(DismantleDeckInputModel model)
+    {
+        Deck? deck = null;
+        Container? container = null;
+
+        deck = await _db
+            .Decks
+            .Include(d => d.Cards)
+            .FirstOrDefaultAsync(d => d.Id == model.DeckId);
+
+        if (deck == null)
+            throw new Exception("No such deck with given id");
+
+        if (model.ContainerId.HasValue)
+        {
+            container = await _db
+                .Containers
+                .Include(c => c.Cards)
+                .FirstOrDefaultAsync(cnt => cnt.Id == model.ContainerId.Value);
+
+            if (container == null)
+                throw new Exception("No such container with given id");
+        }
+
+        int removed = 0;
+
+        // Assign cards in deck to container (if specified, if null they become "unassigned")
+        foreach (var cardSku in deck.Cards)
+        {
+            cardSku.Deck = null;
+            cardSku.Container = container;
+            // As this is no longer part of a deck, clear the sideboard flag
+            cardSku.IsSideboard = false;
+
+            removed += cardSku.Quantity;
+        }
+
+        _db.Decks.Remove(deck);
+        await _db.SaveChangesAsync();
+
+        return new DismantleDeckResult
+        {
+            Removed = removed,
+            ContainerName = container?.Name
+        };
+    }
+
+    public async Task<CardSkuModel> SplitCardSkuAsync(SplitCardSkuInputModel model)
+    {
+        var sku = await _db
+            .Cards
+            .Include(c => c.Container)
+            .Include(c => c.Deck)
+            .FirstOrDefaultAsync(c => c.Id == model.CardSkuId);
+        if (sku == null)
+            throw new Exception("Card sku not found");
+
+        if (sku.DeckId != null)
+            throw new Exception("Card sku belongs to an existing deck and cannot be split off");
+
+        if (model.Quantity <= 0)
+            throw new Exception("Quantity must be greater than 0");
+
+        if (model.Quantity >= sku.Quantity)
+            throw new Exception($"Quantity must be less than {sku.Quantity}");
+
+        var newSku = sku.RemoveQuantity(model.Quantity);
+        newSku.Container = sku.Container;
+
+        await _db.Cards.AddAsync(newSku);
+        await _db.SaveChangesAsync();
+
+        _db.Entry(newSku).Reference(p => p.Container).Load();
+        _db.Entry(newSku).Reference(p => p.Deck).Load();
+
+        return CardSkuToModel(newSku);
+    }
+
+    public async ValueTask<CardSkuModel> UpdateCardSkuAsync(UpdateCardSkuInputModel model)
+    {
+        if (model.Quantity.HasValue && model.Quantity <= 0)
+            throw new Exception("Quantity cannot be 0");
+
+        var sku = await _db.Cards.FirstOrDefaultAsync(c => c.Id == model.Id);
+        if (sku == null)
+            throw new Exception("Card sku not found");
+
+        if (model.Condition != null)
+            sku.Condition = model.Condition;
+        if (model.Comments != null)
+            sku.Comments = model.Comments;
+        if (model.Edition != null)
+            sku.Comments = model.Edition;
+        if (model.Language != null)
+            sku.Language = model.Language;
+        if (model.Quantity != null)
+            sku.Quantity = model.Quantity.Value;
+        if (model.DeckId != null)
+            sku.DeckId = model.DeckId;
+        if (model.ContainerId != null)
+            sku.ContainerId = model.ContainerId;
+
+        if (model.UnsetDeck)
+        {
+            sku.DeckId = null;
+            sku.Deck = null;
+        }
+        if (model.UnsetContainer)
+        {
+            sku.ContainerId = null;
+            sku.Container = null;
+        }
+
+        await _db.SaveChangesAsync();
+
+        _db.Entry(sku).Reference(p => p.Container).Load();
+        _db.Entry(sku).Reference(p => p.Deck).Load();
+
+        return CardSkuToModel(sku);
+    }
+
+    record struct CardIdentityKey(string name, string edition, string? language, CardCondition? condition, string? comments);
+    record struct ContainerIdentityKey(string containerId, string deckId);
+
+    public async ValueTask<(int skusUpdated, int skusRemoved)> ConsolidateCardSkusAsync(ConsolidateCardSkusInputModel model)
+    {
+        IQueryable<CardSku> cards = _db.Cards;
+        if (model.DeckId.HasValue || model.ContainerId.HasValue)
+        {
+            if (model.DeckId.HasValue)
+            {
+                cards = cards.Where(c => c.DeckId == model.DeckId);
+            }
+            if (model.ContainerId.HasValue)
+            {
+                cards = cards.Where(c => c.ContainerId == model.ContainerId);
+            }
+        }
+        else
+        {
+            cards = cards.Where(c => c.DeckId == null && c.ContainerId == null);
+        }
+
+        var mergeCandidates = cards
+            .GroupBy(c => new CardIdentityKey(c.CardName, c.Edition, c.Language, c.Condition, c.Comments))
+            .Where(grp => grp.Count() > 1)
+            .Select(grp => new { Items = grp.ToList() });
+
+        // All clear. Now we can merge
+        var skusRemoved = 0;
+        var skusUpdated = 0;
+        foreach (var grp in mergeCandidates)
+        {
+            var targetSku = grp.Items[0];
+            var skus = grp.Items.Skip(1);
+
+            // Update quantity of merge target
+            foreach (var sku in skus)
+            {
+                targetSku.Quantity += sku.Quantity;
+                // Now remove the merge source
+                _db.Cards.Remove(sku);
+                skusRemoved++;
+            }
+            skusUpdated++;
+        }
+
+        await _db.SaveChangesAsync();
+
+        return (skusUpdated, skusRemoved);
     }
 }

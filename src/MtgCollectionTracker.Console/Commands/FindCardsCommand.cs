@@ -30,11 +30,12 @@ internal class FindCardsCommand : CommandBase
             nameof(CardSkuModel.Edition),
             nameof(CardSkuModel.Language),
             nameof(CardSkuModel.DeckName), 
-            nameof(CardSkuModel.ContainerName));
+            nameof(CardSkuModel.ContainerName),
+            nameof(CardSkuModel.Comments));
 
         foreach (var m in matches)
         {
-            table.AddRow(m.Id, m.Quantity, m.CardName, m.Edition, m.Language, m.DeckName, m.ContainerName);
+            table.AddRow(m.Id, m.Quantity, m.CardName, m.Edition, m.Language, m.DeckName, m.ContainerName, m.Comments);
         }
 
         table.Write();
