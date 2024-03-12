@@ -95,6 +95,10 @@ public class CollectionTrackingService
             var s = FixCardName(query.SearchFilter);
             queryable = queryable.Where(c => c.CardName.Contains(s));
         }
+        else if (query.CardSkuIds != null)
+        {
+            queryable = queryable.Where(c => query.CardSkuIds.Contains(c.Id));
+        }
         if (query.ContainerIds?.Length > 0)
             queryable = queryable.Where(c => c.ContainerId != null && query.ContainerIds.Contains((int)c.ContainerId));
 
