@@ -184,7 +184,15 @@ public class CollectionTrackingService
         else //Add quantity to this existing sku
         {
             mergeSku.Quantity += model.Quantity;
+
+            var rSku = sku.RemoveQuantity(model.Quantity);
+            if (sku == rSku) // We removed entire quantity, then this sku needs to be removed
+            {
+                _db.Cards.Remove(sku);
+            }
+
             theSku = mergeSku;
+
             wasMerged = true;
         }
 
