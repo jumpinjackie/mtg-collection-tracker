@@ -1,9 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Data;
-using System.Collections.Concurrent;
 using System.Linq.Expressions;
-using System.Security.Cryptography;
 using System.Text;
 
 namespace MtgCollectionTracker.Core.Services;
@@ -36,17 +34,30 @@ public class CollectionTrackingService
     /// <param name="noProxies">If true, excludes proxies and non-legal sets from the card search</param>
     /// <param name="sparesOnly">If true, excludes from the card search skus that are part of an existing deck</param>
     /// <returns>If positive, there is a shortfall in your collection. If 0 or negative, the requested <paramref name="wantQty"/> can be met by your collection</returns>
-    public async ValueTask<int> CheckQuantityShortfallAsync(string cardName, int wantQty, bool noProxies, bool sparesOnly)
+    public async ValueTask<(int shortAmount, HashSet<string> fromDeckNames, HashSet<string> fromContainerNames)> CheckQuantityShortfallAsync(string cardName, int wantQty, bool noProxies, bool sparesOnly)
     {
         var cn = FixCardName(cardName);
-        var skus = _db.Cards.Where(s => s.CardName == cn);
+        var skus = _db.Cards.Include(c => c.Deck).Include(c => c.Container).Where(s => s.CardName == cn);
         if (noProxies)
             skus = skus.Where(s => !proxySets.Contains(s.Edition));
         if (sparesOnly) // A spare is any sku not belonging to an existing deck
-            skus = skus.Where(S => S.DeckId == null);
+            skus = skus.Where(s => s.DeckId == null);
 
-        var availableTotal = await skus.SumAsync(s => s.Quantity);
-        return wantQty - availableTotal;
+        HashSet<string> fromDeckNames = new();
+        HashSet<string> fromContainerNames = new();
+        var matchingSkus = await skus.ToListAsync();
+        foreach (var sku in matchingSkus)
+        {
+            if (sku.Deck != null)
+                fromDeckNames.Add(sku.Deck.Name);
+            else if (sku.Container != null)
+                fromContainerNames.Add(sku.Container.Name);
+            else
+                fromContainerNames.Add("<un-assigned>");
+        }
+
+        var availableTotal = matchingSkus.Sum(s => s.Quantity);
+        return (wantQty - availableTotal, fromDeckNames, fromContainerNames);
     }
 
     public IEnumerable<ContainerSummaryModel> GetContainers()
@@ -117,8 +128,8 @@ public class CollectionTrackingService
                 CardName = c.CardName,
                 Comments = c.Comments,
                 Condition = c.Condition,
-                ContainerName = c.Container!.Name,
-                DeckName = c.Deck!.Name,
+                ContainerName = c.Container != null ? c.Container.Name + " (" + c.ContainerId + ")" : null,
+                DeckName = c.Deck != null ? c.Deck.Name + " (" + c.DeckId + ")" : null,
                 Edition = c.Edition,
                 Id = c.Id,
                 IsFoil = c.IsFoil,
@@ -166,6 +177,8 @@ public class CollectionTrackingService
             // Un-set sideboard flag as we're removing from deck
             newSku.IsSideboard = false;
 
+            await _db.Cards.AddAsync(newSku);
+
             theSku = newSku;
         }
         else //Add quantity to this existing sku
@@ -195,7 +208,7 @@ public class CollectionTrackingService
             throw new Exception("Card sku not found");
 
         if (model.Quantity > sku.Quantity)
-            throw new InvalidOperationException($"The specified quantiy {model.Quantity} cannot be satsified by this sku, which has a quantity of {sku.Quantity}");
+            throw new InvalidOperationException($"The specified quantiy {model.Quantity} cannot be satisfied by this sku, which has a quantity of {sku.Quantity}");
 
         if (sku.Deck != null)
             throw new InvalidOperationException($"The given sku already belongs to deck: {sku.Deck.Name}");
@@ -209,13 +222,7 @@ public class CollectionTrackingService
 
         var newSku = sku.RemoveQuantity(model.Quantity);
         newSku.Deck = deck;
-        //A deck resides in a container, thus this card sku resides in the same
-        //container by implication.
-        //
-        //NOTE: This may look like a redundant property as it could be inferred by looking at the
-        //deck's container. But we need this to be able cover "spares" or cards that don't belong
-        //to decks
-        newSku.Container = deck.Container;
+        newSku.Container = null; // Container (if any) is inferred by the container of the deck
         newSku.IsSideboard = model.IsSideboard;
 
         await _db.SaveChangesAsync();
@@ -364,7 +371,7 @@ public class CollectionTrackingService
         // Collector's edition
         "CED",
         "CEI",
-        // 30th Anniversary Edition. 15 card proxy boosters, all for the low-low price of $1000 USD!
+        // 30th Anniversary Edition. 15 card proxy booster packs, all for the low-low price of $1000 USD a pack!
         "30A"
     ];
 
@@ -630,5 +637,25 @@ public class CollectionTrackingService
         await _db.SaveChangesAsync();
 
         return (skusUpdated, skusRemoved);
+    }
+
+    public bool IsBasicLand(string cardName)
+    {
+        switch (cardName.ToLower())
+        {
+            case "plains":
+            case "island":
+            case "swamp":
+            case "mountain":
+            case "forest":
+            case "snow-covered plains":
+            case "snow-covered island":
+            case "snow-covered swamp":
+            case "snow-covered mountain":
+            case "snow-covered forest":
+            case "wastes":
+                return true;
+        }
+        return false;
     }
 }
