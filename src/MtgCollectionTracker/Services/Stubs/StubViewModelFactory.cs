@@ -16,4 +16,8 @@ public class StubViewModelFactory : IViewModelFactory
     public DeckCollectionViewModel Decks() => new DeckCollectionViewModel();
 
     public ContainerSetViewModel Containers() => new ContainerSetViewModel();
+
+    public DrawerViewModel Drawer() => new DrawerViewModel();
+
+    public AddCardsViewModel AddCards() => new AddCardsViewModel();
 }

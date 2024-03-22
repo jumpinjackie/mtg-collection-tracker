@@ -1,8 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services.Contracts;
+using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using System;
 using System.Collections.ObjectModel;
@@ -12,20 +14,24 @@ namespace MtgCollectionTracker.ViewModels;
 
 public partial class CardsViewModel : ViewModelBase
 {
+    readonly IMessenger _messenger;
     readonly IViewModelFactory _vmFactory;
     readonly ICollectionTrackingService _service;
 
     public CardsViewModel()
     {
         base.ThrowIfNotDesignMode();
+        _messenger = WeakReferenceMessenger.Default;
         _vmFactory = new StubViewModelFactory();
         _service = new StubCollectionTrackingService();
         this.SelectedCardSkus.CollectionChanged += SelectedCardSkus_CollectionChanged;
     }
 
-    public CardsViewModel(IViewModelFactory vmFactory,
+    public CardsViewModel(IMessenger messenger,
+                          IViewModelFactory vmFactory,
                           ICollectionTrackingService service)
     {
+        _messenger = messenger;
         _vmFactory = vmFactory;
         _service = service;
         this.SelectedCardSkus.CollectionChanged += SelectedCardSkus_CollectionChanged;
@@ -153,7 +159,10 @@ public partial class CardsViewModel : ViewModelBase
     [RelayCommand]
     private void AddSkus()
     {
-
+        _messenger.Send(new OpenDrawerMessage
+        {
+            ViewModel = _vmFactory.Drawer().WithContent("Add Cards", _vmFactory.AddCards())
+        });
     }
 
     [RelayCommand]

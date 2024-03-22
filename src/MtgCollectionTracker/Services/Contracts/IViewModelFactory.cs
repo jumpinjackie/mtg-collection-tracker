@@ -15,4 +15,8 @@ public interface IViewModelFactory
     ContainerViewModel Container();
 
     DeckViewModel Deck();
+
+    DrawerViewModel Drawer();
+
+    AddCardsViewModel AddCards();
 }

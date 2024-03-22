@@ -12,16 +12,23 @@
          to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
 		<vm:MainViewModel />
 	</Design.DataContext>
-
-	<TabControl Margin="5">
-		<TabItem Header="Cards">
-			<views:CardsView DataContext="{Binding Cards}" />
-		</TabItem>
-		<TabItem Header="Containers">
-			<views:ContainerSetView DataContext="{Binding Containers}" />
-		</TabItem>
-		<TabItem Header="Decks">
-			<views:DeckCollectionView DataContext="{Binding Decks}" />
-		</TabItem>
-	</TabControl>
+	<SplitView IsPaneOpen="{Binding IsDrawerOpen}"
+			   DisplayMode="Overlay"
+			   PanePlacement="Right"
+			   OpenPaneLength="{Binding DrawerWidth}">
+		<SplitView.Pane>
+			<views:DrawerView DataContext="{Binding Drawer}" />
+		</SplitView.Pane>
+		<TabControl Margin="5">
+			<TabItem Header="Cards">
+				<views:CardsView DataContext="{Binding Cards}" />
+			</TabItem>
+			<TabItem Header="Containers">
+				<views:ContainerSetView DataContext="{Binding Containers}" />
+			</TabItem>
+			<TabItem Header="Decks">
+				<views:DeckCollectionView DataContext="{Binding Decks}" />
+			</TabItem>
+		</TabControl>
+	</SplitView>
 </UserControl>

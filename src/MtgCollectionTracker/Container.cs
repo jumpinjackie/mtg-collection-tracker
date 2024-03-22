@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using CommunityToolkit.Mvvm.Messaging;
+using Microsoft.EntityFrameworkCore;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Data;
 using MtgCollectionTracker.Services;
@@ -15,6 +16,8 @@ namespace MtgCollectionTracker;
 [Register(typeof(CardSkuItemViewModel), Scope.InstancePerResolution)]
 [Register(typeof(DeckViewModel), Scope.InstancePerResolution)]
 [Register(typeof(ContainerViewModel), Scope.InstancePerResolution)]
+[Register(typeof(DrawerViewModel), Scope.InstancePerResolution)]
+[Register(typeof(AddCardsViewModel), Scope.InstancePerResolution)]
 [Register(typeof(CardsDbContext), Scope.InstancePerResolution)]
 [Register(typeof(CollectionTrackingService), Scope.InstancePerResolution, typeof(ICollectionTrackingService))]
 [Register(typeof(ViewModelFactory), Scope.SingleInstance, typeof(IViewModelFactory))]
@@ -27,4 +30,7 @@ public partial class Container : IContainer<MainViewModel>
             .UseSqlite("Data Source=collection.sqlite")
             .Options;
     }
+
+    [Factory(Scope.SingleInstance)]
+    public IMessenger GetMessenger() => WeakReferenceMessenger.Default;
 }
