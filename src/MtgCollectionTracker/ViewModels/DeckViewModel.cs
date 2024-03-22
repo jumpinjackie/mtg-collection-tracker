@@ -28,12 +28,20 @@ public partial class DeckViewModel : ViewModelBase
     [ObservableProperty]
     private string? _containerName;
 
+    [ObservableProperty]
+    private string _maindeck;
+
+    [ObservableProperty]
+    private string _sideboard;
+
     public DeckViewModel WithData(DeckSummaryModel deck)
     {
         this.Name = deck.Format?.Length > 0
             ? $"[{deck.Format}] {deck.Name}"
             : deck.Name;
         this.ContainerName = deck.ContainerName;
+        this.Maindeck = $"MD: {deck.MaindeckTotal}";
+        this.Sideboard = $"SB: {deck.SideboardTotal}";
         return this;
     }
 }

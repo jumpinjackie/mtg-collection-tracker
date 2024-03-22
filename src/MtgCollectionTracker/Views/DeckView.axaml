@@ -20,5 +20,9 @@
 			</Panel>
 		</Border>
 		<TextBlock Text="{Binding Name}" ToolTip.Tip="{Binding Name}" HorizontalAlignment="Center" />
+		<Grid ColumnDefinitions="*, *">
+			<TextBlock Grid.Column="0" Text="{Binding Maindeck}" ToolTip.Tip="{Binding Name}" HorizontalAlignment="Center" />
+			<TextBlock Grid.Column="1" Text="{Binding Sideboard}" ToolTip.Tip="{Binding Name}" HorizontalAlignment="Center" />
+		</Grid>
 	</StackPanel>
 </UserControl>
