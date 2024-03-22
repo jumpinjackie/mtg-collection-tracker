@@ -6,7 +6,7 @@ using System.Text;
 
 namespace MtgCollectionTracker.Core.Services;
 
-public class CollectionTrackingService
+public class CollectionTrackingService : ICollectionTrackingService
 {
     readonly CardsDbContext _db;
 
@@ -104,7 +104,7 @@ public class CollectionTrackingService
         if (!string.IsNullOrEmpty(query.SearchFilter))
         {
             var s = FixCardName(query.SearchFilter);
-            queryable = queryable.Where(c => c.CardName.Contains(s));
+            queryable = queryable.Where(c => c.CardName.ToLower().Contains(s.ToLower()));
         }
         else if (query.CardSkuIds != null)
         {

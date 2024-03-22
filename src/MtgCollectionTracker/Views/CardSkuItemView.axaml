@@ -6,6 +6,11 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="MtgCollectionTracker.Views.CardSkuItemView"
 			 x:DataType="vm:CardSkuItemViewModel">
+	<Design.DataContext>
+		<!-- This only sets the DataContext for the previewer in an IDE,
+         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+		<vm:CardSkuItemViewModel />
+	</Design.DataContext>
 	<StackPanel Spacing="5" Width="200">
 		<Border CornerRadius="10" ClipToBounds="True">
 			<Panel Background="#7FFF22DD">
@@ -15,7 +20,11 @@
 				</Panel>
 			</Panel>
 		</Border>
-		<TextBlock Text="{Binding CardName}" HorizontalAlignment="Center" />
-		<TextBlock Text="{Binding Quantity}" HorizontalAlignment="Center" />
+		<TextBlock Grid.Column="0" Text="{Binding CardName}" HorizontalAlignment="Center" />
+		<Grid ColumnDefinitions="*, *, *">
+			<TextBlock Grid.Column="0" Text="{Binding Quantity}" HorizontalAlignment="Center" />
+			<TextBlock Grid.Column="1" Text="{Binding Edition}" HorizontalAlignment="Center" />
+			<TextBlock Grid.Column="2" Text="{Binding Language}" HorizontalAlignment="Center" />
+		</Grid>
 	</StackPanel>
 </UserControl>

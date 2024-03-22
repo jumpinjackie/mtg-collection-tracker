@@ -24,6 +24,11 @@
 
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="StrongInject" Version="1.4.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MtgCollectionTracker.Core\MtgCollectionTracker.Core.csproj" />
   </ItemGroup>
 
   <ItemGroup>

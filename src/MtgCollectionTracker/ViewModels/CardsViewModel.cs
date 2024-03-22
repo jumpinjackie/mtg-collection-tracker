@@ -1,16 +1,40 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MtgCollectionTracker.Core.Services;
+using MtgCollectionTracker.Services.Contracts;
+using MtgCollectionTracker.Services.Stubs;
+using System;
 using System.Collections.ObjectModel;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
 public partial class CardsViewModel : ViewModelBase
 {
+    readonly IViewModelFactory _vmFactory;
+    readonly ICollectionTrackingService _service;
+
+    public CardsViewModel()
+    {
+        base.ThrowIfNotDesignMode();
+        _vmFactory = new StubViewModelFactory();
+        _service = new StubCollectionTrackingService();
+    }
+
+    public CardsViewModel(IViewModelFactory vmFactory,
+                          ICollectionTrackingService service)
+    {
+        _vmFactory = vmFactory;
+        _service = service;
+    }
+
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanSearch))]
     private string? _searchText;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanSearch))]
     private bool _isBusy = false;
 
     //private CancellationTokenSource? _cancellationTokenSource;
@@ -18,6 +42,8 @@ public partial class CardsViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasSelectedCardSku))]
     private CardSkuItemViewModel? _selectedCardSku;
+
+    public bool CanSearch => !string.IsNullOrWhiteSpace(SearchText) && !IsBusy;
 
     public bool HasSelectedCardSku => SelectedCardSku != null;
 
@@ -30,16 +56,19 @@ public partial class CardsViewModel : ViewModelBase
         try
         {
             await Task.Delay(1000);
+            var cards = _service.GetCards(new Core.Model.CardQueryModel
+            {
+                SearchFilter = this.SearchText
+            });
             this.SearchResults.Clear();
-            this.SearchResults.Add(new CardSkuItemViewModel { CardName = "Black Lotus", Edition = "2ED", Quantity = 1 });
-            this.SearchResults.Add(new CardSkuItemViewModel { CardName = "Mox Pearl", Edition = "2ED", Quantity = 1 });
-            this.SearchResults.Add(new CardSkuItemViewModel { CardName = "Mox Emerald", Edition = "2ED", Quantity = 1 });
-            this.SearchResults.Add(new CardSkuItemViewModel { CardName = "Mox Ruby", Edition = "2ED", Quantity = 1 });
-            this.SearchResults.Add(new CardSkuItemViewModel { CardName = "Mox Jet", Edition = "2ED", Quantity = 1 });
-            this.SearchResults.Add(new CardSkuItemViewModel { CardName = "Mox Sapphire", Edition = "2ED", Quantity = 1 });
-            this.SearchResults.Add(new CardSkuItemViewModel { CardName = "Ancestral Recall", Edition = "2ED", Quantity = 1 });
-            this.SearchResults.Add(new CardSkuItemViewModel { CardName = "Time Walk", Edition = "2ED", Quantity = 1 });
-            this.SearchResults.Add(new CardSkuItemViewModel { CardName = "Timetwister", Edition = "2ED", Quantity = 1 });
+            foreach (var sku in cards)
+            {
+                this.SearchResults.Add(_vmFactory.CardSku().WithData(sku));
+            }
+        }
+        catch (Exception ex)
+        {
+
         }
         finally
         {

@@ -10,7 +10,7 @@
 		<StackPanel DockPanel.Dock="Top">
 			<Grid ColumnDefinitions="*, 100">
 				<TextBox Grid.Column="0" Text="{Binding SearchText}" Watermark="Search for cards...." />
-				<Button Command="{Binding PerformSearchCommand}" IsEnabled="{Binding !IsBusy}" Grid.Column="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">Search</Button>
+				<Button Command="{Binding PerformSearchCommand}" IsEnabled="{Binding CanSearch}" Grid.Column="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">Search</Button>
 			</Grid>
 			<ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
 		</StackPanel>
