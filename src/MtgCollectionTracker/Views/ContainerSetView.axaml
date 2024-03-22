@@ -11,12 +11,19 @@
 			<Button Command="{Binding AddContainerCommand}" Content="Add New" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding HasSelectedContainer}" Command="{Binding ViewContainerCommand}" Content="View Container" HorizontalAlignment="Center" />
 		</StackPanel>
-		<ListBox ItemsSource="{Binding Containers}" SelectedItem="{Binding SelectedContainer}" Background="Transparent" Margin="0 20">
-			<ListBox.ItemsPanel>
-				<ItemsPanelTemplate>
-					<WrapPanel />
-				</ItemsPanelTemplate>
-			</ListBox.ItemsPanel>
-		</ListBox>
+		<Panel>
+			<ListBox IsVisible="{Binding Containers.Count}" ItemsSource="{Binding Containers}" SelectedItem="{Binding SelectedContainer}" Background="Transparent" Margin="0 20">
+				<ListBox.ItemsPanel>
+					<ItemsPanelTemplate>
+						<WrapPanel />
+					</ItemsPanelTemplate>
+				</ListBox.ItemsPanel>
+			</ListBox>
+			<StackPanel IsVisible="{Binding !Containers.Count}" VerticalAlignment="Center" HorizontalAlignment="Center">
+				<TextBlock HorizontalAlignment="Center" Text="You have no containers in your collection. Add one using the action below." />
+				<TextBlock HorizontalAlignment="Center" Text="A container represents anything that holds a bunch of cards." />
+				<TextBlock HorizontalAlignment="Center" Text="It could be a trade binder. It could even be a shoebox :)" />
+			</StackPanel>
+		</Panel>
 	</DockPanel>
 </UserControl>

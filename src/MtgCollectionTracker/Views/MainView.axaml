@@ -14,7 +14,7 @@
 	</Design.DataContext>
 
 	<TabControl Margin="5">
-		<TabItem Header="Card SKUs">
+		<TabItem Header="Cards">
 			<views:CardsView DataContext="{Binding Cards}" />
 		</TabItem>
 		<TabItem Header="Containers">

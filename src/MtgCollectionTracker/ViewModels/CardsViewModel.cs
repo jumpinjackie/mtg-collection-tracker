@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Stubs;
@@ -32,35 +33,53 @@ public partial class CardsViewModel : ViewModelBase
 
     internal void Load()
     {
-        var totals = _service.GetCollectionSummary();
+        if (Avalonia.Controls.Design.IsDesignMode)
+        {
+            ApplyTotals(CollectionSummaryModel.Empty());
+        }
+        else
+        {
+            var totals = _service.GetCollectionSummary();
+            ApplyTotals(totals);
+        }
+    }
+
+    private void ApplyTotals(CollectionSummaryModel totals)
+    {
         this.CardTotal = totals.CardTotal;
         this.ProxyTotal = totals.ProxyTotal;
         this.SkuTotal = totals.SkuTotal;
-        this.DeckTotal = totals.DeckTotal;
-        this.ContainerTotal = totals.ContainerTotal;
+
+        this.ShowFirstTimeMessage = !this.IsEmptyCollection;
     }
 
-    public string CollectionSummary => $"{this.CardTotal} cards ({this.ProxyTotal} proxies) across {this.SkuTotal} skus, {this.DeckTotal} decks and {this.ContainerTotal} containers";
+    public string CollectionSummary => $"{this.CardTotal} cards ({this.ProxyTotal} proxies) across {this.SkuTotal} skus";
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CollectionSummary))]
+    [NotifyPropertyChangedFor(nameof(IsEmptyCollection))]
     private int _cardTotal = 0;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CollectionSummary))]
+    [NotifyPropertyChangedFor(nameof(IsEmptyCollection))]
     private int _proxyTotal = 0;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CollectionSummary))]
+    [NotifyPropertyChangedFor(nameof(IsEmptyCollection))]
     private int _skuTotal = 0;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CollectionSummary))]
-    private int _deckTotal = 0;
+    public bool IsEmptyCollection => this.CardTotal == 0 && this.ProxyTotal == 0;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CollectionSummary))]
-    private int _containerTotal = 0;
+    private bool _showSearchResults = false;
+
+    [ObservableProperty]
+    private bool _showFirstTimeMessage = false;
+
+    [ObservableProperty]
+    private bool _showEmptyMessage = false;
 
     private void SelectedCardSkus_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
@@ -106,6 +125,8 @@ public partial class CardsViewModel : ViewModelBase
     private async Task PerformSearch()
     {
         this.IsBusy = true;
+        this.ShowFirstTimeMessage = false;
+        this.ShowSearchResults = true;
         try
         {
             await Task.Delay(1000);

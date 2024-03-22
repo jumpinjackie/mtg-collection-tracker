@@ -6,8 +6,13 @@
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="MtgCollectionTracker.Views.CardsView"
 			 x:DataType="vm:CardsViewModel">
+	<Design.DataContext>
+		<!-- This only sets the DataContext for the previewer in an IDE,
+         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+		<vm:CardsViewModel />
+	</Design.DataContext>
 	<DockPanel>
-		<StackPanel DockPanel.Dock="Top">
+		<StackPanel IsVisible="{Binding !IsEmptyCollection}" DockPanel.Dock="Top">
 			<Grid ColumnDefinitions="*, 100">
 				<TextBox Grid.Column="0" Text="{Binding SearchText}" KeyUp="OnSearchKeyUp" Watermark="Search for cards...." />
 				<Button Command="{Binding PerformSearchCommand}" IsEnabled="{Binding CanSearch}" Grid.Column="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">Search</Button>
@@ -23,12 +28,16 @@
 			<Button IsEnabled="{Binding CanSplitCardSku}" Command="{Binding SplitSelectedSkuCommand}" Content="Split" HorizontalAlignment="Center" />
 			<TextBlock Margin="6" VerticalAlignment="Center" Text="{Binding CollectionSummary}" />
 		</StackPanel>
-		<ListBox ItemsSource="{Binding SearchResults}" SelectionMode="Multiple" SelectedItems="{Binding SelectedCardSkus}" Background="Transparent" Margin="0 20">
-			<ListBox.ItemsPanel>
-				<ItemsPanelTemplate>
-					<WrapPanel />
-				</ItemsPanelTemplate>
-			</ListBox.ItemsPanel>
-		</ListBox>
+		<Panel>
+			<ListBox IsVisible="{Binding ShowSearchResults}" ItemsSource="{Binding SearchResults}" SelectionMode="Multiple" SelectedItems="{Binding SelectedCardSkus}" Background="Transparent" Margin="0 20">
+				<ListBox.ItemsPanel>
+					<ItemsPanelTemplate>
+						<WrapPanel />
+					</ItemsPanelTemplate>
+				</ListBox.ItemsPanel>
+			</ListBox>
+			<TextBlock IsVisible="{Binding ShowFirstTimeMessage}" VerticalAlignment="Center" HorizontalAlignment="Center" Text="Start searching for cards in your collection" />
+			<TextBlock IsVisible="{Binding IsEmptyCollection}" VerticalAlignment="Center" HorizontalAlignment="Center" Text="Your collection is empty. Add cards to your collection below" />
+		</Panel>
 	</DockPanel>
 </UserControl>

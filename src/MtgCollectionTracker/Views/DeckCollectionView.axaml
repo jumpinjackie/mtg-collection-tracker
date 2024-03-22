@@ -14,12 +14,15 @@
 			<Button IsEnabled="{Binding HasSelectedDeck}" Command="{Binding ViewDeckContentsCommand}" Content="View Deck" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding HasSelectedDeck}" Command="{Binding CheckDeckLegalityCommand}" Content="Check Legality" HorizontalAlignment="Center" />
 		</StackPanel>
-		<ListBox ItemsSource="{Binding Decks}" SelectedItem="{Binding SelectedDeck}" Background="Transparent" Margin="0 20">
-			<ListBox.ItemsPanel>
-				<ItemsPanelTemplate>
-					<WrapPanel />
-				</ItemsPanelTemplate>
-			</ListBox.ItemsPanel>
-		</ListBox>
+		<Panel>
+			<ListBox IsVisible="{Binding Decks.Count}" ItemsSource="{Binding Decks}" SelectedItem="{Binding SelectedDeck}" Background="Transparent" Margin="0 20">
+				<ListBox.ItemsPanel>
+					<ItemsPanelTemplate>
+						<WrapPanel />
+					</ItemsPanelTemplate>
+				</ListBox.ItemsPanel>
+			</ListBox>
+			<TextBlock IsVisible="{Binding !Decks.Count}" VerticalAlignment="Center" HorizontalAlignment="Center" Text="You have no decks in your collection. Add one using the action below" />
+		</Panel>
 	</DockPanel>
 </UserControl>

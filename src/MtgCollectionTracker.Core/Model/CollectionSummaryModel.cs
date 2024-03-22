@@ -11,4 +11,16 @@ public class CollectionSummaryModel
     public int DeckTotal { get; init; }
 
     public int ContainerTotal { get; set; }
+
+    public static CollectionSummaryModel Empty()
+    {
+        return new CollectionSummaryModel
+        {
+            CardTotal = 0,
+            ProxyTotal = 0,
+            SkuTotal = 0,
+            DeckTotal = 0,
+            ContainerTotal = 0
+        };
+    }
 }
