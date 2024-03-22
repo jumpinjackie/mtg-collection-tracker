@@ -26,6 +26,8 @@ public partial class CardSkuItemViewModel : ViewModelBase
         this.CardName = sku.Edition == "PROXY" ? "[Proxy] " + sku.CardName : sku.CardName;
         if (sku.Edition != "PROXY")
             this.Edition = sku.Edition;
+        else
+            this.Edition = string.Empty;
         this.Quantity = $"Qty: {sku.Quantity}";
         this.Language = sku.Language?.Length > 0 ? sku.Language : "EN";
         return this;

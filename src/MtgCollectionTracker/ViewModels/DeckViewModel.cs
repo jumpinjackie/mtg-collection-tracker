@@ -1,7 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Stubs;
+using System.Reflection;
 
 namespace MtgCollectionTracker.ViewModels;
 

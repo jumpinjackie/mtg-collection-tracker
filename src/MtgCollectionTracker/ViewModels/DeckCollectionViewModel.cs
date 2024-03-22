@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Stubs;
@@ -37,5 +38,38 @@ public partial class DeckCollectionViewModel : ViewModelBase
     public ObservableCollection<DeckViewModel> Decks { get; } = new();
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasSelectedDeck))]
     private DeckViewModel? _selectedDeck;
+
+    public bool HasSelectedDeck => this.SelectedDeck != null;
+
+    [RelayCommand]
+    private void AddDeck()
+    {
+
+    }
+
+    [RelayCommand]
+    private void DismantleDeck()
+    {
+
+    }
+
+    [RelayCommand]
+    private void CanIBuildThisDeck()
+    {
+
+    }
+
+    [RelayCommand]
+    private void ViewDeckContents()
+    {
+
+    }
+
+    [RelayCommand]
+    private void CheckDeckLegality()
+    {
+
+    }
 }

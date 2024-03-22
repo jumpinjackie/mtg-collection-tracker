@@ -21,5 +21,6 @@ namespace MtgCollectionTracker.Core.Services
         ValueTask<(CardSkuModel sku, bool wasMerged)> RemoveFromDeckAsync(RemoveFromDeckInputModel model);
         Task<CardSkuModel> SplitCardSkuAsync(SplitCardSkuInputModel model);
         ValueTask<int> UpdateCardSkuAsync(UpdateCardSkuInputModel model);
+        CollectionSummaryModel GetCollectionSummary();
     }
 }

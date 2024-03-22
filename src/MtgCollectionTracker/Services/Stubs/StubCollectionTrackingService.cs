@@ -57,6 +57,11 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
+    public CollectionSummaryModel GetCollectionSummary()
+    {
+        throw new System.NotImplementedException();
+    }
+
     public IEnumerable<ContainerSummaryModel> GetContainers()
     {
         throw new System.NotImplementedException();

@@ -1,4 +1,5 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Stubs;
@@ -37,5 +38,20 @@ public partial class ContainerSetViewModel : ViewModelBase
     public ObservableCollection<ContainerViewModel> Containers { get; } = new();
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasSelectedContainer))]
     private ContainerViewModel? _selectedContainer;
+
+    public bool HasSelectedContainer => this.SelectedContainer != null;
+
+    [RelayCommand]
+    private void AddContainer()
+    {
+
+    }
+
+    [RelayCommand]
+    private void ViewContainer()
+    {
+
+    }
 }

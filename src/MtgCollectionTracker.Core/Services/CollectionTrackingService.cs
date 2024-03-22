@@ -666,4 +666,16 @@ public class CollectionTrackingService : ICollectionTrackingService
         }
         return false;
     }
+
+    public CollectionSummaryModel GetCollectionSummary()
+    {
+        return new CollectionSummaryModel
+        {
+            SkuTotal = _db.Cards.Count(),
+            ProxyTotal = _db.Cards.Where(sku => sku.Edition == "PROXY").Sum(sku => sku.Quantity),
+            CardTotal = _db.Cards.Sum(sku => sku.Quantity),
+            DeckTotal = _db.Decks.Count(),
+            ContainerTotal = _db.Containers.Count()
+        };
+    }
 }
