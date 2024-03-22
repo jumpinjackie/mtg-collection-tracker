@@ -27,11 +27,14 @@ public partial class DeckCollectionViewModel : ViewModelBase
 
     internal void LoadDecks()
     {
-        this.Decks.Clear();
-        var decks = _service.GetDecks(null);
-        foreach (var deck in decks)
+        if (!Avalonia.Controls.Design.IsDesignMode)
         {
-            this.Decks.Add(_vmFactory.Deck().WithData(deck));
+            this.Decks.Clear();
+            var decks = _service.GetDecks(null);
+            foreach (var deck in decks)
+            {
+                this.Decks.Add(_vmFactory.Deck().WithData(deck));
+            }
         }
     }
 

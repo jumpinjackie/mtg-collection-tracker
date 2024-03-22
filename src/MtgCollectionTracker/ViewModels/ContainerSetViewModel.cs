@@ -27,11 +27,14 @@ public partial class ContainerSetViewModel : ViewModelBase
 
     internal void LoadContainers()
     {
-        this.Containers.Clear();
-        var containers = _service.GetContainers();
-        foreach (var cont in containers)
+        if (!Avalonia.Controls.Design.IsDesignMode)
         {
-            this.Containers.Add(_vmFactory.Container().WithData(cont));
+            this.Containers.Clear();
+            var containers = _service.GetContainers();
+            foreach (var cont in containers)
+            {
+                this.Containers.Add(_vmFactory.Container().WithData(cont));
+            }
         }
     }
 
