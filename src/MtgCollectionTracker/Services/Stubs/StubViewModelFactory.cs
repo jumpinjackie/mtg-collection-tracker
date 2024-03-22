@@ -8,4 +8,12 @@ public class StubViewModelFactory : IViewModelFactory
     public CardsViewModel Cards() => new CardsViewModel();
 
     public CardSkuItemViewModel CardSku() => new CardSkuItemViewModel();
+
+    public ContainerViewModel Container() => new ContainerViewModel();
+
+    public DeckViewModel Deck() => new DeckViewModel();
+
+    public DeckCollectionViewModel Decks() => new DeckCollectionViewModel();
+
+    public ContainerSetViewModel Containers() => new ContainerSetViewModel();
 }

@@ -38,11 +38,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Views\CardSkuItemView.axaml.cs">
-      <DependentUpon>CardSkuItemView.axaml</DependentUpon>
-    </Compile>
     <Compile Update="Views\CardsView.axaml.cs">
       <DependentUpon>CardsView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\DeckCollectionView.axaml.cs">
+      <DependentUpon>DeckCollectionView.axaml</DependentUpon>
     </Compile>
   </ItemGroup>
 </Project>

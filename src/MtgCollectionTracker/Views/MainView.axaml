@@ -18,10 +18,10 @@
 			<views:CardsView DataContext="{Binding Cards}" />
 		</TabItem>
 		<TabItem Header="Containers">
-
+			<views:ContainerSetView DataContext="{Binding Containers}" />
 		</TabItem>
 		<TabItem Header="Decks">
-
+			<views:DeckCollectionView DataContext="{Binding Decks}" />
 		</TabItem>
 	</TabControl>
 </UserControl>

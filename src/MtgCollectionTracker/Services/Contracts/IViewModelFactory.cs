@@ -6,5 +6,13 @@ public interface IViewModelFactory
 {
     CardsViewModel Cards();
 
+    ContainerSetViewModel Containers();
+
+    DeckCollectionViewModel Decks();
+
     CardSkuItemViewModel CardSku();
+    
+    ContainerViewModel Container();
+
+    DeckViewModel Deck();
 }

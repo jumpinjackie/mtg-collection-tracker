@@ -10,7 +10,11 @@ namespace MtgCollectionTracker;
 
 [Register(typeof(MainViewModel), Scope.SingleInstance)]
 [Register(typeof(CardsViewModel), Scope.SingleInstance)]
+[Register(typeof(DeckCollectionViewModel), Scope.SingleInstance)]
+[Register(typeof(ContainerSetViewModel), Scope.SingleInstance)]
 [Register(typeof(CardSkuItemViewModel), Scope.InstancePerResolution)]
+[Register(typeof(DeckViewModel), Scope.InstancePerResolution)]
+[Register(typeof(ContainerViewModel), Scope.InstancePerResolution)]
 [Register(typeof(CardsDbContext), Scope.InstancePerResolution)]
 [Register(typeof(CollectionTrackingService), Scope.InstancePerResolution, typeof(ICollectionTrackingService))]
 [Register(typeof(ViewModelFactory), Scope.SingleInstance, typeof(IViewModelFactory))]
