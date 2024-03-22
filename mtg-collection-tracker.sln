@@ -7,14 +7,24 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{9C581D46-A54
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MtgCollectionTracker.Console", "src\MtgCollectionTracker.Console\MtgCollectionTracker.Console.csproj", "{B3B81381-A5F5-4B62-A77B-6FA63764FEC0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MtgCollectionTracker.Data", "src\MtgCollectionTracker.Data\MtgCollectionTracker.Data.csproj", "{C14E6989-4D80-4C5B-9467-198555BBE811}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MtgCollectionTracker.Data", "src\MtgCollectionTracker.Data\MtgCollectionTracker.Data.csproj", "{C14E6989-4D80-4C5B-9467-198555BBE811}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MtgCollectionTracker.Core", "src\MtgCollectionTracker.Core\MtgCollectionTracker.Core.csproj", "{C0936480-5200-498D-8B39-9E1E6D3C8A19}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MtgCollectionTracker.Core", "src\MtgCollectionTracker.Core\MtgCollectionTracker.Core.csproj", "{C0936480-5200-498D-8B39-9E1E6D3C8A19}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{474C39D7-9E53-457B-9D3C-3EEC28141233}"
 	ProjectSection(SolutionItems) = preProject
 		README.md = README.md
 	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MtgCollectionTracker", "src\MtgCollectionTracker\MtgCollectionTracker.csproj", "{53E4FB67-79D2-47F5-968C-04EB4A93F18A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MtgCollectionTracker.Android", "src\MtgCollectionTracker.Android\MtgCollectionTracker.Android.csproj", "{D406907A-CE37-425F-8D80-6BECB428508E}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MtgCollectionTracker.Browser", "src\MtgCollectionTracker.Browser\MtgCollectionTracker.Browser.csproj", "{3E59E4FD-6107-4C8C-B315-113F59025204}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MtgCollectionTracker.Desktop", "src\MtgCollectionTracker.Desktop\MtgCollectionTracker.Desktop.csproj", "{5AC48BE1-E7F4-4A22-888D-991FABC25136}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MtgCollectionTracker.iOS", "src\MtgCollectionTracker.iOS\MtgCollectionTracker.iOS.csproj", "{BC89BA05-5A7A-4068-A6A4-5C4184C2CE81}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -34,6 +44,26 @@ Global
 		{C0936480-5200-498D-8B39-9E1E6D3C8A19}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C0936480-5200-498D-8B39-9E1E6D3C8A19}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C0936480-5200-498D-8B39-9E1E6D3C8A19}.Release|Any CPU.Build.0 = Release|Any CPU
+		{53E4FB67-79D2-47F5-968C-04EB4A93F18A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{53E4FB67-79D2-47F5-968C-04EB4A93F18A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{53E4FB67-79D2-47F5-968C-04EB4A93F18A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{53E4FB67-79D2-47F5-968C-04EB4A93F18A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D406907A-CE37-425F-8D80-6BECB428508E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D406907A-CE37-425F-8D80-6BECB428508E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D406907A-CE37-425F-8D80-6BECB428508E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D406907A-CE37-425F-8D80-6BECB428508E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3E59E4FD-6107-4C8C-B315-113F59025204}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3E59E4FD-6107-4C8C-B315-113F59025204}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3E59E4FD-6107-4C8C-B315-113F59025204}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3E59E4FD-6107-4C8C-B315-113F59025204}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5AC48BE1-E7F4-4A22-888D-991FABC25136}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5AC48BE1-E7F4-4A22-888D-991FABC25136}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5AC48BE1-E7F4-4A22-888D-991FABC25136}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5AC48BE1-E7F4-4A22-888D-991FABC25136}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC89BA05-5A7A-4068-A6A4-5C4184C2CE81}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC89BA05-5A7A-4068-A6A4-5C4184C2CE81}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC89BA05-5A7A-4068-A6A4-5C4184C2CE81}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC89BA05-5A7A-4068-A6A4-5C4184C2CE81}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -42,6 +72,11 @@ Global
 		{B3B81381-A5F5-4B62-A77B-6FA63764FEC0} = {9C581D46-A54D-4C17-8058-5980122C7F1F}
 		{C14E6989-4D80-4C5B-9467-198555BBE811} = {9C581D46-A54D-4C17-8058-5980122C7F1F}
 		{C0936480-5200-498D-8B39-9E1E6D3C8A19} = {9C581D46-A54D-4C17-8058-5980122C7F1F}
+		{53E4FB67-79D2-47F5-968C-04EB4A93F18A} = {9C581D46-A54D-4C17-8058-5980122C7F1F}
+		{D406907A-CE37-425F-8D80-6BECB428508E} = {9C581D46-A54D-4C17-8058-5980122C7F1F}
+		{3E59E4FD-6107-4C8C-B315-113F59025204} = {9C581D46-A54D-4C17-8058-5980122C7F1F}
+		{5AC48BE1-E7F4-4A22-888D-991FABC25136} = {9C581D46-A54D-4C17-8058-5980122C7F1F}
+		{BC89BA05-5A7A-4068-A6A4-5C4184C2CE81} = {9C581D46-A54D-4C17-8058-5980122C7F1F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {D737EDAD-99D3-474F-9E39-6FF52EEFA06E}

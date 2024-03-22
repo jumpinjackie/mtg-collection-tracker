@@ -2,7 +2,7 @@
   "profiles": {
     "MtgCollectionTracker.Console": {
       "commandName": "Project",
-      "commandLineArgs": "can-i-build-this-deck --decklist-path \"C:\\Users\\User\\Desktop\\Legacy_Initiative_Stompy_by_SHAKELION.txt\""
+      "commandLineArgs": "update-card-sku --card-sku-ids 2949 2950 --is-land"
     }
   }
 }
