@@ -44,7 +44,7 @@ internal class ImportCommand : CommandBase
             });
 
         var service = serviceProvider.GetRequiredService<CollectionTrackingService>();
-        var (added, rows) = await service.AddMultipleToContainerOrDeckAsync(this.ContainerId, this.DeckId, input);
+        var (added, _, rows) = await service.AddMultipleToContainerOrDeckAsync(this.ContainerId, this.DeckId, input);
 
         Stdout($"{added} cards across {rows} rows added to container/deck");
 

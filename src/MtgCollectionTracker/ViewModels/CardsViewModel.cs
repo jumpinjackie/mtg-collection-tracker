@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class CardsViewModel : ViewModelBase
+public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAddedMessage>
 {
     readonly IMessenger _messenger;
     readonly IViewModelFactory _vmFactory;
@@ -25,6 +25,7 @@ public partial class CardsViewModel : ViewModelBase
         _vmFactory = new StubViewModelFactory();
         _service = new StubCollectionTrackingService();
         this.SelectedCardSkus.CollectionChanged += SelectedCardSkus_CollectionChanged;
+        this.IsActive = true;
     }
 
     public CardsViewModel(IMessenger messenger,
@@ -35,6 +36,7 @@ public partial class CardsViewModel : ViewModelBase
         _vmFactory = vmFactory;
         _service = service;
         this.SelectedCardSkus.CollectionChanged += SelectedCardSkus_CollectionChanged;
+        this.IsActive = true;
     }
 
     internal void Load()
@@ -161,6 +163,7 @@ public partial class CardsViewModel : ViewModelBase
     {
         _messenger.Send(new OpenDrawerMessage
         {
+            DrawerWidth = 800,
             ViewModel = _vmFactory.Drawer().WithContent("Add Cards", _vmFactory.AddCards())
         });
     }
@@ -193,5 +196,12 @@ public partial class CardsViewModel : ViewModelBase
     private void SendSkusToContainer()
     {
 
+    }
+
+    void IRecipient<CardsAddedMessage>.Receive(CardsAddedMessage message)
+    {
+        this.SkuTotal += message.SkuTotal;
+        this.ProxyTotal += message.ProxyTotal;
+        this.CardTotal += message.CardsTotal;
     }
 }

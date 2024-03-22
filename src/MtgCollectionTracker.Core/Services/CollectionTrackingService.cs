@@ -260,7 +260,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         };
     }
 
-    public async ValueTask<(int total, int rows)> AddMultipleToContainerOrDeckAsync(
+    public async ValueTask<(int total, int proxyTotal, int rows)> AddMultipleToContainerOrDeckAsync(
         int? containerId,
         int? deckId,
         IEnumerable<AddToDeckOrContainerInputModel> items)
@@ -300,7 +300,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         }
 
         var res = await _db.SaveChangesAsync();
-        return (skus.Sum(s => s.Quantity), skus.Count);
+        return (skus.Sum(s => s.Quantity), skus.Where(s => s.Edition == "PROXY").Sum(s => s.Quantity), skus.Count);
     }
 
     public async ValueTask<CardSkuModel> AddToDeckOrContainerAsync(int? containerId, int? deckId, AddToDeckOrContainerInputModel model)
