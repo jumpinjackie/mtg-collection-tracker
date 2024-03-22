@@ -1,6 +1,7 @@
 ﻿using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MtgCollectionTracker.Core.Model;
+using MtgCollectionTracker.Data;
 
 namespace MtgCollectionTracker.ViewModels;
 
@@ -19,6 +20,12 @@ public partial class CardSkuItemViewModel : ViewModelBase
     private string _quantity = "Qty: 1";
 
     [ObservableProperty]
+    private string _condition = CardCondition.NearMint.ToString();
+
+    [ObservableProperty]
+    private string? _comments;
+
+    [ObservableProperty]
     private Bitmap? _cardImage;
 
     public CardSkuItemViewModel WithData(CardSkuModel sku)
@@ -28,8 +35,10 @@ public partial class CardSkuItemViewModel : ViewModelBase
             this.Edition = sku.Edition;
         else
             this.Edition = string.Empty;
+        this.Condition = (sku.Condition ?? CardCondition.NearMint).ToString();
         this.Quantity = $"Qty: {sku.Quantity}";
         this.Language = sku.Language?.Length > 0 ? sku.Language : "EN";
+        this.Comments = sku.Comments;
         return this;
     }
 }
