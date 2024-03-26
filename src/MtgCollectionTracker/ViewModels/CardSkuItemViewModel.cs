@@ -28,6 +28,16 @@ public partial class CardSkuItemViewModel : ViewModelBase
     [ObservableProperty]
     private Bitmap? _cardImage;
 
+    [ObservableProperty]
+    private string? _containerName;
+
+    [ObservableProperty]
+    private string? _deckName;
+
+    public bool HasContainer => !string.IsNullOrEmpty(this.ContainerName);
+
+    public bool HasDeck => !string.IsNullOrEmpty(this.DeckName);
+
     public CardSkuItemViewModel WithData(CardSkuModel sku)
     {
         this.CardName = sku.Edition == "PROXY" ? "[Proxy] " + sku.CardName : sku.CardName;
@@ -39,6 +49,8 @@ public partial class CardSkuItemViewModel : ViewModelBase
         this.Quantity = $"Qty: {sku.Quantity}";
         this.Language = sku.Language?.Length > 0 ? sku.Language : "EN";
         this.Comments = sku.Comments;
+        this.ContainerName = sku.ContainerName;
+        this.DeckName = sku.DeckName;
         return this;
     }
 }

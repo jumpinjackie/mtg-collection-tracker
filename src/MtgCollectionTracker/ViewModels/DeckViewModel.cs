@@ -32,6 +32,7 @@ public partial class DeckViewModel : ViewModelBase
     private string _name;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasContainer))]
     private string? _containerName;
 
     [ObservableProperty]
@@ -39,6 +40,8 @@ public partial class DeckViewModel : ViewModelBase
 
     [ObservableProperty]
     private string _sideboard;
+
+    public bool HasContainer => !string.IsNullOrEmpty(this.ContainerName);
 
     public DeckViewModel WithData(DeckSummaryModel deck)
     {

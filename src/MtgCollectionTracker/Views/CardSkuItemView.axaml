@@ -26,5 +26,13 @@
 			<TextBlock Grid.Column="1" Text="{Binding Edition}" HorizontalAlignment="Center" />
 			<TextBlock Grid.Column="2" Text="{Binding Language}" HorizontalAlignment="Center" />
 		</Grid>
+		<Grid IsVisible="{Binding HasContainer}" ColumnDefinitions="30, *">
+			<PathIcon Grid.Column="0" Data="{StaticResource container}" />
+			<TextBlock Grid.Column="1" Text="{Binding ContainerName}" />
+		</Grid>
+		<Grid IsVisible="{Binding HasDeck}" ColumnDefinitions="30, *">
+			<PathIcon Grid.Column="0" Data="{StaticResource deckbox}" />
+			<TextBlock Grid.Column="1" Text="{Binding DeckName}" />
+		</Grid>
 	</StackPanel>
 </UserControl>
