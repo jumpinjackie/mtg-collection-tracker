@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
+using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
@@ -214,7 +215,28 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     [RelayCommand]
     private void DeleteSku()
     {
-
+        if (this.SelectedCardSkus.Count == 1)
+        {
+            var sku = this.SelectedCardSkus[0];
+            _messenger.Send(new OpenDrawerMessage
+            {
+                DrawerWidth = 400,
+                ViewModel = _vmFactory.Drawer().WithConfirmation(
+                    "Delete Card SKU",
+                    $"Are you sure you want to delete this SKU?",
+                    async () =>
+                    {
+                        await _service.DeleteCardSkuAsync(sku.Id);
+                        _messenger.ToastNotify($"Card SKU ({sku.CardName}) deleted");
+                        this.SelectedCardSkus.Remove(sku);
+                        this.SearchResults.Remove(sku);
+                        this.SkuTotal -= 1;
+                        this.ProxyTotal -= sku.ProxyQty;
+                        this.CardTotal -= sku.RealQty;
+                        _messenger.Send(new CloseDrawerMessage());
+                    })
+            });
+        }
     }
 
     void IRecipient<CardsAddedMessage>.Receive(CardsAddedMessage message)

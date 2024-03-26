@@ -7,6 +7,8 @@ namespace MtgCollectionTracker.ViewModels;
 
 public partial class CardSkuItemViewModel : ViewModelBase
 {
+    public int Id { get; private set; }
+
     [ObservableProperty]
     private string _cardName = "CARDNAME";
 
@@ -38,13 +40,23 @@ public partial class CardSkuItemViewModel : ViewModelBase
 
     public bool HasDeck => !string.IsNullOrEmpty(this.DeckName);
 
+    public int ProxyQty { get; private set; }
+    public int RealQty { get; private set; }
+
     public CardSkuItemViewModel WithData(CardSkuModel sku)
     {
+        this.Id = sku.Id;
         this.CardName = sku.Edition == "PROXY" ? "[Proxy] " + sku.CardName : sku.CardName;
         if (sku.Edition != "PROXY")
+        {
             this.Edition = sku.Edition;
+            this.RealQty = sku.Quantity;
+        }
         else
+        {
             this.Edition = string.Empty;
+            this.ProxyQty = sku.Quantity;
+        }
         this.Condition = (sku.Condition ?? CardCondition.NearMint).ToString();
         this.Quantity = $"Qty: {sku.Quantity}";
         this.Language = sku.Language?.Length > 0 ? sku.Language : "EN";
