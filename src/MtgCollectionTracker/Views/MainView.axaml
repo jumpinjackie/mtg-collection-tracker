@@ -14,7 +14,7 @@
 	</Design.DataContext>
 	<SplitView IsPaneOpen="{Binding IsDrawerOpen}"
 			   DisplayMode="Overlay"
-			   PanePlacement="Right"
+			   PanePlacement="Left"
 			   OpenPaneLength="{Binding DrawerWidth}">
 		<SplitView.Pane>
 			<views:DrawerView DataContext="{Binding Drawer}" />

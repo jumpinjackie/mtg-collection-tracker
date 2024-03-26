@@ -22,7 +22,7 @@
                     MaterialOpacity="0.65" />
 			</ExperimentalAcrylicBorder.Material>
 		</ExperimentalAcrylicBorder>
-		<Panel Margin="40">
+		<Panel Margin="10, 40, 10, 10">
 			<views:MainView />
 		</Panel>
 	</Panel>
