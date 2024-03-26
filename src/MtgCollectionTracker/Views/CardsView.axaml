@@ -18,6 +18,11 @@
 				<Button Command="{Binding PerformSearchCommand}" IsEnabled="{Binding CanSearch}" Grid.Column="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">Search</Button>
 			</Grid>
 			<ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
+			<StackPanel Spacing="10" Orientation="Horizontal">
+				<!-- TODO: Change of checkbox state should re-run PerformSearchCommand -->
+				<CheckBox IsChecked="{Binding NoProxies}">Omit proxies</CheckBox>
+				<CheckBox IsChecked="{Binding NotInDecks}">Omit cards already in decks</CheckBox>
+			</StackPanel>
 		</StackPanel>
 		<StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
 			<Button Command="{Binding AddSkusCommand}" Content="Add New" HorizontalAlignment="Center" />
@@ -36,6 +41,7 @@
 					</ItemsPanelTemplate>
 				</ListBox.ItemsPanel>
 			</ListBox>
+			<TextBlock IsVisible="{Binding HasNoResults}" VerticalAlignment="Center" HorizontalAlignment="Center" Text="No results found :(" />
 			<TextBlock IsVisible="{Binding ShowFirstTimeMessage}" VerticalAlignment="Center" HorizontalAlignment="Center" Text="Start searching for cards in your collection" />
 			<TextBlock IsVisible="{Binding IsEmptyCollection}" VerticalAlignment="Center" HorizontalAlignment="Center" Text="Your collection is empty. Add cards to your collection below" />
 		</Panel>

@@ -129,6 +129,15 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
 
     public ObservableCollection<CardSkuItemViewModel> SearchResults { get; } = new();
 
+    [ObservableProperty]
+    private bool _noProxies;
+
+    [ObservableProperty]
+    private bool _notInDecks;
+
+    [ObservableProperty]
+    private bool _hasNoResults;
+
     [RelayCommand]
     private async Task PerformSearch()
     {
@@ -140,13 +149,16 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
             await Task.Delay(1000);
             var cards = _service.GetCards(new Core.Model.CardQueryModel
             {
-                SearchFilter = this.SearchText
+                SearchFilter = this.SearchText,
+                NoProxies = this.NoProxies,
+                NotInDecks = this.NotInDecks
             });
             this.SearchResults.Clear();
             foreach (var sku in cards)
             {
                 this.SearchResults.Add(_vmFactory.CardSku().WithData(sku));
             }
+            this.HasNoResults = !this.ShowFirstTimeMessage && this.SearchResults.Count == 0;
         }
         catch (Exception ex)
         {
