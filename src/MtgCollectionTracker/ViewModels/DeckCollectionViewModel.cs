@@ -62,7 +62,21 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase
     [RelayCommand]
     private void DismantleDeck()
     {
+        if (this.SelectedDeck != null)
+        {
+            _messenger.Send(new OpenDrawerMessage
+            {
+                DrawerWidth = 800,
+                ViewModel = _vmFactory.Drawer().WithConfirmation(
+                    "Dismantle Deck",
+                    $"Are you sure you want to dismantle ({this.SelectedDeck.Name})?", 
+                    async () =>
+                    {
+                        await _service.DismantleDeckAsync(new() { DeckId = this.SelectedDeck.DeckId });
 
+                    })
+            });
+        }
     }
 
     [RelayCommand]

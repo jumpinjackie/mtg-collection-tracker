@@ -2,6 +2,8 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Services.Messaging;
+using System;
+using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
@@ -29,6 +31,21 @@ public partial class DrawerViewModel : ViewModelBase
 
     [ObservableProperty]
     private DrawerContentViewModel _contentDataContext;
+
+    public DrawerViewModel WithConfirmation(
+        string title,
+        string message,
+        Func<ValueTask> yesAction,
+        string yesLabel = "Yes",
+        string noLabel = "No")
+    {
+        this.Title = title;
+        this.ContentDataContext = new ConfirmViewModel()
+            .WithMessage(message)
+            .WithActionLabels(yesLabel, noLabel)
+            .WithActions(yesAction, async () => _messenger.Send(new CloseDrawerMessage()));
+        return this;
+    }
 
     public DrawerViewModel WithContent(string title, DrawerContentViewModel dataContext)
     {

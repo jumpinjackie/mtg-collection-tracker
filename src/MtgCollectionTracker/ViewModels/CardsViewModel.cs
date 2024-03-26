@@ -211,6 +211,12 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
 
     }
 
+    [RelayCommand]
+    private void DeleteSku()
+    {
+
+    }
+
     void IRecipient<CardsAddedMessage>.Receive(CardsAddedMessage message)
     {
         this.SkuTotal += message.SkuTotal;
