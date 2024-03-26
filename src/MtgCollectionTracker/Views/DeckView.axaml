@@ -24,9 +24,9 @@
 			<TextBlock Grid.Column="0" Text="{Binding Maindeck}" ToolTip.Tip="{Binding Name}" HorizontalAlignment="Center" />
 			<TextBlock Grid.Column="1" Text="{Binding Sideboard}" ToolTip.Tip="{Binding Name}" HorizontalAlignment="Center" />
 		</Grid>
-		<Grid IsVisible="{Binding HasContainer}" ColumnDefinitions="30, *">
+		<Grid IsVisible="{Binding HasContainer}" ColumnDefinitions="30, *" ToolTip.Tip="{Binding ContainerName}">
 			<PathIcon Grid.Column="0" Data="{StaticResource container}" />
-			<TextBlock Grid.Column="1" Text="{Binding ContainerName}" />
+			<TextBlock Grid.Column="1" Text="{Binding ContainerName}" VerticalAlignment="Center" />
 		</Grid>
 	</StackPanel>
 </UserControl>
