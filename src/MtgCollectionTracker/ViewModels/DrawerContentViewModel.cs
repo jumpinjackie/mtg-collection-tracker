@@ -5,7 +5,7 @@ using MtgCollectionTracker.Services.Messaging;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class DrawerContentViewModel : ViewModelBase
+public abstract partial class DrawerContentViewModel : RecipientViewModelBase
 {
     
 }

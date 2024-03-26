@@ -15,7 +15,7 @@
 		<Border CornerRadius="10" ClipToBounds="True">
 			<Panel Background="#7FFF22DD">
 				<Panel Height="280">
-					<PathIcon Height="75" Width="75" Data="{StaticResource mail_inbox_regular}" />
+					<PathIcon Height="75" Width="75" Data="{StaticResource deckbox}" />
 				</Panel>
 			</Panel>
 		</Border>

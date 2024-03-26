@@ -4,22 +4,20 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="MtgCollectionTracker.Views.ContainerView"
-			 x:DataType="vm:ContainerViewModel">
+             x:Class="MtgCollectionTracker.Views.DeckListView"
+			 x:DataType="vm:DeckListViewModel">
 	<Design.DataContext>
 		<!-- This only sets the DataContext for the previewer in an IDE,
          to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-		<vm:ContainerViewModel />
+		<vm:DeckListViewModel />
 	</Design.DataContext>
-	<StackPanel Spacing="5" Width="200">
-		<Border CornerRadius="10" ClipToBounds="True">
-			<Panel Background="#7FFF22DD">
-				<Panel Height="280">
-					<PathIcon Height="75" Width="75" Data="{StaticResource container}" />
-				</Panel>
-			</Panel>
-		</Border>
-		<TextBlock Text="{Binding Name}" ToolTip.Tip="{Binding Name}" HorizontalAlignment="Center" />
-		<TextBlock Text="{Binding Total}" ToolTip.Tip="{Binding Total}" HorizontalAlignment="Center" />
-	</StackPanel>
+	<DockPanel>
+		<StackPanel Margin="10" Spacing="10" DockPanel.Dock="Bottom" Orientation="Horizontal">
+			<Button Command="{Binding ShowProxyUsageCommand}">Show Proxy Usage</Button>
+			<Button Command="{Binding HideProxyUsageCommand}">Hide Proxy Usage</Button>
+		</StackPanel>
+		<ScrollViewer>
+			<TextBlock TextWrapping="Wrap" Text="{Binding DeckList}" />
+		</ScrollViewer>
+	</DockPanel>
 </UserControl>

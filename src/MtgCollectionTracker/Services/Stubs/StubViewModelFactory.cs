@@ -20,4 +20,6 @@ public class StubViewModelFactory : IViewModelFactory
     public DrawerViewModel Drawer() => new DrawerViewModel();
 
     public AddCardsViewModel AddCards() => new AddCardsViewModel();
+
+    public DeckListViewModel DeckList() => new DeckListViewModel();
 }

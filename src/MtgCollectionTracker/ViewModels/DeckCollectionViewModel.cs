@@ -1,7 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services.Contracts;
+using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using System.Collections.ObjectModel;
 
@@ -11,19 +13,22 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase
 {
     readonly IViewModelFactory _vmFactory;
     readonly ICollectionTrackingService _service;
+    readonly IMessenger _messenger;
 
     public DeckCollectionViewModel()
     {
         base.ThrowIfNotDesignMode();
         _vmFactory = new StubViewModelFactory();
         _service = new StubCollectionTrackingService();
+        _messenger = WeakReferenceMessenger.Default;
         this.IsActive = true;
     }
 
-    public DeckCollectionViewModel(IViewModelFactory vmFactory, ICollectionTrackingService service)
+    public DeckCollectionViewModel(IViewModelFactory vmFactory, ICollectionTrackingService service, IMessenger messenger)
     {
         _vmFactory = vmFactory;
         _service = service;
+        _messenger = messenger;
         this.IsActive = true;
     }
 
@@ -69,7 +74,14 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase
     [RelayCommand]
     private void ViewDeckContents()
     {
-
+        if (this.SelectedDeck != null)
+        {
+            _messenger.Send(new OpenDrawerMessage
+            {
+                DrawerWidth = 450,
+                ViewModel = _vmFactory.Drawer().WithContent("Deck List", _vmFactory.DeckList().WithDeck(this.SelectedDeck.DeckId, this.SelectedDeck.Name))
+            });
+        }
     }
 
     [RelayCommand]

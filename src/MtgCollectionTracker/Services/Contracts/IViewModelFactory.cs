@@ -19,4 +19,6 @@ public interface IViewModelFactory
     DrawerViewModel Drawer();
 
     AddCardsViewModel AddCards();
+
+    DeckListViewModel DeckList();
 }

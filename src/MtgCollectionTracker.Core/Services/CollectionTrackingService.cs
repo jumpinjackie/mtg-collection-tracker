@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Data;
+using System.Formats.Tar;
 using System.Linq.Expressions;
 using System.Text;
 
@@ -452,12 +453,20 @@ public class CollectionTrackingService : ICollectionTrackingService
             text.AppendLine("// WARNING: This deck has no sideboard!");
         }
 
-        if (proxyTotal > 0 && reportProxyUsage)
+        if (reportProxyUsage)
         {
-            text.AppendLine();
-            text.AppendLine("Proxy stats:");
-            text.AppendLine($"  {proxyTotal} cards [{((double)proxyTotal / (double)deckTotal):P2} of the deck] is proxies or originates from sets not legal for sanctioned tournaments");
-            text.AppendLine("This deck cannot be played in DCI/Wizards sanctioned tournaments");
+            if (proxyTotal > 0)
+            {
+                text.AppendLine();
+                text.AppendLine("Proxy stats:");
+                text.AppendLine($"  {proxyTotal} cards [{((double)proxyTotal / (double)deckTotal):P2} of the deck] is proxies or originates from sets not legal for sanctioned tournaments");
+                text.AppendLine("This deck cannot be played in DCI/Wizards sanctioned tournaments");
+            }
+            else
+            {
+                text.AppendLine();
+                text.AppendLine("This deck has no proxies");
+            }
         }
         return text.ToString();
     }
