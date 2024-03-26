@@ -39,8 +39,9 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
         this.IsActive = true;
     }
 
-    internal void Load()
+    protected override void OnActivated()
     {
+        base.OnActivated();
         if (Avalonia.Controls.Design.IsDesignMode)
         {
             ApplyTotals(CollectionSummaryModel.Empty());

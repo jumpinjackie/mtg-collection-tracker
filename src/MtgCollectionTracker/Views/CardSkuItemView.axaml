@@ -16,7 +16,7 @@
 			<Panel Background="#7FFF22DD">
 				<Image Width="200" Stretch="Uniform" Source="{Binding CardImage}" />
 				<Panel Height="280" IsVisible="{Binding CardImage, Converter={x:Static ObjectConverters.IsNull}}">
-					<PathIcon Height="75" Width="75" Data="{StaticResource music_regular}" />
+					<PathIcon Height="75" Width="75" Data="{StaticResource contact_card_regular}" />
 				</Panel>
 			</Panel>
 		</Border>

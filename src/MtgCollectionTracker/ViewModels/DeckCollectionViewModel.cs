@@ -7,7 +7,7 @@ using System.Collections.ObjectModel;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class DeckCollectionViewModel : ViewModelBase
+public partial class DeckCollectionViewModel : RecipientViewModelBase
 {
     readonly IViewModelFactory _vmFactory;
     readonly ICollectionTrackingService _service;
@@ -17,15 +17,17 @@ public partial class DeckCollectionViewModel : ViewModelBase
         base.ThrowIfNotDesignMode();
         _vmFactory = new StubViewModelFactory();
         _service = new StubCollectionTrackingService();
+        this.IsActive = true;
     }
 
     public DeckCollectionViewModel(IViewModelFactory vmFactory, ICollectionTrackingService service)
     {
         _vmFactory = vmFactory;
         _service = service;
+        this.IsActive = true;
     }
 
-    internal void LoadDecks()
+    protected override void OnActivated()
     {
         if (!Avalonia.Controls.Design.IsDesignMode)
         {

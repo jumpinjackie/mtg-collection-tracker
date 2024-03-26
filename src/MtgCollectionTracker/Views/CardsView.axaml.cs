@@ -12,15 +12,6 @@ public partial class CardsView : UserControl
         InitializeComponent();
     }
 
-    protected override void OnLoaded(RoutedEventArgs e)
-    {
-        base.OnLoaded(e);
-        if (this.DataContext is CardsViewModel vm)
-        {
-            vm.Load();
-        }
-    }
-
     private void OnSearchKeyUp(object sender, KeyEventArgs e)
     {
         if (e.Key == Key.Enter && this.DataContext is CardsViewModel vm)

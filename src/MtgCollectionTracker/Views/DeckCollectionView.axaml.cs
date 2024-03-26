@@ -10,13 +10,4 @@ public partial class DeckCollectionView : UserControl
     {
         InitializeComponent();
     }
-
-    protected override void OnLoaded(RoutedEventArgs e)
-    {
-        base.OnLoaded(e);
-        if (this.DataContext is DeckCollectionViewModel vm)
-        {
-            vm.LoadDecks();
-        }
-    }
 }

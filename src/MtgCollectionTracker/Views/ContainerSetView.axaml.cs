@@ -10,13 +10,4 @@ public partial class ContainerSetView : UserControl
     {
         InitializeComponent();
     }
-
-    protected override void OnLoaded(RoutedEventArgs e)
-    {
-        base.OnLoaded(e);
-        if (this.DataContext is ContainerSetViewModel vm)
-        {
-            vm.LoadContainers();
-        }
-    }
 }

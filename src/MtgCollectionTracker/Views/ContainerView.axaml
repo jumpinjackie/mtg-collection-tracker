@@ -15,7 +15,7 @@
 		<Border CornerRadius="10" ClipToBounds="True">
 			<Panel Background="#7FFF22DD">
 				<Panel Height="280">
-					<PathIcon Height="75" Width="75" Data="{StaticResource music_regular}" />
+					<PathIcon Height="75" Width="75" Data="{StaticResource toolbox_regular}" />
 				</Panel>
 			</Panel>
 		</Border>
