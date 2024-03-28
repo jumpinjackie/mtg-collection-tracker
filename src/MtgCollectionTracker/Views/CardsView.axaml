@@ -19,7 +19,6 @@
 			</Grid>
 			<ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
 			<StackPanel Spacing="10" Orientation="Horizontal">
-				<!-- TODO: Change of checkbox state should re-run PerformSearchCommand -->
 				<CheckBox IsEnabled="{Binding !IsBusy}" IsChecked="{Binding NoProxies}">Omit proxies</CheckBox>
 				<CheckBox IsEnabled="{Binding !IsBusy}" IsChecked="{Binding NotInDecks}">Omit cards already in decks</CheckBox>
 			</StackPanel>
