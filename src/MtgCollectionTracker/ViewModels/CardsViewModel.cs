@@ -154,6 +154,9 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     [RelayCommand]
     private async Task PerformSearch()
     {
+        if (string.IsNullOrEmpty(SearchText))
+            return;
+
         using (((IViewModelWithBusyState)this).StartBusyState())
         {
             this.ShowFirstTimeMessage = false;

@@ -6,7 +6,6 @@ using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using ScryfallApi.Client;
-using SQLitePCL;
 using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,25 +38,28 @@ public partial class EditCardSkuViewModel : DrawerContentViewModel
         _orig = sku;
 
         this.Ids = [sku.Id];
-        this.CardName = sku.CardName;
+        this.CardName = sku.OriginalCardName;
         this.CollectorNumber = sku.CollectorNumber;
-        this.Edition = sku.Edition;
+        this.Edition = sku.OriginalEdition;
         this.Language = sku.Language;
-        this.Quantity = sku.Edition == "PROXY" ? sku.ProxyQty : sku.RealQty;
+        this.Quantity = sku.OriginalEdition == "PROXY" ? sku.ProxyQty : sku.RealQty;
         this.Comments = sku.Comments;
         return this;
     }
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
     private string? _cardName;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
     private string? _edition;
 
     [ObservableProperty]
     private string? _language;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
     private int? _quantity;
 
     [ObservableProperty]

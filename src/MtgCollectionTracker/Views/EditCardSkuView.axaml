@@ -17,15 +17,15 @@
 			<Button Command="{Binding CancelCommand}">Cancel</Button>
 		</StackPanel>
 		<StackPanel Spacing="6">
-			<TextBlock>Card Name</TextBlock>
+			<TextBlock>Card Name (must have both names separated by // for adventure and double-faced cards)</TextBlock>
 			<TextBox Text="{Binding CardName}" />
 			<TextBlock>Quantity</TextBlock>
 			<NumericUpDown Value="{Binding Quantity}" />
 			<TextBlock>Edition (use "PROXY" to indicate proxies)</TextBlock>
 			<TextBox Text="{Binding Edition}" />
-			<TextBlock>Language</TextBlock>
+			<TextBlock>Language Code (if empty, defaults to "en")</TextBlock>
 			<TextBox Text="{Binding Language}" />
-			<TextBlock>Collector #</TextBlock>
+			<TextBlock>Collector # (set to resolve card image for a specific variant)</TextBlock>
 			<TextBox Text="{Binding CollectorNumber}" />
 			<TextBlock>Comments</TextBlock>
 			<TextBox Height="60" Text="{Binding Comments}" />

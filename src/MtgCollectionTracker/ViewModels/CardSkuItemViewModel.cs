@@ -45,6 +45,10 @@ public partial class CardSkuItemViewModel : ViewModelBase
 
     public string? CollectorNumber { get; set; }
 
+    public string? OriginalCardName { get; set; }
+
+    public string? OriginalEdition { get; set; }
+
     public bool HasContainer => !string.IsNullOrEmpty(this.ContainerName);
 
     public bool HasDeck => !string.IsNullOrEmpty(this.DeckName);
@@ -56,6 +60,8 @@ public partial class CardSkuItemViewModel : ViewModelBase
     {
         this.Id = sku.Id;
         this.CollectorNumber = sku.CollectorNumber;
+        this.OriginalCardName = sku.CardName;
+        this.OriginalEdition = sku.Edition;
         this.CardName = sku.Edition == "PROXY" ? "[Proxy] " + sku.CardName : sku.CardName;
         if (sku.Edition != "PROXY")
         {
