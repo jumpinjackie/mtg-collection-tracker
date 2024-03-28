@@ -59,6 +59,11 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
+    public PaginatedCardSkuModel GetCardsForContainer(int containerId, int pageNumber)
+    {
+        throw new System.NotImplementedException();
+    }
+
     public CollectionSummaryModel GetCollectionSummary()
     {
         throw new System.NotImplementedException();

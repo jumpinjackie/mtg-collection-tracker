@@ -15,6 +15,7 @@ public class ViewModelFactory : IViewModelFactory
     readonly Func<DrawerViewModel> _drawer;
     readonly Func<AddCardsViewModel> _addCards;
     readonly Func<DeckListViewModel> _deckList;
+    readonly Func<ContainerBrowseViewModel> _browseContainer;
 
     public ViewModelFactory(Func<CardsViewModel> cards,
                             Func<CardSkuItemViewModel> cardSku,
@@ -24,7 +25,8 @@ public class ViewModelFactory : IViewModelFactory
                             Func<ContainerViewModel> container,
                             Func<DrawerViewModel> drawer,
                             Func<AddCardsViewModel> addCards,
-                            Func<DeckListViewModel> deckList)
+                            Func<DeckListViewModel> deckList,
+                            Func<ContainerBrowseViewModel> browseContainer)
     {
         _cards = cards;
         _cardSku = cardSku;
@@ -35,6 +37,7 @@ public class ViewModelFactory : IViewModelFactory
         _drawer = drawer;
         _addCards = addCards;
         _deckList = deckList;
+        _browseContainer = browseContainer;
     }
 
     public CardsViewModel Cards() => _cards();
@@ -54,4 +57,6 @@ public class ViewModelFactory : IViewModelFactory
     public AddCardsViewModel AddCards() => _addCards();
 
     public DeckListViewModel DeckList() => _deckList();
+
+    public ContainerBrowseViewModel BrowseContainer() => _browseContainer();
 }

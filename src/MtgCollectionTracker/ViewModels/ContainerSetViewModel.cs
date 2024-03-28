@@ -1,7 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services.Contracts;
+using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using System.Collections.ObjectModel;
 
@@ -51,12 +53,19 @@ public partial class ContainerSetViewModel : RecipientViewModelBase
     [RelayCommand]
     private void AddContainer()
     {
-
+        
     }
 
     [RelayCommand]
     private void ViewContainer()
     {
-
+        if (this.SelectedContainer != null)
+        {
+            Messenger.Send(new OpenDrawerMessage
+            {
+                DrawerWidth = 1000,
+                ViewModel = _vmFactory.Drawer().WithContent(this.SelectedContainer.Name, _vmFactory.BrowseContainer().WithContainerId(this.SelectedContainer.Id))
+            });
+        }
     }
 }

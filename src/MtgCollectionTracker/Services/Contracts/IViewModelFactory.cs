@@ -21,4 +21,6 @@ public interface IViewModelFactory
     AddCardsViewModel AddCards();
 
     DeckListViewModel DeckList();
+
+    ContainerBrowseViewModel BrowseContainer();
 }

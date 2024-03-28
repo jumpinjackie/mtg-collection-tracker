@@ -1,0 +1,42 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="MtgCollectionTracker.Views.ContainerBrowseView"
+			 x:DataType="vm:ContainerBrowseViewModel">
+	<Design.DataContext>
+		<!-- This only sets the DataContext for the previewer in an IDE,
+         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+		<vm:ContainerBrowseViewModel />
+	</Design.DataContext>
+	<DockPanel>
+		<StackPanel DockPanel.Dock="Top">
+			<Grid ColumnDefinitions="160, *, 160">
+				<Button IsEnabled="{Binding PreviousEnabled}" Command="{Binding PreviousPageCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Grid.Column="0">Previous Page</Button>
+				<TextBlock HorizontalAlignment="Center" Grid.Column="1" Text="{Binding PageSummary}" />
+				<Button IsEnabled="{Binding NextEnabled}" Command="{Binding NextPageCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Grid.Column="2">Next Page</Button>
+			</Grid>
+			<ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
+		</StackPanel>
+		<StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
+			<Button IsEnabled="{Binding !IsBusy}" Command="{Binding AddSkusCommand}" Content="Add New" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding HasSelectedCardSku}" Command="{Binding ViewSelectedSkuCommand}" Content="View Details" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding CanSendSkusToDeck}" Command="{Binding SendSkusToDeckCommand}" Content="Send to Deck" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding CanSendSkusToContainer}" Command="{Binding SendSkusToContainerCommand}" Content="Send to Container" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding CanUpdateMetadata}" Command="{Binding UpdateSkuMetadataCommand}" Content="Update Metadata" HorizontalAlignment="Center" />
+			<TextBlock Margin="6" VerticalAlignment="Center" Text="{Binding ContainerSummary}" />
+		</StackPanel>
+		<Panel>
+			<ListBox IsEnabled="{Binding !IsBusy}" ItemsSource="{Binding SearchResults}" SelectionMode="Multiple" SelectedItems="{Binding SelectedCardSkus}" Background="Transparent" Margin="0 20">
+				<ListBox.ItemsPanel>
+					<ItemsPanelTemplate>
+						<WrapPanel />
+					</ItemsPanelTemplate>
+				</ListBox.ItemsPanel>
+			</ListBox>
+			<TextBlock IsVisible="{Binding HasNoResults}" VerticalAlignment="Center" HorizontalAlignment="Center" Text="No results found :(" />
+		</Panel>
+	</DockPanel>
+</UserControl>

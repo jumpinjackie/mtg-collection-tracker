@@ -16,6 +16,7 @@ namespace MtgCollectionTracker.Core.Services
         ValueTask<DismantleDeckResult> DismantleDeckAsync(DismantleDeckInputModel model);
         ValueTask<IEnumerable<CardSkuModel>> UpdateCardMetadataAsync(IEnumerable<int> ids, IScryfallApiClient scryfallApiClient, CancellationToken cancel);
         IEnumerable<CardSkuModel> GetCards(CardQueryModel query);
+        PaginatedCardSkuModel GetCardsForContainer(int containerId, int zeroBasedPageNumber);
         IEnumerable<ContainerSummaryModel> GetContainers();
         IEnumerable<DeckSummaryModel> GetDecks(string? format);
         bool IsBasicLand(string cardName);

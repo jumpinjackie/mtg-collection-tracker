@@ -128,25 +128,52 @@ public class CollectionTrackingService : ICollectionTrackingService
         if (query.IncludeScryfallMetadata)
             bq = queryable.Include(c => c.Scryfall);
 
-        return bq
-            .OrderBy(c => c.CardName)
-            .Select(c => new CardSkuModel
-            {
-                CardName = c.CardName,
-                Comments = c.Comments,
-                Condition = c.Condition,
-                ContainerName = c.Container != null ? c.Container.Name + " (" + c.ContainerId + ")" : null,
-                DeckName = c.Deck != null ? c.Deck.Name + " (" + c.DeckId + ")" : null,
-                Edition = c.Edition,
-                Id = c.Id,
-                IsFoil = c.IsFoil,
-                IsLand = c.IsLand,
-                IsSideboard = c.IsSideboard,
-                Language = c.Language,
-                Quantity = c.Quantity,
-                ImageLarge = c.Scryfall!.ImageLarge,
-                ImageSmall = c.Scryfall!.ImageSmall
-            });
+        return ToCardSkuModel(bq.OrderBy(c => c.CardName));
+    }
+
+    private IQueryable<CardSkuModel> ToCardSkuModel(IQueryable<CardSku> skus)
+    {
+        return skus.Select(c => new CardSkuModel
+        {
+            CardName = c.CardName,
+            Comments = c.Comments,
+            Condition = c.Condition,
+            ContainerName = c.Container != null ? c.Container.Name + " (" + c.ContainerId + ")" : null,
+            DeckName = c.Deck != null ? c.Deck.Name + " (" + c.DeckId + ")" : null,
+            Edition = c.Edition,
+            Id = c.Id,
+            IsFoil = c.IsFoil,
+            IsLand = c.IsLand,
+            IsSideboard = c.IsSideboard,
+            Language = c.Language,
+            Quantity = c.Quantity,
+            ImageLarge = c.Scryfall!.ImageLarge,
+            ImageSmall = c.Scryfall!.ImageSmall
+        });
+    }
+
+    public PaginatedCardSkuModel GetCardsForContainer(int containerId, int zeroBasedPageNumber)
+    {
+        IQueryable<CardSku> queryable = _db
+            .Cards
+            .Include(c => c.Deck)
+            .Include(c => c.Container)
+            .Include(c => c.Scryfall)
+            .Where(c => c.ContainerId == containerId);
+
+        var total = queryable.Count();
+
+        // Simulate a 3x4 binder
+        const int pageSize = 12;
+        var skip = zeroBasedPageNumber * pageSize;
+
+        return new()
+        {
+            PageNumber = zeroBasedPageNumber,
+            PageSize = pageSize,
+            Total = total,
+            Items = ToCardSkuModel(queryable.OrderBy(c => c.CardName).Skip(skip).Take(pageSize))
+        };
     }
 
     public async ValueTask<IEnumerable<CardSkuModel>> UpdateCardMetadataAsync(IEnumerable<int> ids, IScryfallApiClient scryfallApiClient, CancellationToken cancel)
@@ -305,11 +332,11 @@ public class CollectionTrackingService : ICollectionTrackingService
             IsLand = c.IsLand,
             IsSideboard = c.IsSideboard,
             Language = c.Language,
-            Quantity = c.Quantity
+            Quantity = c.Quantity,
+            ImageLarge = c.Scryfall?.ImageLarge,
+            ImageSmall = c.Scryfall?.ImageSmall
         };
     }
-
-    
 
     public async ValueTask<(int total, int proxyTotal, int rows)> AddMultipleToContainerOrDeckAsync(
         int? containerId,

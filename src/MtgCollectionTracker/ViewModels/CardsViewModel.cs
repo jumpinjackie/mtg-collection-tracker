@@ -8,7 +8,6 @@ using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using ScryfallApi.Client;
-using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
@@ -16,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAddedMessage>
+public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAddedMessage>, IViewModelWithBusyState
 {
     readonly IViewModelFactory _vmFactory;
     readonly ICollectionTrackingService _service;
@@ -155,7 +154,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     [RelayCommand]
     private async Task PerformSearch()
     {
-        using (StartBusyState())
+        using (((IViewModelWithBusyState)this).StartBusyState())
         {
             this.ShowFirstTimeMessage = false;
             this.ShowSearchResults = true;
@@ -232,7 +231,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     {
         if (this.SelectedCardSkus.Count > 0)
         {
-            using (StartBusyState())
+            using (((IViewModelWithBusyState)this).StartBusyState())
             {
                 int updated = 0;
                 var ids = this.SelectedCardSkus.Select(c => c.Id);
@@ -254,24 +253,6 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
         }
     }
 
-    class BusyState : IDisposable
-    {
-        readonly CardsViewModel _parent;
-
-        public BusyState(CardsViewModel parent)
-        {
-            _parent = parent;
-            _parent.IsBusy = true;
-        }
-
-        public void Dispose()
-        {
-            _parent.IsBusy = false;
-        }
-    }
-
-    private IDisposable StartBusyState() => new BusyState(this);
-
     [RelayCommand]
     private void DeleteSku()
     {
@@ -286,7 +267,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
                     $"Are you sure you want to delete this SKU?",
                     async () =>
                     {
-                        using (StartBusyState())
+                        using (((IViewModelWithBusyState)this).StartBusyState())
                         {
                             await _service.DeleteCardSkuAsync(sku.Id);
                             Messenger.ToastNotify($"Card SKU ({sku.CardName}) deleted");

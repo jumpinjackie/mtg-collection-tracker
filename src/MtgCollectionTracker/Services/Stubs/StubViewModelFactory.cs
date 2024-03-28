@@ -22,4 +22,6 @@ public class StubViewModelFactory : IViewModelFactory
     public AddCardsViewModel AddCards() => new AddCardsViewModel();
 
     public DeckListViewModel DeckList() => new DeckListViewModel();
+
+    public ContainerBrowseViewModel BrowseContainer() => new ContainerBrowseViewModel();
 }
