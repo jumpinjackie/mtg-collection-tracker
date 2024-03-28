@@ -1,6 +1,5 @@
 using Avalonia.Controls;
 using Avalonia.Input;
-using Avalonia.Interactivity;
 using MtgCollectionTracker.ViewModels;
 
 namespace MtgCollectionTracker.Views;

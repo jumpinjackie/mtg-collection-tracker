@@ -1,6 +1,4 @@
-﻿using MtgCollectionTracker.Data;
-
-namespace MtgCollectionTracker.Core.Model;
+﻿namespace MtgCollectionTracker.Core.Model;
 
 public class ContainerSummaryModel : ContainerInfoModel
 {

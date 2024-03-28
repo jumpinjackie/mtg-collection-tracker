@@ -3,7 +3,6 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Data;
 using System.IO;
-using System.Reflection;
 
 namespace MtgCollectionTracker.ViewModels;
 
