@@ -1,8 +1,9 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Messaging;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public class ViewModelBase : ObservableObject
+public abstract class ViewModelBase : ObservableObject
 {
     protected void ThrowIfNotDesignMode()
     {
@@ -11,8 +12,12 @@ public class ViewModelBase : ObservableObject
     }
 }
 
-public class RecipientViewModelBase : ObservableRecipient
+public abstract class RecipientViewModelBase : ObservableRecipient
 {
+    protected RecipientViewModelBase() : base() { }
+
+    protected RecipientViewModelBase(IMessenger messenger) : base(messenger) { }
+
     protected void ThrowIfNotDesignMode()
     {
         if (!Avalonia.Controls.Design.IsDesignMode)

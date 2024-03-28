@@ -3,7 +3,6 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
-using MtgCollectionTracker.Data;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using System.Collections.ObjectModel;
@@ -12,57 +11,13 @@ using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class AddCardSkuViewModel : ViewModelBase
-{
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsValid))]
-    [NotifyCanExecuteChangedFor(nameof(AddCardsCommand))]
-    private int _qty;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsValid))]
-    [NotifyCanExecuteChangedFor(nameof(AddCardsCommand))]
-    private string _cardName;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsValid))]
-    [NotifyCanExecuteChangedFor(nameof(AddCardsCommand))]
-    private string _edition;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsValid))]
-    [NotifyCanExecuteChangedFor(nameof(AddCardsCommand))]
-    private string? _language;
-
-    [ObservableProperty]
-    private bool _isFoil;
-
-    [ObservableProperty]
-    private bool _isLand;
-
-    [ObservableProperty]
-    private CardCondition? _condition;
-
-    [ObservableProperty]
-    private string? _comments;
-
-    public bool IsValid => this.Qty > 0 && !string.IsNullOrEmpty(this.CardName) && !string.IsNullOrEmpty(this.Edition);
-
-    /// <summary>
-    /// Reference copy of the root view model command so we can re-evaluate executability from this item
-    /// </summary>
-    public required IAsyncRelayCommand AddCardsCommand { get; set; }
-}
-
 public partial class AddCardsViewModel : DrawerContentViewModel
 {
-    readonly IMessenger _messenger;
     readonly ICollectionTrackingService _service;
 
     public AddCardsViewModel()
     {
         base.ThrowIfNotDesignMode();
-        _messenger = WeakReferenceMessenger.Default;
         _service = new StubCollectionTrackingService();
 
         this.Cards.Add(new() { AddCardsCommand = this.AddCardsCommand, Qty = 1, CardName = "Black Lotus", Edition = "LEB" });
@@ -77,8 +32,8 @@ public partial class AddCardsViewModel : DrawerContentViewModel
     }
 
     public AddCardsViewModel(IMessenger messenger, ICollectionTrackingService service)
+        : base(messenger)
     {
-        _messenger = messenger;
         _service = service;
     }
 
@@ -121,13 +76,13 @@ public partial class AddCardsViewModel : DrawerContentViewModel
             Edition = c.Edition
         });
         var (total, proxyTotal, rows) = await _service.AddMultipleToContainerOrDeckAsync(this.ContainerId, this.DeckId, adds);
-        _messenger.Send(new CardsAddedMessage { CardsTotal = total, ProxyTotal = proxyTotal, SkuTotal = rows });
-        _messenger.Send(new CloseDrawerMessage());
+        Messenger.Send(new CardsAddedMessage { CardsTotal = total, ProxyTotal = proxyTotal, SkuTotal = rows });
+        Messenger.Send(new CloseDrawerMessage());
     }
 
     [RelayCommand]
     private void Cancel()
     {
-        _messenger.Send(new CloseDrawerMessage());
+        Messenger.Send(new CloseDrawerMessage());
     }
 }

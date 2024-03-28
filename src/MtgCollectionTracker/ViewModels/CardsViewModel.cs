@@ -15,14 +15,12 @@ namespace MtgCollectionTracker.ViewModels;
 
 public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAddedMessage>
 {
-    readonly IMessenger _messenger;
     readonly IViewModelFactory _vmFactory;
     readonly ICollectionTrackingService _service;
 
     public CardsViewModel()
     {
         base.ThrowIfNotDesignMode();
-        _messenger = WeakReferenceMessenger.Default;
         _vmFactory = new StubViewModelFactory();
         _service = new StubCollectionTrackingService();
         this.SelectedCardSkus.CollectionChanged += SelectedCardSkus_CollectionChanged;
@@ -32,8 +30,8 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     public CardsViewModel(IMessenger messenger,
                           IViewModelFactory vmFactory,
                           ICollectionTrackingService service)
+        : base(messenger)
     {
-        _messenger = messenger;
         _vmFactory = vmFactory;
         _service = service;
         this.SelectedCardSkus.CollectionChanged += SelectedCardSkus_CollectionChanged;
@@ -175,7 +173,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     [RelayCommand]
     private void AddSkus()
     {
-        _messenger.Send(new OpenDrawerMessage
+        Messenger.Send(new OpenDrawerMessage
         {
             DrawerWidth = 800,
             ViewModel = _vmFactory.Drawer().WithContent("Add Cards", _vmFactory.AddCards())
@@ -218,7 +216,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
         if (this.SelectedCardSkus.Count == 1)
         {
             var sku = this.SelectedCardSkus[0];
-            _messenger.Send(new OpenDrawerMessage
+            Messenger.Send(new OpenDrawerMessage
             {
                 DrawerWidth = 400,
                 ViewModel = _vmFactory.Drawer().WithConfirmation(
@@ -227,13 +225,13 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
                     async () =>
                     {
                         await _service.DeleteCardSkuAsync(sku.Id);
-                        _messenger.ToastNotify($"Card SKU ({sku.CardName}) deleted");
+                        Messenger.ToastNotify($"Card SKU ({sku.CardName}) deleted");
                         this.SelectedCardSkus.Remove(sku);
                         this.SearchResults.Remove(sku);
                         this.SkuTotal -= 1;
                         this.ProxyTotal -= sku.ProxyQty;
                         this.CardTotal -= sku.RealQty;
-                        _messenger.Send(new CloseDrawerMessage());
+                        Messenger.Send(new CloseDrawerMessage());
                     })
             });
         }

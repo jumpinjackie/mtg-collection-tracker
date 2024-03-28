@@ -13,22 +13,20 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase
 {
     readonly IViewModelFactory _vmFactory;
     readonly ICollectionTrackingService _service;
-    readonly IMessenger _messenger;
 
     public DeckCollectionViewModel()
     {
         base.ThrowIfNotDesignMode();
         _vmFactory = new StubViewModelFactory();
         _service = new StubCollectionTrackingService();
-        _messenger = WeakReferenceMessenger.Default;
         this.IsActive = true;
     }
 
     public DeckCollectionViewModel(IViewModelFactory vmFactory, ICollectionTrackingService service, IMessenger messenger)
+        : base(messenger)
     {
         _vmFactory = vmFactory;
         _service = service;
-        _messenger = messenger;
         this.IsActive = true;
     }
 
@@ -64,7 +62,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase
     {
         if (this.SelectedDeck != null)
         {
-            _messenger.Send(new OpenDrawerMessage
+            Messenger.Send(new OpenDrawerMessage
             {
                 DrawerWidth = 800,
                 ViewModel = _vmFactory.Drawer().WithConfirmation(
@@ -90,7 +88,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase
     {
         if (this.SelectedDeck != null)
         {
-            _messenger.Send(new OpenDrawerMessage
+            Messenger.Send(new OpenDrawerMessage
             {
                 DrawerWidth = 450,
                 ViewModel = _vmFactory.Drawer().WithContent("Deck List", _vmFactory.DeckList().WithDeck(this.SelectedDeck.DeckId, this.SelectedDeck.Name))

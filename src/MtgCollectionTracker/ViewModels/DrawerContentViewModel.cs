@@ -9,17 +9,17 @@ namespace MtgCollectionTracker.ViewModels;
 
 public abstract partial class DrawerContentViewModel : RecipientViewModelBase
 {
-    
+    protected DrawerContentViewModel() : base() { }
+
+    protected DrawerContentViewModel(IMessenger messenger) : base(messenger) { }
 }
 
 public partial class DrawerViewModel : ViewModelBase
 {
     readonly IMessenger _messenger;
 
-    public DrawerViewModel()
-    {
-        _messenger = WeakReferenceMessenger.Default;
-    }
+    public DrawerViewModel() : this(WeakReferenceMessenger.Default)
+    { }
 
     public DrawerViewModel(IMessenger messenger)
     {
@@ -30,7 +30,7 @@ public partial class DrawerViewModel : ViewModelBase
     private string _title = string.Empty;
 
     [ObservableProperty]
-    private DrawerContentViewModel _contentDataContext;
+    private DrawerContentViewModel? _contentDataContext;
 
     public DrawerViewModel WithConfirmation(
         string title,
