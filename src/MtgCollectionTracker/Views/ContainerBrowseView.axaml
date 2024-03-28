@@ -18,6 +18,9 @@
 				<TextBlock HorizontalAlignment="Center" Grid.Column="1" Text="{Binding PageSummary}" />
 				<Button IsEnabled="{Binding NextEnabled}" Command="{Binding NextPageCommand}" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center" Grid.Column="2">Next Page</Button>
 			</Grid>
+			<StackPanel Orientation="Horizontal">
+				<CheckBox IsEnabled="{Binding !IsBusy}" IsChecked="{Binding ShowOnlyMissingMetadata}">Show only skus with missing metadata</CheckBox>
+			</StackPanel>
 			<ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
 		</StackPanel>
 		<StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">

@@ -8,4 +8,8 @@ public partial class ContainerBrowseView : UserControl
     {
         InitializeComponent();
     }
+
+    private void ShowOnlyMissingMetadata(object? sender, Avalonia.Interactivity.RoutedEventArgs e)
+    {
+    }
 }

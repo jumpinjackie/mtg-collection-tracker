@@ -62,25 +62,42 @@ public partial class ContainerBrowseViewModel : DrawerContentViewModel, IViewMod
     [NotifyPropertyChangedFor(nameof(NextEnabled))]
     private bool _canGoNext;
 
+    [ObservableProperty]
+    private bool _showOnlyMissingMetadata;
+
+    partial void OnShowOnlyMissingMetadataChanged(bool value)
+    {
+        FetchPage(this.PageNumber);
+    }
+
+    private void FetchPage(int oneBasedPageNumber)
+    {
+        using (((IViewModelWithBusyState)this).StartBusyState())
+        {
+            var page = _service.GetCardsForContainer(_containerId.Value, new()
+            {
+                ShowOnlyMissingMetadata = this.ShowOnlyMissingMetadata,
+                PageNumber = oneBasedPageNumber - 1
+            });
+            this.SearchResults.Clear();
+            foreach (var sku in page.Items)
+            {
+                this.SearchResults.Add(_vmFactory.CardSku().WithData(sku));
+            }
+            this.HasNoResults = this.SearchResults.Count == 0;
+            var from = Math.Max(page.PageNumber, 0) * page.PageSize;
+            var to = Math.Min((page.PageNumber + 1) * page.PageSize, page.Total);
+            this.PageSummary = $"Viewing {from} - {to} of {page.Total} skus";
+            this.CanGoPrevious = (oneBasedPageNumber - 1) > 0;
+            this.CanGoNext = (this.SearchResults.Count == page.PageSize);
+        }
+    }
+
     partial void OnPageNumberChanged(int oldValue, int newValue)
     {
         if (oldValue != newValue && newValue > 0 && _containerId.HasValue)
         {
-            using (((IViewModelWithBusyState)this).StartBusyState())
-            {
-                var page = _service.GetCardsForContainer(_containerId.Value, newValue - 1);
-                this.SearchResults.Clear();
-                foreach (var sku in page.Items)
-                {
-                    this.SearchResults.Add(_vmFactory.CardSku().WithData(sku));
-                }
-                this.HasNoResults = this.SearchResults.Count == 0;
-                var from = Math.Max(page.PageNumber, 0) * page.PageSize;
-                var to = Math.Min((page.PageNumber + 1) * page.PageSize, page.Total);
-                this.PageSummary = $"Viewing {from} - {to} of {page.Total} skus";
-                this.CanGoPrevious = (newValue - 1) > 0;
-                this.CanGoNext = (this.SearchResults.Count == page.PageSize);
-            }
+            FetchPage(newValue);
         }
     }
 

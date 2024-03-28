@@ -2,10 +2,8 @@
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Data;
 using ScryfallApi.Client;
-using System.Formats.Tar;
 using System.Linq.Expressions;
 using System.Text;
-using System.Threading.Channels;
 
 namespace MtgCollectionTracker.Core.Services;
 
@@ -152,7 +150,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         });
     }
 
-    public PaginatedCardSkuModel GetCardsForContainer(int containerId, int zeroBasedPageNumber)
+    public PaginatedCardSkuModel GetCardsForContainer(int containerId, FetchContainerPageModel options)
     {
         IQueryable<CardSku> queryable = _db
             .Cards
@@ -161,15 +159,18 @@ public class CollectionTrackingService : ICollectionTrackingService
             .Include(c => c.Scryfall)
             .Where(c => c.ContainerId == containerId);
 
+        if (options.ShowOnlyMissingMetadata)
+            queryable = queryable.Where(c => c.ScryfallId == null);
+
         var total = queryable.Count();
 
         // Simulate a 3x4 binder
         const int pageSize = 12;
-        var skip = zeroBasedPageNumber * pageSize;
+        var skip = options.PageNumber * pageSize;
 
         return new()
         {
-            PageNumber = zeroBasedPageNumber,
+            PageNumber = options.PageNumber,
             PageSize = pageSize,
             Total = total,
             Items = ToCardSkuModel(queryable.OrderBy(c => c.CardName).Skip(skip).Take(pageSize))
