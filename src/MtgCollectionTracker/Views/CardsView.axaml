@@ -20,22 +20,23 @@
 			<ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
 			<StackPanel Spacing="10" Orientation="Horizontal">
 				<!-- TODO: Change of checkbox state should re-run PerformSearchCommand -->
-				<CheckBox IsChecked="{Binding NoProxies}">Omit proxies</CheckBox>
-				<CheckBox IsChecked="{Binding NotInDecks}">Omit cards already in decks</CheckBox>
+				<CheckBox IsEnabled="{Binding !IsBusy}" IsChecked="{Binding NoProxies}">Omit proxies</CheckBox>
+				<CheckBox IsEnabled="{Binding !IsBusy}" IsChecked="{Binding NotInDecks}">Omit cards already in decks</CheckBox>
 			</StackPanel>
 		</StackPanel>
 		<StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
-			<Button Command="{Binding AddSkusCommand}" Content="Add New" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding !IsBusy}" Command="{Binding AddSkusCommand}" Content="Add New" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding HasSelectedCardSku}" Command="{Binding ViewSelectedSkuCommand}" Content="View Details" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding CanSendSkusToDeck}" Command="{Binding SendSkusToDeckCommand}" Content="Send to Deck" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding CanSendSkusToContainer}" Command="{Binding SendSkusToContainerCommand}" Content="Send to Container" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding HasSelectedCardSku}" Command="{Binding DeleteSkuCommand}" Content="Delete" />
 			<Button IsEnabled="{Binding CanCombineCardSkus}" Command="{Binding CombineSelectedSkusCommand}" Content="Combine" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding CanSplitCardSku}" Command="{Binding SplitSelectedSkuCommand}" Content="Split" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding CanUpdateMetadata}" Command="{Binding UpdateSkuMetadataCommand}" Content="Update Metadata" HorizontalAlignment="Center" />
 			<TextBlock Margin="6" VerticalAlignment="Center" Text="{Binding CollectionSummary}" />
 		</StackPanel>
 		<Panel>
-			<ListBox IsVisible="{Binding ShowSearchResults}" ItemsSource="{Binding SearchResults}" SelectionMode="Multiple" SelectedItems="{Binding SelectedCardSkus}" Background="Transparent" Margin="0 20">
+			<ListBox IsEnabled="{Binding !IsBusy}" IsVisible="{Binding ShowSearchResults}" ItemsSource="{Binding SearchResults}" SelectionMode="Multiple" SelectedItems="{Binding SelectedCardSkus}" Background="Transparent" Margin="0 20">
 				<ListBox.ItemsPanel>
 					<ItemsPanelTemplate>
 						<WrapPanel />

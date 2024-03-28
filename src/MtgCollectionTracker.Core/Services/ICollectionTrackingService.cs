@@ -14,6 +14,7 @@ namespace MtgCollectionTracker.Core.Services
         ValueTask<DeckInfoModel> CreateDeckAsync(string name, string? format, int? containerId);
         ValueTask<CardSkuModel> DeleteCardSkuAsync(int skuId);
         ValueTask<DismantleDeckResult> DismantleDeckAsync(DismantleDeckInputModel model);
+        ValueTask<IEnumerable<CardSkuModel>> UpdateCardMetadataAsync(IEnumerable<int> ids, IScryfallApiClient scryfallApiClient, CancellationToken cancel);
         IEnumerable<CardSkuModel> GetCards(CardQueryModel query);
         IEnumerable<ContainerSummaryModel> GetContainers();
         IEnumerable<DeckSummaryModel> GetDecks(string? format);

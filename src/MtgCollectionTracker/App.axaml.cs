@@ -22,11 +22,13 @@ public partial class App : Application
         // Without this line you will get duplicate validations from both Avalonia and CT
         BindingPlugins.DataValidators.RemoveAt(0);
         var cnt = new Container();
-
-        using (var db = new CardsDbContext(cnt.CreateDbContextOptions()))
+        if (!Avalonia.Controls.Design.IsDesignMode)
         {
-            //Stdout("Creating database and applying migrations if required");
-            db.Database.Migrate();
+            using (var db = new CardsDbContext(cnt.CreateDbContextOptions()))
+            {
+                //Stdout("Creating database and applying migrations if required");
+                db.Database.Migrate();
+            }
         }
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)

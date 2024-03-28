@@ -5,6 +5,7 @@ using ScryfallApi.Client;
 using System.Formats.Tar;
 using System.Linq.Expressions;
 using System.Text;
+using System.Threading.Channels;
 
 namespace MtgCollectionTracker.Core.Services;
 
@@ -146,6 +147,46 @@ public class CollectionTrackingService : ICollectionTrackingService
                 ImageLarge = c.Scryfall!.ImageLarge,
                 ImageSmall = c.Scryfall!.ImageSmall
             });
+    }
+
+    public async ValueTask<IEnumerable<CardSkuModel>> UpdateCardMetadataAsync(IEnumerable<int> ids, IScryfallApiClient scryfallApiClient, CancellationToken cancel)
+    {
+        var cards = new List<CardSkuModel>();
+
+        var skus = _db.Cards
+            .Include(c => c.Scryfall)
+            .Include(c => c.Deck)
+            .Include(c => c.Container)
+            .Where(c => ids.Contains(c.Id));
+
+        var resolver = new ScryfallMetadataResolver(_db, scryfallApiClient);
+        foreach (var c in skus)
+        {
+            await c.ApplyScryfallMetadataAsync(resolver, true, cancel);
+            cards.Add(new CardSkuModel
+            {
+                CardName = c.CardName,
+                Comments = c.Comments,
+                Condition = c.Condition,
+                ContainerName = c.Container != null ? c.Container.Name + " (" + c.ContainerId + ")" : null,
+                DeckName = c.Deck != null ? c.Deck.Name + " (" + c.DeckId + ")" : null,
+                Edition = c.Edition,
+                Id = c.Id,
+                IsFoil = c.IsFoil,
+                IsLand = c.IsLand,
+                IsSideboard = c.IsSideboard,
+                Language = c.Language,
+                Quantity = c.Quantity,
+                ImageLarge = c.Scryfall?.ImageLarge,
+                ImageSmall = c.Scryfall?.ImageSmall
+            });
+        }
+
+        await _db.SaveChangesAsync(cancel);
+
+        System.Diagnostics.Debug.WriteLine($"SF stats (cache hits: {resolver.CacheHits}, api: {resolver.ScryfallApiCalls}, large img: {resolver.ScryfallLargeImageFetches}, small img: {resolver.ScryfallSmallImageFetches})");
+
+        return cards;
     }
 
     public async ValueTask<(CardSkuModel sku, bool wasMerged)> RemoveFromDeckAsync(RemoveFromDeckInputModel model)
@@ -306,14 +347,10 @@ public class CollectionTrackingService : ICollectionTrackingService
         var resolver = new ScryfallMetadataResolver(_db, scryfallClient);
 
         var skus = new List<CardSku>();
+        var cancel = CancellationToken.None;
         foreach (var sku in cards)
         {
-            sku.Scryfall = await resolver.TryResolveAsync(sku.CardName, sku.Edition, sku.Language, sku.CollectorNumber, CancellationToken.None);
-            if (!sku.IsLand)
-            {
-                sku.IsLand = sku.Scryfall?.CardType?.StartsWith("Land") == true || sku.Scryfall?.CardType?.StartsWith("Basic Land") == true;
-            }
-
+            await sku.ApplyScryfallMetadataAsync(resolver, false, cancel);
             await _db.Cards.AddAsync(sku);
             skus.Add(sku);
         }

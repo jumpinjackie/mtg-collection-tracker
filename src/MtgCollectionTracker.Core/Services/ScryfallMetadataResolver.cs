@@ -28,11 +28,18 @@ internal class ScryfallMetadataResolver
 
     public int ScryfallSmallImageFetches { get; private set; } = 0;
 
-    public async ValueTask<ScryfallCardMetadata?> TryResolveAsync(string cardName, string edition, string? language, string? collectorNumber, CancellationToken cancel)
+    static string? NullIf(string? s) => string.IsNullOrWhiteSpace(s) ? null : s;
+
+    public async ValueTask<ScryfallCardMetadata?> TryResolveAsync(string cardName,
+                                                                  string edition,
+                                                                  string? language,
+                                                                  string? collectorNumber,
+                                                                  bool refetchMetadata,
+                                                                  CancellationToken cancel)
     {
         var nCardName = cardName.ToLower();
         var nEdition = edition.ToLower();
-        var nLanguage = (language ?? "en").ToLower();
+        var nLanguage = (NullIf(language) ?? "en").ToLower();
         var nCollectorNum = collectorNumber?.ToLower();
 
         var key = new ScryfallMetaIdentity(nCardName, nEdition, nLanguage, nCollectorNum);
@@ -53,32 +60,35 @@ internal class ScryfallMetadataResolver
             if (sfMeta != null)
             {
                 _dict.Add(key, sfMeta);
-                return sfMeta;
             }
         }
 
-        if (sfMeta == null && _scryfallApiClient != null)
+        if ((refetchMetadata || sfMeta == null) && _scryfallApiClient != null)
         {
             ScryfallApi.Client.Models.Card? sfCardMeta = null;
             try
             {
                 // Resolve scryfall metadata
-                var sfCards = await _scryfallApiClient.Cards.Search(key.cardName, 0, new ScryfallApi.Client.Models.SearchOptions()
+                var sfCards = await _scryfallApiClient.Cards.Search(key.cardName, 1, new ScryfallApi.Client.Models.SearchOptions()
                 {
+                    IncludeMultilingual = true,
                     Mode = ScryfallApi.Client.Models.SearchOptions.RollupMode.Prints
                 });
                 this.ScryfallApiCalls++;
                 sfCardMeta = sfCards.Data.FirstOrDefault(c => string.Equals(c.Name, key.cardName, StringComparison.OrdinalIgnoreCase) && string.Equals(c.Set, key.edition, StringComparison.OrdinalIgnoreCase) && string.Equals(c.Language, key.language, StringComparison.OrdinalIgnoreCase) && string.Equals(c.CollectorNumber, key.collectorNumber, StringComparison.OrdinalIgnoreCase))
                           ?? sfCards.Data.FirstOrDefault(c => string.Equals(c.Name, key.cardName, StringComparison.OrdinalIgnoreCase) && string.Equals(c.Set, key.edition, StringComparison.OrdinalIgnoreCase) && string.Equals(c.Language, key.language, StringComparison.OrdinalIgnoreCase))
+                          ?? sfCards.Data.FirstOrDefault(c => string.Equals(c.Name, key.cardName, StringComparison.OrdinalIgnoreCase) && string.Equals(c.Set, key.edition, StringComparison.OrdinalIgnoreCase))
                           ?? sfCards.Data.FirstOrDefault(c => string.Equals(c.Name, key.cardName, StringComparison.OrdinalIgnoreCase));
             }
             catch { }
             if (sfCardMeta != null)
             {
-                // Before we make this entity, just check that we don't already have an existing metadata entry
-                // by this scryfall id
-                sfMeta = await _db.Set<ScryfallCardMetadata>().FindAsync(sfCardMeta.Id.ToString(), cancel);
-
+                if (sfMeta == null)
+                {
+                    // Before we make this entity, just check that we don't already have an existing metadata entry
+                    // by this scryfall id
+                    sfMeta = await _db.Set<ScryfallCardMetadata>().FindAsync(sfCardMeta.Id.ToString(), cancel);
+                }
                 // Now we create and add this entity if not foun
                 if (sfMeta == null)
                 {

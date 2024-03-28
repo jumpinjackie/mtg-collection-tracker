@@ -2,6 +2,7 @@
 using MtgCollectionTracker.Core.Services;
 using ScryfallApi.Client;
 using System.Collections.Generic;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.Services.Stubs;
@@ -89,6 +90,11 @@ public class StubCollectionTrackingService : ICollectionTrackingService
     }
 
     public Task<CardSkuModel> SplitCardSkuAsync(SplitCardSkuInputModel model)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public ValueTask<IEnumerable<CardSkuModel>> UpdateCardMetadataAsync(IEnumerable<int> ids, IScryfallApiClient scryfallApiClient, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
