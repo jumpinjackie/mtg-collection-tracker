@@ -23,4 +23,6 @@ public interface IViewModelFactory
     DeckListViewModel DeckList();
 
     ContainerBrowseViewModel BrowseContainer();
+
+    EditCardSkuViewModel EditCardSku();
 }

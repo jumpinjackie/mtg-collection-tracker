@@ -16,6 +16,7 @@ namespace MtgCollectionTracker.Core.Services
         ValueTask<DismantleDeckResult> DismantleDeckAsync(DismantleDeckInputModel model);
         ValueTask<IEnumerable<CardSkuModel>> UpdateCardMetadataAsync(IEnumerable<int> ids, IScryfallApiClient scryfallApiClient, CancellationToken cancel);
         IEnumerable<CardSkuModel> GetCards(CardQueryModel query);
+        ValueTask<CardSkuModel> GetCardSkuByIdAsync(int id, CancellationToken cancel);
         PaginatedCardSkuModel GetCardsForContainer(int containerId, FetchContainerPageModel options);
         IEnumerable<ContainerSummaryModel> GetContainers();
         IEnumerable<DeckSummaryModel> GetDecks(string? format);
@@ -23,7 +24,7 @@ namespace MtgCollectionTracker.Core.Services
         string PrintDeck(int deckId, bool reportProxyUsage);
         ValueTask<(CardSkuModel sku, bool wasMerged)> RemoveFromDeckAsync(RemoveFromDeckInputModel model);
         Task<CardSkuModel> SplitCardSkuAsync(SplitCardSkuInputModel model);
-        ValueTask<int> UpdateCardSkuAsync(UpdateCardSkuInputModel model);
+        ValueTask<int> UpdateCardSkuAsync(UpdateCardSkuInputModel model, IScryfallApiClient? scryfallApiClient, CancellationToken cancel);
         CollectionSummaryModel GetCollectionSummary();
     }
 }

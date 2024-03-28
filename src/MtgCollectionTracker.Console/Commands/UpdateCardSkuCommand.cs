@@ -68,7 +68,7 @@ internal class UpdateCardSkuCommand : CommandBase
             ContainerId = this.ContainerId,
             UnsetDeck = this.UnsetDeck,
             UnsetContainer = this.UnsetContainer
-        });
+        }, null, CancellationToken.None);
         Stdout($"{res} skus updated");
         return 0;
     }

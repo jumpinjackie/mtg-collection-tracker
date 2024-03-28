@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MtgCollectionTracker.Data;
 
@@ -10,9 +11,11 @@ using MtgCollectionTracker.Data;
 namespace MtgCollectionTracker.Data.Migrations
 {
     [DbContext(typeof(CardsDbContext))]
-    partial class CardsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240328194230_CardBackFaceImage")]
+    partial class CardBackFaceImage
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.3");
@@ -139,6 +142,9 @@ namespace MtgCollectionTracker.Data.Migrations
                         .HasMaxLength(36)
                         .HasColumnType("TEXT");
 
+                    b.Property<byte[]>("BackImageLarge")
+                        .HasColumnType("BLOB");
+
                     b.Property<byte[]>("BackImageSmall")
                         .HasColumnType("BLOB");
 
@@ -160,6 +166,9 @@ namespace MtgCollectionTracker.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(5)
                         .HasColumnType("TEXT");
+
+                    b.Property<byte[]>("ImageLarge")
+                        .HasColumnType("BLOB");
 
                     b.Property<byte[]>("ImageSmall")
                         .HasColumnType("BLOB");

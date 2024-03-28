@@ -64,6 +64,11 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
+    public ValueTask<CardSkuModel> GetCardSkuByIdAsync(int id, CancellationToken cancel)
+    {
+        throw new System.NotImplementedException();
+    }
+
     public CollectionSummaryModel GetCollectionSummary()
     {
         throw new System.NotImplementedException();
@@ -104,7 +109,7 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<int> UpdateCardSkuAsync(UpdateCardSkuInputModel model)
+    public ValueTask<int> UpdateCardSkuAsync(UpdateCardSkuInputModel model, IScryfallApiClient? scryfallApiClient, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }

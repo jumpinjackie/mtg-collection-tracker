@@ -38,12 +38,12 @@ public class ScryfallCardMetadata
     public string? Language { get; set; }
 
     /// <summary>
-    /// Large card image (JPG format)
-    /// </summary>
-    public byte[]? ImageLarge { get; set; }
-
-    /// <summary>
     /// Small card image (JPG format)
     /// </summary>
     public byte[]? ImageSmall { get; set; }
+
+    /// <summary>
+    /// Small back face card image (JPG format)
+    /// </summary>
+    public byte[]? BackImageSmall { get; set; }
 }

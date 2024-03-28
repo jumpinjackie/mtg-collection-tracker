@@ -203,6 +203,19 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     }
 
     [RelayCommand]
+    private void EditSelectedSku()
+    {
+        if (this.SelectedCardSkus.Count == 1)
+        {
+            Messenger.Send(new OpenDrawerMessage
+            {
+                DrawerWidth = 600,
+                ViewModel = _vmFactory.Drawer().WithContent("Edit Sku", _vmFactory.EditCardSku().WithSku(this.SelectedCardSkus[0]))
+            });
+        }
+    }
+
+    [RelayCommand]
     private void SplitSelectedSku()
     {
 

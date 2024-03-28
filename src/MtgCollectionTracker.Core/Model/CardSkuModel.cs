@@ -14,6 +14,8 @@ public class CardSkuModel
 
     public string? Language { get; set; }
 
+    public string? CollectorNumber { get; set; }
+
     public string? DeckName { get; set; }
 
     public string? ContainerName { get; set; }
@@ -28,9 +30,9 @@ public class CardSkuModel
 
     public bool IsLand { get; set; }
 
-    public byte[]? ImageLarge { get; set; }
-
     public byte[]? ImageSmall { get; set; }
+
+    public byte[]? BackImageSmall { get; set; }
 
     public string GetDescription(bool withId = true) => withId
         ? $"({Quantity}x {CardName}, {Edition}, id: {Id})"

@@ -6,6 +6,8 @@ public class UpdateCardSkuInputModel
 {
     public required IEnumerable<int> Ids { get; set; }
 
+    public string? CardName { get; set; }
+
     public int? Quantity { get; set; }
 
     public string? Edition { get; set; }
@@ -13,6 +15,8 @@ public class UpdateCardSkuInputModel
     public string? Language { get; set; }
 
     public string? Comments { get; set; }
+
+    public string? CollectorNumber { get; set; }
 
     public CardCondition? Condition { get; set; }
 
@@ -27,4 +31,6 @@ public class UpdateCardSkuInputModel
     public bool UnsetDeck { get; set; }
 
     public bool UnsetContainer { get; set; }
+
+    public bool UpdateMetadata { get; set; }
 }

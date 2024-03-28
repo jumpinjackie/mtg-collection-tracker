@@ -24,8 +24,6 @@ internal class ScryfallMetadataResolver
 
     public int ScryfallApiCalls { get; private set; } = 0;
 
-    public int ScryfallLargeImageFetches { get; private set; } = 0;
-
     public int ScryfallSmallImageFetches { get; private set; } = 0;
 
     static string? NullIf(string? s) => string.IsNullOrWhiteSpace(s) ? null : s;
@@ -115,32 +113,34 @@ internal class ScryfallMetadataResolver
                 if (sfMeta.CollectorNumber != sfCardMeta.CollectorNumber)
                     sfMeta.CollectorNumber = sfCardMeta.CollectorNumber;
 
-                // Large card image
-                if (sfMeta.ImageLarge == null)
-                {
-                    byte[]? imageLarge = null;
-                    if (sfCardMeta.ImageUris.TryGetValue("large", out var largeUri))
-                    {
-                        try
-                        {
-                            imageLarge = await _http.GetByteArrayAsync(largeUri, cancel);
-                            sfMeta.ImageLarge = imageLarge;
-                            this.ScryfallLargeImageFetches++;
-                        }
-                        catch { }
-                    }
-                }
-
-                // Small card image
+                // Small card image (front face)
                 if (sfMeta.ImageSmall == null)
                 {
                     byte[]? imageSmall = null;
-                    if (sfCardMeta.ImageUris.TryGetValue("small", out var smallUri))
+                    var smallUri = sfCardMeta.GetFrontFaceImageUri("small");
+                    if (smallUri != null)
                     {
                         try
                         {
                             imageSmall = await _http.GetByteArrayAsync(smallUri, cancel);
                             sfMeta.ImageSmall = imageSmall;
+                            this.ScryfallSmallImageFetches++;
+                        }
+                        catch { }
+                    }
+                }
+
+                // Small card image (back face)
+                if (sfMeta.BackImageSmall == null )
+                {
+                    byte[]? imageSmall = null;
+                    var smallUri = sfCardMeta.GetBackFaceImageUri("small");
+                    if (smallUri != null)
+                    {
+                        try
+                        {
+                            imageSmall = await _http.GetByteArrayAsync(smallUri, cancel);
+                            sfMeta.BackImageSmall = imageSmall;
                             this.ScryfallSmallImageFetches++;
                         }
                         catch { }

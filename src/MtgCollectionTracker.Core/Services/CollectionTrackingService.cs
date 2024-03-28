@@ -95,6 +95,20 @@ public class CollectionTrackingService : ICollectionTrackingService
             });
     }
 
+    public async ValueTask<CardSkuModel> GetCardSkuByIdAsync(int id, CancellationToken cancel)
+    {
+        var sku = await _db
+            .Cards
+            .Include(c => c.Deck)
+            .Include(c => c.Container)
+            .FirstOrDefaultAsync(c => c.Id == id, cancel);
+
+        if (sku == null)
+            throw new Exception("Not found");
+
+        return CardSkuToModel(sku);
+    }
+
     public IEnumerable<CardSkuModel> GetCards(CardQueryModel query)
     {
         IQueryable<CardSku> queryable = _db
@@ -144,9 +158,10 @@ public class CollectionTrackingService : ICollectionTrackingService
             IsLand = c.IsLand,
             IsSideboard = c.IsSideboard,
             Language = c.Language,
+            CollectorNumber = c.CollectorNumber,
             Quantity = c.Quantity,
-            ImageLarge = c.Scryfall!.ImageLarge,
-            ImageSmall = c.Scryfall!.ImageSmall
+            ImageSmall = c.Scryfall!.ImageSmall,
+            BackImageSmall = c.Scryfall!.BackImageSmall
         });
     }
 
@@ -191,28 +206,12 @@ public class CollectionTrackingService : ICollectionTrackingService
         foreach (var c in skus)
         {
             await c.ApplyScryfallMetadataAsync(resolver, true, cancel);
-            cards.Add(new CardSkuModel
-            {
-                CardName = c.CardName,
-                Comments = c.Comments,
-                Condition = c.Condition,
-                ContainerName = c.Container != null ? c.Container.Name + " (" + c.ContainerId + ")" : null,
-                DeckName = c.Deck != null ? c.Deck.Name + " (" + c.DeckId + ")" : null,
-                Edition = c.Edition,
-                Id = c.Id,
-                IsFoil = c.IsFoil,
-                IsLand = c.IsLand,
-                IsSideboard = c.IsSideboard,
-                Language = c.Language,
-                Quantity = c.Quantity,
-                ImageLarge = c.Scryfall?.ImageLarge,
-                ImageSmall = c.Scryfall?.ImageSmall
-            });
+            cards.Add(CardSkuToModel(c));
         }
 
         await _db.SaveChangesAsync(cancel);
 
-        System.Diagnostics.Debug.WriteLine($"SF stats (cache hits: {resolver.CacheHits}, api: {resolver.ScryfallApiCalls}, large img: {resolver.ScryfallLargeImageFetches}, small img: {resolver.ScryfallSmallImageFetches})");
+        System.Diagnostics.Debug.WriteLine($"SF stats (cache hits: {resolver.CacheHits}, api: {resolver.ScryfallApiCalls}, small img: {resolver.ScryfallSmallImageFetches})");
 
         return cards;
     }
@@ -333,9 +332,10 @@ public class CollectionTrackingService : ICollectionTrackingService
             IsLand = c.IsLand,
             IsSideboard = c.IsSideboard,
             Language = c.Language,
+            CollectorNumber = c.CollectorNumber,
             Quantity = c.Quantity,
-            ImageLarge = c.Scryfall?.ImageLarge,
-            ImageSmall = c.Scryfall?.ImageSmall
+            ImageSmall = c.Scryfall?.ImageSmall,
+            BackImageSmall = c.Scryfall?.BackImageSmall
         };
     }
 
@@ -385,7 +385,7 @@ public class CollectionTrackingService : ICollectionTrackingService
 
         var res = await _db.SaveChangesAsync();
 
-        System.Diagnostics.Debug.WriteLine($"SF stats (cache hits: {resolver.CacheHits}, api: {resolver.ScryfallApiCalls}, large img: {resolver.ScryfallLargeImageFetches}, small img: {resolver.ScryfallSmallImageFetches})");
+        System.Diagnostics.Debug.WriteLine($"SF stats (cache hits: {resolver.CacheHits}, api: {resolver.ScryfallApiCalls}, small img: {resolver.ScryfallSmallImageFetches})");
 
         return (skus.Sum(s => s.Quantity), skus.Where(s => s.Edition == "PROXY").Sum(s => s.Quantity), skus.Count);
     }
@@ -647,24 +647,32 @@ public class CollectionTrackingService : ICollectionTrackingService
         return CardSkuToModel(newSku);
     }
 
-    public async ValueTask<int> UpdateCardSkuAsync(UpdateCardSkuInputModel model)
+    public async ValueTask<int> UpdateCardSkuAsync(UpdateCardSkuInputModel model, IScryfallApiClient? scryfallApiClient, CancellationToken cancel)
     {
         if (model.Quantity.HasValue && model.Quantity <= 0)
             throw new Exception("Quantity cannot be 0");
 
         var skus = _db.Cards.Where(c => model.Ids.Contains(c.Id));
+        ScryfallMetadataResolver? resolver = null;
+        if (scryfallApiClient != null)
+            resolver = new ScryfallMetadataResolver(_db, scryfallApiClient);
+
         foreach (var sku in skus)
         {
+            if (model.CardName != null)
+                sku.CardName = model.CardName;
             if (model.Condition != null)
                 sku.Condition = model.Condition;
             if (model.Comments != null)
                 sku.Comments = model.Comments;
             if (model.Edition != null)
-                sku.Comments = model.Edition;
+                sku.Edition = model.Edition;
             if (model.Language != null)
                 sku.Language = model.Language;
             if (model.Quantity != null)
                 sku.Quantity = model.Quantity.Value;
+            if (model.CollectorNumber != null)
+                sku.CollectorNumber = model.CollectorNumber;
             if (model.DeckId != null)
                 sku.DeckId = model.DeckId;
             if (model.ContainerId != null)
@@ -683,6 +691,11 @@ public class CollectionTrackingService : ICollectionTrackingService
             {
                 sku.ContainerId = null;
                 sku.Container = null;
+            }
+
+            if (resolver != null)
+            {
+                await sku.ApplyScryfallMetadataAsync(resolver, true, cancel);
             }
         }
 

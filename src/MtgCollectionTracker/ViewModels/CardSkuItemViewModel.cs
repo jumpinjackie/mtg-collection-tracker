@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Data;
 using System.IO;
+using System.Reflection;
 
 namespace MtgCollectionTracker.ViewModels;
 
@@ -31,11 +32,18 @@ public partial class CardSkuItemViewModel : ViewModelBase
     [ObservableProperty]
     private Bitmap? _cardImage;
 
+    //TODO: Figure out if it's possible to "flip" the front face image to its
+    //back face image. Right now this is unused
+    [ObservableProperty]
+    private Bitmap? _backFaceImage;
+
     [ObservableProperty]
     private string? _containerName;
 
     [ObservableProperty]
     private string? _deckName;
+
+    public string? CollectorNumber { get; set; }
 
     public bool HasContainer => !string.IsNullOrEmpty(this.ContainerName);
 
@@ -47,6 +55,7 @@ public partial class CardSkuItemViewModel : ViewModelBase
     public CardSkuItemViewModel WithData(CardSkuModel sku)
     {
         this.Id = sku.Id;
+        this.CollectorNumber = sku.CollectorNumber;
         this.CardName = sku.Edition == "PROXY" ? "[Proxy] " + sku.CardName : sku.CardName;
         if (sku.Edition != "PROXY")
         {
@@ -68,6 +77,11 @@ public partial class CardSkuItemViewModel : ViewModelBase
         {
             using var ms = new MemoryStream(sku.ImageSmall);
             this.CardImage = new Bitmap(ms);
+        }
+        if (sku.BackImageSmall != null)
+        {
+            using var ms = new MemoryStream(sku.BackImageSmall);
+            this.BackFaceImage = new Bitmap(ms);
         }
         return this;
     }

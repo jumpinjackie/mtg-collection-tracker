@@ -22,6 +22,7 @@ namespace MtgCollectionTracker;
 [Register(typeof(CardSkuItemViewModel), Scope.InstancePerResolution)]
 [Register(typeof(DeckViewModel), Scope.InstancePerResolution)]
 [Register(typeof(DeckListViewModel), Scope.InstancePerResolution)]
+[Register(typeof(EditCardSkuViewModel), Scope.InstancePerResolution)]
 [Register(typeof(ContainerViewModel), Scope.InstancePerResolution)]
 [Register(typeof(DrawerViewModel), Scope.InstancePerResolution)]
 [Register(typeof(AddCardsViewModel), Scope.InstancePerResolution)]
