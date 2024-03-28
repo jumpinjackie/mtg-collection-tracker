@@ -36,6 +36,19 @@ public class CardSku
     [MaxLength(3)]
     public string? Language { get; set; }
 
+    /// <summary>
+    /// The collector number
+    /// </summary>
+    [MaxLength(5)]
+    public string? CollectorNumber { get; set; }
+
+    /// <summary>
+    /// The scryfall card id, used to associate with auxilliary information like card image, market price, etc
+    /// </summary>
+    public string? ScryfallId { get; set; }
+
+    public virtual ScryfallCardMetadata? Scryfall { get; set; }
+
     public int? DeckId { get; set; }
 
     /// <summary>
@@ -106,6 +119,8 @@ public class CardSku
             ContainerId = this.ContainerId,
             Deck = this.Deck,
             DeckId = this.DeckId,
+
+            ScryfallId = this.ScryfallId,
 
             Edition = this.Edition,
             IsFoil = this.IsFoil,

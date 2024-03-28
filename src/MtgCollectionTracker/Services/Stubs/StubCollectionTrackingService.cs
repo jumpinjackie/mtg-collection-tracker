@@ -1,5 +1,6 @@
 ﻿using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
+using ScryfallApi.Client;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -7,7 +8,7 @@ namespace MtgCollectionTracker.Services.Stubs;
 
 public class StubCollectionTrackingService : ICollectionTrackingService
 {
-    public ValueTask<(int total, int proxyTotal, int rows)> AddMultipleToContainerOrDeckAsync(int? containerId, int? deckId, IEnumerable<AddToDeckOrContainerInputModel> items)
+    public ValueTask<(int total, int proxyTotal, int rows)> AddMultipleToContainerOrDeckAsync(int? containerId, int? deckId, IEnumerable<AddToDeckOrContainerInputModel> items, IScryfallApiClient? client)
     {
         throw new System.NotImplementedException();
     }

@@ -13,4 +13,6 @@ public class CardQueryModel
     public bool NotInDecks { get; set; }
 
     public bool NoProxies { get; set; }
+
+    public bool IncludeScryfallMetadata { get; set; }
 }

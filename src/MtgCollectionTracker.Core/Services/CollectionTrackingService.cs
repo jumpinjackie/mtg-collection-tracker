@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Data;
+using ScryfallApi.Client;
 using System.Formats.Tar;
 using System.Linq.Expressions;
 using System.Text;
@@ -122,7 +123,11 @@ public class CollectionTrackingService : ICollectionTrackingService
         else if (query.DeckIds?.Length > 0)
             queryable = queryable.Where(c => c.DeckId != null && query.DeckIds.Contains((int)c.DeckId));
 
-        return queryable
+        var bq = queryable;
+        if (query.IncludeScryfallMetadata)
+            bq = queryable.Include(c => c.Scryfall);
+
+        return bq
             .OrderBy(c => c.CardName)
             .Select(c => new CardSkuModel
             {
@@ -137,7 +142,9 @@ public class CollectionTrackingService : ICollectionTrackingService
                 IsLand = c.IsLand,
                 IsSideboard = c.IsSideboard,
                 Language = c.Language,
-                Quantity = c.Quantity
+                Quantity = c.Quantity,
+                ImageLarge = c.Scryfall!.ImageLarge,
+                ImageSmall = c.Scryfall!.ImageSmall
             });
     }
 
@@ -261,10 +268,13 @@ public class CollectionTrackingService : ICollectionTrackingService
         };
     }
 
+    
+
     public async ValueTask<(int total, int proxyTotal, int rows)> AddMultipleToContainerOrDeckAsync(
         int? containerId,
         int? deckId,
-        IEnumerable<AddToDeckOrContainerInputModel> items)
+        IEnumerable<AddToDeckOrContainerInputModel> items,
+        IScryfallApiClient? scryfallClient)
     {
         Container? cnt = null;
         Deck? dck = null;
@@ -293,14 +303,25 @@ public class CollectionTrackingService : ICollectionTrackingService
             Quantity = model.Quantity
         });
 
+        var resolver = new ScryfallMetadataResolver(_db, scryfallClient);
+
         var skus = new List<CardSku>();
         foreach (var sku in cards)
         {
+            sku.Scryfall = await resolver.TryResolveAsync(sku.CardName, sku.Edition, sku.Language, sku.CollectorNumber, CancellationToken.None);
+            if (!sku.IsLand)
+            {
+                sku.IsLand = sku.Scryfall?.CardType?.StartsWith("Land") == true || sku.Scryfall?.CardType?.StartsWith("Basic Land") == true;
+            }
+
             await _db.Cards.AddAsync(sku);
-            skus.Add(sku); ;
+            skus.Add(sku);
         }
 
         var res = await _db.SaveChangesAsync();
+
+        System.Diagnostics.Debug.WriteLine($"SF stats (cache hits: {resolver.CacheHits}, api: {resolver.ScryfallApiCalls}, large img: {resolver.ScryfallLargeImageFetches}, small img: {resolver.ScryfallSmallImageFetches})");
+
         return (skus.Sum(s => s.Quantity), skus.Where(s => s.Edition == "PROXY").Sum(s => s.Quantity), skus.Count);
     }
 

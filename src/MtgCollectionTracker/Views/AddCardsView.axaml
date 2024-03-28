@@ -38,8 +38,8 @@
 					<DataGridTextColumn Header="Card Name" Binding="{Binding CardName}"/>
 					<DataGridTextColumn Header="Edition" Binding="{Binding Edition}"/>
 					<DataGridTextColumn Header="Language" Binding="{Binding Language}"/>
+					<DataGridTextColumn Header="Collector #" Binding="{Binding CollectorNumber}"/>
 					<DataGridCheckBoxColumn Header="Foil" Binding="{Binding IsFoil}" />
-					<DataGridCheckBoxColumn Header="Land" Binding="{Binding IsLand}" />
 					<DataGridTextColumn Header="Comments" Binding="{Binding Comments}" />
 					<DataGridTemplateColumn Header="Valid?" Width="80">
 						<DataGridTemplateColumn.CellTemplate>

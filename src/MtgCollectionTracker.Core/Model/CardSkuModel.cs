@@ -28,6 +28,10 @@ public class CardSkuModel
 
     public bool IsLand { get; set; }
 
+    public byte[]? ImageLarge { get; set; }
+
+    public byte[]? ImageSmall { get; set; }
+
     public string GetDescription(bool withId = true) => withId
         ? $"({Quantity}x {CardName}, {Edition}, id: {Id})"
         : $"({Quantity}x {CardName}, {Edition})";

@@ -5,6 +5,7 @@ using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
+using ScryfallApi.Client;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,6 +15,7 @@ namespace MtgCollectionTracker.ViewModels;
 public partial class AddCardsViewModel : DrawerContentViewModel
 {
     readonly ICollectionTrackingService _service;
+    readonly IScryfallApiClient? _scryfallApiClient;
 
     public AddCardsViewModel()
     {
@@ -31,10 +33,11 @@ public partial class AddCardsViewModel : DrawerContentViewModel
         this.Cards.Add(new() { AddCardsCommand = this.AddCardsCommand, Qty = 1, CardName = "Timetwister", Edition = "LEB" });
     }
 
-    public AddCardsViewModel(IMessenger messenger, ICollectionTrackingService service)
+    public AddCardsViewModel(IMessenger messenger, ICollectionTrackingService service, IScryfallApiClient scryfallApiClient)
         : base(messenger)
     {
         _service = service;
+        _scryfallApiClient = scryfallApiClient;
     }
 
     public ObservableCollection<AddCardSkuViewModel> Cards { get; } = new();
@@ -70,12 +73,11 @@ public partial class AddCardsViewModel : DrawerContentViewModel
             Comments = c.Comments,
             Condition = c.Condition,
             IsFoil = c.IsFoil,
-            IsLand = c.IsLand,
             Language = c.Language,
             Quantity = c.Qty,
             Edition = c.Edition
         });
-        var (total, proxyTotal, rows) = await _service.AddMultipleToContainerOrDeckAsync(this.ContainerId, this.DeckId, adds);
+        var (total, proxyTotal, rows) = await _service.AddMultipleToContainerOrDeckAsync(this.ContainerId, this.DeckId, adds, _scryfallApiClient);
         Messenger.Send(new CardsAddedMessage { CardsTotal = total, ProxyTotal = proxyTotal, SkuTotal = rows });
         Messenger.Send(new CloseDrawerMessage());
     }

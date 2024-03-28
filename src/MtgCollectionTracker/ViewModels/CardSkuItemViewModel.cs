@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Data;
+using System.IO;
 
 namespace MtgCollectionTracker.ViewModels;
 
@@ -63,6 +64,11 @@ public partial class CardSkuItemViewModel : ViewModelBase
         this.Comments = sku.Comments;
         this.ContainerName = sku.ContainerName;
         this.DeckName = sku.DeckName;
+        if (sku.ImageSmall != null)
+        {
+            using var ms = new MemoryStream(sku.ImageSmall);
+            this.CardImage = new Bitmap(ms);
+        }
         return this;
     }
 }

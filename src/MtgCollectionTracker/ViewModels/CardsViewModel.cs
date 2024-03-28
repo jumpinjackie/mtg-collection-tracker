@@ -151,7 +151,8 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
             {
                 SearchFilter = this.SearchText,
                 NoProxies = this.NoProxies,
-                NotInDecks = this.NotInDecks
+                NotInDecks = this.NotInDecks,
+                IncludeScryfallMetadata = true
             });
             this.SearchResults.Clear();
             foreach (var sku in cards)

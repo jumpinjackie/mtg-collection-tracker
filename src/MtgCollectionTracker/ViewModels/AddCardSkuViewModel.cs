@@ -27,10 +27,12 @@ public partial class AddCardSkuViewModel : ViewModelBase
     private string? _language;
 
     [ObservableProperty]
-    private bool _isFoil;
+    [NotifyPropertyChangedFor(nameof(IsValid))]
+    [NotifyCanExecuteChangedFor(nameof(AddCardsCommand))]
+    private string? _collectorNumber;
 
     [ObservableProperty]
-    private bool _isLand;
+    private bool _isFoil;
 
     [ObservableProperty]
     private CardCondition? _condition;

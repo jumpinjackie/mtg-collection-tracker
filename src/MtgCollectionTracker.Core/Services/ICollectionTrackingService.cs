@@ -1,10 +1,11 @@
 ﻿using MtgCollectionTracker.Core.Model;
+using ScryfallApi.Client;
 
 namespace MtgCollectionTracker.Core.Services
 {
     public interface ICollectionTrackingService
     {
-        ValueTask<(int total, int proxyTotal, int rows)> AddMultipleToContainerOrDeckAsync(int? containerId, int? deckId, IEnumerable<AddToDeckOrContainerInputModel> items);
+        ValueTask<(int total, int proxyTotal, int rows)> AddMultipleToContainerOrDeckAsync(int? containerId, int? deckId, IEnumerable<AddToDeckOrContainerInputModel> items, IScryfallApiClient? scryfallClient);
         ValueTask<CardSkuModel> AddToDeckAsync(AddToDeckInputModel model);
         ValueTask<CardSkuModel> AddToDeckOrContainerAsync(int? containerId, int? deckId, AddToDeckOrContainerInputModel model);
         ValueTask<(int shortAmount, HashSet<string> fromDeckNames, HashSet<string> fromContainerNames)> CheckQuantityShortfallAsync(string cardName, int wantQty, bool noProxies, bool sparesOnly);
