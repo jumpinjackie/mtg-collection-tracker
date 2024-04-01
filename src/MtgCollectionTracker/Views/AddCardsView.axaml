@@ -21,7 +21,7 @@
 				Add cards to your collection by filling in the card SKUs in the grid below.<LineBreak />
 				The following columns must always be filled in: Qty, Card Name, Edition.<LineBreak />
 				Edition must be the code for the relevant set. Consult Scryfall for the proper codes.<LineBreak />
-				Language must be a 2-3 letter language code. If not specified, English (EN) is assumed.<LineBreak />
+				If language is not specified, English (en) is assumed.<LineBreak />
 				Although not required, it is recommended to tick Land for relevant land cards. This is to assist in decklist presentation.
 			</TextBlock>
 			<DataGrid Name="AddCardsDataGrid"
@@ -37,7 +37,21 @@
 					<DataGridTextColumn Header="Qty" Binding="{Binding Qty}"/>
 					<DataGridTextColumn Header="Card Name" Binding="{Binding CardName}"/>
 					<DataGridTextColumn Header="Edition" Binding="{Binding Edition}"/>
-					<DataGridTextColumn Header="Language" Binding="{Binding Language}"/>
+					<DataGridTemplateColumn Header="Language">
+						<DataGridTemplateColumn.CellTemplate>
+							<DataTemplate>
+								<Panel>
+									<ComboBox MinWidth="100" ItemsSource="{Binding Languages}" SelectedItem="{Binding Language}">
+										<ComboBox.ItemTemplate>
+											<DataTemplate x:DataType="vm:LanguageViewModel">
+												<TextBlock Text="{Binding Name}" />
+											</DataTemplate>
+										</ComboBox.ItemTemplate>
+									</ComboBox>
+								</Panel>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellTemplate>
+					</DataGridTemplateColumn>
 					<DataGridTextColumn Header="Collector #" Binding="{Binding CollectorNumber}"/>
 					<DataGridCheckBoxColumn Header="Foil" Binding="{Binding IsFoil}" />
 					<DataGridTextColumn Header="Comments" Binding="{Binding Comments}" />

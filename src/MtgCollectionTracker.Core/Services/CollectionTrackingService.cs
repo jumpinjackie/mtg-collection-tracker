@@ -27,6 +27,11 @@ public class CollectionTrackingService : ICollectionTrackingService
         return name;
     }
 
+    public IEnumerable<CardLanguageModel> GetLanguages()
+    {
+        return _db.Set<CardLanguage>().Select(lang => new CardLanguageModel(lang.Code, lang.PrintedCode, lang.Name));
+    }
+
     /// <summary>
     /// Checks the shortfall for the given card name.
     /// </summary>
@@ -172,6 +177,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             .Include(c => c.Deck)
             .Include(c => c.Container)
             .Include(c => c.Scryfall)
+            .Include(c => c.Language)
             .Where(c => c.ContainerId == containerId);
 
         if (options.ShowOnlyMissingMetadata)
@@ -200,6 +206,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             .Include(c => c.Scryfall)
             .Include(c => c.Deck)
             .Include(c => c.Container)
+            .Include(c => c.Language)
             .Where(c => ids.Contains(c.Id));
 
         var resolver = new ScryfallMetadataResolver(_db, scryfallApiClient);
@@ -275,6 +282,8 @@ public class CollectionTrackingService : ICollectionTrackingService
         await _db.SaveChangesAsync();
         _db.Entry(theSku).Reference(p => p.Container).Load();
         _db.Entry(theSku).Reference(p => p.Deck).Load();
+        _db.Entry(theSku).Reference(p => p.Language).Load();
+        _db.Entry(theSku).Reference(p => p.Scryfall).Load();
 
         return (CardSkuToModel(theSku), wasMerged);
     }
@@ -365,6 +374,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             Deck = dck,
             Container = cnt,
             Edition = model.Edition,
+            CollectorNumber = model.CollectorNumber,
             IsFoil = model.IsFoil,
             IsLand = model.IsLand,
             IsSideboard = model.IsSideboard,

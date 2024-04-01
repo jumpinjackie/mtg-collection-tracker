@@ -23,8 +23,14 @@
 			<NumericUpDown Value="{Binding Quantity}" />
 			<TextBlock>Edition (use "PROXY" to indicate proxies)</TextBlock>
 			<TextBox Text="{Binding Edition}" />
-			<TextBlock>Language Code (if empty, defaults to "en")</TextBlock>
-			<TextBox Text="{Binding Language}" />
+			<TextBlock>Language</TextBlock>
+			<ComboBox MinWidth="200" ItemsSource="{Binding Languages}" SelectedItem="{Binding Language}">
+				<ComboBox.ItemTemplate>
+					<DataTemplate x:DataType="vm:LanguageViewModel">
+						<TextBlock Text="{Binding Name}" />
+					</DataTemplate>
+				</ComboBox.ItemTemplate>
+			</ComboBox>
 			<TextBlock>Collector # (set to resolve card image for a specific variant)</TextBlock>
 			<TextBox Text="{Binding CollectorNumber}" />
 			<TextBlock>Comments</TextBlock>

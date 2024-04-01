@@ -286,7 +286,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
                         using (((IViewModelWithBusyState)this).StartBusyState())
                         {
                             await _service.DeleteCardSkuAsync(sku.Id);
-                            Messenger.ToastNotify($"Card SKU ({sku.CardName}) deleted");
+                            Messenger.ToastNotify($"Card SKU ({sku.CardName}, {sku.Language ?? "en"}) deleted");
                             this.SelectedCardSkus.Remove(sku);
                             this.SearchResults.Remove(sku);
                             this.SkuTotal -= 1;

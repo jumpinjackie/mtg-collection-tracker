@@ -16,21 +16,29 @@ public partial class AddCardsViewModel : DrawerContentViewModel
 {
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
+    readonly LanguageViewModel[] _languages;
 
     public AddCardsViewModel()
     {
         base.ThrowIfNotDesignMode();
         _service = new StubCollectionTrackingService();
+        _languages = [
+            new LanguageViewModel("en", "en", "English"),
+            new LanguageViewModel("es", "sp", "Spanish"),
+            new LanguageViewModel("fr", "fr", "French"),
+            new LanguageViewModel("de", "de", "German"),
+            new LanguageViewModel("ja", "jp", "Japanese")
+        ];
 
-        this.Cards.Add(new() { AddCardsCommand = this.AddCardsCommand, Qty = 1, CardName = "Black Lotus", Edition = "LEB" });
-        this.Cards.Add(new() { AddCardsCommand = this.AddCardsCommand, Qty = 1, CardName = "Mox Pearl", Edition = "LEB" });
-        this.Cards.Add(new() { AddCardsCommand = this.AddCardsCommand, Qty = 1, CardName = "Mox Emerald", Edition = "LEB" });
-        this.Cards.Add(new() { AddCardsCommand = this.AddCardsCommand, Qty = 1, CardName = "Mox Ruby", Edition = "LEB" });
-        this.Cards.Add(new() { AddCardsCommand = this.AddCardsCommand, Qty = 1, CardName = "Mox Jet", Edition = "LEB" });
-        this.Cards.Add(new() { AddCardsCommand = this.AddCardsCommand, Qty = 1, CardName = "Mox Sapphire", Edition = "LEB" });
-        this.Cards.Add(new() { AddCardsCommand = this.AddCardsCommand, Qty = 1, CardName = "Ancestral Recall", Edition = "LEB" });
-        this.Cards.Add(new() { AddCardsCommand = this.AddCardsCommand, Qty = 1, CardName = "Time Walk", Edition = "LEB" });
-        this.Cards.Add(new() { AddCardsCommand = this.AddCardsCommand, Qty = 1, CardName = "Timetwister", Edition = "LEB" });
+        this.Cards.Add(new() { Languages = _languages, AddCardsCommand = this.AddCardsCommand, Qty = 1, CardName = "Black Lotus", Edition = "LEB" });
+        this.Cards.Add(new() { Languages = _languages, AddCardsCommand = this.AddCardsCommand, Qty = 1, CardName = "Mox Pearl", Edition = "LEB" });
+        this.Cards.Add(new() { Languages = _languages, AddCardsCommand = this.AddCardsCommand, Qty = 1, CardName = "Mox Emerald", Edition = "LEB" });
+        this.Cards.Add(new() { Languages = _languages, AddCardsCommand = this.AddCardsCommand, Qty = 1, CardName = "Mox Ruby", Edition = "LEB" });
+        this.Cards.Add(new() { Languages = _languages, AddCardsCommand = this.AddCardsCommand, Qty = 1, CardName = "Mox Jet", Edition = "LEB" });
+        this.Cards.Add(new() { Languages = _languages, AddCardsCommand = this.AddCardsCommand, Qty = 1, CardName = "Mox Sapphire", Edition = "LEB" });
+        this.Cards.Add(new() { Languages = _languages, AddCardsCommand = this.AddCardsCommand, Qty = 1, CardName = "Ancestral Recall", Edition = "LEB" });
+        this.Cards.Add(new() { Languages = _languages, AddCardsCommand = this.AddCardsCommand, Qty = 1, CardName = "Time Walk", Edition = "LEB" });
+        this.Cards.Add(new() { Languages = _languages, AddCardsCommand = this.AddCardsCommand, Qty = 1, CardName = "Timetwister", Edition = "LEB" });
     }
 
     public AddCardsViewModel(IMessenger messenger, ICollectionTrackingService service, IScryfallApiClient scryfallApiClient)
@@ -38,6 +46,7 @@ public partial class AddCardsViewModel : DrawerContentViewModel
     {
         _service = service;
         _scryfallApiClient = scryfallApiClient;
+        _languages = service.GetLanguages().Select(lang => new LanguageViewModel(lang.Code, lang.PrintedCode, lang.Name)).ToArray();
     }
 
     public ObservableCollection<AddCardSkuViewModel> Cards { get; } = new();
@@ -45,7 +54,7 @@ public partial class AddCardsViewModel : DrawerContentViewModel
     [RelayCommand]
     private void AddRow()
     {
-        Cards.Add(new AddCardSkuViewModel { AddCardsCommand = this.AddCardsCommand, Qty = 1, CardName = "", Edition = "" });
+        Cards.Add(new AddCardSkuViewModel { AddCardsCommand = this.AddCardsCommand, Qty = 1, CardName = "", Edition = "", Languages = _languages });
         AddCardsCommand.NotifyCanExecuteChanged();
     }
 
@@ -73,7 +82,8 @@ public partial class AddCardsViewModel : DrawerContentViewModel
             Comments = c.Comments,
             Condition = c.Condition,
             IsFoil = c.IsFoil,
-            Language = c.Language,
+            Language = c.Language?.Code ?? "en",
+            CollectorNumber = c.CollectorNumber,
             Quantity = c.Qty,
             Edition = c.Edition
         });

@@ -84,6 +84,11 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
+    public IEnumerable<CardLanguageModel> GetLanguages()
+    {
+        throw new System.NotImplementedException();
+    }
+
     public bool IsBasicLand(string cardName)
     {
         throw new System.NotImplementedException();

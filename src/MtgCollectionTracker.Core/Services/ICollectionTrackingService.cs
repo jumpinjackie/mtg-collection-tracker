@@ -5,6 +5,7 @@ namespace MtgCollectionTracker.Core.Services
 {
     public interface ICollectionTrackingService
     {
+        IEnumerable<CardLanguageModel> GetLanguages();
         ValueTask<(int total, int proxyTotal, int rows)> AddMultipleToContainerOrDeckAsync(int? containerId, int? deckId, IEnumerable<AddToDeckOrContainerInputModel> items, IScryfallApiClient? scryfallClient);
         ValueTask<CardSkuModel> AddToDeckAsync(AddToDeckInputModel model);
         ValueTask<CardSkuModel> AddToDeckOrContainerAsync(int? containerId, int? deckId, AddToDeckOrContainerInputModel model);

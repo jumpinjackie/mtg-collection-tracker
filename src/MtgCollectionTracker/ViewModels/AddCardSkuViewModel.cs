@@ -24,7 +24,9 @@ public partial class AddCardSkuViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsValid))]
     [NotifyCanExecuteChangedFor(nameof(AddCardsCommand))]
-    private string? _language;
+    private LanguageViewModel? _language;
+
+    public LanguageViewModel[] Languages { get; set; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsValid))]

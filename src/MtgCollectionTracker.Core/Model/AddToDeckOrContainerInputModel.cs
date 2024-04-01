@@ -10,6 +10,8 @@ public class AddToDeckOrContainerInputModel
 
     public required string Edition { get; set; }
 
+    public string? CollectorNumber { get; set; }
+
     public string? Language { get; set; }
 
     public int? DeckId { get; set; }

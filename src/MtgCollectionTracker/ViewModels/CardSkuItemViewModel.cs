@@ -74,7 +74,7 @@ public partial class CardSkuItemViewModel : ViewModelBase
         }
         this.Condition = (sku.Condition ?? CardCondition.NearMint).ToString();
         this.Quantity = $"Qty: {sku.Quantity}";
-        this.Language = sku.Language?.Length > 0 ? sku.Language : "EN";
+        this.Language = sku.Language?.Length > 0 ? sku.Language : "en";
         this.Comments = sku.Comments;
         this.ContainerName = sku.ContainerName;
         this.DeckName = sku.DeckName;

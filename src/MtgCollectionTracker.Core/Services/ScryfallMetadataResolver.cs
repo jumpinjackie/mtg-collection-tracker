@@ -64,10 +64,11 @@ internal class ScryfallMetadataResolver
         // In the event of in-exact match, prefer oldest printing
         cards.Sort((a, b) => a.ReleasedAt.CompareTo(b.ReleasedAt));
 
-        // If proxy, prefer oldest *english* printing
+        // If proxy, prefer oldest printing of given language before falling back to english
         if (string.Equals(key.edition, "proxy", StringComparison.OrdinalIgnoreCase))
         {
-            sfCardMeta = cards.FirstOrDefault(c => string.Equals(c.Name, key.cardName, StringComparison.OrdinalIgnoreCase) && string.Equals(c.Language, "en", StringComparison.OrdinalIgnoreCase))
+            sfCardMeta = cards.FirstOrDefault(c => string.Equals(c.Name, key.cardName, StringComparison.OrdinalIgnoreCase) && string.Equals(c.Language, key.language, StringComparison.OrdinalIgnoreCase))
+                ?? cards.FirstOrDefault(c => string.Equals(c.Name, key.cardName, StringComparison.OrdinalIgnoreCase) && string.Equals(c.Language, "en", StringComparison.OrdinalIgnoreCase))
                 ?? cards.FirstOrDefault(c => string.Equals(c.Name, key.cardName, StringComparison.OrdinalIgnoreCase));
         }
         else
