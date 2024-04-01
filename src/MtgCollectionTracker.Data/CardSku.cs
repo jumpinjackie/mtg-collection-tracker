@@ -34,7 +34,9 @@ public class CardSku
     /// The languages of this quantity of cards. If not specified, it is assumed to be in English
     /// </summary>
     [MaxLength(3)]
-    public string? Language { get; set; }
+    public string? LanguageId { get; set; }
+
+    public virtual CardLanguage? Language { get; set; }
 
     /// <summary>
     /// The collector number

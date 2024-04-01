@@ -157,7 +157,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             IsFoil = c.IsFoil,
             IsLand = c.IsLand,
             IsSideboard = c.IsSideboard,
-            Language = c.Language,
+            Language = c.Language != null ? c.Language.Code : "en",
             CollectorNumber = c.CollectorNumber,
             Quantity = c.Quantity,
             ImageSmall = c.Scryfall!.ImageSmall,
@@ -331,7 +331,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             IsFoil = c.IsFoil,
             IsLand = c.IsLand,
             IsSideboard = c.IsSideboard,
-            Language = c.Language,
+            Language = c.Language?.Code ?? "en",
             CollectorNumber = c.CollectorNumber,
             Quantity = c.Quantity,
             ImageSmall = c.Scryfall?.ImageSmall,
@@ -368,7 +368,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             IsFoil = model.IsFoil,
             IsLand = model.IsLand,
             IsSideboard = model.IsSideboard,
-            Language = model.Language,
+            LanguageId = model.Language,
             Quantity = model.Quantity
         });
 
@@ -403,7 +403,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             IsFoil = model.IsFoil,
             IsLand = model.IsLand,
             IsSideboard = model.IsSideboard,
-            Language = model.Language,
+            LanguageId = model.Language,
             Quantity = model.Quantity
         };
 
@@ -668,7 +668,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             if (model.Edition != null)
                 sku.Edition = model.Edition;
             if (model.Language != null)
-                sku.Language = model.Language;
+                sku.LanguageId = model.Language;
             if (model.Quantity != null)
                 sku.Quantity = model.Quantity.Value;
             if (model.CollectorNumber != null)
@@ -727,7 +727,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         }
 
         var mergeCandidates = cards
-            .GroupBy(c => new CardIdentityKey(c.CardName, c.Edition, c.Language, c.Condition, c.Comments))
+            .GroupBy(c => new CardIdentityKey(c.CardName, c.Edition, c.LanguageId, c.Condition, c.Comments))
             .Where(grp => grp.Count() > 1)
             .Select(grp => new { Items = grp.ToList() });
 

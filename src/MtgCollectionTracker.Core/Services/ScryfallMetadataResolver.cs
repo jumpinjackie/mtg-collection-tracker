@@ -36,22 +36,36 @@ internal class ScryfallMetadataResolver
         if (_scryfallApiClient == null)
             return sfCardMeta;
 
+        var cards = new List<Card>();
+
         // Resolve scryfall metadata
         int pageNo = 0;
-        while (sfCardMeta == null)
+        while (true)
         {
             pageNo++;
-            var sfCards = await _scryfallApiClient.Cards.Search(key.cardName, pageNo, new ScryfallApi.Client.Models.SearchOptions()
+            try
             {
-                IncludeMultilingual = true,
-                Mode = ScryfallApi.Client.Models.SearchOptions.RollupMode.Prints
-            });
-            this.ScryfallApiCalls++;
-            sfCardMeta = sfCards.Data.FirstOrDefault(c => string.Equals(c.Name, key.cardName, StringComparison.OrdinalIgnoreCase) && string.Equals(c.Set, key.edition, StringComparison.OrdinalIgnoreCase) && string.Equals(c.Language, key.language, StringComparison.OrdinalIgnoreCase) && string.Equals(c.CollectorNumber, key.collectorNumber, StringComparison.OrdinalIgnoreCase))
-                ?? sfCards.Data.FirstOrDefault(c => string.Equals(c.Name, key.cardName, StringComparison.OrdinalIgnoreCase) && string.Equals(c.Set, key.edition, StringComparison.OrdinalIgnoreCase) && string.Equals(c.Language, key.language, StringComparison.OrdinalIgnoreCase))
-                ?? sfCards.Data.FirstOrDefault(c => string.Equals(c.Name, key.cardName, StringComparison.OrdinalIgnoreCase) && string.Equals(c.Set, key.edition, StringComparison.OrdinalIgnoreCase))
-                ?? sfCards.Data.FirstOrDefault(c => string.Equals(c.Name, key.cardName, StringComparison.OrdinalIgnoreCase));
+                var sfCards = await _scryfallApiClient.Cards.Search(key.cardName, pageNo, new ScryfallApi.Client.Models.SearchOptions()
+                {
+                    IncludeMultilingual = true,
+                    Mode = ScryfallApi.Client.Models.SearchOptions.RollupMode.Prints
+                });
+                this.ScryfallApiCalls++;
+                cards.AddRange(sfCards.Data.Where(c => string.Equals(c.Name, key.cardName, StringComparison.OrdinalIgnoreCase)));
+                if (!sfCards.HasMore)
+                    break;
+            }
+            catch (ScryfallApiException se)
+            {
+                break;
+            }
         }
+
+        sfCardMeta = cards.FirstOrDefault(c => string.Equals(c.Name, key.cardName, StringComparison.OrdinalIgnoreCase) && string.Equals(c.Set, key.edition, StringComparison.OrdinalIgnoreCase) && string.Equals(c.Language, key.language, StringComparison.OrdinalIgnoreCase) && string.Equals(c.CollectorNumber, key.collectorNumber, StringComparison.OrdinalIgnoreCase))
+                ?? cards.FirstOrDefault(c => string.Equals(c.Name, key.cardName, StringComparison.OrdinalIgnoreCase) && string.Equals(c.Set, key.edition, StringComparison.OrdinalIgnoreCase) && string.Equals(c.Language, key.language, StringComparison.OrdinalIgnoreCase))
+                ?? cards.FirstOrDefault(c => string.Equals(c.Name, key.cardName, StringComparison.OrdinalIgnoreCase) && string.Equals(c.Set, key.edition, StringComparison.OrdinalIgnoreCase))
+                ?? cards.FirstOrDefault(c => string.Equals(c.Name, key.cardName, StringComparison.OrdinalIgnoreCase));
+
         return sfCardMeta;
     }
     public async ValueTask<ScryfallCardMetadata?> TryResolveAsync(
