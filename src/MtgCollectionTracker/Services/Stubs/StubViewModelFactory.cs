@@ -30,4 +30,6 @@ public class StubViewModelFactory : IViewModelFactory
 
     public SendCardsToContainerOrDeckViewModel SendCardsToContainer(IEnumerable<CardSkuItemViewModel> cards)
         => new SendCardsToContainerOrDeckViewModel { Cards = cards };
+
+    public SplitCardSkuViewModel SplitCardSku() => new SplitCardSkuViewModel();
 }

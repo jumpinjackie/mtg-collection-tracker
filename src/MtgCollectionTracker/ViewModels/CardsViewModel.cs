@@ -100,7 +100,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
         this.HasAtLeastOneSelectedCardSku = this.SelectedCardSkus.Count > 0;
     }
 
-    public bool CanSplitCardSku => !this.IsBusy && this.HasSelectedCardSku;
+    public bool CanSplitCardSku => !this.IsBusy && this.HasSelectedCardSku && this.SelectedCardSkus[0].RealQty > 1;
     public bool CanSendSkusToContainer => !this.IsBusy && this.HasAtLeastOneSelectedCardSku;
     public bool CanSendSkusToDeck => !this.IsBusy && this.HasAtLeastOneSelectedCardSku;
     public bool CanUpdateMetadata => !this.IsBusy && this.HasAtLeastOneSelectedCardSku;
@@ -223,7 +223,18 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     [RelayCommand]
     private void SplitSelectedSku()
     {
-
+        if (CanSplitCardSku)
+        {
+            var vm = _vmFactory.SplitCardSku();
+            vm.CardSkuId = this.SelectedCardSkus[0].Id;
+            vm.CurrentQuantity = this.SelectedCardSkus[0].RealQty;
+            vm.SplitQuantity = vm.SplitMin;
+            Messenger.Send(new OpenDrawerMessage
+            {
+                DrawerWidth = 300,
+                ViewModel = _vmFactory.Drawer().WithContent("Split Card SKU", vm)
+            });
+        }
     }
 
     [RelayCommand]

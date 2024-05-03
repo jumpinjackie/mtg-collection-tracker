@@ -20,6 +20,7 @@ public class ViewModelFactory : IViewModelFactory
     readonly Func<DeckListViewModel> _deckList;
     readonly Func<ContainerBrowseViewModel> _browseContainer;
     readonly Func<EditCardSkuViewModel> _editCardSku;
+    readonly Func<SplitCardSkuViewModel> _splitCardSku;
     readonly Func<SendCardsToContainerOrDeckViewModel> _sendCardsToContainer;
 
     readonly ICollectionTrackingService _service;
@@ -36,6 +37,7 @@ public class ViewModelFactory : IViewModelFactory
                             Func<DeckListViewModel> deckList,
                             Func<ContainerBrowseViewModel> browseContainer,
                             Func<EditCardSkuViewModel> editCardSku,
+                            Func<SplitCardSkuViewModel> splitCardSku,
                             Func<SendCardsToContainerOrDeckViewModel> sendCardsToContainer)
     {
         _service = service;
@@ -51,6 +53,7 @@ public class ViewModelFactory : IViewModelFactory
         _deckList = deckList;
         _browseContainer = browseContainer;
         _editCardSku = editCardSku;
+        _splitCardSku = splitCardSku;
         _sendCardsToContainer = sendCardsToContainer;
     }
 
@@ -84,4 +87,6 @@ public class ViewModelFactory : IViewModelFactory
         vm.AvailableDecks = _service.GetDecks(null).Select(d => _deck().WithData(d)).ToList();
         return vm;
     }
+
+    public SplitCardSkuViewModel SplitCardSku() => _splitCardSku();
 }

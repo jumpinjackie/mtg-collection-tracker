@@ -28,4 +28,6 @@ public interface IViewModelFactory
     ContainerBrowseViewModel BrowseContainer();
 
     EditCardSkuViewModel EditCardSku();
+
+    SplitCardSkuViewModel SplitCardSku();
 }
