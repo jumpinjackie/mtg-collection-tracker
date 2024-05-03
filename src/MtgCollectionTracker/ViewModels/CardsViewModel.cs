@@ -96,12 +96,10 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
 
     private void SelectedCardSkus_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
-        this.HasMultipleSelectedCardSkus = this.SelectedCardSkus.Count > 1;
         this.HasSelectedCardSku = this.SelectedCardSkus.Count == 1;
         this.HasAtLeastOneSelectedCardSku = this.SelectedCardSkus.Count > 0;
     }
 
-    public bool CanCombineCardSkus => !this.IsBusy && this.HasMultipleSelectedCardSkus;
     public bool CanSplitCardSku => !this.IsBusy && this.HasSelectedCardSku;
     public bool CanSendSkusToContainer => !this.IsBusy && this.HasAtLeastOneSelectedCardSku;
     public bool CanSendSkusToDeck => !this.IsBusy && this.HasAtLeastOneSelectedCardSku;
@@ -116,7 +114,6 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     [NotifyPropertyChangedFor(nameof(CanSendSkusToContainer))]
     [NotifyPropertyChangedFor(nameof(CanSendSkusToDeck))]
     [NotifyPropertyChangedFor(nameof(CanUpdateMetadata))]
-    [NotifyPropertyChangedFor(nameof(CanCombineCardSkus))]
     [NotifyPropertyChangedFor(nameof(CanSplitCardSku))]
     private bool _isBusy = false;
 
@@ -131,10 +128,6 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     [NotifyPropertyChangedFor(nameof(CanSendSkusToDeck))]
     [NotifyPropertyChangedFor(nameof(CanUpdateMetadata))]
     private bool _hasAtLeastOneSelectedCardSku;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanCombineCardSkus))]
-    private bool _hasMultipleSelectedCardSkus;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanSplitCardSku))]
@@ -234,21 +227,6 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     }
 
     [RelayCommand]
-    private void CombineSelectedSkus()
-    {
-
-    }
-
-    [RelayCommand]
-    private void SendSkusToDeck()
-    {
-        if (this.SelectedCardSkus.Count > 0)
-        {
-
-        }
-    }
-
-    [RelayCommand]
     private void SendSkusToContainer()
     {
         if (this.SelectedCardSkus.Count > 0)
@@ -256,7 +234,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
             Messenger.Send(new OpenDrawerMessage
             {
                 DrawerWidth = 800,
-                ViewModel = _vmFactory.Drawer().WithContent("Send Cards To Container", _vmFactory.SendCardsToContainer(this.SelectedCardSkus))
+                ViewModel = _vmFactory.Drawer().WithContent("Send Cards To Deck or Container", _vmFactory.SendCardsToContainer(this.SelectedCardSkus))
             });
         }
     }

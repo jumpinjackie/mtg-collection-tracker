@@ -7,7 +7,7 @@ using MtgCollectionTracker.Services.Stubs;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDrawerMessage>, IRecipient<CloseDrawerMessage>, IRecipient<NotificationMessage>, IRecipient<CardsAddedMessage>, IRecipient<CardsSentToContainerMessage>
+public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDrawerMessage>, IRecipient<CloseDrawerMessage>, IRecipient<NotificationMessage>, IRecipient<CardsAddedMessage>, IRecipient<CardsSentToContainerMessage>, IRecipient<CardsSentToDeckMessage>
 {
     public MainViewModel()
     {
@@ -70,7 +70,12 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDraw
 
     void IRecipient<CardsSentToContainerMessage>.Receive(CardsSentToContainerMessage message)
     {
-        this.NotificationManager?.Show($"{message.TotalSkus} SKU(s) moved to ({message.ContainerName})");
+        this.NotificationManager?.Show($"{message.TotalSkus} SKU(s) moved to container ({message.ContainerName})");
+    }
+
+    void IRecipient<CardsSentToDeckMessage>.Receive(CardsSentToDeckMessage message)
+    {
+        this.NotificationManager?.Show($"{message.TotalSkus} SKU(s) moved to deck ({message.DeckName})");
     }
 
     public WindowNotificationManager? NotificationManager { get; set; }

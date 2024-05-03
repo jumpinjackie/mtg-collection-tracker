@@ -28,6 +28,6 @@ public class StubViewModelFactory : IViewModelFactory
 
     public EditCardSkuViewModel EditCardSku() => new EditCardSkuViewModel();
 
-    public SendCardsToContainerViewModel SendCardsToContainer(IEnumerable<CardSkuItemViewModel> cards)
-        => new SendCardsToContainerViewModel { Cards = cards };
+    public SendCardsToContainerOrDeckViewModel SendCardsToContainer(IEnumerable<CardSkuItemViewModel> cards)
+        => new SendCardsToContainerOrDeckViewModel { Cards = cards };
 }

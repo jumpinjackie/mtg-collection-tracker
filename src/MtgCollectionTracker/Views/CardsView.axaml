@@ -28,10 +28,8 @@
 			<Button IsEnabled="{Binding !IsBusy}" Command="{Binding AddSkusCommand}" Content="Add New" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding HasSelectedCardSku}" Command="{Binding ViewSelectedSkuCommand}" Content="View Details" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding HasSelectedCardSku}" Command="{Binding EditSelectedSkuCommand}" Content="Edit" HorizontalAlignment="Center" />
-			<Button IsEnabled="{Binding CanSendSkusToDeck}" Command="{Binding SendSkusToDeckCommand}" Content="Send to Deck" HorizontalAlignment="Center" />
-			<Button IsEnabled="{Binding CanSendSkusToContainer}" Command="{Binding SendSkusToContainerCommand}" Content="Send to Container" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding CanSendSkusToContainer}" Command="{Binding SendSkusToContainerCommand}" Content="Send to Deck/Container" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding HasSelectedCardSku}" Command="{Binding DeleteSkuCommand}" Content="Delete" />
-			<Button IsEnabled="{Binding CanCombineCardSkus}" Command="{Binding CombineSelectedSkusCommand}" Content="Combine" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding CanSplitCardSku}" Command="{Binding SplitSelectedSkuCommand}" Content="Split" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding CanUpdateMetadata}" Command="{Binding UpdateSkuMetadataCommand}" Content="Update Metadata" HorizontalAlignment="Center" />
 			<TextBlock Margin="6" VerticalAlignment="Center" Text="{Binding CollectionSummary}" />

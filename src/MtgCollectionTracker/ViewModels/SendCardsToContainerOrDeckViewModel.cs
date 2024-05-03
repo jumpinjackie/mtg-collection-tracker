@@ -12,19 +12,19 @@ using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class SendCardsToContainerViewModel : DrawerContentViewModel
+public partial class SendCardsToContainerOrDeckViewModel : DrawerContentViewModel
 {
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
 
-    public SendCardsToContainerViewModel(IMessenger messenger, ICollectionTrackingService service, IScryfallApiClient scryfallApiClient)
+    public SendCardsToContainerOrDeckViewModel(IMessenger messenger, ICollectionTrackingService service, IScryfallApiClient scryfallApiClient)
         : base(messenger)
     {
         _service = service;
         _scryfallApiClient = scryfallApiClient;
     }
 
-    public SendCardsToContainerViewModel()
+    public SendCardsToContainerOrDeckViewModel()
     {
         this.ThrowIfNotDesignMode();
         _service = new StubCollectionTrackingService();
@@ -44,28 +44,47 @@ public partial class SendCardsToContainerViewModel : DrawerContentViewModel
                 new CardSkuItemViewModel().WithData(new() { Quantity = 1, CardName = "Time Walk", Edition = "LEB" }),
                 new CardSkuItemViewModel().WithData(new() { Quantity = 1, CardName = "Timetwister", Edition = "LEB" })
         ];
+        this.AvailableDecks = [
+            new DeckViewModel().WithData(new(){ Id = 1, Name = "My Vintage Deck" }),
+            new DeckViewModel().WithData(new(){ Id = 1, Name = "My Legacy Deck" })
+        ];
     }
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SendCardsCommand))]
     private ContainerViewModel? _selectedContainer;
 
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SendCardsCommand))]
+    private DeckViewModel? _selectedDeck;
+
+    [ObservableProperty]
+    private bool _unSetDeck;
+
+    [ObservableProperty]
+    private bool _unSetContainer;
+
     public IEnumerable<ContainerViewModel>? AvailableContainers { get; internal set; }
+
+    public IEnumerable<DeckViewModel>? AvailableDecks { get; internal set; }
 
     public IEnumerable<CardSkuItemViewModel>? Cards { get; internal set; }
 
-    private bool CanSendCards() => this.SelectedContainer != null;
+    private bool CanSendCards() => this.SelectedContainer != null || this.SelectedDeck != null;
 
     [RelayCommand(CanExecute = nameof(CanSendCards))]
     private async Task SendCards()
     {
-        if (this.SelectedContainer != null)
+        if (this.SelectedContainer != null || this.SelectedDeck != null)
         {
             var skuIds = this.Cards.Select(c => c.Id);
             var res = await _service.UpdateCardSkuAsync(new()
             {
                 Ids = skuIds,
-                ContainerId = this.SelectedContainer.Id,
+                ContainerId = this.SelectedContainer?.Id,
+                DeckId = this.SelectedDeck?.DeckId,
+                UnsetDeck = this.UnSetDeck,
+                UnsetContainer = this.UnSetContainer
             }, _scryfallApiClient, CancellationToken.None);
             /*
             // Update existing selection with updated model
@@ -77,7 +96,10 @@ public partial class SendCardsToContainerViewModel : DrawerContentViewModel
                     c.WithData(sku);
             }
             */
-            Messenger.Send(new CardsSentToContainerMessage(res, this.SelectedContainer.Name));
+            if (this.SelectedContainer != null)
+                Messenger.Send(new CardsSentToContainerMessage(res, this.SelectedContainer.Name));
+            if (this.SelectedDeck != null)
+                Messenger.Send(new CardsSentToDeckMessage(res, this.SelectedDeck.Name));
             Messenger.Send(new CloseDrawerMessage());
         }
     }

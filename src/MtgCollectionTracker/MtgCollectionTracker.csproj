@@ -45,5 +45,8 @@
     <Compile Update="Views\DeckCollectionView.axaml.cs">
       <DependentUpon>DeckCollectionView.axaml</DependentUpon>
     </Compile>
+    <Compile Update="Views\SendCardsToContainerOrDeckView.axaml.cs">
+      <DependentUpon>SendCardsToContainerOrDeckView.axaml</DependentUpon>
+    </Compile>
   </ItemGroup>
 </Project>

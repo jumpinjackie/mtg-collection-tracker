@@ -21,7 +21,7 @@ public interface IViewModelFactory
 
     AddCardsViewModel AddCards();
 
-    SendCardsToContainerViewModel SendCardsToContainer(IEnumerable<CardSkuItemViewModel> cards);
+    SendCardsToContainerOrDeckViewModel SendCardsToContainer(IEnumerable<CardSkuItemViewModel> cards);
 
     DeckListViewModel DeckList();
 
