@@ -77,6 +77,14 @@
 			<StackPanel Orientation="Horizontal">
 				<Button Command="{Binding AddRowCommand}">Add Row</Button>
 			</StackPanel>
+			<TextBlock Margin="6">Add these cards to container</TextBlock>
+			<ComboBox Margin="6" SelectedItem="{Binding SelectedContainer}" ItemsSource="{Binding AvailableContainers}">
+				<ComboBox.ItemTemplate>
+					<DataTemplate x:DataType="vm:ContainerViewModel">
+						<TextBlock Text="{Binding Name}" />
+					</DataTemplate>
+				</ComboBox.ItemTemplate>
+			</ComboBox>
 		</StackPanel>
 	</DockPanel>
 </UserControl>

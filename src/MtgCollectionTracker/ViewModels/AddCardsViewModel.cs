@@ -6,6 +6,7 @@ using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using ScryfallApi.Client;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
@@ -47,6 +48,8 @@ public partial class AddCardsViewModel : DrawerContentViewModel
         _service = service;
         _scryfallApiClient = scryfallApiClient;
         _languages = service.GetLanguages().Select(lang => new LanguageViewModel(lang.Code, lang.PrintedCode, lang.Name)).ToArray();
+
+        this.AvailableContainers = service.GetContainers().Select(c => new ContainerViewModel().WithData(c));
     }
 
     public ObservableCollection<AddCardSkuViewModel> Cards { get; } = new();
@@ -68,10 +71,10 @@ public partial class AddCardsViewModel : DrawerContentViewModel
     private bool CanAddCards() => Cards.Count > 0 && Cards.All(c => c.IsValid);
 
     [ObservableProperty]
-    private int? _deckId;
+    [NotifyCanExecuteChangedFor(nameof(AddCardsCommand))]
+    private ContainerViewModel? _selectedContainer;
 
-    [ObservableProperty]
-    private int? _containerId;
+    public IEnumerable<ContainerViewModel>? AvailableContainers { get; internal set; }
 
     [RelayCommand(CanExecute = nameof(CanAddCards))]
     private async Task AddCards()
@@ -87,7 +90,16 @@ public partial class AddCardsViewModel : DrawerContentViewModel
             Quantity = c.Qty,
             Edition = c.Edition
         });
-        var (total, proxyTotal, rows) = await _service.AddMultipleToContainerOrDeckAsync(this.ContainerId, this.DeckId, adds, _scryfallApiClient);
+
+        int? containerId = null;
+        int? deckId = null;
+
+        if (this.SelectedContainer != null)
+        {
+            containerId = this.SelectedContainer.Id;
+        }
+
+        var (total, proxyTotal, rows) = await _service.AddMultipleToContainerOrDeckAsync(containerId, deckId, adds, _scryfallApiClient);
         Messenger.Send(new CardsAddedMessage { CardsTotal = total, ProxyTotal = proxyTotal, SkuTotal = rows });
         Messenger.Send(new CloseDrawerMessage());
     }
