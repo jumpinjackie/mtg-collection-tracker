@@ -133,6 +133,9 @@ public class CollectionTrackingService : ICollectionTrackingService
         if (query.ContainerIds?.Length > 0)
             queryable = queryable.Where(c => c.ContainerId != null && query.ContainerIds.Contains((int)c.ContainerId));
 
+        if (query.UnParented)
+            queryable = queryable.Where(c => c.ContainerId == null && c.DeckId == null);
+
         if (query.NoProxies)
             queryable = queryable.Where(c => !proxySets.Contains(c.Edition));
 

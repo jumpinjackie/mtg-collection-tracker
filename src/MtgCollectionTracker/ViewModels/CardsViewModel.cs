@@ -151,6 +151,9 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     [ObservableProperty]
     private bool _hasNoResults;
 
+    [ObservableProperty]
+    private bool _unParented;
+
     [RelayCommand]
     private async Task PerformSearch()
     {
@@ -168,6 +171,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
                 SearchFilter = this.SearchText,
                 NoProxies = this.NoProxies,
                 NotInDecks = this.NotInDecks,
+                UnParented = this.UnParented,
                 IncludeScryfallMetadata = true
             });
             this.SearchResults.Clear();
@@ -195,6 +199,11 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     }
 
     partial void OnNotInDecksChanged(bool value)
+    {
+        this.PerformSearchCommand.Execute(null);
+    }
+
+    partial void OnUnParentedChanged(bool value)
     {
         this.PerformSearchCommand.Execute(null);
     }
@@ -233,13 +242,23 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     [RelayCommand]
     private void SendSkusToDeck()
     {
-        
+        if (this.SelectedCardSkus.Count > 0)
+        {
+
+        }
     }
 
     [RelayCommand]
     private void SendSkusToContainer()
     {
-
+        if (this.SelectedCardSkus.Count > 0)
+        {
+            Messenger.Send(new OpenDrawerMessage
+            {
+                DrawerWidth = 800,
+                ViewModel = _vmFactory.Drawer().WithContent("Send Cards To Container", _vmFactory.SendCardsToContainer(this.SelectedCardSkus))
+            });
+        }
     }
 
     [RelayCommand]

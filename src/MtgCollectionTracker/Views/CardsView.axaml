@@ -21,6 +21,7 @@
 			<StackPanel Spacing="10" Orientation="Horizontal">
 				<CheckBox IsEnabled="{Binding !IsBusy}" IsChecked="{Binding NoProxies}">Omit proxies</CheckBox>
 				<CheckBox IsEnabled="{Binding !IsBusy}" IsChecked="{Binding NotInDecks}">Omit cards already in decks</CheckBox>
+				<CheckBox IsEnabled="{Binding !IsBusy}" IsChecked="{Binding UnParented}">Show only un-parented</CheckBox>
 			</StackPanel>
 		</StackPanel>
 		<StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">

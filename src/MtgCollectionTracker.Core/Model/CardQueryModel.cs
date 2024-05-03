@@ -14,5 +14,7 @@ public class CardQueryModel
 
     public bool NoProxies { get; set; }
 
+    public bool UnParented { get; set; }
+
     public bool IncludeScryfallMetadata { get; set; }
 }

@@ -1,6 +1,9 @@
-﻿using MtgCollectionTracker.Services.Contracts;
+﻿using MtgCollectionTracker.Core.Services;
+using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.ViewModels;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace MtgCollectionTracker.Services;
 
@@ -17,8 +20,12 @@ public class ViewModelFactory : IViewModelFactory
     readonly Func<DeckListViewModel> _deckList;
     readonly Func<ContainerBrowseViewModel> _browseContainer;
     readonly Func<EditCardSkuViewModel> _editCardSku;
+    readonly Func<SendCardsToContainerViewModel> _sendCardsToContainer;
 
-    public ViewModelFactory(Func<CardsViewModel> cards,
+    readonly ICollectionTrackingService _service;
+
+    public ViewModelFactory(ICollectionTrackingService service,
+                            Func<CardsViewModel> cards,
                             Func<CardSkuItemViewModel> cardSku,
                             Func<DeckViewModel> deck,
                             Func<DeckCollectionViewModel> decks,
@@ -28,8 +35,11 @@ public class ViewModelFactory : IViewModelFactory
                             Func<AddCardsViewModel> addCards,
                             Func<DeckListViewModel> deckList,
                             Func<ContainerBrowseViewModel> browseContainer,
-                            Func<EditCardSkuViewModel> editCardSku)
+                            Func<EditCardSkuViewModel> editCardSku,
+                            Func<SendCardsToContainerViewModel> sendCardsToContainer)
     {
+        _service = service;
+
         _cards = cards;
         _cardSku = cardSku;
         _deck = deck;
@@ -41,6 +51,7 @@ public class ViewModelFactory : IViewModelFactory
         _deckList = deckList;
         _browseContainer = browseContainer;
         _editCardSku = editCardSku;
+        _sendCardsToContainer = sendCardsToContainer;
     }
 
     public CardsViewModel Cards() => _cards();
@@ -64,4 +75,12 @@ public class ViewModelFactory : IViewModelFactory
     public ContainerBrowseViewModel BrowseContainer() => _browseContainer();
 
     public EditCardSkuViewModel EditCardSku() => _editCardSku();
+
+    public SendCardsToContainerViewModel SendCardsToContainer(IEnumerable<CardSkuItemViewModel> cards)
+    {
+        var vm = _sendCardsToContainer();
+        vm.Cards = cards;
+        vm.AvailableContainers = _service.GetContainers().Select(c => _container().WithData(c)).ToList();
+        return vm;
+    }
 }

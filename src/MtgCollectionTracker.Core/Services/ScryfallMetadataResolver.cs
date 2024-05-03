@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using MtgCollectionTracker.Data;
 using ScryfallApi.Client;
 using ScryfallApi.Client.Models;

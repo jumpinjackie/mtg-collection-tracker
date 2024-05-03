@@ -1,0 +1,39 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
+             x:Class="MtgCollectionTracker.Views.SendCardsToContainerView"
+			 x:DataType="vm:SendCardsToContainerViewModel">
+	<Design.DataContext>
+		<!-- This only sets the DataContext for the previewer in an IDE,
+         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+		<vm:SendCardsToContainerViewModel />
+	</Design.DataContext>
+	<DockPanel>
+		<StackPanel DockPanel.Dock="Bottom" Margin="10" Orientation="Horizontal">
+			<Button Command="{Binding SendCardsCommand}">Send Cards</Button>
+		</StackPanel>
+		<StackPanel Margin="10">
+			<TextBlock Margin="6">Container</TextBlock>
+			<ComboBox Margin="6" SelectedItem="{Binding SelectedContainer}" ItemsSource="{Binding AvailableContainers}">
+				<ComboBox.ItemTemplate>
+					<DataTemplate x:DataType="vm:ContainerViewModel">
+						<TextBlock Text="{Binding Name}" />
+					</DataTemplate>
+				</ComboBox.ItemTemplate>
+			</ComboBox>
+			<TextBlock Margin="6" LineSpacing="6" TextWrapping="WrapWithOverflow">
+				The following card SKUs will be added to the specified container
+			</TextBlock>
+			<DataGrid ItemsSource="{Binding Cards}" MinHeight="200" BorderBrush="Gray">
+				<DataGrid.Columns>
+					<DataGridTextColumn Header="Qty" Binding="{Binding Quantity}"/>
+					<DataGridTextColumn Header="Card Name" Binding="{Binding CardName}"/>
+					<DataGridTextColumn Header="Edition" Binding="{Binding Edition}"/>
+				</DataGrid.Columns>
+			</DataGrid>
+		</StackPanel>	
+	</DockPanel>
+</UserControl>

@@ -7,7 +7,7 @@ using MtgCollectionTracker.Services.Stubs;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDrawerMessage>, IRecipient<CloseDrawerMessage>, IRecipient<NotificationMessage>, IRecipient<CardsAddedMessage>
+public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDrawerMessage>, IRecipient<CloseDrawerMessage>, IRecipient<NotificationMessage>, IRecipient<CardsAddedMessage>, IRecipient<CardsSentToContainerMessage>
 {
     public MainViewModel()
     {
@@ -63,9 +63,14 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDraw
     void IRecipient<CardsAddedMessage>.Receive(CardsAddedMessage message)
     {
         if (message.ProxyTotal > 0)
-            this.NotificationManager?.Show($"{message.CardsTotal} cards ({message.ProxyTotal} proxies) added to collection");
+            this.NotificationManager?.Show($"{message.CardsTotal} card(s) ({message.ProxyTotal} proxies) added to collection");
         else
-            this.NotificationManager?.Show($"{message.CardsTotal} cards added to collection");
+            this.NotificationManager?.Show($"{message.CardsTotal} card(s) added to collection");
+    }
+
+    void IRecipient<CardsSentToContainerMessage>.Receive(CardsSentToContainerMessage message)
+    {
+        this.NotificationManager?.Show($"{message.TotalSkus} SKU(s) moved to ({message.ContainerName})");
     }
 
     public WindowNotificationManager? NotificationManager { get; set; }

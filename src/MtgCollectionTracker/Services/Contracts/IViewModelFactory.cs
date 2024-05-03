@@ -1,4 +1,5 @@
 ﻿using MtgCollectionTracker.ViewModels;
+using System.Collections.Generic;
 
 namespace MtgCollectionTracker.Services.Contracts;
 
@@ -19,6 +20,8 @@ public interface IViewModelFactory
     DrawerViewModel Drawer();
 
     AddCardsViewModel AddCards();
+
+    SendCardsToContainerViewModel SendCardsToContainer(IEnumerable<CardSkuItemViewModel> cards);
 
     DeckListViewModel DeckList();
 

@@ -1,5 +1,6 @@
 ﻿using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.ViewModels;
+using System.Collections.Generic;
 
 namespace MtgCollectionTracker.Services.Stubs;
 
@@ -26,4 +27,7 @@ public class StubViewModelFactory : IViewModelFactory
     public ContainerBrowseViewModel BrowseContainer() => new ContainerBrowseViewModel();
 
     public EditCardSkuViewModel EditCardSku() => new EditCardSkuViewModel();
+
+    public SendCardsToContainerViewModel SendCardsToContainer(IEnumerable<CardSkuItemViewModel> cards)
+        => new SendCardsToContainerViewModel { Cards = cards };
 }
