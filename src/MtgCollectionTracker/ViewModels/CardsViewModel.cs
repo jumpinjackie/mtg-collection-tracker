@@ -121,7 +121,19 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
 
     public ObservableCollection<CardSkuItemViewModel> SelectedCardSkus { get; } = new();
 
-    public bool CanSearch => !string.IsNullOrWhiteSpace(SearchText) && !IsBusy;
+    public bool CanSearch
+    {
+        get
+        {
+            if (IsBusy)
+                return false;
+
+            if (!this.UnParented)
+                return !string.IsNullOrWhiteSpace(SearchText);
+
+            return true;
+        }
+    }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanSendSkusToContainer))]
@@ -150,7 +162,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     [RelayCommand]
     private async Task PerformSearch()
     {
-        if (string.IsNullOrEmpty(SearchText))
+        if (!this.UnParented && string.IsNullOrEmpty(SearchText))
             return;
 
         using (((IViewModelWithBusyState)this).StartBusyState())
