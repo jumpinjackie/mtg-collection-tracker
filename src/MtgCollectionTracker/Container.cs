@@ -1,4 +1,7 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+﻿using Avalonia;
+using Avalonia.Controls;
+using Avalonia.Platform.Storage;
+using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.EntityFrameworkCore;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Data;
@@ -36,6 +39,13 @@ namespace MtgCollectionTracker;
 public partial class Container : IContainer<MainViewModel>
 #pragma warning restore SI1103 // Return type of delegate has a single instance scope and so will always have the same value
 {
+    readonly Visual _root;
+
+    public Container(Visual root)
+    {
+        _root = root;
+    }
+
     [Factory]
     public DbContextOptions<CardsDbContext> CreateDbContextOptions()
     {
@@ -46,6 +56,9 @@ public partial class Container : IContainer<MainViewModel>
 
     [Factory(Scope.SingleInstance)]
     public IMessenger GetMessenger() => WeakReferenceMessenger.Default;
+
+    [Factory(Scope.SingleInstance)]
+    public IStorageProvider GetStorageProvider() => TopLevel.GetTopLevel(_root).StorageProvider;
 
     class ScryfallHttpHandler : DelegatingHandler
     {

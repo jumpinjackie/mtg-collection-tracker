@@ -5,6 +5,7 @@ using Avalonia.Markup.Xaml;
 using Microsoft.EntityFrameworkCore;
 using MtgCollectionTracker.Data;
 using MtgCollectionTracker.Views;
+using System;
 
 namespace MtgCollectionTracker;
 
@@ -20,7 +21,28 @@ public partial class App : Application
         // Line below is needed to remove Avalonia data validation.
         // Without this line you will get duplicate validations from both Avalonia and CT
         BindingPlugins.DataValidators.RemoveAt(0);
-        var cnt = new Container();
+
+        Action<Container>? init = null;
+        Visual? root = null;
+        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+        {
+            root = new MainWindow();
+            init = (cnt) =>
+            {
+                root.DataContext = cnt.Resolve().Value;
+                desktop.MainWindow = (MainWindow)root;
+            };
+        }
+        else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
+        {
+            root = new MainView();
+            init = cnt =>
+            {
+                root.DataContext = cnt.Resolve().Value;
+                singleViewPlatform.MainView = (MainView)root;
+            };
+        }
+        var cnt = new Container(root);
         if (!Avalonia.Controls.Design.IsDesignMode)
         {
             using (var db = new CardsDbContext(cnt.CreateDbContextOptions()))
@@ -30,20 +52,7 @@ public partial class App : Application
             }
         }
 
-        if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
-        {
-            desktop.MainWindow = new MainWindow
-            {
-                DataContext = cnt.Resolve().Value
-            };
-        }
-        else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
-        {
-            singleViewPlatform.MainView = new MainView
-            {
-                DataContext = cnt.Resolve().Value
-            };
-        }
+        init?.Invoke(cnt);
 
         base.OnFrameworkInitializationCompleted();
     }
