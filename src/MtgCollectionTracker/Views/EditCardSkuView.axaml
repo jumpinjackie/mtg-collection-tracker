@@ -3,7 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="700"
              x:Class="MtgCollectionTracker.Views.EditCardSkuView"
 			 x:DataType="vm:EditCardSkuViewModel">
 	<Design.DataContext>
@@ -13,28 +13,75 @@
 	</Design.DataContext>
 	<DockPanel>
 		<StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="6">
-			<Button Command="{Binding SaveCommand}">Save</Button>
+			<Button Command="{Binding SaveCommand}">Apply</Button>
 			<Button Command="{Binding CancelCommand}">Cancel</Button>
 		</StackPanel>
 		<StackPanel Spacing="6">
-			<TextBlock>Card Name (must have both names separated by // for adventure and double-faced cards)</TextBlock>
-			<TextBox Text="{Binding CardName}" />
-			<TextBlock>Quantity</TextBlock>
-			<NumericUpDown Value="{Binding Quantity}" />
-			<TextBlock>Edition (use "PROXY" to indicate proxies)</TextBlock>
-			<TextBox Text="{Binding Edition}" />
-			<TextBlock>Language</TextBlock>
-			<ComboBox MinWidth="200" ItemsSource="{Binding Languages}" SelectedItem="{Binding Language}">
-				<ComboBox.ItemTemplate>
-					<DataTemplate x:DataType="vm:LanguageViewModel">
-						<TextBlock Text="{Binding Name}" />
-					</DataTemplate>
-				</ComboBox.ItemTemplate>
-			</ComboBox>
-			<TextBlock>Collector # (set to resolve card image for a specific variant)</TextBlock>
-			<TextBox Text="{Binding CollectorNumber}" />
-			<TextBlock>Comments</TextBlock>
-			<TextBox Height="60" Text="{Binding Comments}" />
+			<TextBlock>Tick the following fields to apply edits for</TextBlock>
+			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="30, *">
+				<CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding ApplyCardName}" />
+				<TextBlock Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">Card Name (must have both names separated by // for adventure and double-faced cards)</TextBlock>
+				<TextBox Grid.Row="1" Grid.ColumnSpan="2" IsEnabled="{Binding ApplyCardName}" Text="{Binding CardName}" />
+			</Grid>
+			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="30, *">
+				<CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding ApplyQuantity}" />
+				<TextBlock Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">Quantity</TextBlock>
+				<NumericUpDown Grid.Row="1" Grid.ColumnSpan="2" IsEnabled="{Binding ApplyQuantity}" Value="{Binding Quantity}" />
+			</Grid>
+			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="30, *">
+				<CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding ApplyEdition}" />
+				<TextBlock Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">Edition (use "PROXY" to indicate proxies)</TextBlock>
+				<TextBox Grid.Row="1" Grid.ColumnSpan="2" IsEnabled="{Binding ApplyEdition}" Text="{Binding Edition}" />
+			</Grid>
+			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="30, *">
+				<CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding ApplyLanguage}" />
+				<TextBlock Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">Language</TextBlock>
+				<ComboBox Grid.Row="1" Grid.ColumnSpan="2" IsEnabled="{Binding ApplyLanguage}" MinWidth="200" ItemsSource="{Binding Languages}" SelectedItem="{Binding Language}">
+					<ComboBox.ItemTemplate>
+						<DataTemplate x:DataType="vm:LanguageViewModel">
+							<TextBlock Text="{Binding Name}" />
+						</DataTemplate>
+					</ComboBox.ItemTemplate>
+				</ComboBox>
+			</Grid>
+			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="30, *">
+				<CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding ApplyDeck}" />
+				<TextBlock Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">Deck</TextBlock>
+				<ComboBox Grid.Row="1" Grid.ColumnSpan="2" IsEnabled="{Binding ApplyDeck}" MinWidth="200" ItemsSource="{Binding AvailableDecks}" SelectedItem="{Binding Deck}">
+					<ComboBox.ItemTemplate>
+						<DataTemplate x:DataType="vm:DeckViewModel">
+							<TextBlock Text="{Binding Name}" />
+						</DataTemplate>
+					</ComboBox.ItemTemplate>
+				</ComboBox>
+			</Grid>
+			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="30, *">
+				<CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding ApplyContainer}" />
+				<TextBlock Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">Container</TextBlock>
+				<ComboBox Grid.Row="1" Grid.ColumnSpan="2" IsEnabled="{Binding ApplyContainer}" MinWidth="200" ItemsSource="{Binding AvailableContainers}" SelectedItem="{Binding Container}">
+					<ComboBox.ItemTemplate>
+						<DataTemplate x:DataType="vm:ContainerViewModel">
+							<TextBlock Text="{Binding Name}" />
+						</DataTemplate>
+					</ComboBox.ItemTemplate>
+				</ComboBox>
+			</Grid>
+			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="30, *">
+				<CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding ApplyCollector}" />
+				<TextBlock Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">Collector # (set to resolve card image for a specific variant)</TextBlock>
+				<TextBox Grid.Row="1" Grid.ColumnSpan="2" IsEnabled="{Binding ApplyCollector}" Text="{Binding CollectorNumber}" />
+			</Grid>
+			<Grid RowDefinitions="Auto, 60" ColumnDefinitions="30, *">
+				<CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding ApplyComments}" />
+				<TextBlock Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">Comments</TextBlock>
+				<TextBox Grid.Row="1" Grid.ColumnSpan="2" IsEnabled="{Binding ApplyComments}" Text="{Binding Comments}" />
+			</Grid>
+			<StackPanel Orientation="Horizontal" Spacing="6">
+				<CheckBox IsThreeState="True" IsChecked="{Binding IsLand}">Is Land?</CheckBox>
+				<CheckBox IsThreeState="True" IsChecked="{Binding IsSideboard}">Is Sideboard?</CheckBox>
+				<CheckBox IsThreeState="True" IsChecked="{Binding UnsetDeck}">Un-set Deck?</CheckBox>
+				<CheckBox IsThreeState="True" IsChecked="{Binding UnsetContainer}">Un-set Container?</CheckBox>
+			</StackPanel>
 		</StackPanel>
 	</DockPanel>
 </UserControl>

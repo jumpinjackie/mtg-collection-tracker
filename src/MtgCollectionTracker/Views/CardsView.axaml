@@ -27,7 +27,7 @@
 		<StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
 			<Button IsEnabled="{Binding !IsBusy}" Command="{Binding AddSkusCommand}" Content="Add New" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding HasSelectedCardSku}" Command="{Binding ViewSelectedSkuCommand}" Content="View Details" HorizontalAlignment="Center" />
-			<Button IsEnabled="{Binding HasSelectedCardSku}" Command="{Binding EditSelectedSkuCommand}" Content="Edit" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding HasAtLeastOneSelectedCardSku}" Command="{Binding EditSelectedSkuCommand}" Content="Edit" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding CanSendSkusToContainer}" Command="{Binding SendSkusToContainerCommand}" Content="Send to Deck/Container" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding HasSelectedCardSku}" Command="{Binding DeleteSkuCommand}" Content="Delete" />
 			<Button IsEnabled="{Binding CanSplitCardSku}" Command="{Binding SplitSelectedSkuCommand}" Content="Split" HorizontalAlignment="Center" />
