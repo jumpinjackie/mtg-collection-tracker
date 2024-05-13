@@ -300,7 +300,6 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
                             this.SkuTotal -= 1;
                             this.ProxyTotal -= sku.ProxyQty;
                             this.CardTotal -= sku.RealQty;
-                            Messenger.Send(new CloseDrawerMessage());
                         }
                     })
             });

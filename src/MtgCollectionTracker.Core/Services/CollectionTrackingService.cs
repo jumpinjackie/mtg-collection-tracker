@@ -429,7 +429,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         return CardSkuToModel(c);
     }
 
-    public async ValueTask<ContainerInfoModel> CreateContainerAsync(string name, string? description)
+    public async ValueTask<ContainerSummaryModel> CreateContainerAsync(string name, string? description)
     {
         if (await _db.Containers.AnyAsync(c => c.Name == name))
         {
@@ -440,10 +440,17 @@ public class CollectionTrackingService : ICollectionTrackingService
         await _db.Containers.AddAsync(c);
         await _db.SaveChangesAsync();
 
-        return new ContainerInfoModel { Name = c.Name, Description = c.Description, Id = c.Id };
+        await _db.Entry(c).Collection(nameof(c.Cards)).LoadAsync();
+
+        return new ContainerSummaryModel
+        {
+            Id = c.Id,
+            Name = c.Name,
+            Total = c.Cards.Sum(c => c.Quantity)
+        };
     }
 
-    public async ValueTask<DeckInfoModel> CreateDeckAsync(string name, string? format, int? containerId)
+    public async ValueTask<DeckSummaryModel> CreateDeckAsync(string name, string? format, int? containerId)
     {
         Container? cnt = null;
         if (containerId.HasValue)
@@ -461,7 +468,17 @@ public class CollectionTrackingService : ICollectionTrackingService
         await _db.Decks.AddAsync(d);
         await _db.SaveChangesAsync();
 
-        return new DeckInfoModel { Cards = [], ContainerName = d.Container?.Name, Format = d.Format, Name = d.Name, Id = d.Id };
+        await _db.Entry(d).Collection(nameof(d.Cards)).LoadAsync();
+
+        return new DeckSummaryModel
+        {
+            Id = d.Id,
+            Name = d.Name,
+            ContainerName = d.Container?.Name,
+            Format = d.Format,
+            MaindeckTotal = d.Cards.Where(c => !c.IsSideboard).Sum(c => c.Quantity),
+            SideboardTotal = d.Cards.Where(c => c.IsSideboard).Sum(c => c.Quantity)
+        };
     }
 
     static HashSet<string> proxySets = [

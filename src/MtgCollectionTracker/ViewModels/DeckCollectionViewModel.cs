@@ -2,14 +2,16 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Core.Services;
+using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class DeckCollectionViewModel : RecipientViewModelBase
+public partial class DeckCollectionViewModel : RecipientViewModelBase, IRecipient<DeckCreatedMessage>, IRecipient<DeckDismantledMessage>
 {
     readonly IViewModelFactory _vmFactory;
     readonly ICollectionTrackingService _service;
@@ -41,6 +43,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase
                 this.Decks.Add(_vmFactory.Deck().WithData(deck));
             }
         }
+        base.OnActivated();
     }
 
     public ObservableCollection<DeckViewModel> Decks { get; } = new();
@@ -54,7 +57,11 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase
     [RelayCommand]
     private void AddDeck()
     {
-
+        Messenger.Send(new OpenDrawerMessage
+        {
+            DrawerWidth = 400,
+            ViewModel = _vmFactory.Drawer().WithContent("New Deck", _vmFactory.NewDeckOrContainer(DeckOrContainer.Deck))
+        });
     }
 
     [RelayCommand]
@@ -71,7 +78,8 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase
                     async () =>
                     {
                         await _service.DismantleDeckAsync(new() { DeckId = this.SelectedDeck.DeckId });
-
+                        this.Messenger.ToastNotify("Deck dismantled");
+                        this.Messenger.Send(new DeckDismantledMessage { Id = this.SelectedDeck.DeckId });
                     })
             });
         }
@@ -100,5 +108,17 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase
     private void CheckDeckLegality()
     {
 
+    }
+
+    void IRecipient<DeckCreatedMessage>.Receive(DeckCreatedMessage message)
+    {
+        this.Decks.Add(_vmFactory.Deck().WithData(message.Deck));
+    }
+
+    void IRecipient<DeckDismantledMessage>.Receive(DeckDismantledMessage message)
+    {
+        var item = this.Decks.FirstOrDefault(d => d.DeckId == message.Id);
+        if (item != null)
+            this.Decks.Remove(item);
     }
 }

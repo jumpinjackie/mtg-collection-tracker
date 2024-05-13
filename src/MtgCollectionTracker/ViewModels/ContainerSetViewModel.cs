@@ -6,10 +6,11 @@ using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using System.Collections.ObjectModel;
+using System.Linq;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class ContainerSetViewModel : RecipientViewModelBase
+public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<ContainerCreatedMessage>, IRecipient<ContainerDeletedMessage>
 {
     readonly IViewModelFactory _vmFactory;
     readonly ICollectionTrackingService _service;
@@ -40,6 +41,7 @@ public partial class ContainerSetViewModel : RecipientViewModelBase
                 this.Containers.Add(_vmFactory.Container().WithData(cont));
             }
         }
+        base.OnActivated();
     }
 
     public ObservableCollection<ContainerViewModel> Containers { get; } = new();
@@ -53,7 +55,11 @@ public partial class ContainerSetViewModel : RecipientViewModelBase
     [RelayCommand]
     private void AddContainer()
     {
-        
+        Messenger.Send(new OpenDrawerMessage
+        {
+            DrawerWidth = 400,
+            ViewModel = _vmFactory.Drawer().WithContent("New Container", _vmFactory.NewDeckOrContainer(DeckOrContainer.Container))
+        });
     }
 
     [RelayCommand]
@@ -66,6 +72,20 @@ public partial class ContainerSetViewModel : RecipientViewModelBase
                 DrawerWidth = 1000,
                 ViewModel = _vmFactory.Drawer().WithContent(this.SelectedContainer.Name, _vmFactory.BrowseContainer().WithContainerId(this.SelectedContainer.Id))
             });
+        }
+    }
+
+    void IRecipient<ContainerCreatedMessage>.Receive(ContainerCreatedMessage message)
+    {
+        this.Containers.Add(_vmFactory.Container().WithData(message.Container));
+    }
+
+    void IRecipient<ContainerDeletedMessage>.Receive(ContainerDeletedMessage message)
+    {
+        var item = this.Containers.FirstOrDefault(c => c.Id == message.Id);
+        if (item != null)
+        {
+            this.Containers.Remove(item);
         }
     }
 }

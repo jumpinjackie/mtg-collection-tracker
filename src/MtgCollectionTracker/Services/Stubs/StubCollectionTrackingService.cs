@@ -34,12 +34,12 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<ContainerInfoModel> CreateContainerAsync(string name, string? description)
+    public ValueTask<ContainerSummaryModel> CreateContainerAsync(string name, string? description)
     {
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<DeckInfoModel> CreateDeckAsync(string name, string? format, int? containerId)
+    public ValueTask<DeckSummaryModel> CreateDeckAsync(string name, string? format, int? containerId)
     {
         throw new System.NotImplementedException();
     }

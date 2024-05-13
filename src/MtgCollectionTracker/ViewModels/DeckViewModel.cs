@@ -2,6 +2,7 @@
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Stubs;
+using System.Linq;
 
 namespace MtgCollectionTracker.ViewModels;
 

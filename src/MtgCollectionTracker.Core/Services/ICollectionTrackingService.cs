@@ -11,8 +11,8 @@ namespace MtgCollectionTracker.Core.Services
         ValueTask<CardSkuModel> AddToDeckOrContainerAsync(int? containerId, int? deckId, AddToDeckOrContainerInputModel model);
         ValueTask<(int shortAmount, HashSet<string> fromDeckNames, HashSet<string> fromContainerNames)> CheckQuantityShortfallAsync(string cardName, int wantQty, bool noProxies, bool sparesOnly);
         ValueTask<(int skusUpdated, int skusRemoved)> ConsolidateCardSkusAsync(ConsolidateCardSkusInputModel model);
-        ValueTask<ContainerInfoModel> CreateContainerAsync(string name, string? description);
-        ValueTask<DeckInfoModel> CreateDeckAsync(string name, string? format, int? containerId);
+        ValueTask<ContainerSummaryModel> CreateContainerAsync(string name, string? description);
+        ValueTask<DeckSummaryModel> CreateDeckAsync(string name, string? format, int? containerId);
         ValueTask<CardSkuModel> DeleteCardSkuAsync(int skuId);
         ValueTask<DismantleDeckResult> DismantleDeckAsync(DismantleDeckInputModel model);
         ValueTask<IEnumerable<CardSkuModel>> UpdateCardMetadataAsync(IEnumerable<int> ids, IScryfallApiClient scryfallApiClient, CancellationToken cancel);

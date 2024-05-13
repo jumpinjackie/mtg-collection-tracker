@@ -30,4 +30,6 @@ public interface IViewModelFactory
     EditCardSkuViewModel EditCardSku();
 
     SplitCardSkuViewModel SplitCardSku();
+
+    NewDeckOrContainerViewModel NewDeckOrContainer(DeckOrContainer type);
 }
