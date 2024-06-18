@@ -1,0 +1,36 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="MtgCollectionTracker.Views.WishlistView"
+			 x:DataType="vm:WishlistViewModel">
+	<Design.DataContext>
+		<!-- This only sets the DataContext for the previewer in an IDE,
+         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+		<vm:WishlistViewModel />
+	</Design.DataContext>
+	<DockPanel>
+		<StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
+			<Button IsEnabled="{Binding !IsBusy}" Command="{Binding AddCardsCommand}" Content="Add New" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding HasSelectedItems}" Command="{Binding EditPriceDataCommand}" Content="Edit Price Data" />
+			<Button IsEnabled="{Binding HasSelectedItems}" Command="{Binding MoveToInventoryCommand}" Content="Move to Inventory" ToolTip.Tip="Add these selected cards to your inventory. This marks these wishlist items as purchased and removes them from your wishlist" />
+			<Button IsEnabled="{Binding HasSelectedItems}" Command="{Binding DeleteCardsCommand}" Content="Delete" />
+			<Button Command="{Binding ManageVendorsCommand}" Content="Manage Vendors" />
+		</StackPanel>
+		<Panel>
+			<ListBox IsEnabled="{Binding !IsBusy}" SelectionMode="Multiple" SelectedItems="{Binding SelectedItems}" Background="Transparent" Margin="0 20">
+				<ListBox.ItemsPanel>
+					<ItemsPanelTemplate>
+						<WrapPanel />
+					</ItemsPanelTemplate>
+				</ListBox.ItemsPanel>
+			</ListBox>
+			<TextBlock IsVisible="{Binding IsEmptyCollection}" VerticalAlignment="Center" TextAlignment="Center" HorizontalAlignment="Center">
+				Your wishlist is empty. Add cards to your wishlist below.<LineBreak />
+				Add vendors to allow recording price matching data for your wishlist items.
+			</TextBlock>
+		</Panel>
+	</DockPanel>
+</UserControl>

@@ -29,6 +29,9 @@
 			<TabItem Header="Decks">
 				<views:DeckCollectionView DataContext="{Binding Decks}" />
 			</TabItem>
+			<TabItem Header="Wishlist">
+				<views:WishlistView DataContext="{Binding Wishlist}" />
+			</TabItem>
 		</TabControl>
 	</SplitView>
 </UserControl>

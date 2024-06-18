@@ -11,6 +11,8 @@ public interface IViewModelFactory
 
     DeckCollectionViewModel Decks();
 
+    WishlistViewModel Wishlist();
+
     CardSkuItemViewModel CardSku();
     
     ContainerViewModel Container();

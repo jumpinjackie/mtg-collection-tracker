@@ -16,6 +16,7 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDraw
         this.Cards = vmFactory.Cards();
         this.Decks = vmFactory.Decks();
         this.Containers = vmFactory.Containers();
+        this.Wishlist = vmFactory.Wishlist();
         this.IsActive = true;
     }
 
@@ -24,6 +25,7 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDraw
         this.Cards = vmFactory.Cards();
         this.Decks = vmFactory.Decks();
         this.Containers = vmFactory.Containers();
+        this.Wishlist = vmFactory.Wishlist();
         this.IsActive = true;
     }
 
@@ -32,6 +34,8 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDraw
     public DeckCollectionViewModel Decks { get; }
 
     public ContainerSetViewModel Containers { get; }
+
+    public WishlistViewModel Wishlist { get; }
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsDrawerOpen))]

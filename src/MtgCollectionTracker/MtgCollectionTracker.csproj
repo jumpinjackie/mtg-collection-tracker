@@ -53,4 +53,8 @@
       <DependentUpon>SendCardsToContainerOrDeckView.axaml</DependentUpon>
     </Compile>
   </ItemGroup>
+
+  <ItemGroup>
+    <UpToDateCheckInput Remove="Views\WishlistView.axaml" />
+  </ItemGroup>
 </Project>

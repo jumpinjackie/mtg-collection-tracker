@@ -18,6 +18,8 @@ public class StubViewModelFactory : IViewModelFactory
 
     public ContainerSetViewModel Containers() => new ContainerSetViewModel();
 
+    public WishlistViewModel Wishlist() => new WishlistViewModel();
+
     public DrawerViewModel Drawer() => new DrawerViewModel();
 
     public AddCardsViewModel AddCards() => new AddCardsViewModel();
