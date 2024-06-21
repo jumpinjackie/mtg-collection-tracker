@@ -14,6 +14,10 @@ public class CardsDbContext : DbContext
 
     public DbSet<Deck> Decks { get; set; }
 
+    public DbSet<Vendor> Vendors { get; set; }
+
+    public DbSet<WishlistItem> WishlistItems { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<CardSku>().HasIndex(nameof(CardSku.CardName));
