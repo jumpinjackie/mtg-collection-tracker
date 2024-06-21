@@ -38,4 +38,6 @@ public interface IViewModelFactory
     SplitCardSkuViewModel SplitCardSku();
 
     NewDeckOrContainerViewModel NewDeckOrContainer(DeckOrContainer type);
+
+    ManageVendorsViewModel ManageVendors();
 }

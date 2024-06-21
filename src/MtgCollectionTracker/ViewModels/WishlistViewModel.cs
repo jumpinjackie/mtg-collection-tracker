@@ -77,7 +77,12 @@ public partial class WishlistViewModel : RecipientViewModelBase, IRecipient<Card
     [RelayCommand]
     private void ManageVendors()
     {
-
+        var vendors = _service.GetVendors();
+        Messenger.Send(new OpenDrawerMessage
+        {
+            DrawerWidth = 800,
+            ViewModel = _vmFactory.Drawer().WithContent("Manage Vendors", _vmFactory.ManageVendors().WithData(vendors))
+        });
     }
 
     [RelayCommand]

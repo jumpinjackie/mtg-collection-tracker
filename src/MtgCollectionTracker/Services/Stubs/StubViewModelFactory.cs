@@ -40,4 +40,6 @@ public class StubViewModelFactory : IViewModelFactory
     public SplitCardSkuViewModel SplitCardSku() => new SplitCardSkuViewModel();
 
     public NewDeckOrContainerViewModel NewDeckOrContainer(DeckOrContainer type) => new NewDeckOrContainerViewModel { Type = type };
+
+    public ManageVendorsViewModel ManageVendors() => new ManageVendorsViewModel();
 }

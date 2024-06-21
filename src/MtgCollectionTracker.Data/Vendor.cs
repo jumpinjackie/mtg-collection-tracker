@@ -14,4 +14,9 @@ public class Vendor
     /// </summary>
     [MaxLength(200)]
     public string Name { get; set; }
+
+    /// <summary>
+    /// All prices offered by this vendor
+    /// </summary>
+    public virtual ICollection<VendorPrice> OfferedPrices { get; set; }
 }

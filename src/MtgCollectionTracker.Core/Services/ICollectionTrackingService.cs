@@ -29,5 +29,7 @@ namespace MtgCollectionTracker.Core.Services
         CollectionSummaryModel GetCollectionSummary();
         ValueTask<ICollection<WishlistItemModel>> AddMultipleToWishlistAsync(IEnumerable<AddToWishlistInputModel> items, IScryfallApiClient? scryfallClient);
         IEnumerable<WishlistItemModel> GetWishlistItems();
+        ValueTask<(int created, int deleted)> ApplyVendorsAsync(ApplyVendorsInputModel model);
+        IEnumerable<VendorModel> GetVendors();
     }
 }

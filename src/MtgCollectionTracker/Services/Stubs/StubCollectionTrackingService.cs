@@ -29,6 +29,11 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
+    public ValueTask<(int created, int deleted)> ApplyVendorsAsync(ApplyVendorsInputModel model)
+    {
+        throw new System.NotImplementedException();
+    }
+
     public ValueTask<(int shortAmount, HashSet<string> fromDeckNames, HashSet<string> fromContainerNames)> CheckQuantityShortfallAsync(string cardName, int wantQty, bool noProxies, bool sparesOnly)
     {
         throw new System.NotImplementedException();
@@ -90,6 +95,11 @@ public class StubCollectionTrackingService : ICollectionTrackingService
     }
 
     public IEnumerable<CardLanguageModel> GetLanguages()
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public IEnumerable<VendorModel> GetVendors()
     {
         throw new System.NotImplementedException();
     }

@@ -172,7 +172,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             BackImageSmall = c.Scryfall!.BackImageSmall,
             // A double-faced card has back-face image, but if we haven't loaded SF metadata
             // for this card yet, then a DFC should have '//' in its card name
-            IsDoubleFaced = c.Scryfall != null 
+            IsDoubleFaced = c.Scryfall != null
                 ? c.Scryfall.BackImageSmall != null
                 : c.CardName.Contains(" // ")
         });
@@ -898,5 +898,33 @@ public class CollectionTrackingService : ICollectionTrackingService
             DeckTotal = _db.Decks.Count(),
             ContainerTotal = _db.Containers.Count()
         };
+    }
+
+    public async ValueTask<(int created, int deleted)> ApplyVendorsAsync(ApplyVendorsInputModel model)
+    {
+        var toRemove = new List<int>();
+        var toAdd = new List<Vendor>();
+        var currentVendors = GetVendors();
+        foreach (var name in model.Names)
+        {
+            if (!currentVendors.Any(v => v.Name == name))
+                toAdd.Add(new Vendor { Name = name });
+        }
+        foreach (var v in currentVendors)
+        {
+            if (!model.Names.Any(n => v.Name == n))
+            {
+                toRemove.Add(v.Id);
+            }
+        }
+        _db.Vendors.RemoveRange(_db.Vendors.Where(v => toRemove.Contains(v.Id)));
+        _db.Vendors.AddRange(toAdd);
+        await _db.SaveChangesAsync();
+        return (toAdd.Count, toRemove.Count);
+    }
+
+    public IEnumerable<VendorModel> GetVendors()
+    {
+        return _db.Vendors.Select(v => new VendorModel { Id = v.Id, Name = v.Name });
     }
 }
