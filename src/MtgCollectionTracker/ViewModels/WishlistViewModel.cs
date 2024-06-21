@@ -55,6 +55,9 @@ public partial class WishlistViewModel : RecipientViewModelBase, IRecipient<Card
     [ObservableProperty]
     private bool _hasSelectedItems;
 
+    [ObservableProperty]
+    private bool _hasSingleSelectedItem;
+
     [RelayCommand]
     private void AddCards()
     {
@@ -84,7 +87,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IRecipient<Card
     }
 
     [RelayCommand]
-    private void EditPriceData()
+    private void EditItem()
     {
 
     }

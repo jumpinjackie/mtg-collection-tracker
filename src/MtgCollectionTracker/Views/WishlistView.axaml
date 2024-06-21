@@ -14,7 +14,7 @@
 	<DockPanel>
 		<StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
 			<Button IsEnabled="{Binding !IsBusy}" Command="{Binding AddCardsCommand}" Content="Add New" HorizontalAlignment="Center" />
-			<Button IsEnabled="{Binding HasSelectedItems}" Command="{Binding EditPriceDataCommand}" Content="Edit Price Data" />
+			<Button IsEnabled="{Binding HasSingleSelectedItem}" Command="{Binding EditItemCommand}" Content="Edit" />
 			<Button IsEnabled="{Binding HasSelectedItems}" Command="{Binding MoveToInventoryCommand}" Content="Move to Inventory" ToolTip.Tip="Add these selected cards to your inventory. This marks these wishlist items as purchased and removes them from your wishlist" />
 			<Button IsEnabled="{Binding HasSelectedItems}" Command="{Binding DeleteCardsCommand}" Content="Delete" />
 			<Button Command="{Binding ManageVendorsCommand}" Content="Manage Vendors" />
