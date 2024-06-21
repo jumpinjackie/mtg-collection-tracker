@@ -36,12 +36,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IRecipien
     {
         if (!Avalonia.Controls.Design.IsDesignMode)
         {
-            this.Decks.Clear();
-            var decks = _service.GetDecks(null);
-            foreach (var deck in decks)
-            {
-                this.Decks.Add(_vmFactory.Deck().WithData(deck));
-            }
+            this.RefreshDecks();
         }
         base.OnActivated();
     }
@@ -82,6 +77,17 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IRecipien
                         this.Messenger.Send(new DeckDismantledMessage { Id = this.SelectedDeck.DeckId });
                     })
             });
+        }
+    }
+
+    [RelayCommand]
+    private void RefreshDecks()
+    {
+        this.Decks.Clear();
+        var decks = _service.GetDecks(null);
+        foreach (var deck in decks)
+        {
+            this.Decks.Add(_vmFactory.Deck().WithData(deck));
         }
     }
 

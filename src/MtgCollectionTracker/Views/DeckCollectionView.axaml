@@ -13,6 +13,7 @@
 			<Button Command="{Binding CanIBuildThisDeckCommand}" Content="Can I Build?" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding HasSelectedDeck}" Command="{Binding ViewDeckContentsCommand}" Content="View Deck" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding HasSelectedDeck}" Command="{Binding CheckDeckLegalityCommand}" Content="Check Legality" HorizontalAlignment="Center" />
+			<Button Command="{Binding RefreshDecksCommand}" Content="Refresh" HorizontalAlignment="Center" />
 		</StackPanel>
 		<Panel>
 			<ListBox IsVisible="{Binding Decks.Count}" ItemsSource="{Binding Decks}" SelectedItem="{Binding SelectedDeck}" Background="Transparent" Margin="0 20">
