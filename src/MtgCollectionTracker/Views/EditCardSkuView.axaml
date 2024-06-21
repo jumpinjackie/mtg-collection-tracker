@@ -26,7 +26,7 @@
 			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="30, *">
 				<CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding ApplyQuantity}" />
 				<TextBlock Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">Quantity</TextBlock>
-				<NumericUpDown Grid.Row="1" Grid.ColumnSpan="2" IsEnabled="{Binding ApplyQuantity}" Value="{Binding Quantity}" />
+				<NumericUpDown Grid.Row="1" Grid.ColumnSpan="2" FormatString="0" IsEnabled="{Binding ApplyQuantity}" Value="{Binding Quantity}" />
 			</Grid>
 			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="30, *">
 				<CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding ApplyEdition}" />
