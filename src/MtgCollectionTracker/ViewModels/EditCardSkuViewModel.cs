@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services;
+using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using ScryfallApi.Client;
@@ -40,13 +41,13 @@ public partial class EditCardSkuViewModel : DrawerContentViewModel
         ];
     }
 
-    public EditCardSkuViewModel(ICollectionTrackingService service, IScryfallApiClient scryfallApiClient)
+    public EditCardSkuViewModel(ICollectionTrackingService service, IViewModelFactory vmFactory, IScryfallApiClient scryfallApiClient)
     {
         _service = service;
         _scryfallApiClient = scryfallApiClient;
         this.Languages = service.GetLanguages().Select(lang => new LanguageViewModel(lang.Code, lang.PrintedCode, lang.Name)).ToArray();
-        this.AvailableDecks = service.GetDecks(null).Select(deck => new DeckViewModel().WithData(deck));
-        this.AvailableContainers = service.GetContainers().Select(cnt => new ContainerViewModel().WithData(cnt));
+        this.AvailableDecks = service.GetDecks(null).Select(deck => vmFactory.Deck().WithData(deck));
+        this.AvailableContainers = service.GetContainers().Select(cnt => new ContainerViewModel().WithData(cnt)).ToList();
     }
 
     public IEnumerable<DeckViewModel> AvailableDecks { get; private set; }
