@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
+using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using System;
@@ -38,6 +39,7 @@ public partial class ManageVendorsViewModel : DrawerContentViewModel
             Names = this.VendorsText.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
         };
         await _service.ApplyVendorsAsync(input);
+        Messenger.ToastNotify("Vendors updated");
         Messenger.Send(new CloseDrawerMessage());
     }
 
