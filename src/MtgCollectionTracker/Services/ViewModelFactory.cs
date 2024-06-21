@@ -27,6 +27,7 @@ public class ViewModelFactory : IViewModelFactory
     readonly Func<NewDeckOrContainerViewModel> _newDeck;
     readonly Func<SendCardsToContainerOrDeckViewModel> _sendCardsToContainer;
     readonly Func<ManageVendorsViewModel> _manageVendors;
+    readonly Func<EditWishlistItemViewModel> _editWishlistItem;
 
     readonly ICollectionTrackingService _service;
 
@@ -48,7 +49,8 @@ public class ViewModelFactory : IViewModelFactory
                             Func<SplitCardSkuViewModel> splitCardSku,
                             Func<NewDeckOrContainerViewModel> newDeck,
                             Func<SendCardsToContainerOrDeckViewModel> sendCardsToContainer,
-                            Func<ManageVendorsViewModel> manageVendors)
+                            Func<ManageVendorsViewModel> manageVendors,
+                            Func<EditWishlistItemViewModel> editWishlistItem)
     {
         _service = service;
 
@@ -70,6 +72,7 @@ public class ViewModelFactory : IViewModelFactory
         _newDeck = newDeck;
         _sendCardsToContainer = sendCardsToContainer;
         _manageVendors = manageVendors;
+        _editWishlistItem = editWishlistItem;
     }
 
     public CardsViewModel Cards() => _cards();
@@ -119,4 +122,6 @@ public class ViewModelFactory : IViewModelFactory
     }
 
     public ManageVendorsViewModel ManageVendors() => _manageVendors();
+
+    public EditWishlistItemViewModel EditWishlistItem() => _editWishlistItem();
 }

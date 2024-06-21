@@ -1,0 +1,119 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
+             x:Class="MtgCollectionTracker.Views.EditWishlistItemView"
+			 x:DataType="vm:EditWishlistItemViewModel">
+	<Design.DataContext>
+		<!-- This only sets the DataContext for the previewer in an IDE,
+         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+		<vm:EditWishlistItemViewModel />
+	</Design.DataContext>
+	<DockPanel>
+		<StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="6">
+			<Button Command="{Binding SaveCommand}">Apply</Button>
+			<Button Command="{Binding CancelCommand}">Cancel</Button>
+		</StackPanel>
+		<StackPanel Spacing="6">
+			<TextBlock>Tick the following fields to apply edits for</TextBlock>
+			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="30, *">
+				<CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding ApplyCardName}" />
+				<TextBlock Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">Card Name (must have both names separated by // for adventure and double-faced cards)</TextBlock>
+				<TextBox Grid.Row="1" Grid.ColumnSpan="2" IsEnabled="{Binding ApplyCardName}" Text="{Binding CardName}" />
+			</Grid>
+			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="30, *">
+				<CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding ApplyQuantity}" />
+				<TextBlock Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">Quantity</TextBlock>
+				<NumericUpDown Grid.Row="1" Grid.ColumnSpan="2" FormatString="0" IsEnabled="{Binding ApplyQuantity}" Value="{Binding Quantity}" />
+			</Grid>
+			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="30, *">
+				<CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding ApplyEdition}" />
+				<TextBlock Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">Edition (use "PROXY" to indicate proxies)</TextBlock>
+				<TextBox Grid.Row="1" Grid.ColumnSpan="2" IsEnabled="{Binding ApplyEdition}" Text="{Binding Edition}" />
+			</Grid>
+			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="30, *">
+				<CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding ApplyLanguage}" />
+				<TextBlock Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">Language</TextBlock>
+				<ComboBox Grid.Row="1" Grid.ColumnSpan="2" IsEnabled="{Binding ApplyLanguage}" MinWidth="200" ItemsSource="{Binding Languages}" SelectedItem="{Binding Language}">
+					<ComboBox.ItemTemplate>
+						<DataTemplate x:DataType="vm:LanguageViewModel">
+							<TextBlock Text="{Binding Name}" />
+						</DataTemplate>
+					</ComboBox.ItemTemplate>
+				</ComboBox>
+			</Grid>
+			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="30, *">
+				<CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding ApplyOffers}" />
+				<TextBlock Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">Vendor Prices</TextBlock>
+				<StackPanel Grid.Row="1" Grid.ColumnSpan="2">
+					<DataGrid Name="VendorPricesGrid"
+						  ItemsSource="{Binding VendorOffers}"
+						  CanUserReorderColumns="True"
+						  CanUserResizeColumns="True"
+						  CanUserSortColumns="False"
+						  GridLinesVisibility="All"
+						  BorderThickness="1"
+						  MinHeight="150"
+						  MaxHeight="200"
+						  BorderBrush="Gray">
+						<DataGrid.Columns>
+							<DataGridTemplateColumn Header="Vendor" MinWidth="160">
+								<DataGridTemplateColumn.CellTemplate>
+									<DataTemplate>
+										<Panel>
+											<ComboBox MinWidth="160" ItemsSource="{Binding AvailableVendors}" SelectedItem="{Binding Vendor}">
+												<ComboBox.ItemTemplate>
+													<DataTemplate x:DataType="vm:VendorViewModel">
+														<TextBlock Text="{Binding Name}" />
+													</DataTemplate>
+												</ComboBox.ItemTemplate>
+											</ComboBox>
+										</Panel>
+									</DataTemplate>
+								</DataGridTemplateColumn.CellTemplate>
+							</DataGridTemplateColumn>
+							<!--
+							<DataGridTextColumn Header="Qty" Binding="{Binding AvailableStock}"/>
+							<DataGridTextColumn Header="Price" Binding="{Binding Price}"/>
+							-->
+							<DataGridTemplateColumn Header="Qty" MinWidth="160">
+								<DataGridTemplateColumn.CellTemplate>
+									<DataTemplate>
+										<NumericUpDown Value="{Binding AvailableStock}"
+										   FormatString="0"
+										   HorizontalAlignment="Stretch"/>
+									</DataTemplate>
+								</DataGridTemplateColumn.CellTemplate>
+							</DataGridTemplateColumn>
+							<DataGridTemplateColumn Header="Price" MinWidth="160">
+								<DataGridTemplateColumn.CellTemplate>
+									<DataTemplate>
+										<NumericUpDown Value="{Binding Price}"
+										   Increment="0.05"
+										   FormatString="{}{0:#,0.00}"
+										   HorizontalAlignment="Stretch"/>
+									</DataTemplate>
+								</DataGridTemplateColumn.CellTemplate>
+							</DataGridTemplateColumn>
+							<DataGridTemplateColumn>
+								<DataGridTemplateColumn.CellTemplate>
+									<DataTemplate>
+										<Button Command="{Binding #VendorPricesGrid.((vm:EditWishlistItemViewModel)DataContext).RemoveOfferCommand}" CommandParameter="{Binding}">Remove</Button>
+									</DataTemplate>
+								</DataGridTemplateColumn.CellTemplate>
+							</DataGridTemplateColumn>
+						</DataGrid.Columns>
+					</DataGrid>
+					<Button IsEnabled="{Binding ApplyOffers}" Command="{Binding AddOfferCommand}">Add Offer</Button>
+				</StackPanel>
+			</Grid>
+			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="30, *">
+				<CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding ApplyCollector}" />
+				<TextBlock Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">Collector # (set to resolve card image for a specific variant)</TextBlock>
+				<TextBox Grid.Row="1" Grid.ColumnSpan="2" IsEnabled="{Binding ApplyCollector}" Text="{Binding CollectorNumber}" />
+			</Grid>
+		</StackPanel>
+	</DockPanel>
+</UserControl>

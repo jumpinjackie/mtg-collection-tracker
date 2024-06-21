@@ -1,9 +1,13 @@
-﻿using Avalonia.Media.Imaging;
+﻿using Avalonia.Input;
+using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MtgCollectionTracker.Core;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Data;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace MtgCollectionTracker.ViewModels;
 
@@ -75,6 +79,8 @@ public partial class WishlistItemViewModel : ViewModelBase
         }
     }
 
+    public List<VendorOfferViewModel> Offers { get; set; }
+
     public string? CollectorNumber { get; set; }
 
     public string? OriginalCardName { get; set; }
@@ -83,6 +89,18 @@ public partial class WishlistItemViewModel : ViewModelBase
 
     public int ProxyQty { get; private set; }
     public int RealQty { get; private set; }
+
+    [ObservableProperty]
+    private string _lowest = "$?";
+
+    [ObservableProperty]
+    private string _highest = "$?";
+
+    [ObservableProperty]
+    private string _bestTotal = "$?";
+
+    [ObservableProperty]
+    private string _bestVendors = "none";
 
     public WishlistItemViewModel WithData(WishlistItemModel item)
     {
@@ -105,6 +123,36 @@ public partial class WishlistItemViewModel : ViewModelBase
         this.Condition = (item.Condition ?? CardCondition.NearMint).ToString();
         this.Quantity = $"Qty: {item.Quantity}";
         this.Language = item.Language?.Length > 0 ? item.Language : "en";
+        this.Offers = item.Offers.Select(o => new VendorOfferViewModel
+        {
+            AvailableStock = o.AvailableStock,
+            Price = o.Price,
+            Vendor = new VendorViewModel
+            {
+                Id = o.VendorId,
+                Name = o.VendorName
+            }
+        }).ToList();
+
+        if (item.Offers.Count > 0)
+        {
+            this.Lowest = $"${item.Offers.Min(o => o.Price)}";
+            this.Highest = $"${item.Offers.Max(o => o.Price)}";
+
+            var (total, vendors, isComplete) = item.Offers.ComputeBestPrice(item.Quantity);
+            this.BestTotal = $"${total}";
+            this.BestVendors = vendors.Count > 1
+                ? "Multiple Vendors"
+                : vendors.Count == 1 ? vendors[0] : "none";
+        }
+        else
+        {
+            this.Lowest = "$?";
+            this.Highest = "$?";
+            this.BestTotal = "$?";
+            this.BestVendors = "none";
+        }
+
         if (item.ImageSmall != null)
         {
             using var ms = new MemoryStream(item.ImageSmall);

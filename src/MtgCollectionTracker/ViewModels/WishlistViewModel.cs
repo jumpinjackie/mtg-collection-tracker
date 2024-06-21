@@ -20,6 +20,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IRecipient<Card
         this.ThrowIfNotDesignMode();
         _vmFactory = new StubViewModelFactory();
         _service = new StubCollectionTrackingService();
+        this.SelectedItems.CollectionChanged += SelectedItems_CollectionChanged;
         this.IsActive = true;
     }
 
@@ -27,6 +28,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IRecipient<Card
     {
         _vmFactory = vmFactory;
         _service = service;
+        this.SelectedItems.CollectionChanged += SelectedItems_CollectionChanged;
         this.IsActive = true;
     }
 
@@ -43,9 +45,15 @@ public partial class WishlistViewModel : RecipientViewModelBase, IRecipient<Card
         base.OnActivated();
     }
 
-    public ObservableCollection<object> Cards { get; } = new();
+    private void SelectedItems_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        this.HasSingleSelectedItem = SelectedItems.Count == 1;
+        this.HasSelectedItems = SelectedItems.Count >= 1;
+    }
 
-    public ObservableCollection<object> SelectedItems { get; } = new();
+    public ObservableCollection<WishlistItemViewModel> Cards { get; } = new();
+
+    public ObservableCollection<WishlistItemViewModel> SelectedItems { get; } = new();
 
     [ObservableProperty]
     private bool _isBusy;
@@ -94,7 +102,11 @@ public partial class WishlistViewModel : RecipientViewModelBase, IRecipient<Card
     [RelayCommand]
     private void EditItem()
     {
-
+        Messenger.Send(new OpenDrawerMessage
+        {
+            DrawerWidth = 600,
+            ViewModel = _vmFactory.Drawer().WithContent("Edit Wishlist Item", _vmFactory.EditWishlistItem().WithData(this.SelectedItems[0]))
+        });
     }
 
     void IRecipient<CardsAddedToWishlistMessage>.Receive(CardsAddedToWishlistMessage message)

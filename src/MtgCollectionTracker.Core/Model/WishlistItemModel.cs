@@ -2,6 +2,19 @@
 
 namespace MtgCollectionTracker.Core.Model;
 
+public class VendorOfferModel : IVendorOffer
+{
+    public int VendorId { get; set; }
+
+    public required string VendorName { get; set; }
+
+    public int AvailableStock { get; set; }
+
+    public decimal Price { get; set; }
+
+    string IVendorOffer.Name => VendorName;
+}
+
 public class WishlistItemModel
 {
     public int Id { get; set; }
@@ -27,4 +40,6 @@ public class WishlistItemModel
     public byte[]? ImageSmall { get; set; }
 
     public byte[]? BackImageSmall { get; set; }
+
+    public required List<VendorOfferModel> Offers { get; set; }
 }

@@ -4,6 +4,7 @@ using MtgCollectionTracker.Data;
 using ScryfallApi.Client;
 using System.Linq.Expressions;
 using System.Text;
+using System.Threading.Channels;
 
 namespace MtgCollectionTracker.Core.Services;
 
@@ -351,7 +352,14 @@ public class CollectionTrackingService : ICollectionTrackingService
             BackImageSmall = w.Scryfall?.BackImageSmall,
             // A double-faced card has back-face image, but if we haven't loaded SF metadata
             // for this card yet, then a DFC should have '//' in its card name
-            IsDoubleFaced = w.Scryfall?.BackImageSmall != null || w.CardName.Contains(" // ")
+            IsDoubleFaced = w.Scryfall?.BackImageSmall != null || w.CardName.Contains(" // "),
+            Offers = w.OfferedPrices.Select(o => new VendorOfferModel
+            {
+                VendorId = o.VendorId,
+                VendorName = o.Vendor.Name,
+                AvailableStock = o.AvailableStock,
+                Price = o.Price
+            }).ToList()
         };
     }
 
@@ -398,7 +406,14 @@ public class CollectionTrackingService : ICollectionTrackingService
                 BackImageSmall = w.Scryfall!.BackImageSmall,
                 // A double-faced card has back-face image, but if we haven't loaded SF metadata
                 // for this card yet, then a DFC should have '//' in its card name
-                IsDoubleFaced = w.Scryfall!.BackImageSmall != null || w.CardName.Contains(" // ")
+                IsDoubleFaced = w.Scryfall!.BackImageSmall != null || w.CardName.Contains(" // "),
+                Offers = w.OfferedPrices.Select(o => new VendorOfferModel
+                {
+                    VendorId = o.VendorId,
+                    VendorName = o.Vendor.Name,
+                    AvailableStock = o.AvailableStock,
+                    Price = o.Price
+                }).ToList()
             });
     }
 
@@ -926,5 +941,69 @@ public class CollectionTrackingService : ICollectionTrackingService
     public IEnumerable<VendorModel> GetVendors()
     {
         return _db.Vendors.Select(v => new VendorModel { Id = v.Id, Name = v.Name });
+    }
+
+    public async ValueTask<WishlistItemModel> UpdateWishlistItemAsync(UpdateWishlistItemInputModel model, IScryfallApiClient? scryfallApiClient, CancellationToken cancel)
+    {
+        if (model.Quantity.HasValue && model.Quantity <= 0)
+            throw new Exception("Quantity cannot be 0");
+
+        var wi = await _db.WishlistItems
+            .Include(w => w.Scryfall)
+            .Include(w => w.OfferedPrices)
+                .ThenInclude(o => o.Vendor)
+            .FirstOrDefaultAsync(w => w.Id == model.Id, cancel);
+        if (wi == null)
+            throw new Exception("Item not found");
+
+        ScryfallMetadataResolver? resolver = null;
+        if (scryfallApiClient != null)
+            resolver = new ScryfallMetadataResolver(_db, scryfallApiClient);
+
+        if (model.CardName != null)
+            wi.CardName = model.CardName;
+        if (model.Condition != null)
+            wi.Condition = model.Condition;
+        if (model.Edition != null)
+            wi.Edition = model.Edition;
+        if (model.Language != null)
+            wi.LanguageId = model.Language;
+        if (model.Quantity != null)
+            wi.Quantity = model.Quantity.Value;
+        if (model.CollectorNumber != null)
+            wi.CollectorNumber = model.CollectorNumber;
+
+        if (model.VendorOffers != null)
+        {
+            foreach (var off in model.VendorOffers)
+            {
+                var currentOffer = wi.OfferedPrices.FirstOrDefault(o => o.VendorId == off.VendorId);
+                if (currentOffer == null)
+                {
+                    wi.OfferedPrices.Add(new VendorPrice { VendorId = off.VendorId, AvailableStock = off.Available, Price = off.Price });
+                }
+                else
+                {
+                    currentOffer.VendorId = off.VendorId;
+                    currentOffer.AvailableStock = off.Available;
+                    currentOffer.Price = off.Price;
+                }
+            }
+        }
+
+        if (resolver != null)
+        {
+            await wi.ApplyScryfallMetadataAsync(resolver, true, cancel);
+        }
+
+        await _db.SaveChangesAsync();
+        foreach (var offer in wi.OfferedPrices)
+        {
+            await _db.Entry(offer)
+                .Reference(nameof(VendorPrice.Vendor))
+                .LoadAsync();
+        }
+
+        return WishListItemToModel(wi);
     }
 }

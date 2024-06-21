@@ -1,9 +1,47 @@
-﻿using MtgCollectionTracker.Core.Services;
+﻿using MtgCollectionTracker.Core.Model;
+using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Data;
 
 namespace MtgCollectionTracker.Core;
 
-internal static class ExtensionMethods
+public static class PublicExtensionMethods
+{
+    public static (decimal TotalPrice, List<string> Vendors, bool IsComplete) ComputeBestPrice<T>(this IEnumerable<T> offers, int requiredQty)
+        where T : IVendorOffer
+    {
+        var vendors = new List<string>();
+        int remainingQty = requiredQty;
+        decimal total = 0;
+        bool isComplete = false;
+        foreach (var offer in offers.OrderBy(o => o.Price))
+        {
+            if (remainingQty > 0)
+            {
+                if (offer.AvailableStock >= remainingQty)
+                {
+                    total += (remainingQty * offer.Price);
+                    remainingQty -= remainingQty;
+                    vendors.Add(offer.Name);
+                }
+                else // Take what's left
+                {
+                    total += (offer.AvailableStock * offer.Price);
+                    remainingQty -= offer.AvailableStock;
+                    vendors.Add(offer.Name);
+                }
+
+                if (remainingQty <= 0)
+                {
+                    isComplete = true;
+                    break;
+                }
+            }
+        }
+        return (total, vendors, isComplete);
+    }
+}
+
+internal static class InternalExtensionMethods
 {
     public static async ValueTask ApplyScryfallMetadataAsync(this IScryfallMetaLinkable sku, ScryfallMetadataResolver resolver, bool refetchMetadata, CancellationToken cancel)
     {

@@ -42,4 +42,6 @@ public class StubViewModelFactory : IViewModelFactory
     public NewDeckOrContainerViewModel NewDeckOrContainer(DeckOrContainer type) => new NewDeckOrContainerViewModel { Type = type };
 
     public ManageVendorsViewModel ManageVendors() => new ManageVendorsViewModel();
+
+    public EditWishlistItemViewModel EditWishlistItem() => new EditWishlistItemViewModel();
 }
