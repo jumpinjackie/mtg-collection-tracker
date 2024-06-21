@@ -27,5 +27,7 @@ namespace MtgCollectionTracker.Core.Services
         Task<CardSkuModel> SplitCardSkuAsync(SplitCardSkuInputModel model);
         ValueTask<int> UpdateCardSkuAsync(UpdateCardSkuInputModel model, IScryfallApiClient? scryfallApiClient, CancellationToken cancel);
         CollectionSummaryModel GetCollectionSummary();
+        ValueTask<ICollection<WishlistItemModel>> AddMultipleToWishlistAsync(IEnumerable<AddToWishlistInputModel> items, IScryfallApiClient? scryfallClient);
+        IEnumerable<WishlistItemModel> GetWishlistItems();
     }
 }

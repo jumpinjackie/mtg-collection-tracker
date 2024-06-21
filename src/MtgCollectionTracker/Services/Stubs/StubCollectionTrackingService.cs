@@ -14,6 +14,11 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
+    public ValueTask<ICollection<WishlistItemModel>> AddMultipleToWishlistAsync(IEnumerable<AddToWishlistInputModel> items, IScryfallApiClient? scryfallClient)
+    {
+        throw new System.NotImplementedException();
+    }
+
     public ValueTask<CardSkuModel> AddToDeckAsync(AddToDeckInputModel model)
     {
         throw new System.NotImplementedException();
@@ -85,6 +90,11 @@ public class StubCollectionTrackingService : ICollectionTrackingService
     }
 
     public IEnumerable<CardLanguageModel> GetLanguages()
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public IEnumerable<WishlistItemModel> GetWishlistItems()
     {
         throw new System.NotImplementedException();
     }

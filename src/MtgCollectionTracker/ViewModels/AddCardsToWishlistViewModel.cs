@@ -19,16 +19,14 @@ using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
-record CsvImportRecord(int Qty, string CardName, string Edition, string? Language, bool? IsFoil, bool? IsLand, bool? IsSideboard, string? Condition, string? Comments);
-
-public partial class AddCardsViewModel : DrawerContentViewModel
+public partial class AddCardsToWishlistViewModel : DrawerContentViewModel
 {
     readonly IStorageProvider _storage;
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
     readonly LanguageViewModel[] _languages;
 
-    public AddCardsViewModel()
+    public AddCardsToWishlistViewModel()
     {
         base.ThrowIfNotDesignMode();
         _service = new StubCollectionTrackingService();
@@ -51,15 +49,13 @@ public partial class AddCardsViewModel : DrawerContentViewModel
         this.Cards.Add(new() { Languages = _languages, AddCardsCommand = this.AddCardsCommand, Qty = 1, CardName = "Timetwister", Edition = "LEB" });
     }
 
-    public AddCardsViewModel(IStorageProvider storage, IMessenger messenger, ICollectionTrackingService service, IScryfallApiClient scryfallApiClient)
+    public AddCardsToWishlistViewModel(IStorageProvider storage, IMessenger messenger, ICollectionTrackingService service, IScryfallApiClient scryfallApiClient)
         : base(messenger)
     {
         _storage = storage;
         _service = service;
         _scryfallApiClient = scryfallApiClient;
         _languages = service.GetLanguages().Select(lang => new LanguageViewModel(lang.Code, lang.PrintedCode, lang.Name)).ToArray();
-
-        this.AvailableContainers = service.GetContainers().Select(c => new ContainerViewModel().WithData(c));
     }
 
     public ObservableCollection<AddCardSkuViewModel> Cards { get; } = new();
@@ -161,16 +157,10 @@ public partial class AddCardsViewModel : DrawerContentViewModel
 
     private bool CanAddCards() => !IsImporting && Cards.Count > 0 && Cards.All(c => c.IsValid);
 
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(AddCardsCommand))]
-    private ContainerViewModel? _selectedContainer;
-
-    public IEnumerable<ContainerViewModel>? AvailableContainers { get; internal set; }
-
     [RelayCommand(CanExecute = nameof(CanAddCards))]
     private async Task AddCards()
     {
-        var adds = this.Cards.Select(c => new AddToDeckOrContainerInputModel
+        var adds = this.Cards.Select(c => new AddToWishlistInputModel
         {
             CardName = c.CardName,
             Comments = c.Comments,
@@ -182,16 +172,8 @@ public partial class AddCardsViewModel : DrawerContentViewModel
             Edition = c.Edition
         });
 
-        int? containerId = null;
-        int? deckId = null;
-
-        if (this.SelectedContainer != null)
-        {
-            containerId = this.SelectedContainer.Id;
-        }
-
-        var (total, proxyTotal, rows) = await _service.AddMultipleToContainerOrDeckAsync(containerId, deckId, adds, _scryfallApiClient);
-        Messenger.Send(new CardsAddedMessage { CardsTotal = total, ProxyTotal = proxyTotal, SkuTotal = rows });
+        var added = await _service.AddMultipleToWishlistAsync(adds, _scryfallApiClient);
+        Messenger.Send(new CardsAddedToWishlistMessage { Added = added });
         Messenger.Send(new CloseDrawerMessage());
     }
 

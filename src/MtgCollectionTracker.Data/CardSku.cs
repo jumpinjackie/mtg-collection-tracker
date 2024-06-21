@@ -9,7 +9,7 @@ namespace MtgCollectionTracker.Data;
 /// <see cref="CardSku"/> instances may belong to a <see cref="Container"/> or a <see cref="Deck"/>
 /// or both
 /// </summary>
-public class CardSku
+public class CardSku : IScryfallMetaLinkable
 {
     public int Id { get; set; }
 

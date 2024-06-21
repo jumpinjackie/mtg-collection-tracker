@@ -334,6 +334,27 @@ public class CollectionTrackingService : ICollectionTrackingService
         return CardSkuToModel(newSku);
     }
 
+    static WishlistItemModel WishListItemToModel(WishlistItem w)
+    {
+        return new WishlistItemModel
+        {
+            CardName = w.CardName,
+            Condition = w.Condition,
+            Edition = w.Edition,
+            Id = w.Id,
+            IsFoil = w.IsFoil,
+            IsLand = w.IsLand,
+            Language = w.Language?.Code ?? "en",
+            CollectorNumber = w.CollectorNumber,
+            Quantity = w.Quantity,
+            ImageSmall = w.Scryfall?.ImageSmall,
+            BackImageSmall = w.Scryfall?.BackImageSmall,
+            // A double-faced card has back-face image, but if we haven't loaded SF metadata
+            // for this card yet, then a DFC should have '//' in its card name
+            IsDoubleFaced = w.Scryfall?.BackImageSmall != null || w.CardName.Contains(" // ")
+        };
+    }
+
     static CardSkuModel CardSkuToModel(CardSku c)
     {
         return new CardSkuModel
@@ -357,6 +378,60 @@ public class CollectionTrackingService : ICollectionTrackingService
             // for this card yet, then a DFC should have '//' in its card name
             IsDoubleFaced = c.Scryfall?.BackImageSmall != null || c.CardName.Contains(" // ")
         };
+    }
+
+    public IEnumerable<WishlistItemModel> GetWishlistItems()
+    {
+        return _db.WishlistItems.Include(w => w.Scryfall)
+            .Select(w => new WishlistItemModel
+            {
+                CardName = w.CardName,
+                Condition = w.Condition,
+                Edition = w.Edition,
+                Id = w.Id,
+                IsFoil = w.IsFoil,
+                IsLand = w.IsLand,
+                Language = w.Language!.Code ?? "en",
+                CollectorNumber = w.CollectorNumber,
+                Quantity = w.Quantity,
+                ImageSmall = w.Scryfall!.ImageSmall,
+                BackImageSmall = w.Scryfall!.BackImageSmall,
+                // A double-faced card has back-face image, but if we haven't loaded SF metadata
+                // for this card yet, then a DFC should have '//' in its card name
+                IsDoubleFaced = w.Scryfall!.BackImageSmall != null || w.CardName.Contains(" // ")
+            });
+    }
+
+    public async ValueTask<ICollection<WishlistItemModel>> AddMultipleToWishlistAsync(IEnumerable<AddToWishlistInputModel> items, IScryfallApiClient? scryfallClient)
+    {
+        var cards = items.Select(model => new WishlistItem
+        {
+            CardName = model.CardName,
+            Condition = model.Condition,
+            Edition = model.Edition,
+            CollectorNumber = model.CollectorNumber,
+            IsFoil = model.IsFoil,
+            IsLand = model.IsLand,
+            LanguageId = model.Language,
+            Quantity = model.Quantity
+        });
+
+        var resolver = new ScryfallMetadataResolver(_db, scryfallClient);
+
+        var witems = new List<WishlistItem>();
+        var cancel = CancellationToken.None;
+        foreach (var sku in cards)
+        {
+            await sku.ApplyScryfallMetadataAsync(resolver, false, cancel);
+            await _db.WishlistItems.AddAsync(sku);
+            witems.Add(sku);
+        }
+
+        var res = await _db.SaveChangesAsync();
+
+        System.Diagnostics.Debug.WriteLine($"SF stats (cache hits: {resolver.CacheHits}, api: {resolver.ScryfallApiCalls}, small img: {resolver.ScryfallSmallImageFetches})");
+
+        return witems.Select(WishListItemToModel).ToList();
     }
 
     public async ValueTask<(int total, int proxyTotal, int rows)> AddMultipleToContainerOrDeckAsync(

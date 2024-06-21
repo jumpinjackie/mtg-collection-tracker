@@ -6,7 +6,7 @@ namespace MtgCollectionTracker.Data;
 /// A <see cref="WishlistItem"/> defines a specific quantity of a particular card with price data
 /// from various vendors
 /// </summary>
-public class WishlistItem
+public class WishlistItem : IScryfallMetaLinkable
 {
     public int Id { get; set; }
 

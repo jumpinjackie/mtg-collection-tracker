@@ -10,6 +10,8 @@ public class StubViewModelFactory : IViewModelFactory
 
     public CardSkuItemViewModel CardSku() => new CardSkuItemViewModel();
 
+    public WishlistItemViewModel WishListItem() => new WishlistItemViewModel();
+
     public ContainerViewModel Container() => new ContainerViewModel();
 
     public DeckViewModel Deck() => new DeckViewModel();
@@ -23,6 +25,8 @@ public class StubViewModelFactory : IViewModelFactory
     public DrawerViewModel Drawer() => new DrawerViewModel();
 
     public AddCardsViewModel AddCards() => new AddCardsViewModel();
+
+    public AddCardsToWishlistViewModel AddCardsToWishlist() => new AddCardsToWishlistViewModel();
 
     public DeckListViewModel DeckList() => new DeckListViewModel();
 

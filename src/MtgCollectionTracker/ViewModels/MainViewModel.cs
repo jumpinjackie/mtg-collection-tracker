@@ -4,10 +4,11 @@ using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
+using System.Linq;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDrawerMessage>, IRecipient<CloseDrawerMessage>, IRecipient<NotificationMessage>, IRecipient<CardsAddedMessage>, IRecipient<CardsSentToContainerMessage>, IRecipient<CardsSentToDeckMessage>
+public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDrawerMessage>, IRecipient<CloseDrawerMessage>, IRecipient<NotificationMessage>, IRecipient<CardsAddedMessage>, IRecipient<CardsSentToContainerMessage>, IRecipient<CardsSentToDeckMessage>, IRecipient<CardsAddedToWishlistMessage>
 {
     public MainViewModel()
     {
@@ -70,6 +71,11 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDraw
             this.NotificationManager?.Show($"{message.CardsTotal} card(s) ({message.ProxyTotal} proxies) added to collection");
         else
             this.NotificationManager?.Show($"{message.CardsTotal} card(s) added to collection");
+    }
+
+    void IRecipient<CardsAddedToWishlistMessage>.Receive(CardsAddedToWishlistMessage message)
+    {
+        this.NotificationManager?.Show($"{message.Added.Sum(s => s.Quantity)} card(s) added to wishlist");
     }
 
     void IRecipient<CardsSentToContainerMessage>.Receive(CardsSentToContainerMessage message)

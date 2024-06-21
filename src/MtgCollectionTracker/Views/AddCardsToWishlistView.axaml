@@ -4,12 +4,12 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
-             x:Class="MtgCollectionTracker.Views.AddCardsView"
-			 x:DataType="vm:AddCardsViewModel">
+             x:Class="MtgCollectionTracker.Views.AddCardsToWishlistView"
+			 x:DataType="vm:AddCardsToWishlistViewModel">
 	<Design.DataContext>
 		<!-- This only sets the DataContext for the previewer in an IDE,
          to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-		<vm:AddCardsViewModel />
+		<vm:AddCardsToWishlistViewModel />
 	</Design.DataContext>
 	<DockPanel>
 		<StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="10" Spacing="10">
@@ -18,7 +18,7 @@
 		</StackPanel>
 		<StackPanel>
 			<TextBlock Margin="6" LineSpacing="6" TextWrapping="WrapWithOverflow">
-				Add cards to your collection by filling in the card SKUs in the grid below.<LineBreak />
+				Add cards to your wishlist by filling in the card SKUs in the grid below.<LineBreak />
 				The following columns must always be filled in: Qty, Card Name, Edition.<LineBreak />
 				Edition must be the code for the relevant set. Consult Scryfall for the proper codes.<LineBreak />
 				If language is not specified, English (en) is assumed.
@@ -78,14 +78,6 @@
 				<Button Command="{Binding AddRowCommand}">Add Row</Button>
 				<Button Command="{Binding ImportCommand}">Import Rows</Button>
 			</StackPanel>
-			<TextBlock Margin="6">Add these cards to container</TextBlock>
-			<ComboBox Margin="6" SelectedItem="{Binding SelectedContainer}" ItemsSource="{Binding AvailableContainers}">
-				<ComboBox.ItemTemplate>
-					<DataTemplate x:DataType="vm:ContainerViewModel">
-						<TextBlock Text="{Binding Name}" />
-					</DataTemplate>
-				</ComboBox.ItemTemplate>
-			</ComboBox>
 		</StackPanel>
 	</DockPanel>
 </UserControl>

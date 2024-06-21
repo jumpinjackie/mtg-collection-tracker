@@ -5,7 +5,7 @@ namespace MtgCollectionTracker.Core;
 
 internal static class ExtensionMethods
 {
-    public static async ValueTask ApplyScryfallMetadataAsync(this CardSku sku, ScryfallMetadataResolver resolver, bool refetchMetadata, CancellationToken cancel)
+    public static async ValueTask ApplyScryfallMetadataAsync(this IScryfallMetaLinkable sku, ScryfallMetadataResolver resolver, bool refetchMetadata, CancellationToken cancel)
     {
         sku.Scryfall = await resolver.TryResolveAsync(sku.CardName, sku.Edition, sku.LanguageId, sku.CollectorNumber, refetchMetadata, cancel);
         if (!sku.IsLand)

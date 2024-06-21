@@ -20,7 +20,7 @@
 			<Button Command="{Binding ManageVendorsCommand}" Content="Manage Vendors" />
 		</StackPanel>
 		<Panel>
-			<ListBox IsEnabled="{Binding !IsBusy}" SelectionMode="Multiple" SelectedItems="{Binding SelectedItems}" Background="Transparent" Margin="0 20">
+			<ListBox IsEnabled="{Binding !IsBusy}" SelectionMode="Multiple" SelectedItems="{Binding SelectedItems}" ItemsSource="{Binding Cards}" Background="Transparent" Margin="0 20">
 				<ListBox.ItemsPanel>
 					<ItemsPanelTemplate>
 						<WrapPanel />

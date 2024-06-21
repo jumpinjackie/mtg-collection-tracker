@@ -13,6 +13,8 @@ public interface IViewModelFactory
 
     WishlistViewModel Wishlist();
 
+    WishlistItemViewModel WishListItem();
+
     CardSkuItemViewModel CardSku();
     
     ContainerViewModel Container();
@@ -22,6 +24,8 @@ public interface IViewModelFactory
     DrawerViewModel Drawer();
 
     AddCardsViewModel AddCards();
+
+    AddCardsToWishlistViewModel AddCardsToWishlist();
 
     SendCardsToContainerOrDeckViewModel SendCardsToContainer(IEnumerable<CardSkuItemViewModel> cards);
 

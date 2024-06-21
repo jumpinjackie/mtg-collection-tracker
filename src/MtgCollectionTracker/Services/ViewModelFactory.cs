@@ -11,6 +11,7 @@ public class ViewModelFactory : IViewModelFactory
 {
     readonly Func<CardsViewModel> _cards;
     readonly Func<CardSkuItemViewModel> _cardSku;
+    readonly Func<WishlistItemViewModel> _wishlistItem;
     readonly Func<DeckViewModel> _deck;
     readonly Func<DeckCollectionViewModel> _decks;
     readonly Func<ContainerSetViewModel> _containerSet;
@@ -18,6 +19,7 @@ public class ViewModelFactory : IViewModelFactory
     readonly Func<ContainerViewModel> _container;
     readonly Func<DrawerViewModel> _drawer;
     readonly Func<AddCardsViewModel> _addCards;
+    readonly Func<AddCardsToWishlistViewModel> _addCardsToWishlist;
     readonly Func<DeckListViewModel> _deckList;
     readonly Func<ContainerBrowseViewModel> _browseContainer;
     readonly Func<EditCardSkuViewModel> _editCardSku;
@@ -30,6 +32,7 @@ public class ViewModelFactory : IViewModelFactory
     public ViewModelFactory(ICollectionTrackingService service,
                             Func<CardsViewModel> cards,
                             Func<CardSkuItemViewModel> cardSku,
+                            Func<WishlistItemViewModel> wishlistItem,
                             Func<DeckViewModel> deck,
                             Func<DeckCollectionViewModel> decks,
                             Func<ContainerSetViewModel> containerSet,
@@ -37,6 +40,7 @@ public class ViewModelFactory : IViewModelFactory
                             Func<ContainerViewModel> container,
                             Func<DrawerViewModel> drawer,
                             Func<AddCardsViewModel> addCards,
+                            Func<AddCardsToWishlistViewModel> addCardsToWishlist,
                             Func<DeckListViewModel> deckList,
                             Func<ContainerBrowseViewModel> browseContainer,
                             Func<EditCardSkuViewModel> editCardSku,
@@ -48,6 +52,7 @@ public class ViewModelFactory : IViewModelFactory
 
         _cards = cards;
         _cardSku = cardSku;
+        _wishlistItem = wishlistItem;
         _deck = deck;
         _decks = decks;
         _containerSet = containerSet;
@@ -55,6 +60,7 @@ public class ViewModelFactory : IViewModelFactory
         _container = container;
         _drawer = drawer;
         _addCards = addCards;
+        _addCardsToWishlist = addCardsToWishlist;
         _deckList = deckList;
         _browseContainer = browseContainer;
         _editCardSku = editCardSku;
@@ -66,6 +72,8 @@ public class ViewModelFactory : IViewModelFactory
     public CardsViewModel Cards() => _cards();
 
     public CardSkuItemViewModel CardSku() => _cardSku();
+
+    public WishlistItemViewModel WishListItem() => _wishlistItem();
 
     public DeckViewModel Deck() => _deck();
 
@@ -80,6 +88,8 @@ public class ViewModelFactory : IViewModelFactory
     public DrawerViewModel Drawer() => _drawer();
 
     public AddCardsViewModel AddCards() => _addCards();
+
+    public AddCardsToWishlistViewModel AddCardsToWishlist() => _addCardsToWishlist();
 
     public DeckListViewModel DeckList() => _deckList();
 
