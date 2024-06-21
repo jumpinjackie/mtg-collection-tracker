@@ -169,7 +169,12 @@ public class CollectionTrackingService : ICollectionTrackingService
             CollectorNumber = c.CollectorNumber,
             Quantity = c.Quantity,
             ImageSmall = c.Scryfall!.ImageSmall,
-            BackImageSmall = c.Scryfall!.BackImageSmall
+            BackImageSmall = c.Scryfall!.BackImageSmall,
+            // A double-faced card has back-face image, but if we haven't loaded SF metadata
+            // for this card yet, then a DFC should have '//' in its card name
+            IsDoubleFaced = c.Scryfall != null 
+                ? c.Scryfall.BackImageSmall != null
+                : c.CardName.Contains(" // ")
         });
     }
 
@@ -347,7 +352,10 @@ public class CollectionTrackingService : ICollectionTrackingService
             CollectorNumber = c.CollectorNumber,
             Quantity = c.Quantity,
             ImageSmall = c.Scryfall?.ImageSmall,
-            BackImageSmall = c.Scryfall?.BackImageSmall
+            BackImageSmall = c.Scryfall?.BackImageSmall,
+            // A double-faced card has back-face image, but if we haven't loaded SF metadata
+            // for this card yet, then a DFC should have '//' in its card name
+            IsDoubleFaced = c.Scryfall?.BackImageSmall != null || c.CardName.Contains(" // ")
         };
     }
 

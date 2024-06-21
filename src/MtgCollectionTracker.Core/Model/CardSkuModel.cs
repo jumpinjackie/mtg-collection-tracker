@@ -30,6 +30,8 @@ public class CardSkuModel
 
     public bool IsLand { get; set; }
 
+    public bool IsDoubleFaced { get; set; }
+
     public byte[]? ImageSmall { get; set; }
 
     public byte[]? BackImageSmall { get; set; }

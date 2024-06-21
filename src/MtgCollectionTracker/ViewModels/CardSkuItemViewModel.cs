@@ -1,5 +1,6 @@
 ﻿using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Data;
 using System.IO;
@@ -31,9 +32,11 @@ public partial class CardSkuItemViewModel : ViewModelBase
     [ObservableProperty]
     private Bitmap? _cardImage;
 
+    
+    private Bitmap? _frontFaceImage;
+
     //TODO: Figure out if it's possible to "flip" the front face image to its
     //back face image. Right now this is unused
-    [ObservableProperty]
     private Bitmap? _backFaceImage;
 
     [ObservableProperty]
@@ -41,6 +44,42 @@ public partial class CardSkuItemViewModel : ViewModelBase
 
     [ObservableProperty]
     private string? _deckName;
+
+    [ObservableProperty]
+    private bool _isFrontFace;
+
+    [ObservableProperty]
+    private bool _isDoubleFaced;
+
+    [ObservableProperty]
+    private string _switchLabel = "Switch to Back";
+
+    private void SwitchToFront()
+    {
+        this.CardImage = _frontFaceImage;
+        this.IsFrontFace = true;
+        this.SwitchLabel = "Switch to Back";
+    }
+
+    private void SwitchToBack()
+    {
+        this.CardImage = _backFaceImage;
+        this.IsFrontFace = false;
+        this.SwitchLabel = "Switch to Front";
+    }
+
+    [RelayCommand]
+    private void SwitchFace()
+    {
+        if (this.IsFrontFace)
+        {
+            SwitchToBack();
+        }
+        else
+        {
+            SwitchToFront();
+        }
+    }
 
     public string? CollectorNumber { get; set; }
 
@@ -58,6 +97,7 @@ public partial class CardSkuItemViewModel : ViewModelBase
     public CardSkuItemViewModel WithData(CardSkuModel sku)
     {
         this.Id = sku.Id;
+        this.IsDoubleFaced = sku.IsDoubleFaced;
         this.CollectorNumber = sku.CollectorNumber;
         this.OriginalCardName = sku.CardName;
         this.OriginalEdition = sku.Edition;
@@ -81,13 +121,14 @@ public partial class CardSkuItemViewModel : ViewModelBase
         if (sku.ImageSmall != null)
         {
             using var ms = new MemoryStream(sku.ImageSmall);
-            this.CardImage = new Bitmap(ms);
+            _frontFaceImage = new Bitmap(ms);
         }
         if (sku.BackImageSmall != null)
         {
             using var ms = new MemoryStream(sku.BackImageSmall);
-            this.BackFaceImage = new Bitmap(ms);
+            _backFaceImage = new Bitmap(ms);
         }
+        this.SwitchToFront();
         return this;
     }
 }

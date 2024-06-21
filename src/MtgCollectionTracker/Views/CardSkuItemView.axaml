@@ -14,6 +14,7 @@
 	<StackPanel Spacing="5" Width="200">
 		<Border CornerRadius="10" ClipToBounds="True">
 			<Panel Background="#7FFF22DD">
+				<!-- TODO: If this is even possible, do a flip animation for double-faced cards -->
 				<Image Width="200" Stretch="Uniform" Source="{Binding CardImage}" />
 				<Panel Height="280" IsVisible="{Binding CardImage, Converter={x:Static ObjectConverters.IsNull}}">
 					<PathIcon Height="75" Width="75" Data="{StaticResource card}" />
@@ -26,6 +27,7 @@
 			<TextBlock Grid.Column="1" Text="{Binding Edition}" HorizontalAlignment="Center" />
 			<TextBlock Grid.Column="2" Text="{Binding Language}" HorizontalAlignment="Center" />
 		</Grid>
+		<Button IsVisible="{Binding IsDoubleFaced}" Grid.Column="0" HorizontalAlignment="Center" Content="{Binding SwitchLabel}" Command="{Binding SwitchFaceCommand}" />
 		<Grid IsVisible="{Binding HasContainer}" ColumnDefinitions="30, *" ToolTip.Tip="{Binding ContainerName}">
 			<PathIcon Grid.Column="0" Data="{StaticResource container}" />
 			<TextBlock Grid.Column="1" Text="{Binding ContainerName}" VerticalAlignment="Center" />
