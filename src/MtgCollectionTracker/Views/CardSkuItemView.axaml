@@ -24,7 +24,7 @@
 				<Border Canvas.Bottom="4" Canvas.Left="4" CornerRadius="3" Background="Gray" Padding="6" Opacity="0.8">
 					<TextBlock Text="{Binding Quantity}" />
 				</Border>
-				<Border Canvas.Bottom="4" Canvas.Right="4" CornerRadius="3" Background="Gray" Padding="6" Opacity="0.8">
+				<Border Canvas.Bottom="4" Canvas.Right="4" CornerRadius="3" Background="Beige" Padding="6" Opacity="0.8">
 					<StackPanel Orientation="Horizontal">
 						<TextBlock Grid.Column="1" Text="{Binding Edition}" />
 						<TextBlock Margin="8 0 0 0" Grid.Column="2" Text="{Binding Language}" />

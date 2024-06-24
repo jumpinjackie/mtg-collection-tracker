@@ -30,6 +30,8 @@ public class StubViewModelFactory : IViewModelFactory
 
     public DeckListViewModel DeckList() => new DeckListViewModel();
 
+    public DeckListVisualViewModel DeckVisual() => new DeckListVisualViewModel();
+
     public ContainerBrowseViewModel BrowseContainer() => new ContainerBrowseViewModel();
 
     public EditCardSkuViewModel EditCardSku() => new EditCardSkuViewModel();

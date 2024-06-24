@@ -22,8 +22,22 @@ public class ScryfallCardMetadata
     [MaxLength(5)]
     public required string Edition { get; set; }
 
+    /// <summary>
+    /// The card's typeline
+    /// </summary>
     [MaxLength(128)]
     public required string CardType { get; set; }
+
+    /// <summary>
+    /// The card type, parsed from the card's typeline
+    /// </summary>
+    [MaxLength(64)]
+    public string? Type { get; set; }
+
+    /// <summary>
+    /// The card's mana value (aka. converted mana cost)
+    /// </summary>
+    public int? ManaValue { get; set; }
 
     [MaxLength(11)]
     public required string Rarity { get; set; }

@@ -1,0 +1,48 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="MtgCollectionTracker.Views.DeckListVisualView"
+			 x:DataType="vm:DeckListVisualViewModel">
+	<Design.DataContext>
+		<!-- This only sets the DataContext for the previewer in an IDE,
+         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+		<vm:DeckListVisualViewModel />
+	</Design.DataContext>
+	<SplitView IsPaneOpen="True"
+			   DisplayMode="CompactInline"
+			   PanePlacement="Right"
+			   OpenPaneLength="400">
+		<SplitView.Pane>
+			<DockPanel>
+				<StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+					<TextBlock xml:space="preserve">Sideboard: </TextBlock>
+					<TextBlock Text="{Binding SideboardSize}" />
+				</StackPanel>
+				<ListBox ScrollViewer.VerticalScrollBarVisibility="Auto" ItemsSource="{Binding Sideboard}" Background="Transparent">
+					<ListBox.ItemsPanel>
+						<ItemsPanelTemplate>
+							<WrapPanel />
+						</ItemsPanelTemplate>
+					</ListBox.ItemsPanel>
+				</ListBox>
+			</DockPanel>
+		</SplitView.Pane>
+		<DockPanel>
+			<StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+				<TextBlock xml:space="preserve">Main Deck: </TextBlock>
+				<TextBlock Text="{Binding MainDeckSize}" />
+			</StackPanel>
+			<ListBox ScrollViewer.VerticalScrollBarVisibility="Auto" ItemsSource="{Binding MainDeck}" Background="Transparent">
+				<ListBox.ItemsPanel>
+					<ItemsPanelTemplate>
+						<WrapPanel />
+					</ItemsPanelTemplate>
+				</ListBox.ItemsPanel>
+			</ListBox>
+		</DockPanel>
+	</SplitView>
+	
+</UserControl>

@@ -33,5 +33,6 @@ namespace MtgCollectionTracker.Core.Services
         IEnumerable<VendorModel> GetVendors();
         ValueTask<WishlistItemModel> UpdateWishlistItemAsync(UpdateWishlistItemInputModel model, IScryfallApiClient? scryfallApiClient, CancellationToken cancel);
         WishlistSpendSummaryModel GetWishlistSpend();
+        ValueTask<DeckModel> GetDeckAsync(int deckId, IScryfallApiClient? scryfallApiClient, CancellationToken cancel);
     }
 }

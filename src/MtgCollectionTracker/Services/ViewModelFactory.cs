@@ -21,6 +21,7 @@ public class ViewModelFactory : IViewModelFactory
     readonly Func<AddCardsViewModel> _addCards;
     readonly Func<AddCardsToWishlistViewModel> _addCardsToWishlist;
     readonly Func<DeckListViewModel> _deckList;
+    readonly Func<DeckListVisualViewModel> _deckVisual;
     readonly Func<ContainerBrowseViewModel> _browseContainer;
     readonly Func<EditCardSkuViewModel> _editCardSku;
     readonly Func<SplitCardSkuViewModel> _splitCardSku;
@@ -44,6 +45,7 @@ public class ViewModelFactory : IViewModelFactory
                             Func<AddCardsViewModel> addCards,
                             Func<AddCardsToWishlistViewModel> addCardsToWishlist,
                             Func<DeckListViewModel> deckList,
+                            Func<DeckListVisualViewModel> deckVisual,
                             Func<ContainerBrowseViewModel> browseContainer,
                             Func<EditCardSkuViewModel> editCardSku,
                             Func<SplitCardSkuViewModel> splitCardSku,
@@ -66,6 +68,7 @@ public class ViewModelFactory : IViewModelFactory
         _addCards = addCards;
         _addCardsToWishlist = addCardsToWishlist;
         _deckList = deckList;
+        _deckVisual = deckVisual;
         _browseContainer = browseContainer;
         _editCardSku = editCardSku;
         _splitCardSku = splitCardSku;
@@ -98,6 +101,8 @@ public class ViewModelFactory : IViewModelFactory
     public AddCardsToWishlistViewModel AddCardsToWishlist() => _addCardsToWishlist();
 
     public DeckListViewModel DeckList() => _deckList();
+
+    public DeckListVisualViewModel DeckVisual() => _deckVisual();
 
     public ContainerBrowseViewModel BrowseContainer() => _browseContainer();
 

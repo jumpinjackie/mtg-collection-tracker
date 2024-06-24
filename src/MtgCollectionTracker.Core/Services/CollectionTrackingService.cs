@@ -1031,4 +1031,64 @@ public class CollectionTrackingService : ICollectionTrackingService
 
         return new() { IsComplete = isComplete, Total = new(total), Vendors = vendors.ToArray() };
     }
+
+    public async ValueTask<DeckModel> GetDeckAsync(int deckId, IScryfallApiClient? scryfallApiClient, CancellationToken cancel)
+    {
+        var deck = await _db.Set<Deck>()
+            .Include(d => d.Cards)
+                .ThenInclude(c => c.Scryfall)
+            .FirstOrDefaultAsync(d => d.Id == deckId);
+
+        if (deck == null)
+            throw new Exception("Deck not found");
+
+        var mainDeck = new List<DeckCardModel>();
+        var sideboard = new List<DeckCardModel>();
+
+        var resolver = new ScryfallMetadataResolver(_db, scryfallApiClient);
+        bool bSaveChanges = false;
+
+        foreach (var sku in deck.Cards)
+        {
+            if (IsIncompleteForDeckDisplay(sku))
+            {
+                await sku.ApplyScryfallMetadataAsync(resolver, true, cancel);
+                bSaveChanges = true;
+            }
+
+            for (int i = 0; i < sku.Quantity; i++)
+            {
+                var card = new DeckCardModel
+                {
+                    SkuId = sku.Id,
+                    CardName = sku.CardName,
+                    FrontFaceImage = sku.Scryfall?.ImageSmall!,
+                    BackFaceImage = sku.Scryfall?.BackImageSmall,
+                    Type = sku.Scryfall?.Type,
+                    ManaValue = sku.Scryfall?.ManaValue ?? -1,
+                    IsLand = sku.IsLand,
+                    IsProxy = sku.Edition == "PROXY"
+                };
+                if (sku.IsSideboard)
+                    sideboard.Add(card);
+                else
+                    mainDeck.Add(card);
+            }
+        }
+
+        if (bSaveChanges)
+        {
+            await _db.SaveChangesAsync(cancel);
+        }
+
+        return new DeckModel { Name = deck.Name, Id = deck.Id, MainDeck = mainDeck.ToArray(), Sideboard = sideboard.ToArray() };
+    }
+
+    static bool IsIncompleteForDeckDisplay(CardSku sku)
+    {
+        return sku.Scryfall == null
+            || sku.Scryfall.Type == null
+            || sku.Scryfall.ImageSmall == null
+            || sku.Scryfall.ManaValue == null;
+    }
 }

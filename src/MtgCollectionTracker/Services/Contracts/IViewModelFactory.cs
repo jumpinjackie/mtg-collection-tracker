@@ -33,6 +33,8 @@ public interface IViewModelFactory
 
     DeckListViewModel DeckList();
 
+    DeckListVisualViewModel DeckVisual();
+
     ContainerBrowseViewModel BrowseContainer();
 
     EditCardSkuViewModel EditCardSku();

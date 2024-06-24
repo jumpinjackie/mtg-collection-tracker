@@ -89,6 +89,11 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
+    public ValueTask<DeckModel> GetDeckAsync(int deckId, IScryfallApiClient? scryfallApiClient, CancellationToken cancel)
+    {
+        throw new System.NotImplementedException();
+    }
+
     public IEnumerable<DeckSummaryModel> GetDecks(string? format)
     {
         throw new System.NotImplementedException();

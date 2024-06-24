@@ -8,15 +8,17 @@
 			 x:DataType="vm:DeckCollectionViewModel">
 	<DockPanel>
 		<StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
-			<Button Command="{Binding AddDeckCommand}" Content="Add New" HorizontalAlignment="Center" />
-			<Button IsEnabled="{Binding HasSelectedDeck}" Command="{Binding DismantleDeckCommand}" Content="Dismantle" HorizontalAlignment="Center" />
-			<Button Command="{Binding CanIBuildThisDeckCommand}" Content="Can I Build?" HorizontalAlignment="Center" />
-			<Button IsEnabled="{Binding HasSelectedDeck}" Command="{Binding ViewDeckContentsCommand}" Content="View Deck" HorizontalAlignment="Center" />
-			<Button IsEnabled="{Binding HasSelectedDeck}" Command="{Binding CheckDeckLegalityCommand}" Content="Check Legality" HorizontalAlignment="Center" />
-			<Button Command="{Binding RefreshDecksCommand}" Content="Refresh" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding !IsBusy}" Command="{Binding AddDeckCommand}" Content="Add New" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding CanRunAgainstSelectedDeck}" Command="{Binding DismantleDeckCommand}" Content="Dismantle" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding CanRunAgainstSelectedDeck}" Command="{Binding CanIBuildThisDeckCommand}" Content="Can I Build?" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding CanRunAgainstSelectedDeck}" Command="{Binding ViewDeckContentsCommand}" Content="View Deck" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding CanRunAgainstSelectedDeck}" Command="{Binding ViewDeckVisuallyCommand}" Content="View Deck 2" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding CanRunAgainstSelectedDeck}" Command="{Binding CheckDeckLegalityCommand}" Content="Check Legality" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding !IsBusy}" Command="{Binding RefreshDecksCommand}" Content="Refresh" HorizontalAlignment="Center" />
+			<TextBlock Margin="6" VerticalAlignment="Center" IsVisible="{Binding IsBusy}">Fetching missing images/metadata from Scryfall. Please wait ...</TextBlock>
 		</StackPanel>
 		<Panel>
-			<ListBox IsVisible="{Binding Decks.Count}" ItemsSource="{Binding Decks}" SelectedItem="{Binding SelectedDeck}" Background="Transparent" Margin="0 20">
+			<ListBox IsEnabled="{Binding !IsBusy}" IsVisible="{Binding Decks.Count}" ItemsSource="{Binding Decks}" SelectedItem="{Binding SelectedDeck}" Background="Transparent" Margin="0 20">
 				<ListBox.ItemsPanel>
 					<ItemsPanelTemplate>
 						<WrapPanel />

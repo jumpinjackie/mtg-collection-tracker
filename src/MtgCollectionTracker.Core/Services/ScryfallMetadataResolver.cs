@@ -139,8 +139,9 @@ internal class ScryfallMetadataResolver
                         CardName = key.cardName,
                         Edition = key.edition,
                         CardType = sfCardMeta.TypeLine,
-                        Rarity = sfCardMeta.Rarity
-
+                        Rarity = sfCardMeta.Rarity,
+                        Type = ParseType(sfCardMeta.TypeLine),
+                        ManaValue = (int)sfCardMeta.Cmc
                     };
                     await _db.Set<ScryfallCardMetadata>().AddAsync(sfMeta, cancel);
                 }
@@ -150,6 +151,14 @@ internal class ScryfallMetadataResolver
                 // Collector #
                 if (sfMeta.CollectorNumber != sfCardMeta.CollectorNumber)
                     sfMeta.CollectorNumber = sfCardMeta.CollectorNumber;
+
+                // Type
+                if (sfMeta.Type == null)
+                    sfMeta.Type = ParseType(sfCardMeta.TypeLine);
+
+                // Mana Value
+                if (sfMeta.ManaValue == null)
+                    sfMeta.ManaValue = (int)sfCardMeta.Cmc;
 
                 // Small card image (front face)
                 if (sfMeta.ImageSmall == null)
@@ -190,5 +199,14 @@ internal class ScryfallMetadataResolver
         }
 
         return sfMeta;
+    }
+
+    static string ParseType(string typeLine)
+    {
+        // No, you're not seeing things. These are 2 distinct hyphens thanks to the power of unicode!
+        // And scryfall insists on putting the unicode hyphen in its typeline!
+        // But just in case, we'll split on both unicode and ascii variants.
+        var tokens = typeLine.Split('—', '-');
+        return tokens[0].Trim();
     }
 }

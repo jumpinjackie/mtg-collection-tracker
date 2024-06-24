@@ -1,0 +1,30 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="MtgCollectionTracker.Views.CardVisualView"
+			 x:DataType="vm:CardVisualViewModel">
+	<Design.DataContext>
+		<!-- This only sets the DataContext for the previewer in an IDE,
+         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+		<vm:CardVisualViewModel />
+	</Design.DataContext>
+	<Canvas ToolTip.Tip="{Binding Tooltip}" Width="140" Height="200">
+		<TextBlock Canvas.Left="0" Canvas.Top="0" Canvas.Right="0" Text="{Binding CardName}" HorizontalAlignment="Center" />
+		<Panel Canvas.Left="0" Canvas.Top="0" Canvas.Bottom="0" Canvas.Right="0"  Background="#7FFF22DD">
+			<!-- TODO: If this is even possible, do a flip animation for double-faced cards -->
+			<Image Width="140" Stretch="Uniform" Source="{Binding CardImage}" />
+			<Panel Height="200" IsVisible="{Binding CardImage, Converter={x:Static ObjectConverters.IsNull}}">
+				<PathIcon Height="75" Width="75" Data="{StaticResource card}" />
+			</Panel>
+		</Panel>
+		<Border IsVisible="{Binding IsGrouped}" Canvas.Bottom="4" Canvas.Left="4" CornerRadius="3" Background="Gray" Padding="6" Opacity="0.8">
+			<TextBlock Text="{Binding Quantity}" />
+		</Border>
+		<Border IsVisible="{Binding IsGrouped}" Canvas.Top="4" Canvas.Left="4" CornerRadius="3" Background="{Binding CardNameBgColor}" Padding="6" Opacity="0.8">
+			<TextBlock Text="{Binding CardName}" />
+		</Border>
+	</Canvas>
+</UserControl>
