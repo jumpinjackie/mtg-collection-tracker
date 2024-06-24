@@ -2,6 +2,7 @@
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Data;
 using ScryfallApi.Client;
+using System;
 using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Channels;
@@ -353,13 +354,13 @@ public class CollectionTrackingService : ICollectionTrackingService
             // A double-faced card has back-face image, but if we haven't loaded SF metadata
             // for this card yet, then a DFC should have '//' in its card name
             IsDoubleFaced = w.Scryfall?.BackImageSmall != null || w.CardName.Contains(" // "),
-            Offers = w.OfferedPrices.Select(o => new VendorOfferModel
+            Offers = w.OfferedPrices?.Select(o => new VendorOfferModel
             {
                 VendorId = o.VendorId,
                 VendorName = o.Vendor.Name,
                 AvailableStock = o.AvailableStock,
                 Price = o.Price
-            }).ToList()
+            })?.ToList() ?? []
         };
     }
 
@@ -941,6 +942,18 @@ public class CollectionTrackingService : ICollectionTrackingService
     public IEnumerable<VendorModel> GetVendors()
     {
         return _db.Vendors.Select(v => new VendorModel { Id = v.Id, Name = v.Name });
+    }
+
+    public async ValueTask<WishlistItemModel> DeleteWishlistItemAsync(int id)
+    {
+        var item = await _db.WishlistItems.FindAsync(id);
+        if (item == null)
+            throw new Exception("Wishlist item not found");
+
+        _db.WishlistItems.Remove(item);
+        await _db.SaveChangesAsync();
+
+        return WishListItemToModel(item);
     }
 
     public async ValueTask<WishlistItemModel> UpdateWishlistItemAsync(UpdateWishlistItemInputModel model, IScryfallApiClient? scryfallApiClient, CancellationToken cancel)

@@ -12,18 +12,26 @@
 		<vm:DeckViewModel />
 	</Design.DataContext>	
 	<StackPanel Spacing="5" Width="200">
-		<Border CornerRadius="10" ClipToBounds="True">
-			<Panel Background="#7FFF22DD">
-				<Panel Height="280">
-					<PathIcon Height="75" Width="75" Data="{StaticResource deckbox}" />
+		<Border ToolTip.Tip="{Binding Name}" CornerRadius="10" ClipToBounds="True">
+			<Canvas Width="200" Height="280">
+				<Panel Canvas.Left="0" Canvas.Top="0" Canvas.Bottom="0" Canvas.Right="0" Background="#7FFF22DD">
+					<Panel Width="200" Height="280">
+						<PathIcon Height="75" Width="75" Data="{StaticResource deckbox}" />
+					</Panel>
 				</Panel>
-			</Panel>
+				<Border Canvas.Top="4" Canvas.Left="4" CornerRadius="3" Background="Gray" Padding="6" Opacity="0.8">
+					<TextBlock Text="{Binding Format}" />
+				</Border>
+				<Border Canvas.Bottom="4" Canvas.Left="4" CornerRadius="3" Background="Gray" Padding="6" Opacity="0.8">
+					<TextBlock Text="{Binding Maindeck}" />
+				</Border>
+				<Border Canvas.Bottom="4" Canvas.Right="4" CornerRadius="3" Background="Gray" Padding="6" Opacity="0.8">
+					<TextBlock Text="{Binding Sideboard}" />
+				</Border>
+			</Canvas>
 		</Border>
 		<TextBlock Text="{Binding Name}" ToolTip.Tip="{Binding Name}" HorizontalAlignment="Center" />
-		<Grid ColumnDefinitions="*, *">
-			<TextBlock Grid.Column="0" Text="{Binding Maindeck}" ToolTip.Tip="{Binding Name}" HorizontalAlignment="Center" />
-			<TextBlock Grid.Column="1" Text="{Binding Sideboard}" ToolTip.Tip="{Binding Name}" HorizontalAlignment="Center" />
-		</Grid>
+		
 		<Grid IsVisible="{Binding HasContainer}" ColumnDefinitions="30, *" ToolTip.Tip="{Binding ContainerName}">
 			<PathIcon Grid.Column="0" Data="{StaticResource container}" />
 			<TextBlock Grid.Column="1" Text="{Binding ContainerName}" VerticalAlignment="Center" />

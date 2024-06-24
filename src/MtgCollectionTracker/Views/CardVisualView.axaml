@@ -11,12 +11,12 @@
          to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
 		<vm:CardVisualViewModel />
 	</Design.DataContext>
-	<Canvas ToolTip.Tip="{Binding Tooltip}" Width="140" Height="200">
+	<Canvas ToolTip.Tip="{Binding Tooltip}" Width="160" Height="220">
 		<TextBlock Canvas.Left="0" Canvas.Top="0" Canvas.Right="0" Text="{Binding CardName}" HorizontalAlignment="Center" />
 		<Panel Canvas.Left="0" Canvas.Top="0" Canvas.Bottom="0" Canvas.Right="0"  Background="#7FFF22DD">
 			<!-- TODO: If this is even possible, do a flip animation for double-faced cards -->
-			<Image Width="140" Stretch="Uniform" Source="{Binding CardImage}" />
-			<Panel Height="200" IsVisible="{Binding CardImage, Converter={x:Static ObjectConverters.IsNull}}">
+			<Image Width="160" Stretch="Uniform" Source="{Binding CardImage}" />
+			<Panel Height="220" IsVisible="{Binding CardImage, Converter={x:Static ObjectConverters.IsNull}}">
 				<PathIcon Height="75" Width="75" Data="{StaticResource card}" />
 			</Panel>
 		</Panel>

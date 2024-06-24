@@ -27,6 +27,11 @@
 							<WrapPanel />
 						</ItemsPanelTemplate>
 					</ListBox.ItemsPanel>
+					<ListBox.Styles>
+						<Style Selector="ListBoxItem">
+							<Setter Property="Padding" Value="2" />
+						</Style>
+					</ListBox.Styles>
 				</ListBox>
 			</DockPanel>
 		</SplitView.Pane>
@@ -41,6 +46,11 @@
 						<WrapPanel />
 					</ItemsPanelTemplate>
 				</ListBox.ItemsPanel>
+				<ListBox.Styles>
+					<Style Selector="ListBoxItem">
+						<Setter Property="Padding" Value="2" />
+					</Style>
+				</ListBox.Styles>
 			</ListBox>
 		</DockPanel>
 	</SplitView>

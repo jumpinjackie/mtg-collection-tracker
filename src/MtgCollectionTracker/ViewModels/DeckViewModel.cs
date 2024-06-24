@@ -14,7 +14,8 @@ public partial class DeckViewModel : ViewModelBase
     {
         base.ThrowIfNotDesignMode();
         _vmFactory = new StubViewModelFactory();
-        this.Name = "[Legacy] My Deck";
+        this.Name = "My Deck";
+        this.Format = "Legacy";
         this.Maindeck = "MD: 60";
         this.Sideboard = "SB: 15";
     }
@@ -33,6 +34,9 @@ public partial class DeckViewModel : ViewModelBase
     private string _name;
 
     [ObservableProperty]
+    private string _format;
+
+    [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasContainer))]
     private string? _containerName;
 
@@ -47,9 +51,8 @@ public partial class DeckViewModel : ViewModelBase
     public DeckViewModel WithData(DeckSummaryModel deck)
     {
         this.DeckId = deck.Id;
-        this.Name = deck.Format?.Length > 0
-            ? $"[{deck.Format}] {deck.Name}"
-            : deck.Name;
+        this.Format = deck.Format ?? "Unknown Format";
+        this.Name = deck.Name;
         this.ContainerName = deck.ContainerName;
         this.Maindeck = $"MD: {deck.MaindeckTotal}";
         this.Sideboard = $"SB: {deck.SideboardTotal}";

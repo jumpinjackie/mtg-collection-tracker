@@ -57,8 +57,8 @@ public partial class DeckListVisualViewModel : DrawerContentViewModel
             foreach (var grp in deck.MainDeck.GroupBy(c => c.SkuId))
             {
                 var card = grp.First();
-                using var ms = new MemoryStream(card.FrontFaceImage);
-                var cm = new CardVisualViewModel { IsGrouped = this.IsGrouped, Quantity = grp.Count(), CardName = card.CardName, Type = card.Type, IsLand = card.IsLand, IsProxy = card.IsProxy, CardImage = new Bitmap(ms) };
+
+                var cm = new CardVisualViewModel { IsGrouped = this.IsGrouped, Quantity = grp.Count(), CardName = card.CardName, Type = card.Type, IsLand = card.IsLand, IsProxy = card.IsProxy, CardImage = TryGetFrontFaceImage(card) };
                 md.Add(cm);
                 mdTotal += grp.Count();
             }
@@ -69,8 +69,7 @@ public partial class DeckListVisualViewModel : DrawerContentViewModel
             foreach (var grp in deck.Sideboard.GroupBy(c => c.SkuId))
             {
                 var card = grp.First();
-                using var ms = new MemoryStream(card.FrontFaceImage);
-                this.Sideboard.Add(new CardVisualViewModel { IsGrouped = this.IsGrouped, Quantity = grp.Count(), CardName = card.CardName, Type = card.Type, IsLand = card.IsLand, IsProxy = card.IsProxy, CardImage = new Bitmap(ms) });
+                this.Sideboard.Add(new CardVisualViewModel { IsGrouped = this.IsGrouped, Quantity = grp.Count(), CardName = card.CardName, Type = card.Type, IsLand = card.IsLand, IsProxy = card.IsProxy, CardImage = TryGetFrontFaceImage(card) });
                 sbTotal += grp.Count();
             }
         }
@@ -79,8 +78,7 @@ public partial class DeckListVisualViewModel : DrawerContentViewModel
             var md = new List<CardVisualViewModel>();
             foreach (var card in deck.MainDeck)
             {
-                using var ms = new MemoryStream(card.FrontFaceImage);
-                var cm = new CardVisualViewModel { IsGrouped = this.IsGrouped, Quantity = 1, CardName = card.CardName, Type = card.Type, IsLand = card.IsLand, IsProxy = card.IsProxy, CardImage = new Bitmap(ms) };
+                var cm = new CardVisualViewModel { IsGrouped = this.IsGrouped, Quantity = 1, CardName = card.CardName, Type = card.Type, IsLand = card.IsLand, IsProxy = card.IsProxy, CardImage = TryGetFrontFaceImage(card) };
                 md.Add(cm);
             }
             // Non-lands before lands
@@ -90,7 +88,7 @@ public partial class DeckListVisualViewModel : DrawerContentViewModel
             foreach (var card in deck.Sideboard)
             {
                 using var ms = new MemoryStream(card.FrontFaceImage);
-                this.Sideboard.Add(new CardVisualViewModel { IsGrouped = this.IsGrouped, Quantity = 1, CardName = card.CardName, Type = card.Type, IsLand = card.IsLand, IsProxy = card.IsProxy, CardImage = new Bitmap(ms) });
+                this.Sideboard.Add(new CardVisualViewModel { IsGrouped = this.IsGrouped, Quantity = 1, CardName = card.CardName, Type = card.Type, IsLand = card.IsLand, IsProxy = card.IsProxy, CardImage = TryGetFrontFaceImage(card) });
             }
 
             mdTotal += this.MainDeck.Count;
@@ -101,5 +99,15 @@ public partial class DeckListVisualViewModel : DrawerContentViewModel
         this.SideboardSize = sbTotal;
 
         return this;
+
+        static Bitmap? TryGetFrontFaceImage(DeckCardModel card)
+        {
+            if (card.FrontFaceImage != null)
+            {
+                using var ms = new MemoryStream(card.FrontFaceImage);
+                return new Bitmap(ms);
+            }
+            return null;
+        }
     }
 }

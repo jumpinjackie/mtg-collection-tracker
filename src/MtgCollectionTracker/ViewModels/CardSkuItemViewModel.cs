@@ -21,7 +21,7 @@ public partial class CardSkuItemViewModel : ViewModelBase
     private string? _language = "EN";
 
     [ObservableProperty]
-    private string _quantity = "Qty: 1";
+    private string _quantity = "1";
 
     [ObservableProperty]
     private string _condition = CardCondition.NearMint.ToString();
@@ -113,7 +113,7 @@ public partial class CardSkuItemViewModel : ViewModelBase
             this.ProxyQty = sku.Quantity;
         }
         this.Condition = (sku.Condition ?? CardCondition.NearMint).ToString();
-        this.Quantity = $"Qty: {sku.Quantity}";
+        this.Quantity = $"{sku.Quantity}";
         this.Language = sku.Language?.Length > 0 ? sku.Language : "en";
         this.Comments = sku.Comments;
         this.ContainerName = sku.ContainerName;

@@ -94,7 +94,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IRecipient<Card
                     $"Are you sure you want to delete this wishlist item?",
                     async () =>
                     {
-                        await _service.DeleteCardSkuAsync(item.Id);
+                        await _service.DeleteWishlistItemAsync(item.Id);
                         Messenger.ToastNotify($"Wishlist item ({item.CardName}, {item.Language ?? "en"}) deleted");
                         this.SelectedItems.Remove(item);
                         this.Cards.Remove(item);
