@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Core.Services;
+using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
@@ -82,7 +83,25 @@ public partial class WishlistViewModel : RecipientViewModelBase, IRecipient<Card
     [RelayCommand]
     private void DeleteCards()
     {
-
+        if (this.SelectedItems.Count == 1)
+        {
+            var item = this.SelectedItems[0];
+            Messenger.Send(new OpenDrawerMessage
+            {
+                DrawerWidth = 400,
+                ViewModel = _vmFactory.Drawer().WithConfirmation(
+                    "Delete Wishlist Item",
+                    $"Are you sure you want to delete this wishlist item?",
+                    async () =>
+                    {
+                        await _service.DeleteCardSkuAsync(item.Id);
+                        Messenger.ToastNotify($"Wishlist item ({item.CardName}, {item.Language ?? "en"}) deleted");
+                        this.SelectedItems.Remove(item);
+                        this.Cards.Remove(item);
+                        this.ApplySummary();
+                    })
+            });
+        }
     }
 
     [RelayCommand]
