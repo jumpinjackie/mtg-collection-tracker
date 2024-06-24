@@ -4,7 +4,7 @@
 /// Defines a price that a <see cref="Vendor"/> can offer for a given card, along with the quantity of
 /// that card they have in stock
 /// </summary>
-public class VendorPrice
+public class VendorPrice : IVendorOffer
 {
     public int Id { get; set; }
 
@@ -31,4 +31,10 @@ public class VendorPrice
     /// The quantity of this card they have in stock
     /// </summary>
     public int AvailableStock { get; set; }
+
+    string IVendorOffer.Name => Vendor.Name;
+
+    int IVendorOffer.AvailableStock => AvailableStock;
+
+    decimal IVendorOffer.Price => Price;
 }

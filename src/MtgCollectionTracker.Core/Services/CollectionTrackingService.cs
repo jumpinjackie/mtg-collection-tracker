@@ -1006,4 +1006,29 @@ public class CollectionTrackingService : ICollectionTrackingService
 
         return WishListItemToModel(wi);
     }
+
+    public WishlistSpendSummaryModel GetWishlistSpend()
+    {
+        var items = _db.Set<WishlistItem>()
+            .Include(w => w.OfferedPrices)
+                .ThenInclude(p => p.Vendor)
+            .Where(w => w.OfferedPrices.Count > 0);
+
+        var vendors = new HashSet<string>();
+        var isComplete = true;
+        decimal total = 0;
+
+        foreach (var item in items)
+        {
+            var (subTotal, v, c) = item.OfferedPrices.ComputeBestPrice(item.Quantity);
+            vendors.UnionWith(v);
+            total += subTotal;
+            if (!c)
+            {
+                isComplete = false;
+            }
+        }
+
+        return new() { IsComplete = isComplete, Total = new(total), Vendors = vendors.ToArray() };
+    }
 }

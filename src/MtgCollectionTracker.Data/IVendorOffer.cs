@@ -1,4 +1,4 @@
-﻿namespace MtgCollectionTracker.Core.Model;
+﻿namespace MtgCollectionTracker.Data;
 
 public interface IVendorOffer
 {

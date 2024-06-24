@@ -5,12 +5,11 @@ using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
-using ScryfallApi.Client.Apis;
 using System.Collections.ObjectModel;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class WishlistViewModel : RecipientViewModelBase, IRecipient<CardsAddedToWishlistMessage>
+public partial class WishlistViewModel : RecipientViewModelBase, IRecipient<CardsAddedToWishlistMessage>, IRecipient<WishlistItemUpdatedMessage>
 {
     readonly IViewModelFactory _vmFactory;
     readonly ICollectionTrackingService _service;
@@ -41,6 +40,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IRecipient<Card
             {
                 this.Cards.Add(_vmFactory.WishListItem().WithData(item));
             }
+            this.ApplySummary();
         }
         base.OnActivated();
     }
@@ -65,6 +65,9 @@ public partial class WishlistViewModel : RecipientViewModelBase, IRecipient<Card
 
     [ObservableProperty]
     private bool _hasSingleSelectedItem;
+
+    [ObservableProperty]
+    private string _wishlistSummary;
 
     [RelayCommand]
     private void AddCards()
@@ -115,5 +118,16 @@ public partial class WishlistViewModel : RecipientViewModelBase, IRecipient<Card
         {
             this.Cards.Add(_vmFactory.WishListItem().WithData(item));
         }
+    }
+
+    private void ApplySummary()
+    {
+        var summary = _service.GetWishlistSpend();
+        this.WishlistSummary = $"Current spend: ${summary.Total.Amount} across {summary.Vendors.Length} vendor(s)";
+    }
+
+    void IRecipient<WishlistItemUpdatedMessage>.Receive(WishlistItemUpdatedMessage message)
+    {
+        this.ApplySummary();
     }
 }

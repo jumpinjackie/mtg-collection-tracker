@@ -30,7 +30,7 @@
 			</Grid>
 			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="30, *">
 				<CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding ApplyEdition}" />
-				<TextBlock Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">Edition (use "PROXY" to indicate proxies)</TextBlock>
+				<TextBlock Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">Edition</TextBlock>
 				<TextBox Grid.Row="1" Grid.ColumnSpan="2" IsEnabled="{Binding ApplyEdition}" Text="{Binding Edition}" />
 			</Grid>
 			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="30, *">
@@ -106,6 +106,7 @@
 							</DataGridTemplateColumn>
 						</DataGrid.Columns>
 					</DataGrid>
+					<TextBlock Padding="6" TextWrapping="WrapWithOverflow">NOTE: Qty does not have to be exact. If a vendor has enough stock to satisfy, just put the qty you need</TextBlock>
 					<Button IsEnabled="{Binding ApplyOffers}" Command="{Binding AddOfferCommand}">Add Offer</Button>
 				</StackPanel>
 			</Grid>

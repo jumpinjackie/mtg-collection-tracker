@@ -32,5 +32,6 @@ namespace MtgCollectionTracker.Core.Services
         ValueTask<(int created, int deleted)> ApplyVendorsAsync(ApplyVendorsInputModel model);
         IEnumerable<VendorModel> GetVendors();
         ValueTask<WishlistItemModel> UpdateWishlistItemAsync(UpdateWishlistItemInputModel model, IScryfallApiClient? scryfallApiClient, CancellationToken cancel);
+        WishlistSpendSummaryModel GetWishlistSpend();
     }
 }

@@ -18,6 +18,7 @@
 			<Button IsEnabled="{Binding HasSelectedItems}" Command="{Binding MoveToInventoryCommand}" Content="Move to Inventory" ToolTip.Tip="Add these selected cards to your inventory. This marks these wishlist items as purchased and removes them from your wishlist" />
 			<Button IsEnabled="{Binding HasSelectedItems}" Command="{Binding DeleteCardsCommand}" Content="Delete" />
 			<Button Command="{Binding ManageVendorsCommand}" Content="Manage Vendors" />
+			<TextBlock Margin="6" VerticalAlignment="Center" Text="{Binding WishlistSummary}" />
 		</StackPanel>
 		<Panel>
 			<ListBox IsEnabled="{Binding !IsBusy}" SelectionMode="Multiple" SelectedItems="{Binding SelectedItems}" ItemsSource="{Binding Cards}" Background="Transparent" Margin="0 20">

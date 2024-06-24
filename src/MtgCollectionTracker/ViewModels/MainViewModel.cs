@@ -1,6 +1,7 @@
 ﻿using Avalonia.Controls.Notifications;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
+using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
@@ -8,7 +9,7 @@ using System.Linq;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDrawerMessage>, IRecipient<CloseDrawerMessage>, IRecipient<NotificationMessage>, IRecipient<CardsAddedMessage>, IRecipient<CardsSentToContainerMessage>, IRecipient<CardsSentToDeckMessage>, IRecipient<CardsAddedToWishlistMessage>
+public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDrawerMessage>, IRecipient<CloseDrawerMessage>, IRecipient<NotificationMessage>, IRecipient<CardsAddedMessage>, IRecipient<CardsSentToContainerMessage>, IRecipient<CardsSentToDeckMessage>, IRecipient<CardsAddedToWishlistMessage>, IRecipient<WishlistItemUpdatedMessage>
 {
     public MainViewModel()
     {
@@ -86,6 +87,11 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDraw
     void IRecipient<CardsSentToDeckMessage>.Receive(CardsSentToDeckMessage message)
     {
         this.NotificationManager?.Show($"{message.TotalSkus} SKU(s) moved to deck ({message.DeckName})");
+    }
+
+    void IRecipient<WishlistItemUpdatedMessage>.Receive(WishlistItemUpdatedMessage message)
+    {
+        this.NotificationManager?.Show("Wishlist item updated");
     }
 
     public WindowNotificationManager? NotificationManager { get; set; }

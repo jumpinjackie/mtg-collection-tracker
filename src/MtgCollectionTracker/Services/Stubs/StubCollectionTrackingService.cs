@@ -109,6 +109,11 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
+    public WishlistSpendSummaryModel GetWishlistSpend()
+    {
+        throw new System.NotImplementedException();
+    }
+
     public bool IsBasicLand(string cardName)
     {
         throw new System.NotImplementedException();

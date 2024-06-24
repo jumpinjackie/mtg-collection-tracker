@@ -186,7 +186,7 @@ public partial class EditWishlistItemViewModel : DrawerContentViewModel
 
         var updated = await _service.UpdateWishlistItemAsync(m, _scryfallApiClient, cancel);
 
-        Messenger.ToastNotify("Wishlist item updated");
+        Messenger.Send(new WishlistItemUpdatedMessage());
 
         if (_origItem != null)
         {
