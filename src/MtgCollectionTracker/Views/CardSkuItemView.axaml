@@ -13,21 +13,26 @@
 	</Design.DataContext>
 	<StackPanel Spacing="5" Width="200">
 		<Border CornerRadius="10" ClipToBounds="True">
-			<Panel Background="#7FFF22DD">
-				<!-- TODO: If this is even possible, do a flip animation for double-faced cards -->
-				<Image Width="200" Stretch="Uniform" Source="{Binding CardImage}" />
-				<Panel Height="280" IsVisible="{Binding CardImage, Converter={x:Static ObjectConverters.IsNull}}">
-					<PathIcon Height="75" Width="75" Data="{StaticResource card}" />
+			<Canvas Width="200" Height="280">
+				<Panel Canvas.Left="0" Canvas.Top="0" Canvas.Bottom="0" Canvas.Right="0"  Background="#7FFF22DD">
+					<!-- TODO: If this is even possible, do a flip animation for double-faced cards -->
+					<Image Width="200" Stretch="Uniform" Source="{Binding CardImage}" />
+					<Panel Height="280" IsVisible="{Binding CardImage, Converter={x:Static ObjectConverters.IsNull}}">
+						<PathIcon Height="75" Width="75" Data="{StaticResource card}" />
+					</Panel>
 				</Panel>
-			</Panel>
+				<Border Canvas.Bottom="4" Canvas.Left="4" CornerRadius="3" Background="Gray" Padding="6" Opacity="0.8">
+					<TextBlock Text="{Binding Quantity}" />
+				</Border>
+				<Border Canvas.Bottom="4" Canvas.Right="4" CornerRadius="3" Background="Gray" Padding="6" Opacity="0.8">
+					<StackPanel Orientation="Horizontal">
+						<TextBlock Grid.Column="1" Text="{Binding Edition}" />
+						<TextBlock Margin="8 0 0 0" Grid.Column="2" Text="{Binding Language}" />
+					</StackPanel>
+				</Border>
+			</Canvas>
 		</Border>
 		<TextBlock Grid.Column="0" Text="{Binding CardName}" ToolTip.Tip="{Binding CardName}" HorizontalAlignment="Center" />
-		<Grid ColumnDefinitions="*, *, *">
-			<TextBlock Grid.Column="0" Text="{Binding Quantity}" HorizontalAlignment="Center" />
-			<TextBlock Grid.Column="1" Text="{Binding Edition}" HorizontalAlignment="Center" />
-			<TextBlock Grid.Column="2" Text="{Binding Language}" HorizontalAlignment="Center" />
-		</Grid>
-		<Button IsVisible="{Binding IsDoubleFaced}" Grid.Column="0" HorizontalAlignment="Center" Content="{Binding SwitchLabel}" Command="{Binding SwitchFaceCommand}" />
 		<Grid IsVisible="{Binding HasContainer}" ColumnDefinitions="30, *" ToolTip.Tip="{Binding ContainerName}">
 			<PathIcon Grid.Column="0" Data="{StaticResource container}" />
 			<TextBlock Grid.Column="1" Text="{Binding ContainerName}" VerticalAlignment="Center" />
@@ -36,5 +41,6 @@
 			<PathIcon Grid.Column="0" Data="{StaticResource deckbox}" />
 			<TextBlock Grid.Column="1" Text="{Binding DeckName}" VerticalAlignment="Center" />
 		</Grid>
+		<Button IsVisible="{Binding IsDoubleFaced}" Grid.Column="0" HorizontalAlignment="Center" Content="{Binding SwitchLabel}" Command="{Binding SwitchFaceCommand}" />
 	</StackPanel>
 </UserControl>
