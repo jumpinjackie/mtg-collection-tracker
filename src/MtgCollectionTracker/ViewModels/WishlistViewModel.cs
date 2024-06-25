@@ -1,16 +1,19 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using System.Collections.ObjectModel;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class WishlistViewModel : RecipientViewModelBase, IRecipient<CardsAddedToWishlistMessage>, IRecipient<WishlistItemUpdatedMessage>
+public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithBusyState, IRecipient<CardsAddedToWishlistMessage>, IRecipient<WishlistItemUpdatedMessage>
 {
     readonly IViewModelFactory _vmFactory;
     readonly ICollectionTrackingService _service;
@@ -57,18 +60,26 @@ public partial class WishlistViewModel : RecipientViewModelBase, IRecipient<Card
     public ObservableCollection<WishlistItemViewModel> SelectedItems { get; } = new();
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanDoMultiSelectionCommand))]
+    [NotifyPropertyChangedFor(nameof(CanDoSingleSelectionCommand))]
     private bool _isBusy;
 
     public bool IsEmptyCollection => Cards.Count == 0;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanDoMultiSelectionCommand))]
     private bool _hasSelectedItems;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanDoSingleSelectionCommand))]
     private bool _hasSingleSelectedItem;
 
     [ObservableProperty]
     private string _wishlistSummary;
+
+    public bool CanDoSingleSelectionCommand => HasSingleSelectedItem && !IsBusy;
+
+    public bool CanDoMultiSelectionCommand => HasSelectedItems && !IsBusy;
 
     [RelayCommand]
     private void AddCards()
@@ -116,9 +127,35 @@ public partial class WishlistViewModel : RecipientViewModelBase, IRecipient<Card
     }
 
     [RelayCommand]
-    private void MoveToInventory()
+    private async Task MoveToCollection()
     {
-
+        if (this.SelectedItems.Count > 0)
+        {
+            var arg = new MoveWishlistItemsToCollectionInputModel
+            {
+                WishlistItemIds = this.SelectedItems.Select(w => w.Id).ToArray()
+            };
+            Messenger.Send(new OpenDrawerMessage
+            {
+                DrawerWidth = 400,
+                ViewModel = _vmFactory.Drawer().WithConfirmation(
+                    "Move to Collection",
+                    $"Are you sure you want move these wishlist items to your collection?",
+                    async () =>
+                    {
+                        var result = await _service.MoveWishlistItemsToCollectionAsync(arg);
+                        var removedIds = result.CreatedSkus.Select(tuple => tuple.WishlistItemId);
+                        var toRemove = this.SelectedItems.Where(i => removedIds.Contains(i.Id)).ToList();
+                        foreach (var item in toRemove)
+                        {
+                            this.SelectedItems.Remove(item);
+                            this.Cards.Remove(item);
+                        }
+                        this.ApplySummary();
+                        Messenger.ToastNotify($"{result.CreatedSkus.Length} wishlist items moved to your collection");
+                    })
+            });
+        }
     }
 
     [RelayCommand]

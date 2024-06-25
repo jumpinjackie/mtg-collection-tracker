@@ -129,6 +129,11 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
+    public ValueTask<MoveWishlistItemsToCollectionResult> MoveWishlistItemsToCollectionAsync(MoveWishlistItemsToCollectionInputModel model)
+    {
+        throw new System.NotImplementedException();
+    }
+
     public string PrintDeck(int deckId, bool reportProxyUsage)
     {
         throw new System.NotImplementedException();

@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Data;
 using ScryfallApi.Client;
@@ -1103,5 +1104,30 @@ public class CollectionTrackingService : ICollectionTrackingService
             || sku.Scryfall.Type == null
             || sku.Scryfall.ImageSmall == null
             || sku.Scryfall.ManaValue == null;
+    }
+
+    public async ValueTask<MoveWishlistItemsToCollectionResult> MoveWishlistItemsToCollectionAsync(MoveWishlistItemsToCollectionInputModel model)
+    {
+        var items = _db.Set<WishlistItem>()
+            .Include(wi => wi.Scryfall)
+            .Where(wi => model.WishlistItemIds.Contains(wi.Id))
+            .ToList();
+
+        var converted = new List<(int id, CardSku sku)>();
+        foreach (var item in items)
+        {
+            converted.Add(new(item.Id, item.CreateSku(model.ContainerId)));
+        }
+
+        _db.Set<WishlistItem>().RemoveRange(items);
+        await _db.Set<CardSku>().AddRangeAsync(converted.Select(c => c.sku));
+        await _db.SaveChangesAsync();
+
+        foreach (var added in converted)
+        {
+            await _db.Entry(added.sku).Reference(nameof(CardSku.Scryfall)).LoadAsync();
+        }
+
+        return new MoveWishlistItemsToCollectionResult { CreatedSkus = converted.Select(c => new WishlistItemMoveResult(c.id, CardSkuToModel(c.sku))).ToArray() };
     }
 }

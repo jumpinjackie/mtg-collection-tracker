@@ -79,7 +79,7 @@ public class WishlistItem : IScryfallMetaLinkable
     /// </summary>
     /// <param name="containerId"></param>
     /// <returns></returns>
-    public CardSku CreateSku(int containerId)
+    public CardSku CreateSku(int? containerId)
     {
         return new CardSku
         {

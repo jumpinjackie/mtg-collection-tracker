@@ -35,5 +35,6 @@ namespace MtgCollectionTracker.Core.Services
         WishlistSpendSummaryModel GetWishlistSpend();
         ValueTask<WishlistItemModel> DeleteWishlistItemAsync(int id);
         ValueTask<DeckModel> GetDeckAsync(int deckId, IScryfallApiClient? scryfallApiClient, CancellationToken cancel);
+        ValueTask<MoveWishlistItemsToCollectionResult> MoveWishlistItemsToCollectionAsync(MoveWishlistItemsToCollectionInputModel model);
     }
 }
