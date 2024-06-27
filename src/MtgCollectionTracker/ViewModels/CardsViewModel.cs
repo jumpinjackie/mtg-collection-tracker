@@ -100,7 +100,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
         this.HasAtLeastOneSelectedCardSku = this.SelectedCardSkus.Count > 0;
     }
 
-    public bool CanSplitCardSku => !this.IsBusy && this.HasSelectedCardSku && this.SelectedCardSkus[0].RealQty > 1;
+    public bool CanSplitCardSku => !this.IsBusy && this.HasSelectedCardSku && (this.SelectedCardSkus[0].RealQty > 1 || this.SelectedCardSkus[0].ProxyQty > 1);
     public bool CanSendSkusToContainer => !this.IsBusy && this.HasAtLeastOneSelectedCardSku;
     public bool CanSendSkusToDeck => !this.IsBusy && this.HasAtLeastOneSelectedCardSku;
     public bool CanUpdateMetadata => !this.IsBusy && this.HasAtLeastOneSelectedCardSku;
@@ -245,9 +245,20 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     {
         if (CanSplitCardSku)
         {
+            var selected = this.SelectedCardSkus[0];
             var vm = _vmFactory.SplitCardSku();
-            vm.CardSkuId = this.SelectedCardSkus[0].Id;
-            vm.CurrentQuantity = this.SelectedCardSkus[0].RealQty;
+            vm.CardSkuId = selected.Id;
+            if (selected.ProxyQty > 1)
+            {
+                vm.CurrentQuantity = selected.ProxyQty;
+            }
+            else if (selected.RealQty > 1)
+            {
+                vm.CurrentQuantity = selected.RealQty;
+            }
+            if (vm.CurrentQuantity == 0)
+                return;
+
             vm.SplitQuantity = vm.SplitMin;
             Messenger.Send(new OpenDrawerMessage
             {
