@@ -34,12 +34,7 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
     {
         if (!Avalonia.Controls.Design.IsDesignMode)
         {
-            this.Containers.Clear();
-            var containers = _service.GetContainers();
-            foreach (var cont in containers)
-            {
-                this.Containers.Add(_vmFactory.Container().WithData(cont));
-            }
+            this.RefreshListCommand.Execute(null);
         }
         base.OnActivated();
     }
@@ -47,10 +42,14 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
     public ObservableCollection<ContainerViewModel> Containers { get; } = new();
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasSelectedContainer))]
+    [NotifyPropertyChangedFor(nameof(CanRunAgainstSelectedContainer))]
     private ContainerViewModel? _selectedContainer;
 
-    public bool HasSelectedContainer => this.SelectedContainer != null;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(CanRunAgainstSelectedContainer))]
+    private bool _isBusy;
+
+    public bool CanRunAgainstSelectedContainer => SelectedContainer != null && !IsBusy;
 
     [RelayCommand]
     private void AddContainer()
@@ -72,6 +71,17 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
                 DrawerWidth = 1000,
                 ViewModel = _vmFactory.Drawer().WithContent(this.SelectedContainer.Name, _vmFactory.BrowseContainer().WithContainerId(this.SelectedContainer.Id))
             });
+        }
+    }
+
+    [RelayCommand]
+    private void RefreshList()
+    {
+        this.Containers.Clear();
+        var containers = _service.GetContainers();
+        foreach (var cont in containers)
+        {
+            this.Containers.Add(_vmFactory.Container().WithData(cont));
         }
     }
 

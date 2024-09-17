@@ -8,11 +8,12 @@
 			 x:DataType="vm:ContainerSetViewModel">
 	<DockPanel>
 		<StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
-			<Button Command="{Binding AddContainerCommand}" Content="Add New" HorizontalAlignment="Center" />
-			<Button IsEnabled="{Binding HasSelectedContainer}" Command="{Binding ViewContainerCommand}" Content="View Container" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding !IsBusy}" Command="{Binding AddContainerCommand}" Content="Add New" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding CanRunAgainstSelectedContainer}" Command="{Binding ViewContainerCommand}" Content="View Container" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding !IsBusy}" Command="{Binding RefreshListCommand}" Content="Refresh" HorizontalAlignment="Center" />
 		</StackPanel>
 		<Panel>
-			<ListBox IsVisible="{Binding Containers.Count}" ItemsSource="{Binding Containers}" SelectedItem="{Binding SelectedContainer}" Background="Transparent" Margin="0 20">
+			<ListBox IsEnabled="{Binding !IsBusy}" IsVisible="{Binding Containers.Count}" ItemsSource="{Binding Containers}" SelectedItem="{Binding SelectedContainer}" Background="Transparent" Margin="0 20">
 				<ListBox.ItemsPanel>
 					<ItemsPanelTemplate>
 						<WrapPanel />
