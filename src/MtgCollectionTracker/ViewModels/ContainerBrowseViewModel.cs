@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Contracts;
+using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using ScryfallApi.Client;
 using System;
@@ -173,7 +174,11 @@ public partial class ContainerBrowseViewModel : DrawerContentViewModel, IViewMod
     [RelayCommand]
     private void AddSkus()
     {
-
+        Messenger.Send(new OpenDrawerMessage
+        {
+            DrawerWidth = 800,
+            ViewModel = _vmFactory.Drawer().WithContent("Add Cards", _vmFactory.AddCards())
+        });
     }
 
     [RelayCommand]
@@ -183,15 +188,16 @@ public partial class ContainerBrowseViewModel : DrawerContentViewModel, IViewMod
     }
 
     [RelayCommand]
-    private void SendSkusToDeck()
-    {
-
-    }
-
-    [RelayCommand]
     private void SendSkusToContainer()
     {
-
+        if (this.SelectedCardSkus.Count > 0)
+        {
+            Messenger.Send(new OpenDrawerMessage
+            {
+                DrawerWidth = 800,
+                ViewModel = _vmFactory.Drawer().WithContent("Send Cards To Deck or Container", _vmFactory.SendCardsToContainer(this.SelectedCardSkus))
+            });
+        }
     }
 
     [RelayCommand]
