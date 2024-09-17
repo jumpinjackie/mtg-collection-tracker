@@ -55,6 +55,9 @@ public partial class CardSkuItemViewModel : ViewModelBase
     private bool _isFoil;
 
     [ObservableProperty]
+    private bool _isSideboard;
+
+    [ObservableProperty]
     private string _switchLabel = "Switch to Back";
 
     private void SwitchToFront()
@@ -101,6 +104,7 @@ public partial class CardSkuItemViewModel : ViewModelBase
     {
         this.Id = sku.Id;
         this.IsDoubleFaced = sku.IsDoubleFaced;
+        this.IsSideboard = sku.IsSideboard;
         this.CollectorNumber = sku.CollectorNumber;
         this.OriginalCardName = sku.CardName;
         this.OriginalEdition = sku.Edition;

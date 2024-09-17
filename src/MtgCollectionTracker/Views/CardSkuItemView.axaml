@@ -22,7 +22,10 @@
 					</Panel>
 				</Panel>
 				<Border Canvas.Bottom="4" Canvas.Left="4" CornerRadius="3" Background="Gray" Padding="6" Opacity="0.8">
-					<TextBlock Text="{Binding Quantity}" />
+					<StackPanel Orientation="Horizontal">
+						<TextBlock Text="{Binding Quantity}" />
+						<TextBlock Margin="8 0 0 0" IsVisible="{Binding IsSideboard}" ToolTip.Tip="This card is in the sideboard" Text="SB" />
+					</StackPanel>
 				</Border>
 				<Border IsVisible="{Binding IsFoil}" Canvas.Bottom="40" Canvas.Right="4" CornerRadius="3" Background="Gray" Padding="6" Opacity="0.8">
 					<StackPanel Orientation="Horizontal">
