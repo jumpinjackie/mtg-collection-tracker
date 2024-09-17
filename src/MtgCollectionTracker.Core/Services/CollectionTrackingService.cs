@@ -809,6 +809,8 @@ public class CollectionTrackingService : ICollectionTrackingService
                 sku.ContainerId = model.ContainerId;
             if (model.IsLand.HasValue)
                 sku.IsLand = model.IsLand.Value;
+            if (model.IsFoil.HasValue)
+                sku.IsFoil = model.IsFoil.Value;
             if (model.IsSideboard.HasValue)
                 sku.IsSideboard = model.IsSideboard.Value;
 

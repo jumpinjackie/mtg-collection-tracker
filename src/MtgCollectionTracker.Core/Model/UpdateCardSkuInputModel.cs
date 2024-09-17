@@ -26,6 +26,8 @@ public class UpdateCardSkuInputModel
 
     public bool? IsSideboard { get; set; }
 
+    public bool? IsFoil { get; set; }
+
     public bool? IsLand { get; set; }
 
     public bool UnsetDeck { get; set; }

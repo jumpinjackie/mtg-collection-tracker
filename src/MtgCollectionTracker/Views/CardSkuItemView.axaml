@@ -24,6 +24,11 @@
 				<Border Canvas.Bottom="4" Canvas.Left="4" CornerRadius="3" Background="Gray" Padding="6" Opacity="0.8">
 					<TextBlock Text="{Binding Quantity}" />
 				</Border>
+				<Border IsVisible="{Binding IsFoil}" Canvas.Bottom="40" Canvas.Right="4" CornerRadius="3" Background="Gray" Padding="6" Opacity="0.8">
+					<StackPanel Orientation="Horizontal">
+						<TextBlock Grid.Column="1" Text="Foil" />
+					</StackPanel>
+				</Border>
 				<Border Canvas.Bottom="4" Canvas.Right="4" CornerRadius="3" Background="Gray" Padding="6" Opacity="0.8">
 					<StackPanel Orientation="Horizontal">
 						<TextBlock Grid.Column="1" Text="{Binding Edition}" />

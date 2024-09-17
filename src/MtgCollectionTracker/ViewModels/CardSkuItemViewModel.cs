@@ -52,6 +52,9 @@ public partial class CardSkuItemViewModel : ViewModelBase
     private bool _isDoubleFaced;
 
     [ObservableProperty]
+    private bool _isFoil;
+
+    [ObservableProperty]
     private string _switchLabel = "Switch to Back";
 
     private void SwitchToFront()
@@ -118,6 +121,7 @@ public partial class CardSkuItemViewModel : ViewModelBase
         this.Comments = sku.Comments;
         this.ContainerName = sku.ContainerName;
         this.DeckName = sku.DeckName;
+        this.IsFoil = sku.IsFoil;
         if (sku.ImageSmall != null)
         {
             using var ms = new MemoryStream(sku.ImageSmall);

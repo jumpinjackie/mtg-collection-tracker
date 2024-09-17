@@ -78,6 +78,7 @@
 			</Grid>
 			<StackPanel Orientation="Horizontal" Spacing="6">
 				<CheckBox IsThreeState="True" IsChecked="{Binding IsLand}">Is Land?</CheckBox>
+				<CheckBox IsThreeState="True" IsChecked="{Binding IsFoil}">Is Foil?</CheckBox>
 				<CheckBox IsThreeState="True" IsChecked="{Binding IsSideboard}">Is Sideboard?</CheckBox>
 				<CheckBox IsThreeState="True" IsChecked="{Binding UnsetDeck}">Un-set Deck?</CheckBox>
 				<CheckBox IsThreeState="True" IsChecked="{Binding UnsetContainer}">Un-set Container?</CheckBox>

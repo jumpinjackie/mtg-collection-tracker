@@ -168,6 +168,10 @@ public partial class EditCardSkuViewModel : DrawerContentViewModel
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
+    private bool? _isFoil;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
     private bool? _isSideboard;
 
     [ObservableProperty]
@@ -188,6 +192,7 @@ public partial class EditCardSkuViewModel : DrawerContentViewModel
             || this.ApplyEdition
             || this.ApplyLanguage
             || this.ApplyQuantity
+            || this.IsFoil.HasValue
             || this.IsLand.HasValue
             || this.IsSideboard.HasValue
             || this.UnsetContainer.HasValue
@@ -219,6 +224,7 @@ public partial class EditCardSkuViewModel : DrawerContentViewModel
             m.ContainerId = Container.Id;
 
         m.IsLand = IsLand;
+        m.IsFoil = IsFoil;
         m.IsSideboard = IsSideboard;
         if (UnsetContainer.HasValue)
             m.UnsetContainer = UnsetContainer.Value;
