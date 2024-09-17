@@ -2,9 +2,9 @@ using Avalonia.Controls;
 
 namespace MtgCollectionTracker.Views;
 
-public partial class DrawerView : UserControl
+public partial class DialogView : UserControl
 {
-    public DrawerView()
+    public DialogView()
     {
         InitializeComponent();
     }

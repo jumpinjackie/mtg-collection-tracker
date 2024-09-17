@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
+			 xmlns:dialogHost="clr-namespace:DialogHostAvalonia;assembly=DialogHost.Avalonia"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
 			 xmlns:views="clr-namespace:MtgCollectionTracker.Views"
              x:Class="MtgCollectionTracker.Views.MainView"
@@ -12,13 +13,7 @@
          to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
 		<vm:MainViewModel />
 	</Design.DataContext>
-	<SplitView IsPaneOpen="{Binding IsDrawerOpen}"
-			   DisplayMode="Overlay"
-			   PanePlacement="Left"
-			   OpenPaneLength="{Binding DrawerWidth}">
-		<SplitView.Pane>
-			<views:DrawerView DataContext="{Binding Drawer}" />
-		</SplitView.Pane>
+	<dialogHost:DialogHost DisableOpeningAnimation="True" CloseOnClickAway="False">
 		<TabControl Margin="5">
 			<TabItem Header="Cards">
 				<views:CardsView DataContext="{Binding Cards}" />
@@ -33,5 +28,5 @@
 				<views:WishlistView DataContext="{Binding Wishlist}" />
 			</TabItem>
 		</TabControl>
-	</SplitView>
+	</dialogHost:DialogHost>
 </UserControl>

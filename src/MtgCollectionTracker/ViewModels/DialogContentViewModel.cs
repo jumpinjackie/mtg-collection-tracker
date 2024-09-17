@@ -7,21 +7,21 @@ using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public abstract partial class DrawerContentViewModel : RecipientViewModelBase
+public abstract partial class DialogContentViewModel : RecipientViewModelBase
 {
-    protected DrawerContentViewModel() : base() { }
+    protected DialogContentViewModel() : base() { }
 
-    protected DrawerContentViewModel(IMessenger messenger) : base(messenger) { }
+    protected DialogContentViewModel(IMessenger messenger) : base(messenger) { }
 }
 
-public partial class DrawerViewModel : ViewModelBase
+public partial class DialogViewModel : ViewModelBase
 {
     readonly IMessenger _messenger;
 
-    public DrawerViewModel() : this(WeakReferenceMessenger.Default)
+    public DialogViewModel() : this(WeakReferenceMessenger.Default)
     { }
 
-    public DrawerViewModel(IMessenger messenger)
+    public DialogViewModel(IMessenger messenger)
     {
         _messenger = messenger;
     }
@@ -30,9 +30,9 @@ public partial class DrawerViewModel : ViewModelBase
     private string _title = string.Empty;
 
     [ObservableProperty]
-    private DrawerContentViewModel? _contentDataContext;
+    private DialogContentViewModel? _contentDataContext;
 
-    public DrawerViewModel WithConfirmation(
+    public DialogViewModel WithConfirmation(
         string title,
         string message,
         Func<ValueTask> yesAction,
@@ -43,11 +43,11 @@ public partial class DrawerViewModel : ViewModelBase
         this.ContentDataContext = new ConfirmViewModel()
             .WithMessage(message)
             .WithActionLabels(yesLabel, noLabel)
-            .WithActions(yesAction, async () => _messenger.Send(new CloseDrawerMessage()));
+            .WithActions(yesAction, async () => _messenger.Send(new CloseDialogMessage()));
         return this;
     }
 
-    public DrawerViewModel WithContent(string title, DrawerContentViewModel dataContext)
+    public DialogViewModel WithContent(string title, DialogContentViewModel dataContext)
     {
         this.Title = title;
         this.ContentDataContext = dataContext;
@@ -57,6 +57,6 @@ public partial class DrawerViewModel : ViewModelBase
     [RelayCommand]
     private void Close()
     {
-        _messenger.Send(new CloseDrawerMessage());
+        _messenger.Send(new CloseDialogMessage());
     }
 }

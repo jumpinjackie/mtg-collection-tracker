@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class ContainerBrowseViewModel : DrawerContentViewModel, IViewModelWithBusyState
+public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewModelWithBusyState
 {
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
@@ -174,7 +174,7 @@ public partial class ContainerBrowseViewModel : DrawerContentViewModel, IViewMod
     [RelayCommand]
     private void AddSkus()
     {
-        Messenger.Send(new OpenDrawerMessage
+        Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 800,
             ViewModel = _vmFactory.Drawer().WithContent("Add Cards", _vmFactory.AddCards())
@@ -192,7 +192,7 @@ public partial class ContainerBrowseViewModel : DrawerContentViewModel, IViewMod
     {
         if (this.SelectedCardSkus.Count > 0)
         {
-            Messenger.Send(new OpenDrawerMessage
+            Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 800,
                 ViewModel = _vmFactory.Drawer().WithContent("Send Cards To Deck or Container", _vmFactory.SendCardsToContainer(this.SelectedCardSkus))

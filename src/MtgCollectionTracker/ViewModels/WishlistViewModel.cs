@@ -84,7 +84,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
     [RelayCommand]
     private void AddCards()
     {
-        Messenger.Send(new OpenDrawerMessage
+        Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 800,
             ViewModel = _vmFactory.Drawer().WithContent("Add Cards to Wishlist", _vmFactory.AddCardsToWishlist())
@@ -97,7 +97,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
         if (this.SelectedItems.Count == 1)
         {
             var item = this.SelectedItems[0];
-            Messenger.Send(new OpenDrawerMessage
+            Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 400,
                 ViewModel = _vmFactory.Drawer().WithConfirmation(
@@ -119,7 +119,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
     private void ManageVendors()
     {
         var vendors = _service.GetVendors();
-        Messenger.Send(new OpenDrawerMessage
+        Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 800,
             ViewModel = _vmFactory.Drawer().WithContent("Manage Vendors", _vmFactory.ManageVendors().WithData(vendors))
@@ -135,7 +135,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
             {
                 WishlistItemIds = this.SelectedItems.Select(w => w.Id).ToArray()
             };
-            Messenger.Send(new OpenDrawerMessage
+            Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 400,
                 ViewModel = _vmFactory.Drawer().WithConfirmation(
@@ -161,7 +161,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
     [RelayCommand]
     private void EditItem()
     {
-        Messenger.Send(new OpenDrawerMessage
+        Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 600,
             ViewModel = _vmFactory.Drawer().WithContent("Edit Wishlist Item", _vmFactory.EditWishlistItem().WithData(this.SelectedItems[0]))

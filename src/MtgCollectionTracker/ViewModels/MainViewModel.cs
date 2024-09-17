@@ -1,15 +1,14 @@
 ﻿using Avalonia.Controls.Notifications;
-using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
-using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDrawerMessage>, IRecipient<CloseDrawerMessage>, IRecipient<NotificationMessage>, IRecipient<CardsAddedMessage>, IRecipient<CardsSentToContainerMessage>, IRecipient<CardsSentToDeckMessage>, IRecipient<CardsAddedToWishlistMessage>, IRecipient<WishlistItemUpdatedMessage>
+public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDialogMessage>, IRecipient<CloseDialogMessage>, IRecipient<NotificationMessage>, IRecipient<CardsAddedMessage>, IRecipient<CardsSentToContainerMessage>, IRecipient<CardsSentToDeckMessage>, IRecipient<CardsAddedToWishlistMessage>, IRecipient<WishlistItemUpdatedMessage>
 {
     public MainViewModel()
     {
@@ -39,26 +38,36 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDraw
 
     public WishlistViewModel Wishlist { get; }
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsDrawerOpen))]
-    private DrawerViewModel? _drawer;
+    private Stack<DialogViewModel> _dialogStack = new();
 
-    public bool IsDrawerOpen => this.Drawer != null;
-
-    [ObservableProperty]
-    private int _drawerWidth;
-
-    void IRecipient<OpenDrawerMessage>.Receive(OpenDrawerMessage message)
+    void IRecipient<OpenDialogMessage>.Receive(OpenDialogMessage message)
     {
-        this.DrawerWidth = message.DrawerWidth;
-        this.Drawer = message.ViewModel;
-        //this.NotificationManager?.Show("Drawer Opened");
+        // HACK: Cannot figure out if/how DialogHost can have multiple dialogs open at once but
+        // visually stacked. As a workaround if there is a pre-existing dialog, dislodge that one
+        // and show our new one, but keep references to open dialogs in a stack
+        if (_dialogStack.Count > 0)
+            DialogHostAvalonia.DialogHost.Close(null);
+
+        _dialogStack.Push(message.ViewModel);
+        DialogHostAvalonia.DialogHost.Show(_dialogStack.Peek());
     }
 
-    void IRecipient<CloseDrawerMessage>.Receive(CloseDrawerMessage message)
+    void IRecipient<CloseDialogMessage>.Receive(CloseDialogMessage message)
     {
-        this.Drawer = null;
-        //this.NotificationManager?.Show("Drawer Closed");
+        // HACK: Cannot figure out if/how DialogHost can have multiple dialogs open at once but
+        // visually stacked. As a workaround if there are multiple "open" dialogs, then close the
+        // topmost one, pop its VM off the stack and restore the next topmost dialog VM
+
+        // Right now we are assuming the close message was sent from the topmost dialog VM, which
+        // right now is a safe assumption to make
+        if (_dialogStack.Count > 0)
+        {
+            _dialogStack.Pop();
+            DialogHostAvalonia.DialogHost.Close(null);
+
+            if (_dialogStack.Count > 0)
+                DialogHostAvalonia.DialogHost.Show(_dialogStack.Peek());
+        }
     }
 
     void IRecipient<NotificationMessage>.Receive(NotificationMessage message)

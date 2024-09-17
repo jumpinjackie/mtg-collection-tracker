@@ -4,8 +4,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="MtgCollectionTracker.Views.DrawerView"
-			 x:DataType="vm:DrawerViewModel">
+             x:Class="MtgCollectionTracker.Views.DialogView"
+			 x:DataType="vm:DialogViewModel">
 	<DockPanel>
 		<Grid ColumnDefinitions="*, 30" DockPanel.Dock="Top">
 			<TextBlock Margin="6" FontSize="24" Text="{Binding Title}" Grid.Column="0" />

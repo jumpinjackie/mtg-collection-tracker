@@ -55,7 +55,7 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
     [RelayCommand]
     private void AddContainer()
     {
-        Messenger.Send(new OpenDrawerMessage
+        Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 400,
             ViewModel = _vmFactory.Drawer().WithContent("New Container", _vmFactory.NewDeckOrContainer(DeckOrContainer.Container))
@@ -67,7 +67,7 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
     {
         if (this.SelectedContainer != null)
         {
-            Messenger.Send(new OpenDrawerMessage
+            Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 800,
                 ViewModel = _vmFactory.Drawer().WithConfirmation(
@@ -88,7 +88,7 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
     {
         if (this.SelectedContainer != null)
         {
-            Messenger.Send(new OpenDrawerMessage
+            Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 1000,
                 ViewModel = _vmFactory.Drawer().WithContent(this.SelectedContainer.Name, _vmFactory.BrowseContainer().WithContainerId(this.SelectedContainer.Id))

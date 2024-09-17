@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class SplitCardSkuViewModel : DrawerContentViewModel
+public partial class SplitCardSkuViewModel : DialogContentViewModel
 {
     readonly ICollectionTrackingService _service;
 
@@ -49,10 +49,10 @@ public partial class SplitCardSkuViewModel : DrawerContentViewModel
                 Quantity = this.SplitQuantity
             });
             Messenger.Send(new NotificationMessage { Content = "Card SKU split" });
-            Messenger.Send(new CloseDrawerMessage());
+            Messenger.Send(new CloseDialogMessage());
         }
     }
 
     [RelayCommand]
-    private void Cancel() => Messenger.Send(new CloseDrawerMessage());
+    private void Cancel() => Messenger.Send(new CloseDialogMessage());
 }

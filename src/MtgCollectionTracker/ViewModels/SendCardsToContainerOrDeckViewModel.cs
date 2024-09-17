@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class SendCardsToContainerOrDeckViewModel : DrawerContentViewModel
+public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewModel
 {
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
@@ -100,7 +100,7 @@ public partial class SendCardsToContainerOrDeckViewModel : DrawerContentViewMode
                 Messenger.Send(new CardsSentToContainerMessage(res, this.SelectedContainer.Name));
             if (this.SelectedDeck != null)
                 Messenger.Send(new CardsSentToDeckMessage(res, this.SelectedDeck.Name));
-            Messenger.Send(new CloseDrawerMessage());
+            Messenger.Send(new CloseDialogMessage());
         }
     }
 }

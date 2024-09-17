@@ -23,7 +23,7 @@ public interface IViewModelFactory
 
     DeckViewModel Deck();
 
-    DrawerViewModel Drawer();
+    DialogViewModel Drawer();
 
     AddCardsViewModel AddCards();
 

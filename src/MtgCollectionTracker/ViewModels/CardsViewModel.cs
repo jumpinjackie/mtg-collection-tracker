@@ -191,7 +191,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     [RelayCommand]
     private void AddSkus()
     {
-        Messenger.Send(new OpenDrawerMessage
+        Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 800,
             ViewModel = _vmFactory.Drawer().WithContent("Add Cards", _vmFactory.AddCards())
@@ -224,7 +224,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     {
         if (this.SelectedCardSkus.Count == 1)
         {
-            Messenger.Send(new OpenDrawerMessage
+            Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 600,
                 ViewModel = _vmFactory.Drawer().WithContent("Edit Sku", _vmFactory.EditCardSku().WithSku(this.SelectedCardSkus[0]))
@@ -232,7 +232,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
         }
         else if (this.SelectedCardSkus.Count > 1)
         {
-            Messenger.Send(new OpenDrawerMessage
+            Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 600,
                 ViewModel = _vmFactory.Drawer().WithContent("Edit Skus", _vmFactory.EditCardSku().WithSkus(this.SelectedCardSkus))
@@ -260,7 +260,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
                 return;
 
             vm.SplitQuantity = vm.SplitMin;
-            Messenger.Send(new OpenDrawerMessage
+            Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 300,
                 ViewModel = _vmFactory.Drawer().WithContent("Split Card SKU", vm)
@@ -273,7 +273,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     {
         if (this.SelectedCardSkus.Count > 0)
         {
-            Messenger.Send(new OpenDrawerMessage
+            Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 800,
                 ViewModel = _vmFactory.Drawer().WithContent("Send Cards To Deck or Container", _vmFactory.SendCardsToContainer(this.SelectedCardSkus))
@@ -314,7 +314,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
         if (this.SelectedCardSkus.Count == 1)
         {
             var sku = this.SelectedCardSkus[0];
-            Messenger.Send(new OpenDrawerMessage
+            Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 400,
                 ViewModel = _vmFactory.Drawer().WithConfirmation(

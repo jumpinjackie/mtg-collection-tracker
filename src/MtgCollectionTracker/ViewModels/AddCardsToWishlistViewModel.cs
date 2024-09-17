@@ -19,7 +19,7 @@ using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class AddCardsToWishlistViewModel : DrawerContentViewModel
+public partial class AddCardsToWishlistViewModel : DialogContentViewModel
 {
     readonly IStorageProvider _storage;
     readonly ICollectionTrackingService _service;
@@ -174,12 +174,12 @@ public partial class AddCardsToWishlistViewModel : DrawerContentViewModel
 
         var added = await _service.AddMultipleToWishlistAsync(adds, _scryfallApiClient);
         Messenger.Send(new CardsAddedToWishlistMessage { Added = added });
-        Messenger.Send(new CloseDrawerMessage());
+        Messenger.Send(new CloseDialogMessage());
     }
 
     [RelayCommand]
     private void Cancel()
     {
-        Messenger.Send(new CloseDrawerMessage());
+        Messenger.Send(new CloseDialogMessage());
     }
 }

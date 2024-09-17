@@ -15,7 +15,7 @@ public enum DeckOrContainer
     Container
 }
 
-public partial class NewDeckOrContainerViewModel : DrawerContentViewModel
+public partial class NewDeckOrContainerViewModel : DialogContentViewModel
 {
     readonly ICollectionTrackingService _service;
 
@@ -60,13 +60,13 @@ public partial class NewDeckOrContainerViewModel : DrawerContentViewModel
                 var di = await _service.CreateDeckAsync(this.Name, this.DeckFormat, null);
                 this.Messenger.Send(new DeckCreatedMessage { Deck = di });
                 this.Messenger.ToastNotify($"Deck created ({this.Name})");
-                this.Messenger.Send(new CloseDrawerMessage());
+                this.Messenger.Send(new CloseDialogMessage());
                 break;
             case DeckOrContainer.Container:
                 var ci = await _service.CreateContainerAsync(this.Name, this.ContainerDescription);
                 this.Messenger.Send(new ContainerCreatedMessage { Container = ci });
                 this.Messenger.ToastNotify($"Container created ({this.Name})");
-                this.Messenger.Send(new CloseDrawerMessage());
+                this.Messenger.Send(new CloseDialogMessage());
                 break;
         }
     }
@@ -74,6 +74,6 @@ public partial class NewDeckOrContainerViewModel : DrawerContentViewModel
     [RelayCommand]
     private void Cancel()
     {
-        this.Messenger.Send(new CloseDrawerMessage());
+        this.Messenger.Send(new CloseDialogMessage());
     }
 }

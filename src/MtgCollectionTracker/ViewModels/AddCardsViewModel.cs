@@ -21,7 +21,7 @@ namespace MtgCollectionTracker.ViewModels;
 
 record CsvImportRecord(int Qty, string CardName, string Edition, string? Language, bool? IsFoil, bool? IsLand, bool? IsSideboard, string? Condition, string? Comments);
 
-public partial class AddCardsViewModel : DrawerContentViewModel
+public partial class AddCardsViewModel : DialogContentViewModel
 {
     readonly IStorageProvider _storage;
     readonly ICollectionTrackingService _service;
@@ -192,12 +192,12 @@ public partial class AddCardsViewModel : DrawerContentViewModel
 
         var (total, proxyTotal, rows) = await _service.AddMultipleToContainerOrDeckAsync(containerId, deckId, adds, _scryfallApiClient);
         Messenger.Send(new CardsAddedMessage { CardsTotal = total, ProxyTotal = proxyTotal, SkuTotal = rows });
-        Messenger.Send(new CloseDrawerMessage());
+        Messenger.Send(new CloseDialogMessage());
     }
 
     [RelayCommand]
     private void Cancel()
     {
-        Messenger.Send(new CloseDrawerMessage());
+        Messenger.Send(new CloseDialogMessage());
     }
 }

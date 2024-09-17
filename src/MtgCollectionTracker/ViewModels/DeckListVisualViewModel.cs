@@ -12,7 +12,7 @@ using System.Linq;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class DeckListVisualViewModel : DrawerContentViewModel
+public partial class DeckListVisualViewModel : DialogContentViewModel
 {
     readonly ICollectionTrackingService _service;
 

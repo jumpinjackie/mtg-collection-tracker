@@ -62,7 +62,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
     [RelayCommand]
     private void AddDeck()
     {
-        Messenger.Send(new OpenDrawerMessage
+        Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 400,
             ViewModel = _vmFactory.Drawer().WithContent("New Deck", _vmFactory.NewDeckOrContainer(DeckOrContainer.Deck))
@@ -74,7 +74,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
     {
         if (this.SelectedDeck != null)
         {
-            Messenger.Send(new OpenDrawerMessage
+            Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 800,
                 ViewModel = _vmFactory.Drawer().WithConfirmation(
@@ -112,7 +112,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
     {
         if (this.SelectedDeck != null)
         {
-            Messenger.Send(new OpenDrawerMessage
+            Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 450,
                 ViewModel = _vmFactory.Drawer().WithContent("Deck List", _vmFactory.DeckList().WithDeck(this.SelectedDeck.DeckId, this.SelectedDeck.Name))
@@ -130,7 +130,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
             {
                 deck = await _service.GetDeckAsync(this.SelectedDeck.DeckId, _scryfallApiClient, CancellationToken.None);
             }
-            Messenger.Send(new OpenDrawerMessage
+            Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 1280,
                 ViewModel = _vmFactory.Drawer().WithContent("Deck: " + deck.Name, _vmFactory.DeckVisual().WithDeck(deck))

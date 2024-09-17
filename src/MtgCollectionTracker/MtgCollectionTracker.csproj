@@ -26,6 +26,7 @@
 
     <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
     <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
+    <PackageReference Include="DialogHost.Avalonia" Version="0.8.1" />
     <PackageReference Include="StrongInject" Version="1.4.4" />
   </ItemGroup>
 
@@ -45,6 +46,9 @@
     </Compile>
     <Compile Update="Views\DeckCollectionView.axaml.cs">
       <DependentUpon>DeckCollectionView.axaml</DependentUpon>
+    </Compile>
+    <Compile Update="Views\DialogView.axaml.cs">
+      <DependentUpon>DialogView.axaml</DependentUpon>
     </Compile>
     <Compile Update="Views\NewDeckOrContainerView.axaml.cs">
       <DependentUpon>NewDeckOrContainerView.axaml</DependentUpon>

@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class ManageVendorsViewModel : DrawerContentViewModel
+public partial class ManageVendorsViewModel : DialogContentViewModel
 {
     readonly ICollectionTrackingService _service;
 
@@ -40,7 +40,7 @@ public partial class ManageVendorsViewModel : DrawerContentViewModel
         };
         await _service.ApplyVendorsAsync(input);
         Messenger.ToastNotify("Vendors updated");
-        Messenger.Send(new CloseDrawerMessage());
+        Messenger.Send(new CloseDialogMessage());
     }
 
     public ManageVendorsViewModel WithData(IEnumerable<VendorModel> vendors)

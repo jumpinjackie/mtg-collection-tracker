@@ -22,7 +22,7 @@ public class StubViewModelFactory : IViewModelFactory
 
     public WishlistViewModel Wishlist() => new WishlistViewModel();
 
-    public DrawerViewModel Drawer() => new DrawerViewModel();
+    public DialogViewModel Drawer() => new DialogViewModel();
 
     public AddCardsViewModel AddCards() => new AddCardsViewModel();
 

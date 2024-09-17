@@ -5,7 +5,7 @@ using MtgCollectionTracker.Services.Stubs;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class DeckListViewModel : DrawerContentViewModel
+public partial class DeckListViewModel : DialogContentViewModel
 {
     readonly ICollectionTrackingService _service;
 

@@ -17,7 +17,7 @@ public class ViewModelFactory : IViewModelFactory
     readonly Func<ContainerSetViewModel> _containerSet;
     readonly Func<WishlistViewModel> _wishlist;
     readonly Func<ContainerViewModel> _container;
-    readonly Func<DrawerViewModel> _drawer;
+    readonly Func<DialogViewModel> _drawer;
     readonly Func<AddCardsViewModel> _addCards;
     readonly Func<AddCardsToWishlistViewModel> _addCardsToWishlist;
     readonly Func<DeckListViewModel> _deckList;
@@ -41,7 +41,7 @@ public class ViewModelFactory : IViewModelFactory
                             Func<ContainerSetViewModel> containerSet,
                             Func<WishlistViewModel> wishlist,
                             Func<ContainerViewModel> container,
-                            Func<DrawerViewModel> drawer,
+                            Func<DialogViewModel> drawer,
                             Func<AddCardsViewModel> addCards,
                             Func<AddCardsToWishlistViewModel> addCardsToWishlist,
                             Func<DeckListViewModel> deckList,
@@ -94,7 +94,7 @@ public class ViewModelFactory : IViewModelFactory
 
     public ContainerViewModel Container() => _container();
 
-    public DrawerViewModel Drawer() => _drawer();
+    public DialogViewModel Drawer() => _drawer();
 
     public AddCardsViewModel AddCards() => _addCards();
 

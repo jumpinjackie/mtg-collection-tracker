@@ -30,7 +30,7 @@ public partial class VendorOfferViewModel : ViewModelBase
     private decimal _price;
 }
 
-public partial class EditWishlistItemViewModel : DrawerContentViewModel
+public partial class EditWishlistItemViewModel : DialogContentViewModel
 {
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
@@ -193,12 +193,12 @@ public partial class EditWishlistItemViewModel : DrawerContentViewModel
             _origItem.WithData(updated);
         }
 
-        Messenger.Send(new CloseDrawerMessage());
+        Messenger.Send(new CloseDialogMessage());
     }
 
     [RelayCommand]
     private void Cancel()
     {
-        Messenger.Send(new CloseDrawerMessage());
+        Messenger.Send(new CloseDialogMessage());
     }
 }

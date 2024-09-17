@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class EditCardSkuViewModel : DrawerContentViewModel
+public partial class EditCardSkuViewModel : DialogContentViewModel
 {
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
@@ -249,12 +249,12 @@ public partial class EditCardSkuViewModel : DrawerContentViewModel
             }
         }
 
-        Messenger.Send(new CloseDrawerMessage());
+        Messenger.Send(new CloseDialogMessage());
     }
 
     [RelayCommand]
     private void Cancel()
     {
-        Messenger.Send(new CloseDrawerMessage());
+        Messenger.Send(new CloseDialogMessage());
     }
 }

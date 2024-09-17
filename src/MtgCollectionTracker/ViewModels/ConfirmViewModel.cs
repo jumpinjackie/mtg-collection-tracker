@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class ConfirmViewModel : DrawerContentViewModel
+public partial class ConfirmViewModel : DialogContentViewModel
 {
     public ConfirmViewModel()
     {
@@ -63,7 +63,7 @@ public partial class ConfirmViewModel : DrawerContentViewModel
             this.CanExecuteYes = false;
             await _yesAction.Invoke();
             this.CanExecuteYes = true;
-            this.Messenger.Send(new CloseDrawerMessage());
+            this.Messenger.Send(new CloseDialogMessage());
         }
     }
 
@@ -75,7 +75,7 @@ public partial class ConfirmViewModel : DrawerContentViewModel
             this.CanExecuteNo = false;
             await _noAction.Invoke();
             this.CanExecuteNo = true;
-            this.Messenger.Send(new CloseDrawerMessage());
+            this.Messenger.Send(new CloseDialogMessage());
         }
     }
 }
