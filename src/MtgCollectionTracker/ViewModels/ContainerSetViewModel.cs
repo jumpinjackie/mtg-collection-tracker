@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Core.Services;
+using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
@@ -59,6 +60,27 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
             DrawerWidth = 400,
             ViewModel = _vmFactory.Drawer().WithContent("New Container", _vmFactory.NewDeckOrContainer(DeckOrContainer.Container))
         });
+    }
+
+    [RelayCommand]
+    private void DeleteContainer()
+    {
+        if (this.SelectedContainer != null)
+        {
+            Messenger.Send(new OpenDrawerMessage
+            {
+                DrawerWidth = 800,
+                ViewModel = _vmFactory.Drawer().WithConfirmation(
+                    "Delete Container?",
+                    $"Are you sure you want to delete ({this.SelectedContainer.Name})? All SKUs in this container will be un-assigned",
+                    async () =>
+                    {
+                        var res = await _service.DeleteContainerAsync(new() { ContainerId = this.SelectedContainer.Id });
+                        this.Messenger.ToastNotify($"Container Deleted. {res.UnassignedSkuTotal} SKU(s) un-assigned");
+                        this.Messenger.Send(new ContainerDeletedMessage { Id = this.SelectedContainer.Id });
+                    })
+            });
+        }
     }
 
     [RelayCommand]

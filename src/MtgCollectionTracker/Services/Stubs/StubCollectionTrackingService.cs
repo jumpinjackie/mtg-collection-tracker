@@ -59,6 +59,11 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
+    public ValueTask<DeleteContainerResult> DeleteContainerAsync(DeleteContainerInputModel model)
+    {
+        throw new System.NotImplementedException();
+    }
+
     public ValueTask<WishlistItemModel> DeleteWishlistItemAsync(int id)
     {
         throw new System.NotImplementedException();

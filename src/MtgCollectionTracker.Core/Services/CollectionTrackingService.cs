@@ -746,6 +746,30 @@ public class CollectionTrackingService : ICollectionTrackingService
         };
     }
 
+    public async ValueTask<DeleteContainerResult> DeleteContainerAsync(DeleteContainerInputModel model)
+    {
+        var container = await _db.Containers
+            .Include(c => c.Cards)
+            .FirstOrDefaultAsync(c => c.Id == model.ContainerId);
+
+        if (container == null)
+            throw new Exception("No such container with given id");
+
+        int unassigned = 0;
+        foreach (var sku in container.Cards)
+        {
+            sku.Container = null;
+            unassigned++;
+        }
+        _db.Containers.Remove(container);
+        await _db.SaveChangesAsync();
+
+        return new DeleteContainerResult
+        {
+            UnassignedSkuTotal = unassigned
+        };
+    }
+
     public async Task<CardSkuModel> SplitCardSkuAsync(SplitCardSkuInputModel model)
     {
         var sku = await _db
