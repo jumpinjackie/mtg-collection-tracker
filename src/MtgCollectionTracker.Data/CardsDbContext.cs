@@ -18,6 +18,8 @@ public class CardsDbContext : DbContext
 
     public DbSet<WishlistItem> WishlistItems { get; set; }
 
+    public DbSet<Notes> Notes { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<CardSku>().HasIndex(nameof(CardSku.CardName));

@@ -114,6 +114,11 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
+    public string GetNotes()
+    {
+        throw new System.NotImplementedException();
+    }
+
     public IEnumerable<VendorModel> GetVendors()
     {
         throw new System.NotImplementedException();
@@ -160,6 +165,11 @@ public class StubCollectionTrackingService : ICollectionTrackingService
     }
 
     public ValueTask<int> UpdateCardSkuAsync(UpdateCardSkuInputModel model, IScryfallApiClient? scryfallApiClient, CancellationToken cancel)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public ValueTask UpdateNotesAsync(string notes)
     {
         throw new System.NotImplementedException();
     }

@@ -13,6 +13,8 @@ public interface IViewModelFactory
 
     WishlistViewModel Wishlist();
 
+    NotesViewModel Notes();
+
     WishlistItemViewModel WishListItem();
 
     EditWishlistItemViewModel EditWishlistItem();

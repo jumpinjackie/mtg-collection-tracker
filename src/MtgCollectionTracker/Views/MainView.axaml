@@ -27,6 +27,9 @@
 			<TabItem Header="Wishlist">
 				<views:WishlistView DataContext="{Binding Wishlist}" />
 			</TabItem>
+			<TabItem Header="Notes">
+				<views:NotesView DataContext="{Binding Notes}" />
+			</TabItem>
 		</TabControl>
 	</dialogHost:DialogHost>
 </UserControl>

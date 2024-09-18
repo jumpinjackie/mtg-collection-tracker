@@ -22,6 +22,8 @@ public class StubViewModelFactory : IViewModelFactory
 
     public WishlistViewModel Wishlist() => new WishlistViewModel();
 
+    public NotesViewModel Notes() => new NotesViewModel();
+
     public DialogViewModel Drawer() => new DialogViewModel();
 
     public AddCardsViewModel AddCards() => new AddCardsViewModel();

@@ -1,10 +1,13 @@
 ﻿using Avalonia.Controls.Notifications;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
@@ -18,6 +21,7 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
         this.Decks = vmFactory.Decks();
         this.Containers = vmFactory.Containers();
         this.Wishlist = vmFactory.Wishlist();
+        this.Notes = vmFactory.Notes();
         this.IsActive = true;
     }
 
@@ -27,6 +31,7 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
         this.Decks = vmFactory.Decks();
         this.Containers = vmFactory.Containers();
         this.Wishlist = vmFactory.Wishlist();
+        this.Notes = vmFactory.Notes();
         this.IsActive = true;
     }
 
@@ -37,6 +42,8 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
     public ContainerSetViewModel Containers { get; }
 
     public WishlistViewModel Wishlist { get; }
+
+    public NotesViewModel Notes { get; }
 
     private Stack<DialogViewModel> _dialogStack = new();
 

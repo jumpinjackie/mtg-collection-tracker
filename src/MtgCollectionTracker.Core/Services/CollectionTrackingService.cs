@@ -1,12 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Data;
 using ScryfallApi.Client;
-using System;
 using System.Linq.Expressions;
 using System.Text;
-using System.Threading.Channels;
 
 namespace MtgCollectionTracker.Core.Services;
 
@@ -1155,5 +1152,28 @@ public class CollectionTrackingService : ICollectionTrackingService
         }
 
         return new MoveWishlistItemsToCollectionResult { CreatedSkus = converted.Select(c => new WishlistItemMoveResult(c.id, CardSkuToModel(c.sku))).ToArray() };
+    }
+
+    public string GetNotes()
+    {
+        var n = _db.Notes.FirstOrDefault();
+        if (n != null)
+            return n.Text;
+        return string.Empty;
+    }
+
+    public async ValueTask UpdateNotesAsync(string notes)
+    {
+        var n = _db.Notes.FirstOrDefault();
+        if (n == null)
+        {
+            n = new Notes() { Text = notes };
+            _db.Notes.Add(n);
+        }
+        else
+        {
+            n.Text = notes;
+        }
+        await _db.SaveChangesAsync();
     }
 }

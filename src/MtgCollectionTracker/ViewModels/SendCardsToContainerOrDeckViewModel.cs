@@ -59,9 +59,11 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
     private DeckViewModel? _selectedDeck;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SendCardsCommand))]
     private bool _unSetDeck;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SendCardsCommand))]
     private bool _unSetContainer;
 
     public IEnumerable<ContainerViewModel>? AvailableContainers { get; internal set; }
@@ -70,12 +72,12 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
 
     public IEnumerable<CardSkuItemViewModel>? Cards { get; internal set; }
 
-    private bool CanSendCards() => this.SelectedContainer != null || this.SelectedDeck != null;
+    private bool CanSendCards() => this.SelectedContainer != null || this.SelectedDeck != null || this.UnSetContainer || this.UnSetDeck;
 
     [RelayCommand(CanExecute = nameof(CanSendCards))]
     private async Task SendCards()
     {
-        if (this.SelectedContainer != null || this.SelectedDeck != null)
+        if (CanSendCards())
         {
             var skuIds = this.Cards.Select(c => c.Id);
             var res = await _service.UpdateCardSkuAsync(new()
