@@ -1,5 +1,6 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using System.Collections.ObjectModel;
+using System.Security.Claims;
 
 namespace MtgCollectionTracker.ViewModels;
 
@@ -8,7 +9,14 @@ public interface IMultiModeCardListBehaviorHost
     void HandleBusyChanged(bool oldValue, bool newValue);
 }
 
-public partial class MultiModeCardListBehavior : ObservableObject
+public interface ICardSkuItem
+{
+    int RealQty { get; }
+
+    int ProxyQty { get; }
+}
+
+public partial class MultiModeCardListBehavior<T> : ObservableObject where T : class, ICardSkuItem
 {
     readonly IMultiModeCardListBehaviorHost _parent;
 
@@ -67,9 +75,9 @@ public partial class MultiModeCardListBehavior : ObservableObject
 
     // Table-specific bound property
     [ObservableProperty]
-    private CardSkuItemViewModel? _selectedRow;
+    private T? _selectedRow;
 
-    partial void OnSelectedRowChanged(CardSkuItemViewModel? oldValue, CardSkuItemViewModel newValue)
+    partial void OnSelectedRowChanged(T? oldValue, T newValue)
     {
         // Sync with SelectedCardSkus to ensure existing bound commands work.
         // NOTE: Can only sync one item as Avalonia DataGrid SelectedItems is currently not bindable :(
@@ -78,5 +86,5 @@ public partial class MultiModeCardListBehavior : ObservableObject
             SelectedCardSkus.Add(newValue);
     }
 
-    public ObservableCollection<CardSkuItemViewModel> SelectedCardSkus { get; } = new();
+    public ObservableCollection<T> SelectedCardSkus { get; } = new();
 }

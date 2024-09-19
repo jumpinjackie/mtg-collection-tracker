@@ -65,7 +65,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
         FetchPage(this.PageNumber);
     }
 
-    public MultiModeCardListBehavior Behavior { get; }
+    public MultiModeCardListBehavior<CardSkuItemViewModel> Behavior { get; }
 
     private void FetchPage(int oneBasedPageNumber)
     {

@@ -94,7 +94,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     [ObservableProperty]
     private bool _showEmptyMessage = false;
 
-    public MultiModeCardListBehavior Behavior { get; }
+    public MultiModeCardListBehavior<CardSkuItemViewModel> Behavior { get; }
 
     public ObservableCollection<CardSkuItemViewModel> SearchResults { get; } = new();
 

@@ -13,7 +13,7 @@ public enum CardItemViewMode
     Table
 }
 
-public partial class CardSkuItemViewModel : ViewModelBase
+public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem
 {
     public int Id { get; private set; }
 
