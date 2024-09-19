@@ -1,10 +1,8 @@
 ﻿using Avalonia.Media.Imaging;
-using CommunityToolkit.Mvvm.Collections;
 using CommunityToolkit.Mvvm.ComponentModel;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services.Stubs;
-using ScryfallApi.Client.Models;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.IO;

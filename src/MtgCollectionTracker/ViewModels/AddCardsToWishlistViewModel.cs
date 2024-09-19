@@ -10,7 +10,6 @@ using MtgCollectionTracker.Data;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using ScryfallApi.Client;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;

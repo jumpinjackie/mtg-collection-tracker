@@ -1,6 +1,4 @@
 ﻿using Avalonia.Controls.Notifications;
-using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using DialogHostAvalonia.Positioners;
 using MtgCollectionTracker.Services;
@@ -9,7 +7,6 @@ using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 

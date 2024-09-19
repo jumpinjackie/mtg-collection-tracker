@@ -1,5 +1,4 @@
-﻿using Avalonia.Input;
-using Avalonia.Media.Imaging;
+﻿using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MtgCollectionTracker.Core;
