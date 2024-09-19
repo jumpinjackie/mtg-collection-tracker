@@ -21,35 +21,35 @@
 				<TextBox Grid.Column="0" Text="{Binding SearchText}" KeyUp="OnSearchKeyUp" Watermark="Search for cards...." />
 				<Button Command="{Binding PerformSearchCommand}" IsEnabled="{Binding CanSearch}" Grid.Column="1" HorizontalAlignment="Stretch" HorizontalContentAlignment="Center">Search</Button>
 			</Grid>
-			<ProgressBar IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
+			<ProgressBar IsIndeterminate="True" IsVisible="{Binding Behavior.IsBusy}" />
 			<StackPanel Spacing="10" Orientation="Horizontal">
-				<CheckBox IsEnabled="{Binding !IsBusy}" IsChecked="{Binding NoProxies}">Omit proxies</CheckBox>
-				<CheckBox IsEnabled="{Binding !IsBusy}" IsChecked="{Binding NotInDecks}">Omit cards already in decks</CheckBox>
-				<CheckBox IsEnabled="{Binding !IsBusy}" IsChecked="{Binding UnParented}">Show only un-parented</CheckBox>
+				<CheckBox IsEnabled="{Binding !Behavior.IsBusy}" IsChecked="{Binding NoProxies}">Omit proxies</CheckBox>
+				<CheckBox IsEnabled="{Binding !Behavior.IsBusy}" IsChecked="{Binding NotInDecks}">Omit cards already in decks</CheckBox>
+				<CheckBox IsEnabled="{Binding !Behavior.IsBusy}" IsChecked="{Binding UnParented}">Show only un-parented</CheckBox>
 			</StackPanel>
 		</StackPanel>
 		<StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
-			<Button IsEnabled="{Binding !IsBusy}" Command="{Binding AddSkusCommand}" Content="Add New" HorizontalAlignment="Center" />
-			<Button IsEnabled="{Binding HasSelectedCardSku}" Command="{Binding ViewSelectedSkuCommand}" Content="View Details" HorizontalAlignment="Center" />
-			<Button IsEnabled="{Binding HasAtLeastOneSelectedCardSku}" Command="{Binding EditSelectedSkuCommand}" Content="Edit" HorizontalAlignment="Center" />
-			<Button IsEnabled="{Binding CanSendSkusToContainer}" Command="{Binding SendSkusToContainerCommand}" Content="Send to Deck/Container" HorizontalAlignment="Center" />
-			<Button IsEnabled="{Binding HasSelectedCardSku}" Command="{Binding DeleteSkuCommand}" Content="Delete" />
-			<Button IsEnabled="{Binding CanSplitCardSku}" Command="{Binding SplitSelectedSkuCommand}" Content="Split" HorizontalAlignment="Center" />
-			<Button IsEnabled="{Binding CanUpdateMetadata}" Command="{Binding UpdateSkuMetadataCommand}" Content="Update Metadata" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding !Behavior.IsBusy}" Command="{Binding AddSkusCommand}" Content="Add New" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding Behavior.HasSelectedCardSku}" Command="{Binding ViewSelectedSkuCommand}" Content="View Details" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding Behavior.HasAtLeastOneSelectedCardSku}" Command="{Binding EditSelectedSkuCommand}" Content="Edit" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding Behavior.CanSendSkusToContainer}" Command="{Binding SendSkusToContainerCommand}" Content="Send to Deck/Container" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding Behavior.HasSelectedCardSku}" Command="{Binding DeleteSkuCommand}" Content="Delete" />
+			<Button IsEnabled="{Binding Behavior.CanSplitCardSku}" Command="{Binding SplitSelectedSkuCommand}" Content="Split" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding Behavior.CanUpdateMetadata}" Command="{Binding UpdateSkuMetadataCommand}" Content="Update Metadata" HorizontalAlignment="Center" />
 			<TextBlock Margin="6" VerticalAlignment="Center" Text="{Binding CollectionSummary}" />
 		</StackPanel>
 		<Panel>
 			<DockPanel>
 				<StackPanel DockPanel.Dock="Top" Spacing="20" Orientation="Horizontal" IsVisible="{Binding ShowSearchResults}">
 					<TextBlock VerticalAlignment="Center">View as:</TextBlock>
-					<RadioButton GroupName="View Mode" IsChecked="{Binding ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:CardItemViewMode.VisualList}}" Content="Visual List"/>
-					<RadioButton GroupName="View Mode" IsChecked="{Binding ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:CardItemViewMode.Table}}" Content="Table"/>
+					<RadioButton GroupName="View Mode" IsChecked="{Binding Behavior.ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:CardItemViewMode.VisualList}}" Content="Visual List"/>
+					<RadioButton GroupName="View Mode" IsChecked="{Binding Behavior.ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:CardItemViewMode.Table}}" Content="Table"/>
 				</StackPanel>
-				<ListBox IsEnabled="{Binding !IsBusy}" ItemsSource="{Binding SearchResults}" SelectionMode="Multiple" SelectedItems="{Binding SelectedCardSkus}" Background="Transparent" Margin="0 20">
+				<ListBox IsEnabled="{Binding !Behavior.IsBusy}" ItemsSource="{Binding SearchResults}" SelectionMode="Multiple" SelectedItems="{Binding Behavior.SelectedCardSkus}" Background="Transparent" Margin="0 20">
 					<ListBox.IsVisible>
 						<MultiBinding Converter="{x:Static BoolConverters.And}">
 							<Binding Path="ShowSearchResults" />
-							<Binding Path="IsListMode" />
+							<Binding Path="Behavior.IsListMode" />
 						</MultiBinding>
 					</ListBox.IsVisible>
 					<ListBox.ItemsPanel>
@@ -63,7 +63,7 @@
 					<SplitView.IsVisible>
 						<MultiBinding Converter="{x:Static BoolConverters.And}">
 							<Binding Path="ShowSearchResults" />
-							<Binding Path="IsTableMode" />
+							<Binding Path="Behavior.IsTableMode" />
 						</MultiBinding>
 					</SplitView.IsVisible>
 					<SplitView.Pane>
@@ -73,17 +73,17 @@
 						
 						I'm just not expert enough yet
 						-->
-						<StackPanel IsVisible="{Binding HasSelectedCardSku}" VerticalAlignment="Center" HorizontalAlignment="Center">
+						<StackPanel IsVisible="{Binding Behavior.HasSelectedCardSku}" VerticalAlignment="Center" HorizontalAlignment="Center">
 							<Canvas Width="200" Height="280">
 								<Panel Canvas.Left="0" Canvas.Top="0" Canvas.Bottom="0" Canvas.Right="0" Background="#7FFF22DD">
 									<!-- TODO: If this is even possible, do a flip animation for double-faced cards -->
-									<Image Width="200" Stretch="Uniform" Source="{Binding SelectedCardSkus[0].CardImage}" />
-									<Panel Height="280" IsVisible="{Binding SelectedCardSkus[0].CardImage, Converter={x:Static ObjectConverters.IsNull}}">
+									<Image Width="200" Stretch="Uniform" Source="{Binding Behavior.SelectedCardSkus[0].CardImage}" />
+									<Panel Height="280" IsVisible="{Binding Behavior.SelectedCardSkus[0].CardImage, Converter={x:Static ObjectConverters.IsNull}}">
 										<PathIcon Height="75" Width="75" Data="{StaticResource card}" />
 									</Panel>
 								</Panel>
 							</Canvas>
-							<Button IsVisible="{Binding SelectedCardSkus[0].IsDoubleFaced}" Grid.Column="0" HorizontalAlignment="Center" Content="{Binding SelectedCardSkus[0].SwitchLabel}" Command="{Binding SelectedCardSkus[0].SwitchFaceCommand}" />
+							<Button IsVisible="{Binding Behavior.SelectedCardSkus[0].IsDoubleFaced}" Grid.Column="0" HorizontalAlignment="Center" Content="{Binding Behavior.SelectedCardSkus[0].SwitchLabel}" Command="{Binding Behavior.SelectedCardSkus[0].SwitchFaceCommand}" />
 						</StackPanel>
 					</SplitView.Pane>
 					<Grid>
@@ -98,7 +98,7 @@
 								  GridLinesVisibility="All"
 								  IsReadOnly="True"
 								  SelectionMode="Single"
-								  SelectedItem="{Binding SelectedRow}"
+								  SelectedItem="{Binding Behavior.SelectedRow}"
 								  BorderThickness="1">
 							<DataGrid.Columns>
 								<DataGridTextColumn Header="Qty" Binding="{Binding Quantity}"/>

@@ -195,7 +195,8 @@ public class CollectionTrackingService : ICollectionTrackingService
 
         // Simulate a 3x4 binder by default
         const int DEFAULT_PAGE_SIZE = 12;
-        var skip = options.PageNumber * options.PageSize ?? DEFAULT_PAGE_SIZE;
+        var size = (options.PageSize ?? DEFAULT_PAGE_SIZE);
+        var skip = options.PageNumber * size;
 
         return new()
         {

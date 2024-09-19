@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewModelWithBusyState
+public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewModelWithBusyState, IMultiModeCardListBehaviorHost
 {
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
@@ -26,7 +26,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
         this.ThrowIfNotDesignMode();
         _service = new StubCollectionTrackingService();
         _vmFactory = new StubViewModelFactory();
-        this.SelectedCardSkus.CollectionChanged += SelectedCardSkus_CollectionChanged;
+        this.Behavior = new(this);
         this.IsActive = true;
     }
 
@@ -40,14 +40,8 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
         _service = service;
         _scryfallApiClient = scryfallApiClient;
         _vmFactory = vmFactory;
-        this.SelectedCardSkus.CollectionChanged += SelectedCardSkus_CollectionChanged;
+        this.Behavior = new(this);
         this.IsActive = true;
-    }
-    private void SelectedCardSkus_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
-    {
-        this.HasMultipleSelectedCardSkus = this.SelectedCardSkus.Count > 1;
-        this.HasSelectedCardSku = this.SelectedCardSkus.Count == 1;
-        this.HasAtLeastOneSelectedCardSku = this.SelectedCardSkus.Count > 0;
     }
 
     private int? _containerId;
@@ -71,14 +65,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
         FetchPage(this.PageNumber);
     }
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(IsListMode))]
-    [NotifyPropertyChangedFor(nameof(IsTableMode))]
-    private CardItemViewMode _viewMode;
-
-    public bool IsListMode => this.ViewMode == CardItemViewMode.VisualList;
-
-    public bool IsTableMode => this.ViewMode == CardItemViewMode.Table;
+    public MultiModeCardListBehavior Behavior { get; }
 
     private void FetchPage(int oneBasedPageNumber)
     {
@@ -89,6 +76,8 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
                 ShowOnlyMissingMetadata = this.ShowOnlyMissingMetadata,
                 PageNumber = oneBasedPageNumber - 1
             });
+            Behavior.SelectedCardSkus.Clear();
+            Behavior.SelectedRow = null;
             this.SearchResults.Clear();
             foreach (var sku in page.Items)
             {
@@ -130,34 +119,11 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
         return this;
     }
 
-    public bool NextEnabled => this.CanGoNext && !this.IsBusy;
+    public bool NextEnabled => this.CanGoNext && !Behavior.IsBusy;
 
-    public bool PreviousEnabled => this.CanGoPrevious && !this.IsBusy;
+    public bool PreviousEnabled => this.CanGoPrevious && !Behavior.IsBusy;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanSendSkusToContainer))]
-    [NotifyPropertyChangedFor(nameof(CanSendSkusToDeck))]
-    [NotifyPropertyChangedFor(nameof(CanUpdateMetadata))]
-    [NotifyPropertyChangedFor(nameof(CanCombineCardSkus))]
-    [NotifyPropertyChangedFor(nameof(CanSplitCardSku))]
-    [NotifyPropertyChangedFor(nameof(PreviousEnabled))]
-    [NotifyPropertyChangedFor(nameof(NextEnabled))]
-    private bool _isBusy;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanSplitCardSku))]
-    private bool _hasSelectedCardSku;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanCombineCardSkus))]
-    private bool _hasMultipleSelectedCardSkus;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanSendSkusToContainer))]
-    [NotifyPropertyChangedFor(nameof(CanSendSkusToDeck))]
-    [NotifyPropertyChangedFor(nameof(CanUpdateMetadata))]
-    private bool _hasAtLeastOneSelectedCardSku;
-
+    
     [ObservableProperty]
     private string? _containerSummary;
 
@@ -170,28 +136,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
     [ObservableProperty]
     private bool _hasNoResults;
 
-    public bool CanCombineCardSkus => !this.IsBusy && this.HasMultipleSelectedCardSkus;
-    public bool CanSplitCardSku => !this.IsBusy && this.HasSelectedCardSku;
-    public bool CanSendSkusToContainer => !this.IsBusy && this.HasAtLeastOneSelectedCardSku;
-    public bool CanSendSkusToDeck => !this.IsBusy && this.HasAtLeastOneSelectedCardSku;
-    public bool CanUpdateMetadata => !this.IsBusy && this.HasAtLeastOneSelectedCardSku;
-
     public ObservableCollection<CardSkuItemViewModel> SearchResults { get; } = new();
-
-    public ObservableCollection<CardSkuItemViewModel> SelectedCardSkus { get; } = new();
-
-    // Table-specific bound property
-    [ObservableProperty]
-    private CardSkuItemViewModel _selectedRow;
-
-    partial void OnSelectedRowChanged(CardSkuItemViewModel? oldValue, CardSkuItemViewModel newValue)
-    {
-        // Sync with SelectedCardSkus to ensure existing bound commands work.
-        // NOTE: Can only sync one item as Avalonia DataGrid SelectedItems is currently not bindable :(
-        SelectedCardSkus.Clear();
-        if (newValue != null)
-            SelectedCardSkus.Add(newValue);
-    }
 
     [RelayCommand]
     private void AddSkus()
@@ -212,12 +157,12 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
     [RelayCommand]
     private void SendSkusToContainer()
     {
-        if (this.SelectedCardSkus.Count > 0)
+        if (Behavior.SelectedCardSkus.Count > 0)
         {
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 800,
-                ViewModel = _vmFactory.Drawer().WithContent("Send Cards To Deck or Container", _vmFactory.SendCardsToContainer(this.SelectedCardSkus))
+                ViewModel = _vmFactory.Drawer().WithContent("Send Cards To Deck or Container", _vmFactory.SendCardsToContainer(Behavior.SelectedCardSkus))
             });
         }
     }
@@ -225,12 +170,12 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
     [RelayCommand]
     private async Task UpdateSkuMetadata()
     {
-        if (this.SelectedCardSkus.Count > 0)
+        if (Behavior.SelectedCardSkus.Count > 0)
         {
             using (((IViewModelWithBusyState)this).StartBusyState())
             {
                 int updated = 0;
-                var ids = this.SelectedCardSkus.Select(c => c.Id);
+                var ids = Behavior.SelectedCardSkus.Select(c => c.Id);
                 var updatedSkus = await _service.UpdateCardMetadataAsync(ids, _scryfallApiClient, CancellationToken.None);
                 foreach (var sku in updatedSkus)
                 {
@@ -247,5 +192,17 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
                 }
             }
         }
+    }
+
+    bool IViewModelWithBusyState.IsBusy
+    {
+        get => Behavior.IsBusy;
+        set => Behavior.IsBusy = value;
+    }
+
+    void IMultiModeCardListBehaviorHost.HandleBusyChanged(bool oldValue, bool newValue)
+    {
+        this.OnPropertyChanged(nameof(PreviousEnabled));
+        this.OnPropertyChanged(nameof(NextEnabled));
     }
 }
