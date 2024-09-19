@@ -1,0 +1,41 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="MtgCollectionTracker.Views.CanIBuildThisDeckView">
+	<SplitView PanePlacement="Left" IsPaneOpen="True" DisplayMode="Inline">
+		<SplitView.Pane>
+			<DockPanel>
+				<StackPanel Margin="6" DockPanel.Dock="Top">
+					<TextBlock>Decklist</TextBlock>
+				</StackPanel>
+				<StackPanel Margin="6" DockPanel.Dock="Bottom">
+					<CheckBox>
+						<TextBlock ToolTip.Tip="If ticked, excludes proxies in your collection when determining availability">Disallow Proxies</TextBlock>
+					</CheckBox>
+					<CheckBox>
+						<TextBlock ToolTip.Tip="If ticked, only checks if the main deck can be built with your current collection">Ignore Sideboard in check</TextBlock>
+					</CheckBox>
+					<CheckBox>
+						<TextBlock ToolTip.Tip="If ticked, only considers cards in your collection that do not currently belong to any decks">Spares Only</TextBlock>
+					</CheckBox>
+					<CheckBox>
+						<TextBlock ToolTip.Tip="If ticked, ignores basic lands when checking available quantities (ie. Assume you have near-unlimited basic lands)">Ignore Basic Lands</TextBlock>
+					</CheckBox>
+					<StackPanel Orientation="Horizontal">
+						<Button>Check</Button>
+						<Button>Import</Button>
+					</StackPanel>
+				</StackPanel>
+				<TextBox Watermark="Enter decklist contents here ..." />
+			</DockPanel>
+		</SplitView.Pane>
+		<TextBlock TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="WrapWithOverflow">
+			Enter the decklist and click the Check button to see if this deck can be built from the available cards in your collection.
+			<LineBreak />
+			<LineBreak />
+			As an alternative to manual entry, you can click Import to import an existing decklist in MTGO text format.
+		</TextBlock>
+	</SplitView>
+</UserControl>

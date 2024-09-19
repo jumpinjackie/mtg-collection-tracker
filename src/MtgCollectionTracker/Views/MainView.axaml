@@ -27,6 +27,9 @@
 			<TabItem Header="Wishlist">
 				<views:WishlistView DataContext="{Binding Wishlist}" />
 			</TabItem>
+			<TabItem Header="Can I Build?">
+				<views:CanIBuildThisDeckView DataContext="{Binding CanIBuild}" />
+			</TabItem>
 			<TabItem Header="Notes">
 				<views:NotesView DataContext="{Binding Notes}" />
 			</TabItem>

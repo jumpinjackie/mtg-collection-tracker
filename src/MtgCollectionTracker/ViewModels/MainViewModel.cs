@@ -44,6 +44,8 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
 
     public WishlistViewModel Wishlist { get; }
 
+    public CanIBuildThisDeckViewModel CanIBuild { get; }
+
     public NotesViewModel Notes { get; }
 
     private Stack<DialogViewModel> _dialogStack = new();
