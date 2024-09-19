@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
+			 xmlns:svc="clr-namespace:MtgCollectionTracker.Services"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="MtgCollectionTracker.Views.CardsView"
 			 x:DataType="vm:CardsViewModel">
@@ -11,6 +12,9 @@
          to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
 		<vm:CardsViewModel />
 	</Design.DataContext>
+	<UserControl.Resources>
+		<svc:EnumToBooleanConverter x:Key="EnumToBoolConverter" />
+	</UserControl.Resources>
 	<DockPanel>
 		<StackPanel IsVisible="{Binding !IsEmptyCollection}" DockPanel.Dock="Top">
 			<Grid ColumnDefinitions="*, 100">
@@ -35,13 +39,83 @@
 			<TextBlock Margin="6" VerticalAlignment="Center" Text="{Binding CollectionSummary}" />
 		</StackPanel>
 		<Panel>
-			<ListBox IsEnabled="{Binding !IsBusy}" IsVisible="{Binding ShowSearchResults}" ItemsSource="{Binding SearchResults}" SelectionMode="Multiple" SelectedItems="{Binding SelectedCardSkus}" Background="Transparent" Margin="0 20">
-				<ListBox.ItemsPanel>
-					<ItemsPanelTemplate>
-						<WrapPanel />
-					</ItemsPanelTemplate>
-				</ListBox.ItemsPanel>
-			</ListBox>
+			<DockPanel>
+				<StackPanel DockPanel.Dock="Top" Spacing="20" Orientation="Horizontal" IsVisible="{Binding ShowSearchResults}">
+					<TextBlock VerticalAlignment="Center">View as:</TextBlock>
+					<RadioButton GroupName="View Mode" IsChecked="{Binding ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:CardItemViewMode.VisualList}}" Content="Visual List"/>
+					<RadioButton GroupName="View Mode" IsChecked="{Binding ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:CardItemViewMode.Table}}" Content="Table"/>
+				</StackPanel>
+				<ListBox IsEnabled="{Binding !IsBusy}" ItemsSource="{Binding SearchResults}" SelectionMode="Multiple" SelectedItems="{Binding SelectedCardSkus}" Background="Transparent" Margin="0 20">
+					<ListBox.IsVisible>
+						<MultiBinding Converter="{x:Static BoolConverters.And}">
+							<Binding Path="ShowSearchResults" />
+							<Binding Path="IsListMode" />
+						</MultiBinding>
+					</ListBox.IsVisible>
+					<ListBox.ItemsPanel>
+						<ItemsPanelTemplate>
+							<WrapPanel />
+						</ItemsPanelTemplate>
+					</ListBox.ItemsPanel>
+				</ListBox>
+				<!-- TODO: Same templatization to avoid XAML duplication -->
+				<SplitView IsPaneOpen="True" PanePlacement="Right">
+					<SplitView.IsVisible>
+						<MultiBinding Converter="{x:Static BoolConverters.And}">
+							<Binding Path="ShowSearchResults" />
+							<Binding Path="IsTableMode" />
+						</MultiBinding>
+					</SplitView.IsVisible>
+					<SplitView.Pane>
+						<!-- 
+						TODO: I'm sure there's a way to templatize this content to avoid current
+						XAML duplication with CardSkuItemView.axaml
+						
+						I'm just not expert enough yet
+						-->
+						<StackPanel IsVisible="{Binding HasSelectedCardSku}" VerticalAlignment="Center" HorizontalAlignment="Center">
+							<Canvas Width="200" Height="280">
+								<Panel Canvas.Left="0" Canvas.Top="0" Canvas.Bottom="0" Canvas.Right="0" Background="#7FFF22DD">
+									<!-- TODO: If this is even possible, do a flip animation for double-faced cards -->
+									<Image Width="200" Stretch="Uniform" Source="{Binding SelectedCardSkus[0].CardImage}" />
+									<Panel Height="280" IsVisible="{Binding SelectedCardSkus[0].CardImage, Converter={x:Static ObjectConverters.IsNull}}">
+										<PathIcon Height="75" Width="75" Data="{StaticResource card}" />
+									</Panel>
+								</Panel>
+							</Canvas>
+							<Button IsVisible="{Binding SelectedCardSkus[0].IsDoubleFaced}" Grid.Column="0" HorizontalAlignment="Center" Content="{Binding SelectedCardSkus[0].SwitchLabel}" Command="{Binding SelectedCardSkus[0].SwitchFaceCommand}" />
+						</StackPanel>
+					</SplitView.Pane>
+					<Grid>
+						<!-- 
+						NOTE: Can only have single selection mode as multi-selection data binding
+						is not currently supported :( 
+						-->
+						<DataGrid ItemsSource="{Binding SearchResults}" 
+								  CanUserReorderColumns="True"
+								  CanUserResizeColumns="True"
+								  CanUserSortColumns="True"
+								  GridLinesVisibility="All"
+								  IsReadOnly="True"
+								  SelectionMode="Single"
+								  SelectedItem="{Binding SelectedRow}"
+								  BorderThickness="1">
+							<DataGrid.Columns>
+								<DataGridTextColumn Header="Qty" Binding="{Binding Quantity}"/>
+								<DataGridTextColumn Header="Card Name" Binding="{Binding CardName}"/>
+								<DataGridTextColumn Header="Language" Binding="{Binding Language}"/>
+								<DataGridTextColumn Header="Edition" Binding="{Binding Edition}"/>
+								<DataGridTextColumn Header="Collector #" Binding="{Binding CollectorNumber}"/>
+								<DataGridTextColumn Header="Container" Binding="{Binding ContainerName}"/>
+								<DataGridTextColumn Header="Deck" Binding="{Binding DeckName}"/>
+								<DataGridTextColumn Header="Foil?" Binding="{Binding IsFoil}"/>
+								<DataGridTextColumn Header="Sideboard?" Binding="{Binding IsSideboard}"/>
+								<DataGridTextColumn Header="Comments" Binding="{Binding Comments}"/>
+							</DataGrid.Columns>
+						</DataGrid>
+					</Grid>
+				</SplitView>
+			</DockPanel>
 			<TextBlock IsVisible="{Binding HasNoResults}" VerticalAlignment="Center" HorizontalAlignment="Center" Text="No results found :(" />
 			<TextBlock IsVisible="{Binding ShowFirstTimeMessage}" VerticalAlignment="Center" HorizontalAlignment="Center" Text="Start searching for cards in your collection" />
 			<TextBlock IsVisible="{Binding IsEmptyCollection}" VerticalAlignment="Center" HorizontalAlignment="Center" Text="Your collection is empty. Add cards to your collection below" />

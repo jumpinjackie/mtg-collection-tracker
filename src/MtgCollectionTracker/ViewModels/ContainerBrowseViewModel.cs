@@ -71,6 +71,15 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
         FetchPage(this.PageNumber);
     }
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsListMode))]
+    [NotifyPropertyChangedFor(nameof(IsTableMode))]
+    private CardItemViewMode _viewMode;
+
+    public bool IsListMode => this.ViewMode == CardItemViewMode.VisualList;
+
+    public bool IsTableMode => this.ViewMode == CardItemViewMode.Table;
+
     private void FetchPage(int oneBasedPageNumber)
     {
         using (((IViewModelWithBusyState)this).StartBusyState())
@@ -170,6 +179,19 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
     public ObservableCollection<CardSkuItemViewModel> SearchResults { get; } = new();
 
     public ObservableCollection<CardSkuItemViewModel> SelectedCardSkus { get; } = new();
+
+    // Table-specific bound property
+    [ObservableProperty]
+    private CardSkuItemViewModel _selectedRow;
+
+    partial void OnSelectedRowChanged(CardSkuItemViewModel? oldValue, CardSkuItemViewModel newValue)
+    {
+        // Sync with SelectedCardSkus to ensure existing bound commands work.
+        // NOTE: Can only sync one item as Avalonia DataGrid SelectedItems is currently not bindable :(
+        SelectedCardSkus.Clear();
+        if (newValue != null)
+            SelectedCardSkus.Add(newValue);
+    }
 
     [RelayCommand]
     private void AddSkus()

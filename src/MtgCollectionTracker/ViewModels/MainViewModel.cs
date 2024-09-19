@@ -2,6 +2,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using DialogHostAvalonia.Positioners;
+using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
@@ -34,6 +36,8 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
         this.Notes = vmFactory.Notes();
         this.IsActive = true;
     }
+
+    public IDialogPopupPositioner DialogPositioner { get; } = new DialogPopupPositioner();
 
     public CardsViewModel Cards { get; }
 

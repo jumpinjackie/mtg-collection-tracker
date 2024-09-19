@@ -13,7 +13,7 @@
          to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
 		<vm:MainViewModel />
 	</Design.DataContext>
-	<dialogHost:DialogHost DisableOpeningAnimation="True" CloseOnClickAway="False">
+	<dialogHost:DialogHost PopupPositioner="{Binding DialogPositioner}" DisableOpeningAnimation="True" CloseOnClickAway="False">
 		<TabControl Margin="5">
 			<TabItem Header="Cards">
 				<views:CardsView DataContext="{Binding Cards}" />

@@ -193,16 +193,16 @@ public class CollectionTrackingService : ICollectionTrackingService
 
         var total = queryable.Count();
 
-        // Simulate a 3x4 binder
-        const int pageSize = 12;
-        var skip = options.PageNumber * pageSize;
+        // Simulate a 3x4 binder by default
+        const int DEFAULT_PAGE_SIZE = 12;
+        var skip = options.PageNumber * options.PageSize ?? DEFAULT_PAGE_SIZE;
 
         return new()
         {
             PageNumber = options.PageNumber,
-            PageSize = pageSize,
+            PageSize = DEFAULT_PAGE_SIZE,
             Total = total,
-            Items = ToCardSkuModel(queryable.OrderBy(c => c.CardName).Skip(skip).Take(pageSize))
+            Items = ToCardSkuModel(queryable.OrderBy(c => c.CardName).Skip(skip).Take(DEFAULT_PAGE_SIZE))
         };
     }
 

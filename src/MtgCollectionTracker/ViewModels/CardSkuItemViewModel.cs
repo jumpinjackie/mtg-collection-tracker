@@ -7,6 +7,12 @@ using System.IO;
 
 namespace MtgCollectionTracker.ViewModels;
 
+public enum CardItemViewMode
+{
+    VisualList,
+    Table
+}
+
 public partial class CardSkuItemViewModel : ViewModelBase
 {
     public int Id { get; private set; }
