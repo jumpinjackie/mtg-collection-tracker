@@ -11,10 +11,42 @@
          to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
 		<vm:NotesViewModel />
 	</Design.DataContext>
-	<DockPanel>
-		<StackPanel DockPanel.Dock="Bottom">
-			<Button Command="{Binding SaveNotesCommand}">Save</Button>
-		</StackPanel>
-		<TextBox Text="{Binding Notes}" Watermark="Use this tab to write any notes regarding this collection" AcceptsReturn="True" TextWrapping="Wrap" />
-	</DockPanel>
+	<SplitView DisplayMode="Inline" IsPaneOpen="True" PanePlacement="Left">
+		<SplitView.Pane>
+			<DockPanel>
+				<TextBlock Margin="6" DockPanel.Dock="Top">Your Notes</TextBlock>
+				<StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
+					<Button Command="{Binding AddNewNoteCommand}">Add New Note</Button>
+					<Button Command="{Binding DeleteSelectedNoteCommand}" IsEnabled="{Binding CanDelete}">Delete</Button>
+				</StackPanel>
+				<ListBox ItemsSource="{Binding Notes}" SelectedItem="{Binding SelectedNote}">
+					<ListBox.ItemTemplate>
+						<DataTemplate>
+							<TextBlock Text="{Binding TitleText}"/>
+						</DataTemplate>
+					</ListBox.ItemTemplate>
+				</ListBox>
+			</DockPanel>
+		</SplitView.Pane>
+		<Panel>
+			<TextBlock IsVisible="{Binding SelectedNote, Converter={x:Static ObjectConverters.IsNull}}" VerticalAlignment="Center" HorizontalAlignment="Center">
+				No note selected. Select an existing note on the left or click "Add New Note" to create a new note
+			</TextBlock>
+			<DockPanel IsVisible="{Binding SelectedNote, Converter={x:Static ObjectConverters.IsNotNull}}">
+				<StackPanel DockPanel.Dock="Bottom">
+					<Button Command="{Binding SaveNotesCommand}">Save</Button>
+				</StackPanel>
+				<DockPanel>
+					<StackPanel DockPanel.Dock="Top">
+						<TextBlock Margin="6">Title</TextBlock>
+						<TextBox Text="{Binding SelectedNote.Title}" Watermark="Notes Title" AcceptsReturn="True" TextWrapping="Wrap" />
+					</StackPanel>
+					<DockPanel>
+						<TextBlock Margin="6" DockPanel.Dock="Top">Notes</TextBlock>
+						<TextBox Text="{Binding SelectedNote.Notes}" Watermark="Use this tab to write any notes regarding this collection" AcceptsReturn="True" TextWrapping="Wrap" />
+					</DockPanel>
+				</DockPanel>
+			</DockPanel>
+		</Panel>
+	</SplitView>
 </UserControl>

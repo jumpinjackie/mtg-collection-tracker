@@ -64,6 +64,11 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
+    public ValueTask<bool> DeleteNotesAsync(int id)
+    {
+        throw new System.NotImplementedException();
+    }
+
     public ValueTask<WishlistItemModel> DeleteWishlistItemAsync(int id)
     {
         throw new System.NotImplementedException();
@@ -114,7 +119,7 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
-    public string GetNotes()
+    public IEnumerable<NotesModel> GetNotes()
     {
         throw new System.NotImplementedException();
     }
@@ -169,7 +174,7 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
-    public ValueTask UpdateNotesAsync(string notes)
+    public ValueTask<NotesModel> UpdateNotesAsync(int? id, string? title, string notes)
     {
         throw new System.NotImplementedException();
     }

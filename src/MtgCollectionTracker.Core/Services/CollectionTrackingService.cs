@@ -1155,26 +1155,43 @@ public class CollectionTrackingService : ICollectionTrackingService
         return new MoveWishlistItemsToCollectionResult { CreatedSkus = converted.Select(c => new WishlistItemMoveResult(c.id, CardSkuToModel(c.sku))).ToArray() };
     }
 
-    public string GetNotes()
+    public IEnumerable<NotesModel> GetNotes()
     {
-        var n = _db.Notes.FirstOrDefault();
-        if (n != null)
-            return n.Text;
-        return string.Empty;
+        return _db.Notes.Select(n => new NotesModel { Id = n.Id, Notes = n.Text, Title = n.Title });
     }
 
-    public async ValueTask UpdateNotesAsync(string notes)
+    public async ValueTask<NotesModel> UpdateNotesAsync(int? id, string? title, string notes)
     {
-        var n = _db.Notes.FirstOrDefault();
-        if (n == null)
+        Notes? n = null;
+        if (id.HasValue)
         {
-            n = new Notes() { Text = notes };
-            _db.Notes.Add(n);
-        }
-        else
-        {
+            n = await _db.Notes.FindAsync(id.Value);
+            if (n == null)
+                throw new Exception("Notes not found");
+            n.Title = title;
             n.Text = notes;
         }
+        else 
+        {
+            n = new Notes() { Title = title, Text = notes };
+            await _db.Notes.AddAsync(n);
+        }
         await _db.SaveChangesAsync();
+        return new NotesModel
+        {
+            Id = n.Id,
+            Title = n.Title,
+            Notes = n.Text
+        };
+    }
+
+    public async ValueTask<bool> DeleteNotesAsync(int id)
+    {
+        var n = await _db.Notes.FindAsync(id);
+        if (n == null)
+            return false;
+        _db.Notes.Remove(n);
+        await _db.SaveChangesAsync();
+        return true;
     }
 }
