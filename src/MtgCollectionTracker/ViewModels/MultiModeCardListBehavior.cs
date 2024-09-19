@@ -23,20 +23,18 @@ public partial class MultiModeCardListBehavior<T> : ObservableObject where T : c
     public MultiModeCardListBehavior(IMultiModeCardListBehaviorHost parent)
     {
         _parent = parent;
-        this.SelectedCardSkus.CollectionChanged += SelectedCardSkus_CollectionChanged;
+        this.SelectedItems.CollectionChanged += SelectedCardSkus_CollectionChanged;
     }
 
     private void SelectedCardSkus_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
-        this.HasSelectedCardSku = this.SelectedCardSkus.Count == 1;
-        this.HasAtLeastOneSelectedCardSku = this.SelectedCardSkus.Count > 0;
+        this.HasSelectedCardSku = this.SelectedItems.Count == 1;
+        this.HasAtLeastOneSelectedCardSku = this.SelectedItems.Count > 0;
     }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanSendSkusToContainer))]
-    [NotifyPropertyChangedFor(nameof(CanSendSkusToDeck))]
-    [NotifyPropertyChangedFor(nameof(CanUpdateMetadata))]
-    [NotifyPropertyChangedFor(nameof(CanSplitCardSku))]
+    [NotifyPropertyChangedFor(nameof(HasAtLeastOneSelectedItem))]
+    [NotifyPropertyChangedFor(nameof(IsItemSplittable))]
     private bool _isBusy = false;
 
     partial void OnIsBusyChanged(bool oldValue, bool newValue)
@@ -45,24 +43,22 @@ public partial class MultiModeCardListBehavior<T> : ObservableObject where T : c
     }
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanCombineCardSkus))]
+    [NotifyPropertyChangedFor(nameof(IsItemMergeable))]
     private bool _hasMultipleSelectedCardSkus;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanSendSkusToContainer))]
-    [NotifyPropertyChangedFor(nameof(CanSendSkusToDeck))]
-    [NotifyPropertyChangedFor(nameof(CanUpdateMetadata))]
+    [NotifyPropertyChangedFor(nameof(HasAtLeastOneSelectedItem))]
     private bool _hasAtLeastOneSelectedCardSku;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanSplitCardSku))]
+    [NotifyPropertyChangedFor(nameof(IsItemSplittable))]
+    [NotifyPropertyChangedFor(nameof(HasOneSelectedItem))]
     private bool _hasSelectedCardSku;
 
-    public bool CanCombineCardSkus => !this.IsBusy && this.HasMultipleSelectedCardSkus;
-    public bool CanSplitCardSku => !this.IsBusy && this.HasSelectedCardSku && (this.SelectedCardSkus[0].RealQty > 1 || this.SelectedCardSkus[0].ProxyQty > 1);
-    public bool CanSendSkusToContainer => !this.IsBusy && this.HasAtLeastOneSelectedCardSku;
-    public bool CanSendSkusToDeck => !this.IsBusy && this.HasAtLeastOneSelectedCardSku;
-    public bool CanUpdateMetadata => !this.IsBusy && this.HasAtLeastOneSelectedCardSku;
+    public bool IsItemMergeable => !this.IsBusy && this.HasMultipleSelectedCardSkus;
+    public bool IsItemSplittable => !this.IsBusy && this.HasSelectedCardSku && (this.SelectedItems[0].RealQty > 1 || this.SelectedItems[0].ProxyQty > 1);
+    public bool HasAtLeastOneSelectedItem => !this.IsBusy && this.HasAtLeastOneSelectedCardSku;
+    public bool HasOneSelectedItem => !this.IsBusy && this.HasSelectedCardSku;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsListMode))]
@@ -81,10 +77,10 @@ public partial class MultiModeCardListBehavior<T> : ObservableObject where T : c
     {
         // Sync with SelectedCardSkus to ensure existing bound commands work.
         // NOTE: Can only sync one item as Avalonia DataGrid SelectedItems is currently not bindable :(
-        SelectedCardSkus.Clear();
+        SelectedItems.Clear();
         if (newValue != null)
-            SelectedCardSkus.Add(newValue);
+            SelectedItems.Add(newValue);
     }
 
-    public ObservableCollection<T> SelectedCardSkus { get; } = new();
+    public ObservableCollection<T> SelectedItems { get; } = new();
 }

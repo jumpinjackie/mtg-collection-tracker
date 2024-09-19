@@ -11,7 +11,7 @@ using System.Linq;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class WishlistItemViewModel : ViewModelBase
+public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
 {
     public int Id { get; private set; }
 
@@ -26,6 +26,9 @@ public partial class WishlistItemViewModel : ViewModelBase
 
     [ObservableProperty]
     private string _quantity = "Qty: 1";
+
+    [ObservableProperty]
+    private int _quantityNum = 1;
 
     [ObservableProperty]
     private string _condition = CardCondition.NearMint.ToString();
@@ -122,6 +125,7 @@ public partial class WishlistItemViewModel : ViewModelBase
         }
         this.Condition = (item.Condition ?? CardCondition.NearMint).ToString();
         this.Quantity = $"Qty: {item.Quantity}";
+        this.QuantityNum = item.Quantity;
         this.Language = item.Language?.Length > 0 ? item.Language : "en";
         this.Offers = item.Offers.Select(o => new VendorOfferViewModel
         {

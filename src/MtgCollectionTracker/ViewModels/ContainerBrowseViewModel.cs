@@ -76,7 +76,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
                 ShowOnlyMissingMetadata = this.ShowOnlyMissingMetadata,
                 PageNumber = oneBasedPageNumber - 1
             });
-            Behavior.SelectedCardSkus.Clear();
+            Behavior.SelectedItems.Clear();
             Behavior.SelectedRow = null;
             this.SearchResults.Clear();
             foreach (var sku in page.Items)
@@ -157,12 +157,12 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
     [RelayCommand]
     private void SendSkusToContainer()
     {
-        if (Behavior.SelectedCardSkus.Count > 0)
+        if (Behavior.SelectedItems.Count > 0)
         {
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 800,
-                ViewModel = _vmFactory.Drawer().WithContent("Send Cards To Deck or Container", _vmFactory.SendCardsToContainer(Behavior.SelectedCardSkus))
+                ViewModel = _vmFactory.Drawer().WithContent("Send Cards To Deck or Container", _vmFactory.SendCardsToContainer(Behavior.SelectedItems))
             });
         }
     }
@@ -170,12 +170,12 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
     [RelayCommand]
     private async Task UpdateSkuMetadata()
     {
-        if (Behavior.SelectedCardSkus.Count > 0)
+        if (Behavior.SelectedItems.Count > 0)
         {
             using (((IViewModelWithBusyState)this).StartBusyState())
             {
                 int updated = 0;
-                var ids = Behavior.SelectedCardSkus.Select(c => c.Id);
+                var ids = Behavior.SelectedItems.Select(c => c.Id);
                 var updatedSkus = await _service.UpdateCardMetadataAsync(ids, _scryfallApiClient, CancellationToken.None);
                 foreach (var sku in updatedSkus)
                 {

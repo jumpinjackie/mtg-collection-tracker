@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
+			 xmlns:svc="clr-namespace:MtgCollectionTracker.Services"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="MtgCollectionTracker.Views.WishlistView"
 			 x:DataType="vm:WishlistViewModel">
@@ -11,23 +12,85 @@
          to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
 		<vm:WishlistViewModel />
 	</Design.DataContext>
+	<!-- TODO: Can we make this globally shared to avoid having to re-define this on every user control? -->
+	<UserControl.Resources>
+		<svc:EnumToBooleanConverter x:Key="EnumToBoolConverter" />
+	</UserControl.Resources>
 	<DockPanel>
 		<StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
-			<Button IsEnabled="{Binding !IsBusy}" Command="{Binding AddCardsCommand}" Content="Add New" HorizontalAlignment="Center" />
-			<Button IsEnabled="{Binding CanDoSingleSelectionCommand}" Command="{Binding EditItemCommand}" Content="Edit" />
-			<Button IsEnabled="{Binding CanDoMultiSelectionCommand}" Command="{Binding MoveToCollectionCommand}" Content="Move to Collection" ToolTip.Tip="Add these selected cards to your inventory. This marks these wishlist items as purchased and removes them from your wishlist" />
-			<Button IsEnabled="{Binding CanDoSingleSelectionCommand}" Command="{Binding DeleteCardsCommand}" Content="Delete" />
-			<Button IsEnabled="{Binding !IsBusy}" Command="{Binding ManageVendorsCommand}" Content="Manage Vendors" />
+			<Button IsEnabled="{Binding !Behavior.IsBusy}" Command="{Binding AddCardsCommand}" Content="Add New" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding Behavior.HasOneSelectedItem}" Command="{Binding EditItemCommand}" Content="Edit" />
+			<Button IsEnabled="{Binding Behavior.HasAtLeastOneSelectedItem}" Command="{Binding MoveToCollectionCommand}" Content="Move to Collection" ToolTip.Tip="Add these selected cards to your inventory. This marks these wishlist items as purchased and removes them from your wishlist" />
+			<Button IsEnabled="{Binding Behavior.HasOneSelectedItem}" Command="{Binding DeleteCardsCommand}" Content="Delete" />
+			<Button IsEnabled="{Binding !Behavior.IsBusy}" Command="{Binding ManageVendorsCommand}" Content="Manage Vendors" />
 			<TextBlock Margin="6" VerticalAlignment="Center" Text="{Binding WishlistSummary}" />
 		</StackPanel>
 		<Panel>
-			<ListBox IsEnabled="{Binding !IsBusy}" SelectionMode="Multiple" SelectedItems="{Binding SelectedItems}" ItemsSource="{Binding Cards}" Background="Transparent" Margin="0 20">
-				<ListBox.ItemsPanel>
-					<ItemsPanelTemplate>
-						<WrapPanel />
-					</ItemsPanelTemplate>
-				</ListBox.ItemsPanel>
-			</ListBox>
+			<DockPanel>
+				<StackPanel DockPanel.Dock="Top" Spacing="20" Orientation="Horizontal">
+					<TextBlock VerticalAlignment="Center">View as:</TextBlock>
+					<RadioButton GroupName="View Mode" IsChecked="{Binding Behavior.ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:CardItemViewMode.VisualList}}" Content="Visual List"/>
+					<RadioButton GroupName="View Mode" IsChecked="{Binding Behavior.ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:CardItemViewMode.Table}}" Content="Table"/>
+				</StackPanel>
+				<ListBox IsVisible="{Binding Behavior.IsListMode}" IsEnabled="{Binding !Behavior.IsBusy}" SelectionMode="Multiple" SelectedItems="{Binding Behavior.SelectedItems}" ItemsSource="{Binding Cards}" Background="Transparent" Margin="0 20">
+					<ListBox.ItemsPanel>
+						<ItemsPanelTemplate>
+							<WrapPanel />
+						</ItemsPanelTemplate>
+					</ListBox.ItemsPanel>
+				</ListBox>
+				<!-- TODO: Same templatization to avoid XAML duplication -->
+				<SplitView IsPaneOpen="True" PanePlacement="Right" IsVisible="{Binding Behavior.IsTableMode}">
+					<SplitView.Pane>
+						<!-- 
+						TODO: I'm sure there's a way to templatize this content to avoid current
+						XAML duplication with CardSkuItemView.axaml
+						
+						I'm just not expert enough yet
+						-->
+						<StackPanel IsVisible="{Binding Behavior.HasSelectedCardSku}" VerticalAlignment="Center" HorizontalAlignment="Center">
+							<Canvas Width="200" Height="280">
+								<Panel Canvas.Left="0" Canvas.Top="0" Canvas.Bottom="0" Canvas.Right="0" Background="#7FFF22DD">
+									<!-- TODO: If this is even possible, do a flip animation for double-faced cards -->
+									<Image Width="200" Stretch="Uniform" Source="{Binding Behavior.SelectedItems[0].CardImage}" />
+									<Panel Height="280" IsVisible="{Binding Behavior.SelectedItems[0].CardImage, Converter={x:Static ObjectConverters.IsNull}}">
+										<PathIcon Height="75" Width="75" Data="{StaticResource card}" />
+									</Panel>
+								</Panel>
+							</Canvas>
+							<Button IsVisible="{Binding Behavior.SelectedItems[0].IsDoubleFaced}" Grid.Column="0" HorizontalAlignment="Center" Content="{Binding Behavior.SelectedItems[0].SwitchLabel}" Command="{Binding Behavior.SelectedItems[0].SwitchFaceCommand}" />
+						</StackPanel>
+					</SplitView.Pane>
+					<Grid>
+						<!-- 
+						NOTE: Can only have single selection mode as multi-selection data binding
+						is not currently supported :( 
+						-->
+						<DataGrid ItemsSource="{Binding Cards}"
+								  IsEnabled="{Binding !Behavior.IsBusy}"
+								  CanUserReorderColumns="True"
+								  CanUserResizeColumns="True"
+								  CanUserSortColumns="True"
+								  GridLinesVisibility="All"
+								  IsReadOnly="True"
+								  SelectionMode="Single"
+								  SelectedItem="{Binding Behavior.SelectedRow}"
+								  BorderThickness="1">
+							<DataGrid.Columns>
+								<DataGridTextColumn Header="Qty" Binding="{Binding QuantityNum}"/>
+								<DataGridTextColumn Header="Card Name" Binding="{Binding CardName}"/>
+								<DataGridTextColumn Header="Language" Binding="{Binding Language}"/>
+								<DataGridTextColumn Header="Edition" Binding="{Binding Edition}"/>
+								<DataGridTextColumn Header="Collector #" Binding="{Binding CollectorNumber}"/>
+								<!--
+								<DataGridTextColumn Header="Foil?" Binding="{Binding IsFoil}"/>
+								-->
+								<DataGridTextColumn Header="Comments" Binding="{Binding Comments}"/>
+							</DataGrid.Columns>
+						</DataGrid>
+					</Grid>
+				</SplitView>
+			</DockPanel>
 			<TextBlock IsVisible="{Binding IsEmptyCollection}" VerticalAlignment="Center" TextAlignment="Center" HorizontalAlignment="Center">
 				Your wishlist is empty. Add cards to your wishlist below.<LineBreak />
 				Add vendors to allow recording price matching data for your wishlist items.

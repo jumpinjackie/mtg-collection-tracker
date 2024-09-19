@@ -13,7 +13,7 @@ using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithBusyState, IRecipient<CardsAddedToWishlistMessage>, IRecipient<WishlistItemUpdatedMessage>
+public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithBusyState, IRecipient<CardsAddedToWishlistMessage>, IRecipient<WishlistItemUpdatedMessage>, IMultiModeCardListBehaviorHost
 {
     readonly IViewModelFactory _vmFactory;
     readonly ICollectionTrackingService _service;
@@ -23,7 +23,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
         this.ThrowIfNotDesignMode();
         _vmFactory = new StubViewModelFactory();
         _service = new StubCollectionTrackingService();
-        this.SelectedItems.CollectionChanged += SelectedItems_CollectionChanged;
+        this.Behavior = new(this);
         this.IsActive = true;
     }
 
@@ -31,7 +31,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
     {
         _vmFactory = vmFactory;
         _service = service;
-        this.SelectedItems.CollectionChanged += SelectedItems_CollectionChanged;
+        this.Behavior = new(this);
         this.IsActive = true;
     }
 
@@ -49,37 +49,20 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
         base.OnActivated();
     }
 
-    private void SelectedItems_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    bool IViewModelWithBusyState.IsBusy
     {
-        this.HasSingleSelectedItem = SelectedItems.Count == 1;
-        this.HasSelectedItems = SelectedItems.Count >= 1;
+        get => Behavior.IsBusy;
+        set => Behavior.IsBusy = value;
     }
 
+    public MultiModeCardListBehavior<WishlistItemViewModel> Behavior { get; }
+
     public ObservableCollection<WishlistItemViewModel> Cards { get; } = new();
-
-    public ObservableCollection<WishlistItemViewModel> SelectedItems { get; } = new();
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanDoMultiSelectionCommand))]
-    [NotifyPropertyChangedFor(nameof(CanDoSingleSelectionCommand))]
-    private bool _isBusy;
 
     public bool IsEmptyCollection => Cards.Count == 0;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanDoMultiSelectionCommand))]
-    private bool _hasSelectedItems;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanDoSingleSelectionCommand))]
-    private bool _hasSingleSelectedItem;
-
-    [ObservableProperty]
     private string _wishlistSummary;
-
-    public bool CanDoSingleSelectionCommand => HasSingleSelectedItem && !IsBusy;
-
-    public bool CanDoMultiSelectionCommand => HasSelectedItems && !IsBusy;
 
     [RelayCommand]
     private void AddCards()
@@ -94,9 +77,9 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
     [RelayCommand]
     private void DeleteCards()
     {
-        if (this.SelectedItems.Count == 1)
+        if (Behavior.SelectedItems.Count == 1)
         {
-            var item = this.SelectedItems[0];
+            var item = Behavior.SelectedItems[0];
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 400,
@@ -107,7 +90,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
                     {
                         await _service.DeleteWishlistItemAsync(item.Id);
                         Messenger.ToastNotify($"Wishlist item ({item.CardName}, {item.Language ?? "en"}) deleted");
-                        this.SelectedItems.Remove(item);
+                        Behavior.SelectedItems.Remove(item);
                         this.Cards.Remove(item);
                         this.ApplySummary();
                     })
@@ -129,11 +112,11 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
     [RelayCommand]
     private async Task MoveToCollection()
     {
-        if (this.SelectedItems.Count > 0)
+        if (Behavior.SelectedItems.Count > 0)
         {
             var arg = new MoveWishlistItemsToCollectionInputModel
             {
-                WishlistItemIds = this.SelectedItems.Select(w => w.Id).ToArray()
+                WishlistItemIds = Behavior.SelectedItems.Select(w => w.Id).ToArray()
             };
             Messenger.Send(new OpenDialogMessage
             {
@@ -145,10 +128,10 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
                     {
                         var result = await _service.MoveWishlistItemsToCollectionAsync(arg);
                         var removedIds = result.CreatedSkus.Select(tuple => tuple.WishlistItemId);
-                        var toRemove = this.SelectedItems.Where(i => removedIds.Contains(i.Id)).ToList();
+                        var toRemove = Behavior.SelectedItems.Where(i => removedIds.Contains(i.Id)).ToList();
                         foreach (var item in toRemove)
                         {
-                            this.SelectedItems.Remove(item);
+                            Behavior.SelectedItems.Remove(item);
                             this.Cards.Remove(item);
                         }
                         this.ApplySummary();
@@ -164,7 +147,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 600,
-            ViewModel = _vmFactory.Drawer().WithContent("Edit Wishlist Item", _vmFactory.EditWishlistItem().WithData(this.SelectedItems[0]))
+            ViewModel = _vmFactory.Drawer().WithContent("Edit Wishlist Item", _vmFactory.EditWishlistItem().WithData(Behavior.SelectedItems[0]))
         });
     }
 
@@ -185,5 +168,10 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
     void IRecipient<WishlistItemUpdatedMessage>.Receive(WishlistItemUpdatedMessage message)
     {
         this.ApplySummary();
+    }
+
+    void IMultiModeCardListBehaviorHost.HandleBusyChanged(bool oldValue, bool newValue)
+    {
+        throw new System.NotImplementedException();
     }
 }

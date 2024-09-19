@@ -197,20 +197,20 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     [RelayCommand]
     private void EditSelectedSku()
     {
-        if (Behavior.SelectedCardSkus.Count == 1)
+        if (Behavior.SelectedItems.Count == 1)
         {
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 600,
-                ViewModel = _vmFactory.Drawer().WithContent("Edit Sku", _vmFactory.EditCardSku().WithSku(Behavior.SelectedCardSkus[0]))
+                ViewModel = _vmFactory.Drawer().WithContent("Edit Sku", _vmFactory.EditCardSku().WithSku(Behavior.SelectedItems[0]))
             });
         }
-        else if (Behavior.SelectedCardSkus.Count > 1)
+        else if (Behavior.SelectedItems.Count > 1)
         {
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 600,
-                ViewModel = _vmFactory.Drawer().WithContent("Edit Skus", _vmFactory.EditCardSku().WithSkus(Behavior.SelectedCardSkus))
+                ViewModel = _vmFactory.Drawer().WithContent("Edit Skus", _vmFactory.EditCardSku().WithSkus(Behavior.SelectedItems))
             });
         }
     }
@@ -218,9 +218,9 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     [RelayCommand]
     private void SplitSelectedSku()
     {
-        if (Behavior.CanSplitCardSku)
+        if (Behavior.IsItemSplittable)
         {
-            var selected = Behavior.SelectedCardSkus[0];
+            var selected = Behavior.SelectedItems[0];
             var vm = _vmFactory.SplitCardSku();
             vm.CardSkuId = selected.Id;
             if (selected.ProxyQty > 1)
@@ -246,12 +246,12 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     [RelayCommand]
     private void SendSkusToContainer()
     {
-        if (Behavior.SelectedCardSkus.Count > 0)
+        if (Behavior.SelectedItems.Count > 0)
         {
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 800,
-                ViewModel = _vmFactory.Drawer().WithContent("Send Cards To Deck or Container", _vmFactory.SendCardsToContainer(Behavior.SelectedCardSkus))
+                ViewModel = _vmFactory.Drawer().WithContent("Send Cards To Deck or Container", _vmFactory.SendCardsToContainer(Behavior.SelectedItems))
             });
         }
     }
@@ -259,12 +259,12 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     [RelayCommand]
     private async Task UpdateSkuMetadata()
     {
-        if (Behavior.SelectedCardSkus.Count > 0)
+        if (Behavior.SelectedItems.Count > 0)
         {
             using (((IViewModelWithBusyState)this).StartBusyState())
             {
                 int updated = 0;
-                var ids = Behavior.SelectedCardSkus.Select(c => c.Id);
+                var ids = Behavior.SelectedItems.Select(c => c.Id);
                 var updatedSkus = await _service.UpdateCardMetadataAsync(ids, _scryfallApiClient, CancellationToken.None);
                 foreach (var sku in updatedSkus)
                 {
@@ -286,9 +286,9 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     [RelayCommand]
     private void DeleteSku()
     {
-        if (Behavior.SelectedCardSkus.Count == 1)
+        if (Behavior.SelectedItems.Count == 1)
         {
-            var sku = Behavior.SelectedCardSkus[0];
+            var sku = Behavior.SelectedItems[0];
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 400,
@@ -301,7 +301,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
                         {
                             await _service.DeleteCardSkuAsync(sku.Id);
                             Messenger.ToastNotify($"Card SKU ({sku.CardName}, {sku.Language ?? "en"}) deleted");
-                            Behavior.SelectedCardSkus.Remove(sku);
+                            Behavior.SelectedItems.Remove(sku);
                             this.SearchResults.Remove(sku);
                             this.SkuTotal -= 1;
                             this.ProxyTotal -= sku.ProxyQty;

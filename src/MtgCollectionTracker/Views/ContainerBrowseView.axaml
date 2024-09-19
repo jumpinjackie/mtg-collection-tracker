@@ -29,9 +29,11 @@
 		</StackPanel>
 		<StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
 			<Button IsEnabled="{Binding !Behavior.IsBusy}" Command="{Binding AddSkusCommand}" Content="Add New" HorizontalAlignment="Center" />
-			<Button IsEnabled="{Binding Behavior.HasSelectedCardSku}" Command="{Binding ViewSelectedSkuCommand}" Content="View Details" HorizontalAlignment="Center" />
-			<Button IsEnabled="{Binding Behavior.CanSendSkusToContainer}" Command="{Binding SendSkusToContainerCommand}" Content="Send to Deck/Container" HorizontalAlignment="Center" />
-			<Button IsEnabled="{Binding Behavior.CanUpdateMetadata}" Command="{Binding UpdateSkuMetadataCommand}" Content="Update Metadata" HorizontalAlignment="Center" />
+			<!--
+			<Button IsEnabled="{Binding Behavior.HasOneSelectedItem}" Command="{Binding ViewSelectedSkuCommand}" Content="View Details" HorizontalAlignment="Center" />
+			-->
+			<Button IsEnabled="{Binding Behavior.HasAtLeastOneSelectedItem}" Command="{Binding SendSkusToContainerCommand}" Content="Send to Deck/Container" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding Behavior.HasAtLeastOneSelectedItem}" Command="{Binding UpdateSkuMetadataCommand}" Content="Update Metadata" HorizontalAlignment="Center" />
 			<TextBlock Margin="6" VerticalAlignment="Center" Text="{Binding ContainerSummary}" />
 		</StackPanel>
 		<Panel>
@@ -41,7 +43,7 @@
 					<RadioButton GroupName="View Mode" IsChecked="{Binding Behavior.ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:CardItemViewMode.VisualList}}" Content="Visual List"/>
 					<RadioButton GroupName="View Mode" IsChecked="{Binding Behavior.ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:CardItemViewMode.Table}}" Content="Table"/>
 				</StackPanel>
-				<ListBox IsEnabled="{Binding !Behavior.IsBusy}" IsVisible="{Binding Behavior.IsListMode}" ItemsSource="{Binding SearchResults}" SelectionMode="Multiple" SelectedItems="{Binding Behavior.SelectedCardSkus}" Background="Transparent" Margin="0 20">
+				<ListBox IsEnabled="{Binding !Behavior.IsBusy}" IsVisible="{Binding Behavior.IsListMode}" ItemsSource="{Binding SearchResults}" SelectionMode="Multiple" SelectedItems="{Binding Behavior.SelectedItems}" Background="Transparent" Margin="0 20">
 					<ListBox.ItemsPanel>
 						<ItemsPanelTemplate>
 							<WrapPanel />
@@ -60,13 +62,13 @@
 							<Canvas Width="200" Height="280">
 								<Panel Canvas.Left="0" Canvas.Top="0" Canvas.Bottom="0" Canvas.Right="0" Background="#7FFF22DD">
 									<!-- TODO: If this is even possible, do a flip animation for double-faced cards -->
-									<Image Width="200" Stretch="Uniform" Source="{Binding Behavior.SelectedCardSkus[0].CardImage}" />
-									<Panel Height="280" IsVisible="{Binding Behavior.SelectedCardSkus[0].CardImage, Converter={x:Static ObjectConverters.IsNull}}">
+									<Image Width="200" Stretch="Uniform" Source="{Binding Behavior.SelectedItems[0].CardImage}" />
+									<Panel Height="280" IsVisible="{Binding Behavior.SelectedItems[0].CardImage, Converter={x:Static ObjectConverters.IsNull}}">
 										<PathIcon Height="75" Width="75" Data="{StaticResource card}" />
 									</Panel>
 								</Panel>
 							</Canvas>
-							<Button IsVisible="{Binding Behavior.SelectedCardSkus[0].IsDoubleFaced}" Grid.Column="0" HorizontalAlignment="Center" Content="{Binding Behavior.SelectedCardSkus[0].SwitchLabel}" Command="{Binding Behavior.SelectedCardSkus[0].SwitchFaceCommand}" />
+							<Button IsVisible="{Binding Behavior.SelectedItems[0].IsDoubleFaced}" Grid.Column="0" HorizontalAlignment="Center" Content="{Binding Behavior.SelectedItems[0].SwitchLabel}" Command="{Binding Behavior.SelectedItems[0].SwitchFaceCommand}" />
 						</StackPanel>
 					</SplitView.Pane>
 					<Grid>
