@@ -45,10 +45,16 @@
 				<LineBreak />
 				<LineBreak />
 				As an alternative to manual entry, you can click Import to import an existing decklist in MTGO text format.
+				<LineBreak />
+				<LineBreak />
+				For split, adventure or double-faced cards make sure to name both faces/sides of the card name and use // as the separator.
+				<LineBreak />
+				<LineBreak />
+				You can specify only the front side of an adventure/double-faced card only if you already own at least one copy of the card in your collection. Otherwise name search will fail and will report all copies as not found.
 			</TextBlock>
 			<DockPanel IsVisible="{Binding HasResult}">
 				<StackPanel Margin="10" DockPanel.Dock="Bottom">
-					<TextBlock Text="{Binding CheckResultSummary}" Margin="10" />
+					<TextBlock Text="{Binding CheckResultSummary}" Margin="10" TextWrapping="Wrap" />
 					<StackPanel IsVisible="{Binding HasShort}" Orientation="Horizontal" Spacing="10">
 						<Button Command="{Binding AddToWishlistCommand}">Add missing to Wishlist</Button>
 						<CheckBox IsChecked="{Binding ShowShortOnly}">

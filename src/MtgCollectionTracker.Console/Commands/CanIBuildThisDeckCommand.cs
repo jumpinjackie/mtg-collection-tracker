@@ -50,7 +50,7 @@ internal class CanIBuildThisDeckCommand : CommandBase
                 continue;
 
             Stdout($"Checking availability of: {card.CardName}");
-            var (shortAmt, fromDecks, fromContainers) = await service.CheckQuantityShortfallAsync(card.CardName, card.Count, this.NoProxies, this.SparesOnly);
+            var (shortAmt, fromDecks, fromContainers, _) = await service.CheckQuantityShortfallAsync(card.CardName, card.Count, this.NoProxies, this.SparesOnly);
             if (shortAmt > 0)
                 shortFalls.Add((card.CardName, card.Count, shortAmt));
 

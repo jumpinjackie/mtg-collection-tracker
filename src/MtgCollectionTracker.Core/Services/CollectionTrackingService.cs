@@ -1,9 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Data;
 using ScryfallApi.Client;
 using System.Linq.Expressions;
 using System.Text;
+using System.Threading.Channels;
 
 namespace MtgCollectionTracker.Core.Services;
 
@@ -24,7 +26,11 @@ public class CollectionTrackingService : ICollectionTrackingService
         if (string.Equals(name, "\"Name Sticker\" Goblin", StringComparison.OrdinalIgnoreCase))
             return "_____ Goblin";
 
-        return name;
+        // Split-cards. / should hopefully be a reserved (no pun intended) character
+        if (name.IndexOf('/') >= 0 && name.IndexOf("//") < 0)
+            name = string.Join(" // ", name.Split('/', StringSplitOptions.RemoveEmptyEntries));
+
+        return name.Trim();
     }
 
     public IEnumerable<CardLanguageModel> GetLanguages()
@@ -40,10 +46,14 @@ public class CollectionTrackingService : ICollectionTrackingService
     /// <param name="noProxies">If true, excludes proxies and non-legal sets from the card search</param>
     /// <param name="sparesOnly">If true, excludes from the card search skus that are part of an existing deck</param>
     /// <returns>If positive, there is a shortfall in your collection. If 0 or negative, the requested <paramref name="wantQty"/> can be met by your collection</returns>
-    public async ValueTask<(int shortAmount, HashSet<string> fromDeckNames, HashSet<string> fromContainerNames)> CheckQuantityShortfallAsync(string cardName, int wantQty, bool noProxies, bool sparesOnly)
+    public async ValueTask<CheckQuantityResult> CheckQuantityShortfallAsync(string cardName, int wantQty, bool noProxies, bool sparesOnly)
     {
-        var cn = FixCardName(cardName);
-        var skus = _db.Cards.Include(c => c.Deck).Include(c => c.Container).Where(s => s.CardName == cn);
+        string? suggestedName = null;
+        var searchName = FixCardName(cardName);
+        var skus = _db.Cards
+            .Include(c => c.Deck)
+            .Include(c => c.Container)
+            .Where(s => s.CardName == searchName);
         if (noProxies)
             skus = skus.Where(s => !proxySets.Contains(s.Edition));
         if (sparesOnly) // A spare is any sku not belonging to an existing deck
@@ -51,7 +61,36 @@ public class CollectionTrackingService : ICollectionTrackingService
 
         HashSet<string> fromDeckNames = new();
         HashSet<string> fromContainerNames = new();
-        var matchingSkus = await skus.ToListAsync();
+        var matchingSkus = new List<CardSku>();
+        matchingSkus.AddRange(skus);
+        // No match, card name may need fixing up
+        if (matchingSkus.Count == 0)
+        {
+            // See if this is the front-side of a mdfc/adventure card
+            var searchName2 = searchName + " //";
+            skus = _db.Cards
+                .Include(c => c.Deck)
+                .Include(c => c.Container)
+                .Where(s => s.CardName.StartsWith(searchName2));
+
+            matchingSkus.AddRange(skus);
+
+            // If this produced results, accept the replacement suggested name if the matches yield only
+            // one single distinct card name
+            if (matchingSkus.Count > 0)
+            {
+                var names = new HashSet<string>(matchingSkus.Select(s => s.CardName));
+                if (names.Count == 1)
+                    suggestedName = names.First();
+            }
+        }
+        else
+        {
+            // If the original input card name was fixed up, return the fixed name as suggested
+            if (searchName != cardName)
+                suggestedName = searchName;
+        }
+
         foreach (var sku in matchingSkus)
         {
             if (sku.Deck != null)
@@ -63,7 +102,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         }
 
         var availableTotal = matchingSkus.Sum(s => s.Quantity);
-        return (wantQty - availableTotal, fromDeckNames, fromContainerNames);
+        return new (wantQty - availableTotal, fromDeckNames, fromContainerNames, suggestedName);
     }
 
     public IEnumerable<ContainerSummaryModel> GetContainers()
@@ -1193,5 +1232,27 @@ public class CollectionTrackingService : ICollectionTrackingService
         _db.Notes.Remove(n);
         await _db.SaveChangesAsync();
         return true;
+    }
+
+    public async ValueTask<Dictionary<string, ScryfallResolvedCard>> ResolveEditionsForCardsAsync(IEnumerable<string> cardNames, IScryfallApiClient client)
+    {
+        var resolved = new Dictionary<string, ScryfallResolvedCard>();
+        var sfMetaResolver = new ScryfallMetadataResolver(_db, client);
+        var cancel = CancellationToken.None;
+        bool bSave = false;
+        foreach (var cardName in cardNames.Distinct())
+        {
+            var (sfc, added) = await sfMetaResolver.ResolveEditionAsync(cardName, cancel);
+            if (sfc != null)
+                resolved[cardName] = sfc;
+
+            if (added)
+                bSave = true;
+        }
+        if (bSave)
+        {
+            await _db.SaveChangesAsync(cancel);
+        }
+        return resolved;
     }
 }

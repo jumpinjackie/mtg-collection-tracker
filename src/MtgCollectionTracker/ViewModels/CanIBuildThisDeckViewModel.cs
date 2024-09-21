@@ -5,6 +5,7 @@ using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
+using ScryfallApi.Client;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -25,12 +26,14 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
 {
     readonly ICollectionTrackingService _service;
     readonly IViewModelFactory _vmFactory;
+    readonly IScryfallApiClient? _client;
 
-    public CanIBuildThisDeckViewModel(ICollectionTrackingService service, IViewModelFactory vmFactory, IMessenger messenger)
+    public CanIBuildThisDeckViewModel(ICollectionTrackingService service, IViewModelFactory vmFactory, IMessenger messenger, IScryfallApiClient client)
         : base(messenger)
     {
         _service = service;
         _vmFactory = vmFactory;
+        _client = client;
     }
 
     public CanIBuildThisDeckViewModel()
@@ -78,16 +81,27 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
     private bool _hasShort;
 
     [RelayCommand]
-    private void AddToWishlist()
+    private async Task AddToWishlist()
     {
         var shortOnly = _deckListCardItems.Where(d => d.Short > 0).ToList();
         if (shortOnly.Count > 0)
         {
+            var wishlistItems = new List<(int qty, string cardName, string edition)>();
+            var resolved = await _service.ResolveEditionsForCardsAsync(shortOnly.Select(c => c.CardName), _client!);
+            foreach (var c in shortOnly)
+            {
+                if (resolved.TryGetValue(c.CardName, out var ed))
+                    wishlistItems.Add((c.Short, ed.CardName ?? c.CardName, ed.Edition ?? string.Empty));
+                else
+                    wishlistItems.Add((c.Short, c.CardName, string.Empty));
+            }
+
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 800,
-                ViewModel = _vmFactory.Drawer().WithContent("Add Cards to Wishlist", _vmFactory.AddCardsToWishlist()
-                    .WithCards(shortOnly.Select(c => (c.Short, c.CardName))))
+                ViewModel = _vmFactory.Drawer().WithContent("Add Cards to Wishlist", _vmFactory
+                    .AddCardsToWishlist()
+                    .WithCards(wishlistItems))
             });
         }
     }
@@ -130,7 +144,7 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
                 continue;
 
             //Stdout($"Checking availability of: {card.CardName}");
-            var (shortAmt, fromDecks, fromContainers) = await _service.CheckQuantityShortfallAsync(card.CardName, card.Count, this.NoProxies, this.SparesOnly);
+            var (shortAmt, fromDecks, fromContainers, suggestedName) = await _service.CheckQuantityShortfallAsync(card.CardName, card.Count, this.NoProxies, this.SparesOnly);
             if (shortAmt > 0)
                 this.HasShort = true;
 
@@ -138,7 +152,10 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
             // a count summary if that's the case
             var fromDecksStr = fromDecks.Count > 2 ? $"{fromDecks.Count} different decks" : string.Join(", ", fromDecks);
             var fromContainersStr = fromContainers.Count > 2 ? $"{fromContainers.Count} different containers" : string.Join(", ", fromContainers);
-            _deckListCardItems.Add(new (card.CardName, card.Count, shortAmt, fromDecksStr, fromContainersStr));
+            if (!string.IsNullOrEmpty(suggestedName))
+                _deckListCardItems.Add(new(suggestedName, card.Count, shortAmt, fromDecksStr, fromContainersStr));
+            else
+                _deckListCardItems.Add(new(card.CardName, card.Count, shortAmt, fromDecksStr, fromContainersStr));
         }
 
         var text = new StringBuilder();
@@ -162,7 +179,7 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
             {
                 text.AppendLine("You may be able to build this deck if you allow for cards already used in other decks");
             }
-            text.Append("If your decklist contains split, adventure or double-faced cards, make sure to use the full name for both sides and use '//' instead of '/' as the separator");
+            text.Append("If your decklist contains split, adventure or double-faced cards, they may be marked missing if you do not already own at least one of the cards in your collection. In such cases, make sure to use the full name for both sides and use '//' instead of '/' as the separator");
         }
 
         this.ApplyObservableList();

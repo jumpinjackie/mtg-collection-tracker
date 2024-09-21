@@ -59,7 +59,7 @@ public partial class AddCardsToWishlistViewModel : DialogContentViewModel
         _languages = service.GetLanguages().Select(lang => new LanguageViewModel(lang.Code, lang.PrintedCode, lang.Name)).ToArray();
     }
 
-    public AddCardsToWishlistViewModel WithCards(IEnumerable<(int qty, string cardName)> cards)
+    public AddCardsToWishlistViewModel WithCards(IEnumerable<(int qty, string cardName, string edition)> cards)
     {
         foreach (var c in cards)
         {
@@ -68,7 +68,8 @@ public partial class AddCardsToWishlistViewModel : DialogContentViewModel
                 Languages = _languages,
                 AddCardsCommand = this.AddCardsCommand,
                 Qty = c.qty,
-                CardName = c.cardName
+                CardName = c.cardName,
+                Edition = c.edition
             });
         }
         return this;

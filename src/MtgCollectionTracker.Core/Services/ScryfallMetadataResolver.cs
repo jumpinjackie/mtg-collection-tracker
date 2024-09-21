@@ -5,6 +5,8 @@ using ScryfallApi.Client.Models;
 
 namespace MtgCollectionTracker.Core.Services;
 
+public record ScryfallResolvedCard(string CardName, string Edition);
+
 internal class ScryfallMetadataResolver
 {
     record struct ScryfallMetaIdentity(string cardName, string edition, string language, string? collectorNumber);
@@ -29,6 +31,30 @@ internal class ScryfallMetadataResolver
 
     static string? NullIf(string? s) => string.IsNullOrWhiteSpace(s) ? null : s;
 
+    public async ValueTask<(ScryfallResolvedCard? meta, bool added)> ResolveEditionAsync(string cardName, CancellationToken cancel)
+    {
+        if (_scryfallApiClient == null)
+            return (null, false);
+
+        // Resolve scryfall metadata
+        var sfCards = await _scryfallApiClient.Cards.Search(cardName, 1, new SearchOptions()
+        {
+            IncludeMultilingual = true,
+            Mode = SearchOptions.RollupMode.Prints
+        });
+        this.ScryfallApiCalls++;
+
+        if (sfCards.Data.Count > 0)
+        {
+            var sfc = sfCards.Data.First();
+
+            var res = new ScryfallResolvedCard(sfc.Name, sfc.Set.ToUpper());
+            var (_, added) = await TryAddMetadataAsync(res.CardName, res.Edition, sfc, cancel);
+            return (res, added);
+        }
+        return (null, false);
+    }
+
     private async ValueTask<Card?> FindCardAsync(ScryfallMetaIdentity key)
     {
         Card? sfCardMeta = null;
@@ -44,10 +70,10 @@ internal class ScryfallMetadataResolver
             pageNo++;
             try
             {
-                var sfCards = await _scryfallApiClient.Cards.Search(key.cardName, pageNo, new ScryfallApi.Client.Models.SearchOptions()
+                var sfCards = await _scryfallApiClient.Cards.Search(key.cardName, pageNo, new SearchOptions()
                 {
                     IncludeMultilingual = true,
-                    Mode = ScryfallApi.Client.Models.SearchOptions.RollupMode.Prints
+                    Mode = SearchOptions.RollupMode.Prints
                 });
                 this.ScryfallApiCalls++;
                 cards.AddRange(sfCards.Data.Where(c => string.Equals(c.Name, key.cardName, StringComparison.OrdinalIgnoreCase)));
@@ -80,6 +106,29 @@ internal class ScryfallMetadataResolver
 
         return sfCardMeta;
     }
+
+    private async ValueTask<(ScryfallCardMetadata meta, bool added)> TryAddMetadataAsync(string name, string edition, Card sfCardMeta, CancellationToken cancel)
+    {
+        // Before we make this entity, just check that we don't already have an existing metadata entry
+        // by this scryfall id
+        var sfMeta = await _db.Set<ScryfallCardMetadata>().FindAsync(sfCardMeta.Id.ToString(), cancel);
+        if (sfMeta != null)
+            return (sfMeta, false);
+
+        sfMeta = new ScryfallCardMetadata
+        {
+            Id = sfCardMeta.Id.ToString(),
+            CardName = name,
+            Edition = edition,
+            CardType = sfCardMeta.TypeLine,
+            Rarity = sfCardMeta.Rarity,
+            Type = ParseType(sfCardMeta.TypeLine),
+            ManaValue = (int)sfCardMeta.Cmc
+        };
+        await _db.Set<ScryfallCardMetadata>().AddAsync(sfMeta, cancel);
+        return (sfMeta, true);
+    }
+
     public async ValueTask<ScryfallCardMetadata?> TryResolveAsync(
         string cardName,
         string edition,
@@ -116,7 +165,7 @@ internal class ScryfallMetadataResolver
 
         if ((refetchMetadata || sfMeta == null) && _scryfallApiClient != null)
         {
-            ScryfallApi.Client.Models.Card? sfCardMeta = null;
+            Card? sfCardMeta = null;
             try
             {
                 sfCardMeta = await FindCardAsync(key);
@@ -124,26 +173,10 @@ internal class ScryfallMetadataResolver
             catch { }
             if (sfCardMeta != null)
             {
+                // Now we create and add this entity if not found
                 if (sfMeta == null)
                 {
-                    // Before we make this entity, just check that we don't already have an existing metadata entry
-                    // by this scryfall id
-                    sfMeta = await _db.Set<ScryfallCardMetadata>().FindAsync(sfCardMeta.Id.ToString(), cancel);
-                }
-                // Now we create and add this entity if not foun
-                if (sfMeta == null)
-                {
-                    sfMeta = new ScryfallCardMetadata
-                    {
-                        Id = sfCardMeta.Id.ToString(),
-                        CardName = key.cardName,
-                        Edition = key.edition,
-                        CardType = sfCardMeta.TypeLine,
-                        Rarity = sfCardMeta.Rarity,
-                        Type = ParseType(sfCardMeta.TypeLine),
-                        ManaValue = (int)sfCardMeta.Cmc
-                    };
-                    await _db.Set<ScryfallCardMetadata>().AddAsync(sfMeta, cancel);
+                    (sfMeta, _) = await TryAddMetadataAsync(key.cardName, key.edition, sfCardMeta, cancel);
                 }
                 
                 // New or existing, update these properties if different
