@@ -28,7 +28,7 @@ public class CollectionTrackingService : ICollectionTrackingService
 
         // Split-cards. / should hopefully be a reserved (no pun intended) character
         if (name.IndexOf('/') >= 0 && name.IndexOf("//") < 0)
-            name = string.Join(" // ", name.Split('/', StringSplitOptions.RemoveEmptyEntries));
+            name = string.Join(" // ", name.Split('/', StringSplitOptions.RemoveEmptyEntries).Select(s => s.Trim()));
 
         return name.Trim();
     }

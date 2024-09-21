@@ -165,7 +165,7 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
             if (!SparesOnly)
             {
                 text.AppendLine("Please note. You may need to dismantle one or more of your existing decks to build this one.");
-                text.AppendLine("If you want to check if this is possible without dismantling any existing deck, re-run this command with --spares-only specified");
+                text.AppendLine("If you want to check if this is possible without dismantling any existing deck, re-run this check with 'Spares Only' checked");
             }
         }
         else
@@ -179,7 +179,7 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
             {
                 text.AppendLine("You may be able to build this deck if you allow for cards already used in other decks");
             }
-            text.Append("If your decklist contains split, adventure or double-faced cards, they may be marked missing if you do not already own at least one of the cards in your collection. In such cases, make sure to use the full name for both sides and use '//' instead of '/' as the separator");
+            text.Append("If your decklist contains split, adventure or double-faced cards, they may be marked missing if you did not specify the full name and do not already own at least one of the cards in your collection. In such cases, make sure to use the full name for both sides and use '//' instead of '/' as the separator");
         }
 
         this.ApplyObservableList();
