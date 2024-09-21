@@ -50,9 +50,9 @@
 				<StackPanel Margin="10" DockPanel.Dock="Bottom">
 					<TextBlock Text="{Binding CheckResultSummary}" Margin="10" />
 					<StackPanel IsVisible="{Binding HasShort}" Orientation="Horizontal" Spacing="10">
-						<Button Command="{Binding AddToWishlistCommand}">Add to Wishlist</Button>
+						<Button Command="{Binding AddToWishlistCommand}">Add missing to Wishlist</Button>
 						<CheckBox IsChecked="{Binding ShowShortOnly}">
-							<TextBlock>Show only short-falling</TextBlock>
+							<TextBlock>Show only missing</TextBlock>
 						</CheckBox>
 					</StackPanel>
 				</StackPanel>
