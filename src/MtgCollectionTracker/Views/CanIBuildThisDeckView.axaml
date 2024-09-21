@@ -3,7 +3,14 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="MtgCollectionTracker.Views.CanIBuildThisDeckView">
+			 xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
+             x:Class="MtgCollectionTracker.Views.CanIBuildThisDeckView"
+			 x:DataType="vm:CanIBuildThisDeckViewModel">
+	<Design.DataContext>
+		<!-- This only sets the DataContext for the previewer in an IDE,
+         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+		<vm:CanIBuildThisDeckViewModel />
+	</Design.DataContext>
 	<SplitView PanePlacement="Left" IsPaneOpen="True" DisplayMode="Inline">
 		<SplitView.Pane>
 			<DockPanel>
@@ -11,31 +18,70 @@
 					<TextBlock>Decklist</TextBlock>
 				</StackPanel>
 				<StackPanel Margin="6" DockPanel.Dock="Bottom">
-					<CheckBox>
+					<CheckBox IsChecked="{Binding NoProxies}">
 						<TextBlock ToolTip.Tip="If ticked, excludes proxies in your collection when determining availability">Disallow Proxies</TextBlock>
 					</CheckBox>
-					<CheckBox>
+					<CheckBox IsChecked="{Binding IgnoreSideboard}">
 						<TextBlock ToolTip.Tip="If ticked, only checks if the main deck can be built with your current collection">Ignore Sideboard in check</TextBlock>
 					</CheckBox>
-					<CheckBox>
+					<CheckBox IsChecked="{Binding SparesOnly}">
 						<TextBlock ToolTip.Tip="If ticked, only considers cards in your collection that do not currently belong to any decks">Spares Only</TextBlock>
 					</CheckBox>
-					<CheckBox>
+					<CheckBox IsChecked="{Binding IgnoreBasicLands}">
 						<TextBlock ToolTip.Tip="If ticked, ignores basic lands when checking available quantities (ie. Assume you have near-unlimited basic lands)">Ignore Basic Lands</TextBlock>
 					</CheckBox>
 					<StackPanel Orientation="Horizontal">
-						<Button>Check</Button>
+						<Button Command="{Binding CheckCommand}">Check</Button>
 						<Button>Import</Button>
+						<Button Command="{Binding ResetCommand}">Reset</Button>
 					</StackPanel>
 				</StackPanel>
-				<TextBox Watermark="Enter decklist contents here ..." />
+				<TextBox Watermark="Enter decklist contents here ..." AcceptsReturn="True" Text="{Binding DeckListContents}" />
 			</DockPanel>
 		</SplitView.Pane>
-		<TextBlock TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="WrapWithOverflow">
-			Enter the decklist and click the Check button to see if this deck can be built from the available cards in your collection.
-			<LineBreak />
-			<LineBreak />
-			As an alternative to manual entry, you can click Import to import an existing decklist in MTGO text format.
-		</TextBlock>
+		<Grid>
+			<TextBlock IsVisible="{Binding !HasResult}" TextAlignment="Center" HorizontalAlignment="Center" VerticalAlignment="Center" TextWrapping="WrapWithOverflow">
+				Enter the decklist and click the Check button to see if this deck can be built from the available cards in your collection.
+				<LineBreak />
+				<LineBreak />
+				As an alternative to manual entry, you can click Import to import an existing decklist in MTGO text format.
+			</TextBlock>
+			<DockPanel IsVisible="{Binding HasResult}">
+				<StackPanel Margin="10" DockPanel.Dock="Bottom">
+					<TextBlock Text="{Binding CheckResultSummary}" Margin="10" />
+					<StackPanel IsVisible="{Binding HasShort}" Orientation="Horizontal" Spacing="10">
+						<Button Command="{Binding AddToWishlistCommand}">Add to Wishlist</Button>
+						<CheckBox IsChecked="{Binding ShowShortOnly}">
+							<TextBlock>Show only short-falling</TextBlock>
+						</CheckBox>
+					</StackPanel>
+				</StackPanel>
+				<DataGrid ItemsSource="{Binding DeckListReportItems}"
+					      CanUserReorderColumns="True"
+					      CanUserResizeColumns="True"
+					      CanUserSortColumns="True"
+					      GridLinesVisibility="All"
+					      IsReadOnly="True"
+					      BorderThickness="1">
+					<DataGrid.Columns>
+						<DataGridTemplateColumn Width="30">
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<Panel>
+										<PathIcon IsVisible="{Binding IsShort}" Data="{StaticResource warning_regular}" />
+										<PathIcon IsVisible="{Binding !IsShort}" Data="{StaticResource checkmark_regular}" />
+									</Panel>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+						<DataGridTextColumn Header="Qty" Binding="{Binding Requested}"/>
+						<DataGridTextColumn Header="Card Name" Binding="{Binding CardName}"/>
+						<DataGridTextColumn Header="Short" Binding="{Binding ShortTxt}"/>
+						<DataGridTextColumn Header="From Decks" Binding="{Binding FromDecks}"/>
+						<DataGridTextColumn Header="From Containers" Binding="{Binding FromContainers}"/>
+					</DataGrid.Columns>
+				</DataGrid>
+			</DockPanel>
+		</Grid>
 	</SplitView>
 </UserControl>

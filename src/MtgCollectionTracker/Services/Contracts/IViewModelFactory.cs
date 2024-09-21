@@ -15,6 +15,8 @@ public interface IViewModelFactory
 
     NotesViewModel Notes();
 
+    CanIBuildThisDeckViewModel CanIBuild();
+
     WishlistItemViewModel WishListItem();
 
     EditWishlistItemViewModel EditWishlistItem();

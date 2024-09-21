@@ -10,6 +10,8 @@ using MtgCollectionTracker.Data;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using ScryfallApi.Client;
+using System.Collections;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.IO;
@@ -55,6 +57,21 @@ public partial class AddCardsToWishlistViewModel : DialogContentViewModel
         _service = service;
         _scryfallApiClient = scryfallApiClient;
         _languages = service.GetLanguages().Select(lang => new LanguageViewModel(lang.Code, lang.PrintedCode, lang.Name)).ToArray();
+    }
+
+    public AddCardsToWishlistViewModel WithCards(IEnumerable<(int qty, string cardName)> cards)
+    {
+        foreach (var c in cards)
+        {
+            this.Cards.Add(new AddCardSkuViewModel
+            {
+                Languages = _languages,
+                AddCardsCommand = this.AddCardsCommand,
+                Qty = c.qty,
+                CardName = c.cardName
+            });
+        }
+        return this;
     }
 
     public ObservableCollection<AddCardSkuViewModel> Cards { get; } = new();

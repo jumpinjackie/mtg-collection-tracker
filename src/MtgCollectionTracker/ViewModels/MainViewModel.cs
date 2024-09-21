@@ -21,6 +21,7 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
         this.Containers = vmFactory.Containers();
         this.Wishlist = vmFactory.Wishlist();
         this.Notes = vmFactory.Notes();
+        this.CanIBuild = vmFactory.CanIBuild();
         this.IsActive = true;
     }
 
@@ -31,6 +32,7 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
         this.Containers = vmFactory.Containers();
         this.Wishlist = vmFactory.Wishlist();
         this.Notes = vmFactory.Notes();
+        this.CanIBuild = vmFactory.CanIBuild();
         this.IsActive = true;
     }
 

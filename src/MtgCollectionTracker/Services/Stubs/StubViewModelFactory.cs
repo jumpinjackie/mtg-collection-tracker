@@ -24,6 +24,8 @@ public class StubViewModelFactory : IViewModelFactory
 
     public NotesViewModel Notes() => new NotesViewModel();
 
+    public CanIBuildThisDeckViewModel CanIBuild() => new CanIBuildThisDeckViewModel();
+
     public DialogViewModel Drawer() => new DialogViewModel();
 
     public AddCardsViewModel AddCards() => new AddCardsViewModel();
