@@ -240,9 +240,9 @@ public class CollectionTrackingService : ICollectionTrackingService
         return new()
         {
             PageNumber = options.PageNumber,
-            PageSize = DEFAULT_PAGE_SIZE,
+            PageSize = size,
             Total = total,
-            Items = ToCardSkuModel(queryable.OrderBy(c => c.CardName).Skip(skip).Take(DEFAULT_PAGE_SIZE))
+            Items = ToCardSkuModel(queryable.OrderBy(c => c.CardName).Skip(skip).Take(size))
         };
     }
 

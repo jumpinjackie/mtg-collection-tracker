@@ -74,9 +74,10 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
             var page = _service.GetCardsForContainer(_containerId.Value, new()
             {
                 ShowOnlyMissingMetadata = this.ShowOnlyMissingMetadata,
-                PageNumber = oneBasedPageNumber - 1
                 // TODO: Dynamically compute desired page size based on screen real estate
-                // right now it is defaulting to 12 because we didn't pass a page size here
+                // right now it is hard-coded to 16
+                PageSize = 16,
+                PageNumber = oneBasedPageNumber - 1
             });
             Behavior.SelectedItems.Clear();
             Behavior.SelectedRow = null;
