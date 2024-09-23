@@ -9,6 +9,8 @@ public class UpdateVendorOfferInputModel
     public decimal Price { get; set; } 
 
     public int Available { get; set; }
+
+    public string? Notes { get; set; }
 }
 
 public class UpdateWishlistItemInputModel

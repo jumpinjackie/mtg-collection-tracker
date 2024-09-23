@@ -60,4 +60,14 @@ public class ScryfallCardMetadata
     /// Small back face card image (JPG format)
     /// </summary>
     public byte[]? BackImageSmall { get; set; }
+
+    /// <summary>
+    /// Large card image (JPG format)
+    /// </summary>
+    public byte[]? ImageLarge { get; set; } // Reserved for future use
+
+    /// <summary>
+    /// Large back face card image (JPG format)
+    /// </summary>
+    public byte[]? BackImageLarge { get; set; } // Reserved for future use
 }

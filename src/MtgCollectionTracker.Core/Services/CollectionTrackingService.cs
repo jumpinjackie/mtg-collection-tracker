@@ -397,7 +397,8 @@ public class CollectionTrackingService : ICollectionTrackingService
                 VendorId = o.VendorId,
                 VendorName = o.Vendor.Name,
                 AvailableStock = o.AvailableStock,
-                Price = o.Price
+                Price = o.Price,
+                Notes = o.Notes
             })?.ToList() ?? []
         };
     }
@@ -451,7 +452,8 @@ public class CollectionTrackingService : ICollectionTrackingService
                     VendorId = o.VendorId,
                     VendorName = o.Vendor.Name,
                     AvailableStock = o.AvailableStock,
-                    Price = o.Price
+                    Price = o.Price,
+                    Notes = o.Notes
                 }).ToList()
             });
     }
@@ -1059,13 +1061,20 @@ public class CollectionTrackingService : ICollectionTrackingService
                 var currentOffer = wi.OfferedPrices.FirstOrDefault(o => o.VendorId == off.VendorId);
                 if (currentOffer == null)
                 {
-                    wi.OfferedPrices.Add(new VendorPrice { VendorId = off.VendorId, AvailableStock = off.Available, Price = off.Price });
+                    wi.OfferedPrices.Add(new VendorPrice
+                    {
+                        VendorId = off.VendorId,
+                        AvailableStock = off.Available,
+                        Price = off.Price,
+                        Notes = off.Notes
+                    });
                 }
                 else
                 {
                     currentOffer.VendorId = off.VendorId;
                     currentOffer.AvailableStock = off.Available;
                     currentOffer.Price = off.Price;
+                    currentOffer.Notes = off.Notes;
                 }
             }
         }

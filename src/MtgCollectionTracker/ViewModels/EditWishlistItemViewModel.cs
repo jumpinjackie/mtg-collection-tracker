@@ -27,6 +27,9 @@ public partial class VendorOfferViewModel : ViewModelBase
 
     [ObservableProperty]
     private decimal _price;
+
+    [ObservableProperty]
+    private string? _notes;
 }
 
 public partial class EditWishlistItemViewModel : DialogContentViewModel
@@ -177,8 +180,8 @@ public partial class EditWishlistItemViewModel : DialogContentViewModel
             m.Language = Language.Code;
         if (!string.IsNullOrEmpty(CollectorNumber) && ApplyCollector)
             m.CollectorNumber = CollectorNumber;
-        
-        m.IsFoil = this.IsFoil.Value;
+
+        m.IsFoil = this.IsFoil;
 
         if (ApplyOffers)
         {
@@ -186,7 +189,8 @@ public partial class EditWishlistItemViewModel : DialogContentViewModel
             {
                 VendorId = v.Vendor.Id,
                 Available = v.AvailableStock,
-                Price = v.Price
+                Price = v.Price,
+                Notes = v.Notes
             });
         }
 

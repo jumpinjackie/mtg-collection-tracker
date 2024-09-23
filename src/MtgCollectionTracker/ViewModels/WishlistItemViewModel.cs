@@ -139,6 +139,7 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
         {
             AvailableStock = o.AvailableStock,
             Price = o.Price,
+            Notes = o.Notes,
             Vendor = new VendorViewModel
             {
                 Id = o.VendorId,
@@ -188,7 +189,7 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
         var text = new StringBuilder();
         foreach (var offer in offers)
         {
-            text.AppendLine($"{(selectedVendors.Contains(offer.Vendor.Name) ? "* " : "  ")}{offer.Vendor.Name} - {offer.AvailableStock} @ ${offer.Price}");
+            text.AppendLine($"{(selectedVendors.Contains(offer.Vendor.Name) ? "* " : "  ")}{offer.Vendor.Name} - {offer.AvailableStock} @ ${offer.Price}{(!string.IsNullOrWhiteSpace(offer.Notes) ? (" (" + offer.Notes + ")") : string.Empty)}");
         }
         return text.ToString();
     }

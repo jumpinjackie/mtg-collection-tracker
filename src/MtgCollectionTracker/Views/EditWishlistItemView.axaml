@@ -79,10 +79,6 @@
 									</DataTemplate>
 								</DataGridTemplateColumn.CellTemplate>
 							</DataGridTemplateColumn>
-							<!--
-							<DataGridTextColumn Header="Qty" Binding="{Binding AvailableStock}"/>
-							<DataGridTextColumn Header="Price" Binding="{Binding Price}"/>
-							-->
 							<DataGridTemplateColumn Header="Qty" MinWidth="160">
 								<DataGridTemplateColumn.CellTemplate>
 									<DataTemplate>
@@ -102,6 +98,7 @@
 									</DataTemplate>
 								</DataGridTemplateColumn.CellTemplate>
 							</DataGridTemplateColumn>
+							<DataGridTextColumn Header="Notes" Binding="{Binding Notes}" />
 							<DataGridTemplateColumn>
 								<DataGridTemplateColumn.CellTemplate>
 									<DataTemplate>

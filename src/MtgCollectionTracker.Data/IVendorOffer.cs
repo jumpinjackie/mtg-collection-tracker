@@ -7,4 +7,6 @@ public interface IVendorOffer
     int AvailableStock { get; }
 
     decimal Price { get; }
+
+    string? Notes { get; }
 }

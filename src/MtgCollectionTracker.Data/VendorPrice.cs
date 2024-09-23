@@ -1,4 +1,6 @@
-﻿namespace MtgCollectionTracker.Data;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace MtgCollectionTracker.Data;
 
 /// <summary>
 /// Defines a price that a <see cref="Vendor"/> can offer for a given card, along with the quantity of
@@ -32,9 +34,16 @@ public class VendorPrice : IVendorOffer
     /// </summary>
     public int AvailableStock { get; set; }
 
+    /// <summary>
+    /// Any notes about this offer
+    /// </summary>
+    public string? Notes { get; set; }
+
     string IVendorOffer.Name => Vendor.Name;
 
     int IVendorOffer.AvailableStock => AvailableStock;
 
     decimal IVendorOffer.Price => Price;
+
+    string? IVendorOffer.Notes => Notes;
 }

@@ -12,6 +12,8 @@ public class VendorOfferModel : IVendorOffer
 
     public decimal Price { get; set; }
 
+    public string? Notes { get; set; }
+
     string IVendorOffer.Name => VendorName;
 }
 
