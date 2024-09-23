@@ -4,12 +4,14 @@ using MtgCollectionTracker.Data;
 
 namespace MtgCollectionTracker.Core;
 
+public record VendorOffer(string Name, int Qty, decimal Price, string? Notes);
+
 public static class PublicExtensionMethods
 {
-    public static (decimal TotalPrice, List<string> Vendors, bool IsComplete) ComputeBestPrice<T>(this IEnumerable<T> offers, int requiredQty)
+    public static (decimal TotalPrice, List<VendorOffer> Vendors, bool IsComplete) ComputeBestPrice<T>(this IEnumerable<T> offers, int requiredQty)
         where T : IVendorOffer
     {
-        var vendors = new List<string>();
+        var vendors = new List<VendorOffer>();
         int remainingQty = requiredQty;
         decimal total = 0;
         bool isComplete = false;
@@ -22,14 +24,15 @@ public static class PublicExtensionMethods
                 if (offer.AvailableStock >= remainingQty)
                 {
                     total += (remainingQty * offer.Price);
-                    remainingQty -= remainingQty;
-                    vendors.Add(offer.Name);
+                    var subQty = remainingQty;
+                    remainingQty -= subQty;
+                    vendors.Add(new (offer.Name, subQty, offer.Price, offer.Notes));
                 }
                 else // Take what's left
                 {
                     total += (offer.AvailableStock * offer.Price);
                     remainingQty -= offer.AvailableStock;
-                    vendors.Add(offer.Name);
+                    vendors.Add(new (offer.Name, offer.AvailableStock, offer.Price, offer.Notes));
                 }
 
                 if (remainingQty <= 0)

@@ -1109,7 +1109,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         foreach (var item in items)
         {
             var (subTotal, v, c) = item.OfferedPrices.ComputeBestPrice(item.Quantity);
-            vendors.UnionWith(v);
+            vendors.UnionWith(v.Select(vndr => vndr.Name));
             total += subTotal;
             if (!c)
             {
@@ -1265,5 +1265,21 @@ public class CollectionTrackingService : ICollectionTrackingService
             await _db.SaveChangesAsync(cancel);
         }
         return resolved;
+    }
+
+    public WishlistBuyingListModel GenerateBuyingList()
+    {
+        var ret = new WishlistBuyingListModel();
+        var wishlist = _db.Set<WishlistItem>()
+            .Include(w => w.OfferedPrices);
+        foreach (var item in wishlist)
+        {
+            var (subTotal, vendors, isComplete) = item.OfferedPrices.ComputeBestPrice(item.Quantity);
+            foreach (var vendor in vendors)
+            {
+                ret.Add(vendor.Name, new BuyingListItem(vendor.Qty, item.CardName, vendor.Price, vendor.Notes));
+            }
+        }
+        return ret;
     }
 }

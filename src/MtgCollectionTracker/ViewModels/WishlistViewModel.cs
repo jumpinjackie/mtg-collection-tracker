@@ -151,6 +151,17 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
         });
     }
 
+    [RelayCommand]
+    private void GenerateBuyingList()
+    {
+        var buylist = _service.GenerateBuyingList();
+        Messenger.Send(new OpenDialogMessage
+        {
+            DrawerWidth = 600,
+            ViewModel = _vmFactory.Drawer().WithContent("Buying List", new BuyingListViewModel().WithText(buylist))
+        });
+    }
+
     void IRecipient<CardsAddedToWishlistMessage>.Receive(CardsAddedToWishlistMessage message)
     {
         foreach (var item in message.Added)

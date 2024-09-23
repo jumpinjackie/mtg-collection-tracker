@@ -79,6 +79,11 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
+    public WishlistBuyingListModel GenerateBuyingList()
+    {
+        throw new System.NotImplementedException();
+    }
+
     public IEnumerable<CardSkuModel> GetCards(CardQueryModel query)
     {
         throw new System.NotImplementedException();

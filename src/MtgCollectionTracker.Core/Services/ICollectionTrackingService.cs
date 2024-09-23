@@ -43,5 +43,6 @@ namespace MtgCollectionTracker.Core.Services
         ValueTask<NotesModel> UpdateNotesAsync(int? id, string? title, string notes);
         ValueTask<bool> DeleteNotesAsync(int id);
         ValueTask<Dictionary<string, ScryfallResolvedCard>> ResolveEditionsForCardsAsync(IEnumerable<string> cardNames, IScryfallApiClient client);
+        WishlistBuyingListModel GenerateBuyingList();
     }
 }

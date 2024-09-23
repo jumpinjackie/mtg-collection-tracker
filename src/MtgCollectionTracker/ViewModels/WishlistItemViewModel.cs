@@ -157,9 +157,10 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
             this.BestTotal = $"${total}";
             this.BestVendors = vendors.Count > 1
                 ? "Multiple Vendors"
-                : vendors.Count == 1 ? vendors[0] : "none";
+                : vendors.Count == 1 ? vendors[0].Name : "none";
 
-            this.VendorExplanation = ExplainOffers(vendors, this.Offers);
+            var selVendors = vendors.Select(v => v.Name).ToHashSet();
+            this.VendorExplanation = ExplainOffers(selVendors, this.Offers);
         }
         else
         {
@@ -184,7 +185,7 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
         return this;
     }
 
-    private string ExplainOffers(List<string> selectedVendors, List<VendorOfferViewModel> offers)
+    private string ExplainOffers(HashSet<string> selectedVendors, List<VendorOfferViewModel> offers)
     {
         var text = new StringBuilder();
         foreach (var offer in offers)
