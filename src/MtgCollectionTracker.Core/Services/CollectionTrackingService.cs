@@ -1049,6 +1049,8 @@ public class CollectionTrackingService : ICollectionTrackingService
             wi.Quantity = model.Quantity.Value;
         if (model.CollectorNumber != null)
             wi.CollectorNumber = model.CollectorNumber;
+        if (model.IsFoil.HasValue)
+            wi.IsFoil = model.IsFoil.Value;
 
         if (model.VendorOffers != null)
         {

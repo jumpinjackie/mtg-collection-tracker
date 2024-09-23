@@ -54,6 +54,9 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
     private bool _isDoubleFaced;
 
     [ObservableProperty]
+    private bool _isFoil;
+
+    [ObservableProperty]
     private string _switchLabel = "Switch to Back";
 
     private void SwitchToFront()
@@ -116,6 +119,7 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
         this.CollectorNumber = item.CollectorNumber;
         this.OriginalCardName = item.CardName;
         this.OriginalEdition = item.Edition;
+        this.IsFoil = item.IsFoil;
         this.CardName = item.Edition == "PROXY" ? "[Proxy] " + item.CardName : item.CardName;
         if (item.Edition != "PROXY")
         {

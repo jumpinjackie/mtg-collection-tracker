@@ -121,11 +121,9 @@
 				</CheckBox>
 				<TextBox Grid.Row="1" Grid.ColumnSpan="2" IsEnabled="{Binding ApplyCollector}" Text="{Binding CollectorNumber}" />
 			</Grid>
-			<!--
 			<StackPanel Orientation="Horizontal" Spacing="6">
 				<CheckBox IsThreeState="True" IsChecked="{Binding IsFoil}">Is Foil?</CheckBox>
 			</StackPanel>
-			-->
 		</StackPanel>
 	</DockPanel>
 </UserControl>

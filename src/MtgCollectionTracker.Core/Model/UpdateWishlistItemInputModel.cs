@@ -25,6 +25,8 @@ public class UpdateWishlistItemInputModel
 
     public string? CollectorNumber { get; set; }
 
+    public bool? IsFoil { get; set; }
+
     public CardCondition? Condition { get; set; }
 
     public IEnumerable<UpdateVendorOfferInputModel>? VendorOffers { get; set; }

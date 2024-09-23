@@ -133,6 +133,10 @@ public partial class EditWishlistItemViewModel : DialogContentViewModel
     [ObservableProperty]
     private string? _collectorNumber;
 
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
+    private bool? _isFoil;
+
     private bool CanSave()
     {
         return this.ApplyCardName
@@ -140,7 +144,8 @@ public partial class EditWishlistItemViewModel : DialogContentViewModel
             || this.ApplyEdition
             || this.ApplyLanguage
             || this.ApplyQuantity
-            || this.ApplyOffers;
+            || this.ApplyOffers
+            || this.IsFoil.HasValue;
     }
 
     [RelayCommand]
@@ -172,6 +177,8 @@ public partial class EditWishlistItemViewModel : DialogContentViewModel
             m.Language = Language.Code;
         if (!string.IsNullOrEmpty(CollectorNumber) && ApplyCollector)
             m.CollectorNumber = CollectorNumber;
+        
+        m.IsFoil = this.IsFoil.Value;
 
         if (ApplyOffers)
         {
