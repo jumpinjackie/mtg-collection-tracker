@@ -19,23 +19,27 @@
 		<StackPanel Spacing="6">
 			<TextBlock>Tick the following fields to apply edits for</TextBlock>
 			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="30, *">
-				<CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding ApplyCardName}" />
-				<TextBlock Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">Card Name (must have both names separated by // for adventure and double-faced cards)</TextBlock>
+				<CheckBox Grid.Row="0" Grid.ColumnSpan="2" IsChecked="{Binding ApplyCardName}">
+					<TextBlock VerticalAlignment="Center">Card Name (must have both names separated by // for adventure and double-faced cards)</TextBlock>
+				</CheckBox>
 				<TextBox Grid.Row="1" Grid.ColumnSpan="2" IsEnabled="{Binding ApplyCardName}" Text="{Binding CardName}" />
 			</Grid>
 			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="30, *">
-				<CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding ApplyQuantity}" />
-				<TextBlock Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">Quantity</TextBlock>
+				<CheckBox Grid.Row="0" Grid.ColumnSpan="2" IsChecked="{Binding ApplyQuantity}">
+					<TextBlock VerticalAlignment="Center">Quantity</TextBlock>
+				</CheckBox>
 				<NumericUpDown Grid.Row="1" Grid.ColumnSpan="2" FormatString="0" IsEnabled="{Binding ApplyQuantity}" Value="{Binding Quantity}" />
 			</Grid>
 			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="30, *">
-				<CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding ApplyEdition}" />
-				<TextBlock Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">Edition</TextBlock>
+				<CheckBox Grid.Row="0" Grid.ColumnSpan="2" IsChecked="{Binding ApplyEdition}">
+					<TextBlock VerticalAlignment="Center">Edition</TextBlock>
+				</CheckBox>
 				<TextBox Grid.Row="1" Grid.ColumnSpan="2" IsEnabled="{Binding ApplyEdition}" Text="{Binding Edition}" />
 			</Grid>
 			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="30, *">
-				<CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding ApplyLanguage}" />
-				<TextBlock Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">Language</TextBlock>
+				<CheckBox Grid.Row="0" Grid.ColumnSpan="2" IsChecked="{Binding ApplyLanguage}">
+					<TextBlock VerticalAlignment="Center">Language</TextBlock>
+				</CheckBox>
 				<ComboBox Grid.Row="1" Grid.ColumnSpan="2" IsEnabled="{Binding ApplyLanguage}" MinWidth="200" ItemsSource="{Binding Languages}" SelectedItem="{Binding Language}">
 					<ComboBox.ItemTemplate>
 						<DataTemplate x:DataType="vm:LanguageViewModel">
@@ -45,8 +49,9 @@
 				</ComboBox>
 			</Grid>
 			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="30, *">
-				<CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding ApplyOffers}" />
-				<TextBlock Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">Vendor Prices</TextBlock>
+				<CheckBox Grid.Row="0" Grid.ColumnSpan="2" IsChecked="{Binding ApplyOffers}">
+					<TextBlock VerticalAlignment="Center">Vendor Prices</TextBlock>
+				</CheckBox>
 				<StackPanel Grid.Row="1" Grid.ColumnSpan="2">
 					<DataGrid Name="VendorPricesGrid"
 						  ItemsSource="{Binding VendorOffers}"
@@ -111,10 +116,16 @@
 				</StackPanel>
 			</Grid>
 			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="30, *">
-				<CheckBox Grid.Row="0" Grid.Column="0" IsChecked="{Binding ApplyCollector}" />
-				<TextBlock Grid.Row="0" Grid.Column="1" VerticalAlignment="Center">Collector # (set to resolve card image for a specific variant)</TextBlock>
+				<CheckBox Grid.Row="0" Grid.ColumnSpan="2" IsChecked="{Binding ApplyCollector}">
+					<TextBlock VerticalAlignment="Center">Collector # (set to resolve card image for a specific variant)</TextBlock>
+				</CheckBox>
 				<TextBox Grid.Row="1" Grid.ColumnSpan="2" IsEnabled="{Binding ApplyCollector}" Text="{Binding CollectorNumber}" />
 			</Grid>
+			<!--
+			<StackPanel Orientation="Horizontal" Spacing="6">
+				<CheckBox IsThreeState="True" IsChecked="{Binding IsFoil}">Is Foil?</CheckBox>
+			</StackPanel>
+			-->
 		</StackPanel>
 	</DockPanel>
 </UserControl>
