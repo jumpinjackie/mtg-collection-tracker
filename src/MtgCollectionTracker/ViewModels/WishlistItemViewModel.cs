@@ -4,9 +4,11 @@ using CommunityToolkit.Mvvm.Input;
 using MtgCollectionTracker.Core;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Data;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Text;
 
 namespace MtgCollectionTracker.ViewModels;
 
@@ -104,6 +106,9 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
     [ObservableProperty]
     private string _bestVendors = "none";
 
+    [ObservableProperty]
+    private string? _vendorExplanation;
+
     public WishlistItemViewModel WithData(WishlistItemModel item)
     {
         this.Id = item.Id;
@@ -136,6 +141,7 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
                 Name = o.VendorName
             }
         }).ToList();
+        this.Offers.Sort((a, b) => a.Price.CompareTo(b.Price));
 
         if (item.Offers.Count > 0)
         {
@@ -147,6 +153,8 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
             this.BestVendors = vendors.Count > 1
                 ? "Multiple Vendors"
                 : vendors.Count == 1 ? vendors[0] : "none";
+
+            this.VendorExplanation = ExplainOffers(vendors, this.Offers);
         }
         else
         {
@@ -154,6 +162,7 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
             this.Highest = "$?";
             this.BestTotal = "$?";
             this.BestVendors = "none";
+            this.VendorExplanation = null;
         }
 
         if (item.ImageSmall != null)
@@ -168,5 +177,15 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
         }
         this.SwitchToFront();
         return this;
+    }
+
+    private string ExplainOffers(List<string> selectedVendors, List<VendorOfferViewModel> offers)
+    {
+        var text = new StringBuilder();
+        foreach (var offer in offers)
+        {
+            text.AppendLine($"{(selectedVendors.Contains(offer.Vendor.Name) ? "* " : "  ")}{offer.Vendor.Name} - {offer.AvailableStock} @ ${offer.Price}");
+        }
+        return text.ToString();
     }
 }

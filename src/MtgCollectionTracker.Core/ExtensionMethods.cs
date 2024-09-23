@@ -13,6 +13,8 @@ public static class PublicExtensionMethods
         int remainingQty = requiredQty;
         decimal total = 0;
         bool isComplete = false;
+        // TODO: If multiple vendors offer the same required amount at the same price, all those
+        // vendors should be included, instead of the just the first one we find
         foreach (var offer in offers.OrderBy(o => o.Price))
         {
             if (remainingQty > 0)

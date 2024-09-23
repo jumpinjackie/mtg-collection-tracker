@@ -45,7 +45,7 @@
 		</Grid>
 		<StackPanel Orientation="Horizontal">
 			<TextBlock xml:space="preserve">From: </TextBlock>
-			<TextBlock Text="{Binding BestVendors}" />
+			<TextBlock Text="{Binding BestVendors}" ToolTip.Tip="{Binding VendorExplanation}" />
 		</StackPanel>
 		<Button IsVisible="{Binding IsDoubleFaced}" Grid.Column="0" HorizontalAlignment="Center" Content="{Binding SwitchLabel}" Command="{Binding SwitchFaceCommand}" />
 	</StackPanel>
