@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Core.Services;
+using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using ScryfallApi.Client;
@@ -14,12 +15,14 @@ namespace MtgCollectionTracker.ViewModels;
 
 public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewModel
 {
+    readonly IViewModelFactory _vmFactory;
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
 
-    public SendCardsToContainerOrDeckViewModel(IMessenger messenger, ICollectionTrackingService service, IScryfallApiClient scryfallApiClient)
+    public SendCardsToContainerOrDeckViewModel(IMessenger messenger, IViewModelFactory vmFactory, ICollectionTrackingService service, IScryfallApiClient scryfallApiClient)
         : base(messenger)
     {
+        _vmFactory = vmFactory;
         _service = service;
         _scryfallApiClient = scryfallApiClient;
     }
@@ -27,6 +30,7 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
     public SendCardsToContainerOrDeckViewModel()
     {
         this.ThrowIfNotDesignMode();
+        _vmFactory = new StubViewModelFactory();
         _service = new StubCollectionTrackingService();
         this.AvailableContainers = [
             new ContainerViewModel().WithData(new() { Id = 1, Name = "Main Binder" }),
@@ -73,6 +77,14 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
     public IEnumerable<CardSkuItemViewModel>? Cards { get; internal set; }
 
     private bool CanSendCards() => this.SelectedContainer != null || this.SelectedDeck != null || this.UnSetContainer || this.UnSetDeck;
+
+    public SendCardsToContainerOrDeckViewModel WithCards(IEnumerable<CardSkuItemViewModel> cards)
+    {
+        this.Cards = cards;
+        this.AvailableContainers = _service.GetContainers().Select(c => _vmFactory.Container().WithData(c)).ToList();
+        this.AvailableDecks = _service.GetDecks(null).Select(d => _vmFactory.Deck().WithData(d)).ToList();
+        return this;
+    }
 
     [RelayCommand(CanExecute = nameof(CanSendCards))]
     private async Task SendCards()

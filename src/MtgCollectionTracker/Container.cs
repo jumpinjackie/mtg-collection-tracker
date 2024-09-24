@@ -17,11 +17,11 @@ using System.Threading.Tasks;
 
 namespace MtgCollectionTracker;
 
-[Register(typeof(MainViewModel), Scope.SingleInstance)]
-[Register(typeof(CardsViewModel), Scope.SingleInstance)]
-[Register(typeof(DeckCollectionViewModel), Scope.SingleInstance)]
-[Register(typeof(ContainerSetViewModel), Scope.SingleInstance)]
-[Register(typeof(WishlistViewModel), Scope.SingleInstance)]
+[Register(typeof(MainViewModel), Scope.InstancePerResolution)]
+[Register(typeof(CardsViewModel), Scope.InstancePerResolution)]
+[Register(typeof(DeckCollectionViewModel), Scope.InstancePerResolution)]
+[Register(typeof(ContainerSetViewModel), Scope.InstancePerResolution)]
+[Register(typeof(WishlistViewModel), Scope.InstancePerResolution)]
 [Register(typeof(ContainerBrowseViewModel), Scope.InstancePerResolution)]
 [Register(typeof(CardSkuItemViewModel), Scope.InstancePerResolution)]
 [Register(typeof(WishlistItemViewModel), Scope.InstancePerResolution)]
@@ -58,7 +58,7 @@ public partial class Container : IContainer<MainViewModel>
     public DbContextOptions<CardsDbContext> CreateDbContextOptions()
     {
         return new DbContextOptionsBuilder<CardsDbContext>()
-            .UseSqlite("Data Source=collection.sqlite")
+            .UseSqlite("Data Source=collection.sqlite;Cache=Shared")
             .Options;
     }
 

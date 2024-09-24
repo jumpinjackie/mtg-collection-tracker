@@ -33,7 +33,7 @@ public interface IViewModelFactory
 
     AddCardsToWishlistViewModel AddCardsToWishlist();
 
-    SendCardsToContainerOrDeckViewModel SendCardsToContainer(IEnumerable<CardSkuItemViewModel> cards);
+    SendCardsToContainerOrDeckViewModel SendCardsToContainer();
 
     DeckListViewModel DeckList();
 

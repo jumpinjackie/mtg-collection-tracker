@@ -32,10 +32,7 @@ public class ViewModelFactory : IViewModelFactory
     readonly Func<ManageVendorsViewModel> _manageVendors;
     readonly Func<EditWishlistItemViewModel> _editWishlistItem;
 
-    readonly ICollectionTrackingService _service;
-
-    public ViewModelFactory(ICollectionTrackingService service,
-                            Func<CardsViewModel> cards,
+    public ViewModelFactory(Func<CardsViewModel> cards,
                             Func<CardSkuItemViewModel> cardSku,
                             Func<WishlistItemViewModel> wishlistItem,
                             Func<DeckViewModel> deck,
@@ -58,8 +55,6 @@ public class ViewModelFactory : IViewModelFactory
                             Func<ManageVendorsViewModel> manageVendors,
                             Func<EditWishlistItemViewModel> editWishlistItem)
     {
-        _service = service;
-
         _cards = cards;
         _cardSku = cardSku;
         _wishlistItem = wishlistItem;
@@ -118,14 +113,7 @@ public class ViewModelFactory : IViewModelFactory
 
     public EditCardSkuViewModel EditCardSku() => _editCardSku();
 
-    public SendCardsToContainerOrDeckViewModel SendCardsToContainer(IEnumerable<CardSkuItemViewModel> cards)
-    {
-        var vm = _sendCardsToContainer();
-        vm.Cards = cards;
-        vm.AvailableContainers = _service.GetContainers().Select(c => _container().WithData(c)).ToList();
-        vm.AvailableDecks = _service.GetDecks(null).Select(d => _deck().WithData(d)).ToList();
-        return vm;
-    }
+    public SendCardsToContainerOrDeckViewModel SendCardsToContainer() => _sendCardsToContainer();
 
     public SplitCardSkuViewModel SplitCardSku() => _splitCardSku();
 

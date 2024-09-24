@@ -1,19 +1,22 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Conventions;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Data;
 using ScryfallApi.Client;
+using StrongInject;
 using System.Linq.Expressions;
 using System.Text;
-using System.Threading.Channels;
 
 namespace MtgCollectionTracker.Core.Services;
 
 public class CollectionTrackingService : ICollectionTrackingService
 {
-    readonly CardsDbContext _db;
+    // Make no assumptions about lifecycles of service consumers. Every dbcontext access
+    // *must* be a transient unit of work, and the only way to enforce that is to make this
+    // dbcontext a Func<Owned<T>> and to leverage C# using blocks to ensure dbcontext disposal
+    // when done
+    readonly Func<Owned<CardsDbContext>> _db;
 
-    public CollectionTrackingService(CardsDbContext db)
+    public CollectionTrackingService(Func<Owned<CardsDbContext>> db)
     {
         _db = db;
     }
@@ -35,7 +38,8 @@ public class CollectionTrackingService : ICollectionTrackingService
 
     public IEnumerable<CardLanguageModel> GetLanguages()
     {
-        return _db.Set<CardLanguage>().Select(lang => new CardLanguageModel(lang.Code, lang.PrintedCode, lang.Name));
+        using var db = _db.Invoke();
+        return db.Value.Set<CardLanguage>().Select(lang => new CardLanguageModel(lang.Code, lang.PrintedCode, lang.Name)).ToList();
     }
 
     /// <summary>
@@ -48,9 +52,11 @@ public class CollectionTrackingService : ICollectionTrackingService
     /// <returns>If positive, there is a shortfall in your collection. If 0 or negative, the requested <paramref name="wantQty"/> can be met by your collection</returns>
     public async ValueTask<CheckQuantityResult> CheckQuantityShortfallAsync(string cardName, int wantQty, bool noProxies, bool sparesOnly)
     {
+        using var db = _db.Invoke();
+
         string? suggestedName = null;
         var searchName = FixCardName(cardName);
-        var skus = _db.Cards
+        var skus = db.Value.Cards
             .Include(c => c.Deck)
             .Include(c => c.Container)
             .Where(s => s.CardName == searchName);
@@ -68,7 +74,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         {
             // See if this is the front-side of a mdfc/adventure card
             var searchName2 = searchName + " //";
-            skus = _db.Cards
+            skus = db.Value.Cards
                 .Include(c => c.Deck)
                 .Include(c => c.Container)
                 .Where(s => s.CardName.StartsWith(searchName2));
@@ -107,7 +113,8 @@ public class CollectionTrackingService : ICollectionTrackingService
 
     public IEnumerable<ContainerSummaryModel> GetContainers()
     {
-        return _db
+        using var db = _db.Invoke();
+        return db.Value
             .Containers
             .OrderBy(c => c.Name)
             .Select(c => new ContainerSummaryModel
@@ -115,7 +122,8 @@ public class CollectionTrackingService : ICollectionTrackingService
                 Id = c.Id,
                 Name = c.Name,
                 Total = c.Cards.Sum(c => c.Quantity)
-            });
+            })
+            .ToList();
     }
 
     public IEnumerable<DeckSummaryModel> GetDecks(string? format)
@@ -123,7 +131,8 @@ public class CollectionTrackingService : ICollectionTrackingService
         Expression<Func<Deck, bool>> predicate = string.IsNullOrEmpty(format)
             ? d => true
             : d => d.Format == format;
-        return _db
+        using var db = _db.Invoke();
+        return db.Value
             .Decks
             .Where(predicate)
             .Include(d => d.Container)
@@ -136,12 +145,14 @@ public class CollectionTrackingService : ICollectionTrackingService
                 Format = d.Format,
                 MaindeckTotal = d.Cards.Where(c => !c.IsSideboard).Sum(c => c.Quantity),
                 SideboardTotal = d.Cards.Where(c => c.IsSideboard).Sum(c => c.Quantity)
-            });
+            })
+            .ToList();
     }
 
     public async ValueTask<CardSkuModel> GetCardSkuByIdAsync(int id, CancellationToken cancel)
     {
-        var sku = await _db
+        using var db = _db.Invoke();
+        var sku = await db.Value
             .Cards
             .Include(c => c.Deck)
             .Include(c => c.Container)
@@ -155,7 +166,8 @@ public class CollectionTrackingService : ICollectionTrackingService
 
     public IEnumerable<CardSkuModel> GetCards(CardQueryModel query)
     {
-        IQueryable<CardSku> queryable = _db
+        using var db = _db.Invoke();
+        IQueryable<CardSku> queryable = db.Value
             .Cards
             .Include(c => c.Deck)
             .Include(c => c.Container);
@@ -187,7 +199,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         if (query.IncludeScryfallMetadata)
             bq = queryable.Include(c => c.Scryfall);
 
-        return ToCardSkuModel(bq.OrderBy(c => c.CardName));
+        return ToCardSkuModel(bq.OrderBy(c => c.CardName)).ToList();
     }
 
     private IQueryable<CardSkuModel> ToCardSkuModel(IQueryable<CardSku> skus)
@@ -219,7 +231,8 @@ public class CollectionTrackingService : ICollectionTrackingService
 
     public PaginatedCardSkuModel GetCardsForContainer(int containerId, FetchContainerPageModel options)
     {
-        IQueryable<CardSku> queryable = _db
+        using var db = _db.Invoke();
+        IQueryable<CardSku> queryable = db.Value
             .Cards
             .Include(c => c.Deck)
             .Include(c => c.Container)
@@ -242,29 +255,29 @@ public class CollectionTrackingService : ICollectionTrackingService
             PageNumber = options.PageNumber,
             PageSize = size,
             Total = total,
-            Items = ToCardSkuModel(queryable.OrderBy(c => c.CardName).Skip(skip).Take(size))
+            Items = ToCardSkuModel(queryable.OrderBy(c => c.CardName).Skip(skip).Take(size)).ToList()
         };
     }
 
     public async ValueTask<IEnumerable<CardSkuModel>> UpdateCardMetadataAsync(IEnumerable<int> ids, IScryfallApiClient scryfallApiClient, CancellationToken cancel)
     {
+        using var db = _db.Invoke();
         var cards = new List<CardSkuModel>();
-
-        var skus = _db.Cards
+        var skus = db.Value.Cards
             .Include(c => c.Scryfall)
             .Include(c => c.Deck)
             .Include(c => c.Container)
             .Include(c => c.Language)
             .Where(c => ids.Contains(c.Id));
 
-        var resolver = new ScryfallMetadataResolver(_db, scryfallApiClient);
+        var resolver = new ScryfallMetadataResolver(db.Value, scryfallApiClient);
         foreach (var c in skus)
         {
             await c.ApplyScryfallMetadataAsync(resolver, true, cancel);
             cards.Add(CardSkuToModel(c));
         }
 
-        await _db.SaveChangesAsync(cancel);
+        await db.Value.SaveChangesAsync(cancel);
 
         System.Diagnostics.Debug.WriteLine($"SF stats (cache hits: {resolver.CacheHits}, api: {resolver.ScryfallApiCalls}, small img: {resolver.ScryfallSmallImageFetches})");
 
@@ -273,15 +286,16 @@ public class CollectionTrackingService : ICollectionTrackingService
 
     public async ValueTask<(CardSkuModel sku, bool wasMerged)> RemoveFromDeckAsync(RemoveFromDeckInputModel model)
     {
+        using var db = _db.Invoke();
         bool wasMerged = false;
         Container? container = null;
         if (model.ContainerId.HasValue)
         {
-            container = await _db.Containers.FirstOrDefaultAsync(c => c.Id == model.ContainerId.Value);
+            container = await db.Value.Containers.FirstOrDefaultAsync(c => c.Id == model.ContainerId.Value);
             if (container == null)
                 throw new Exception("Container not found");
         }
-        var sku = await _db.Cards.Include(c => c.Deck).FirstOrDefaultAsync(s => s.Id == model.CardSkuId);
+        var sku = await db.Value.Cards.Include(c => c.Deck).FirstOrDefaultAsync(s => s.Id == model.CardSkuId);
         if (sku == null)
             throw new Exception("Card sku not found");
 
@@ -291,7 +305,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         Expression<Func<CardSku, bool>> skuPredicate = c => c.DeckId == null && c.ContainerId == null;
         if (container != null)
             skuPredicate = c => c.DeckId == null && c.ContainerId == container.Id;
-        var mergeSku = await _db.Cards
+        var mergeSku = await db.Value.Cards
             .Where(skuPredicate)
             // Must match on [card name / edition / language / condition / comments]
             .Where(c => c.CardName == sku.CardName && c.Edition == sku.Edition && c.Language == sku.Language && c.Condition == sku.Condition && c.Comments == sku.Comments)
@@ -308,7 +322,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             // Un-set sideboard flag as we're removing from deck
             newSku.IsSideboard = false;
 
-            await _db.Cards.AddAsync(newSku);
+            await db.Value.Cards.AddAsync(newSku);
 
             theSku = newSku;
         }
@@ -319,7 +333,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             var rSku = sku.RemoveQuantity(model.Quantity);
             if (sku == rSku) // We removed entire quantity, then this sku needs to be removed
             {
-                _db.Cards.Remove(sku);
+                db.Value.Cards.Remove(sku);
             }
 
             theSku = mergeSku;
@@ -327,11 +341,12 @@ public class CollectionTrackingService : ICollectionTrackingService
             wasMerged = true;
         }
 
-        await _db.SaveChangesAsync();
-        _db.Entry(theSku).Reference(p => p.Container).Load();
-        _db.Entry(theSku).Reference(p => p.Deck).Load();
-        _db.Entry(theSku).Reference(p => p.Language).Load();
-        _db.Entry(theSku).Reference(p => p.Scryfall).Load();
+        await db.Value.SaveChangesAsync();
+        var ent = db.Value.Entry(theSku);
+        ent.Reference(p => p.Container).Load();
+        ent.Reference(p => p.Deck).Load();
+        ent.Reference(p => p.Language).Load();
+        ent.Reference(p => p.Scryfall).Load();
 
         return (CardSkuToModel(theSku), wasMerged);
     }
@@ -341,10 +356,11 @@ public class CollectionTrackingService : ICollectionTrackingService
         if (model.Quantity < 0)
             throw new ArgumentException("Quantity is less than zero");
 
-        var deck = await _db.Decks.Include(c => c.Container).FirstOrDefaultAsync(d => d.Id == model.DeckId);
+        using var db = _db.Invoke();
+        var deck = await db.Value.Decks.Include(c => c.Container).FirstOrDefaultAsync(d => d.Id == model.DeckId);
         if (deck == null)
             throw new Exception("Deck not found");
-        var sku = await _db.Cards.Include(c => c.Deck).FirstOrDefaultAsync(s => s.Id == model.CardSkuId);
+        var sku = await db.Value.Cards.Include(c => c.Deck).FirstOrDefaultAsync(s => s.Id == model.CardSkuId);
         if (sku == null)
             throw new Exception("Card sku not found");
 
@@ -366,10 +382,10 @@ public class CollectionTrackingService : ICollectionTrackingService
         newSku.Container = null; // Container (if any) is inferred by the container of the deck
         newSku.IsSideboard = model.IsSideboard;
 
-        await _db.SaveChangesAsync();
-
-        _db.Entry(newSku).Reference(p => p.Container).Load();
-        _db.Entry(newSku).Reference(p => p.Deck).Load();
+        await db.Value.SaveChangesAsync();
+        var ent = db.Value.Entry(newSku);
+        ent.Reference(p => p.Container).Load();
+        ent.Reference(p => p.Deck).Load();
 
         return CardSkuToModel(newSku);
     }
@@ -430,7 +446,8 @@ public class CollectionTrackingService : ICollectionTrackingService
 
     public IEnumerable<WishlistItemModel> GetWishlistItems()
     {
-        return _db.WishlistItems.Include(w => w.Scryfall)
+        using var db = _db.Invoke();
+        return db.Value.WishlistItems.Include(w => w.Scryfall)
             .Select(w => new WishlistItemModel
             {
                 CardName = w.CardName,
@@ -455,7 +472,7 @@ public class CollectionTrackingService : ICollectionTrackingService
                     Price = o.Price,
                     Notes = o.Notes
                 }).ToList()
-            });
+            }).ToList();
     }
 
     public async ValueTask<ICollection<WishlistItemModel>> AddMultipleToWishlistAsync(IEnumerable<AddToWishlistInputModel> items, IScryfallApiClient? scryfallClient)
@@ -472,18 +489,19 @@ public class CollectionTrackingService : ICollectionTrackingService
             Quantity = model.Quantity
         });
 
-        var resolver = new ScryfallMetadataResolver(_db, scryfallClient);
+        using var db = _db.Invoke();
+        var resolver = new ScryfallMetadataResolver(db.Value, scryfallClient);
 
         var witems = new List<WishlistItem>();
         var cancel = CancellationToken.None;
         foreach (var sku in cards)
         {
             await sku.ApplyScryfallMetadataAsync(resolver, false, cancel);
-            await _db.WishlistItems.AddAsync(sku);
+            await db.Value.WishlistItems.AddAsync(sku);
             witems.Add(sku);
         }
 
-        var res = await _db.SaveChangesAsync();
+        var res = await db.Value.SaveChangesAsync();
 
         System.Diagnostics.Debug.WriteLine($"SF stats (cache hits: {resolver.CacheHits}, api: {resolver.ScryfallApiCalls}, small img: {resolver.ScryfallSmallImageFetches})");
 
@@ -498,10 +516,11 @@ public class CollectionTrackingService : ICollectionTrackingService
     {
         Container? cnt = null;
         Deck? dck = null;
+        using var db = _db.Invoke();
         if (containerId.HasValue)
-            cnt = await _db.Containers.FindAsync(containerId.Value);
+            cnt = await db.Value.Containers.FindAsync(containerId.Value);
         if (deckId.HasValue)
-            dck = await _db.Decks.Include(d => d.Container).FirstOrDefaultAsync(d => d.Id == deckId.Value);
+            dck = await db.Value.Decks.Include(d => d.Container).FirstOrDefaultAsync(d => d.Id == deckId.Value);
 
         // Always take the deck's container
         if (dck != null)
@@ -524,18 +543,18 @@ public class CollectionTrackingService : ICollectionTrackingService
             Quantity = model.Quantity
         });
 
-        var resolver = new ScryfallMetadataResolver(_db, scryfallClient);
+        var resolver = new ScryfallMetadataResolver(db.Value, scryfallClient);
 
         var skus = new List<CardSku>();
         var cancel = CancellationToken.None;
         foreach (var sku in cards)
         {
             await sku.ApplyScryfallMetadataAsync(resolver, false, cancel);
-            await _db.Cards.AddAsync(sku);
+            await db.Value.Cards.AddAsync(sku);
             skus.Add(sku);
         }
 
-        var res = await _db.SaveChangesAsync();
+        var res = await db.Value.SaveChangesAsync();
 
         System.Diagnostics.Debug.WriteLine($"SF stats (cache hits: {resolver.CacheHits}, api: {resolver.ScryfallApiCalls}, small img: {resolver.ScryfallSmallImageFetches})");
 
@@ -558,28 +577,30 @@ public class CollectionTrackingService : ICollectionTrackingService
             LanguageId = model.Language,
             Quantity = model.Quantity
         };
+        using var db = _db.Invoke();
+        await db.Value.Cards.AddAsync(c);
+        await db.Value.SaveChangesAsync();
 
-        await _db.Cards.AddAsync(c);
-        await _db.SaveChangesAsync();
-
-        _db.Entry(c).Reference(p => p.Container).Load();
-        _db.Entry(c).Reference(p => p.Deck).Load();
+        var ent = db.Value.Entry(c);
+        ent.Reference(p => p.Container).Load();
+        ent.Reference(p => p.Deck).Load();
 
         return CardSkuToModel(c);
     }
 
     public async ValueTask<ContainerSummaryModel> CreateContainerAsync(string name, string? description)
     {
-        if (await _db.Containers.AnyAsync(c => c.Name == name))
+        using var db = _db.Invoke();
+        if (await db.Value.Containers.AnyAsync(c => c.Name == name))
         {
             throw new Exception($"A container with the name ({name}) already exists");
         }
 
         var c = new Container { Name = name, Description = description };
-        await _db.Containers.AddAsync(c);
-        await _db.SaveChangesAsync();
+        await db.Value.Containers.AddAsync(c);
+        await db.Value.SaveChangesAsync();
 
-        await _db.Entry(c).Collection(nameof(c.Cards)).LoadAsync();
+        await db.Value.Entry(c).Collection(nameof(c.Cards)).LoadAsync();
 
         return new ContainerSummaryModel
         {
@@ -592,22 +613,23 @@ public class CollectionTrackingService : ICollectionTrackingService
     public async ValueTask<DeckSummaryModel> CreateDeckAsync(string name, string? format, int? containerId)
     {
         Container? cnt = null;
+        using var db = _db.Invoke();
         if (containerId.HasValue)
         {
-            cnt = await _db.Containers.FindAsync(containerId);
+            cnt = await db.Value.Containers.FindAsync(containerId);
             if (cnt == null)
                 throw new Exception("No such container");
         }
-        if (await _db.Decks.AnyAsync(d => d.Name == name))
+        if (await db.Value.Decks.AnyAsync(d => d.Name == name))
         {
             throw new Exception($"A deck with the name ({name}) already exists");
         }
 
         var d = new Deck { Name = name, Format = format, Container = cnt };
-        await _db.Decks.AddAsync(d);
-        await _db.SaveChangesAsync();
+        await db.Value.Decks.AddAsync(d);
+        await db.Value.SaveChangesAsync();
 
-        await _db.Entry(d).Collection(nameof(d.Cards)).LoadAsync();
+        await db.Value.Entry(d).Collection(nameof(d.Cards)).LoadAsync();
 
         return new DeckSummaryModel
         {
@@ -643,7 +665,8 @@ public class CollectionTrackingService : ICollectionTrackingService
 
     public string PrintDeck(int deckId, bool reportProxyUsage)
     {
-        var deck = _db.Decks.Include(d => d.Cards).FirstOrDefault(d => d.Id == deckId);
+        using var db = _db.Invoke();
+        var deck = db.Value.Decks.Include(d => d.Cards).FirstOrDefault(d => d.Id == deckId);
         if (deck == null)
             throw new Exception("Deck not found");
 
@@ -728,12 +751,13 @@ public class CollectionTrackingService : ICollectionTrackingService
 
     public async ValueTask<CardSkuModel> DeleteCardSkuAsync(int skuId)
     {
-        var sku = await _db.Cards.FindAsync(skuId);
+        using var db = _db.Invoke();
+        var sku = await db.Value.Cards.FindAsync(skuId);
         if (sku == null)
             throw new Exception("Sku not found");
 
-        _db.Cards.Remove(sku);
-        await _db.SaveChangesAsync();
+        db.Value.Cards.Remove(sku);
+        await db.Value.SaveChangesAsync();
 
         return CardSkuToModel(sku);
     }
@@ -743,7 +767,8 @@ public class CollectionTrackingService : ICollectionTrackingService
         Deck? deck = null;
         Container? container = null;
 
-        deck = await _db
+        using var db = _db.Invoke();
+        deck = await db.Value
             .Decks
             .Include(d => d.Cards)
             .FirstOrDefaultAsync(d => d.Id == model.DeckId);
@@ -753,7 +778,7 @@ public class CollectionTrackingService : ICollectionTrackingService
 
         if (model.ContainerId.HasValue)
         {
-            container = await _db
+            container = await db.Value
                 .Containers
                 .Include(c => c.Cards)
                 .FirstOrDefaultAsync(cnt => cnt.Id == model.ContainerId.Value);
@@ -775,8 +800,8 @@ public class CollectionTrackingService : ICollectionTrackingService
             removed += cardSku.Quantity;
         }
 
-        _db.Decks.Remove(deck);
-        await _db.SaveChangesAsync();
+        db.Value.Decks.Remove(deck);
+        await db.Value.SaveChangesAsync();
 
         return new DismantleDeckResult
         {
@@ -787,7 +812,8 @@ public class CollectionTrackingService : ICollectionTrackingService
 
     public async ValueTask<DeleteContainerResult> DeleteContainerAsync(DeleteContainerInputModel model)
     {
-        var container = await _db.Containers
+        using var db = _db.Invoke();
+        var container = await db.Value.Containers
             .Include(c => c.Cards)
             .FirstOrDefaultAsync(c => c.Id == model.ContainerId);
 
@@ -800,8 +826,8 @@ public class CollectionTrackingService : ICollectionTrackingService
             sku.Container = null;
             unassigned++;
         }
-        _db.Containers.Remove(container);
-        await _db.SaveChangesAsync();
+        db.Value.Containers.Remove(container);
+        await db.Value.SaveChangesAsync();
 
         return new DeleteContainerResult
         {
@@ -811,7 +837,8 @@ public class CollectionTrackingService : ICollectionTrackingService
 
     public async Task<CardSkuModel> SplitCardSkuAsync(SplitCardSkuInputModel model)
     {
-        var sku = await _db
+        using var db = _db.Invoke();
+        var sku = await db.Value
             .Cards
             .Include(c => c.Container)
             .Include(c => c.Deck)
@@ -831,11 +858,12 @@ public class CollectionTrackingService : ICollectionTrackingService
         var newSku = sku.RemoveQuantity(model.Quantity);
         newSku.Container = sku.Container;
 
-        await _db.Cards.AddAsync(newSku);
-        await _db.SaveChangesAsync();
+        await db.Value.Cards.AddAsync(newSku);
+        await db.Value.SaveChangesAsync();
 
-        _db.Entry(newSku).Reference(p => p.Container).Load();
-        _db.Entry(newSku).Reference(p => p.Deck).Load();
+        var ent = db.Value.Entry(newSku);
+        ent.Reference(p => p.Container).Load();
+        ent.Reference(p => p.Deck).Load();
 
         return CardSkuToModel(newSku);
     }
@@ -845,10 +873,11 @@ public class CollectionTrackingService : ICollectionTrackingService
         if (model.Quantity.HasValue && model.Quantity <= 0)
             throw new Exception("Quantity cannot be 0");
 
-        var skus = _db.Cards.Where(c => model.Ids.Contains(c.Id));
+        using var db = _db.Invoke();
+        var skus = db.Value.Cards.Where(c => model.Ids.Contains(c.Id));
         ScryfallMetadataResolver? resolver = null;
         if (scryfallApiClient != null)
-            resolver = new ScryfallMetadataResolver(_db, scryfallApiClient);
+            resolver = new ScryfallMetadataResolver(db.Value, scryfallApiClient);
 
         foreach (var sku in skus)
         {
@@ -894,7 +923,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             }
         }
 
-        var res = await _db.SaveChangesAsync();
+        var res = await db.Value.SaveChangesAsync();
 
         return res;
     }
@@ -904,7 +933,8 @@ public class CollectionTrackingService : ICollectionTrackingService
 
     public async ValueTask<(int skusUpdated, int skusRemoved)> ConsolidateCardSkusAsync(ConsolidateCardSkusInputModel model)
     {
-        IQueryable<CardSku> cards = _db.Cards;
+        using var db = _db.Invoke();
+        IQueryable<CardSku> cards = db.Value.Cards;
         if (model.DeckId.HasValue || model.ContainerId.HasValue)
         {
             if (model.DeckId.HasValue)
@@ -939,13 +969,13 @@ public class CollectionTrackingService : ICollectionTrackingService
             {
                 targetSku.Quantity += sku.Quantity;
                 // Now remove the merge source
-                _db.Cards.Remove(sku);
+                db.Value.Cards.Remove(sku);
                 skusRemoved++;
             }
             skusUpdated++;
         }
 
-        await _db.SaveChangesAsync();
+        await db.Value.SaveChangesAsync();
 
         return (skusUpdated, skusRemoved);
     }
@@ -972,13 +1002,14 @@ public class CollectionTrackingService : ICollectionTrackingService
 
     public CollectionSummaryModel GetCollectionSummary()
     {
+        using var db = _db.Invoke();
         return new CollectionSummaryModel
         {
-            SkuTotal = _db.Cards.Count(),
-            ProxyTotal = _db.Cards.Where(sku => sku.Edition == "PROXY").Sum(sku => sku.Quantity),
-            CardTotal = _db.Cards.Sum(sku => sku.Quantity),
-            DeckTotal = _db.Decks.Count(),
-            ContainerTotal = _db.Containers.Count()
+            SkuTotal = db.Value.Cards.Count(),
+            ProxyTotal = db.Value.Cards.Where(sku => sku.Edition == "PROXY").Sum(sku => sku.Quantity),
+            CardTotal = db.Value.Cards.Sum(sku => sku.Quantity),
+            DeckTotal = db.Value.Decks.Count(),
+            ContainerTotal = db.Value.Containers.Count()
         };
     }
 
@@ -999,25 +1030,28 @@ public class CollectionTrackingService : ICollectionTrackingService
                 toRemove.Add(v.Id);
             }
         }
-        _db.Vendors.RemoveRange(_db.Vendors.Where(v => toRemove.Contains(v.Id)));
-        _db.Vendors.AddRange(toAdd);
-        await _db.SaveChangesAsync();
+        using var db = _db.Invoke();
+        db.Value.Vendors.RemoveRange(db.Value.Vendors.Where(v => toRemove.Contains(v.Id)));
+        db.Value.Vendors.AddRange(toAdd);
+        await db.Value.SaveChangesAsync();
         return (toAdd.Count, toRemove.Count);
     }
 
     public IEnumerable<VendorModel> GetVendors()
     {
-        return _db.Vendors.Select(v => new VendorModel { Id = v.Id, Name = v.Name });
+        using var db = _db.Invoke();
+        return db.Value.Vendors.Select(v => new VendorModel { Id = v.Id, Name = v.Name }).ToList();
     }
 
     public async ValueTask<WishlistItemModel> DeleteWishlistItemAsync(int id)
     {
-        var item = await _db.WishlistItems.FindAsync(id);
+        using var db = _db.Invoke();
+        var item = await db.Value.WishlistItems.FindAsync(id);
         if (item == null)
             throw new Exception("Wishlist item not found");
 
-        _db.WishlistItems.Remove(item);
-        await _db.SaveChangesAsync();
+        db.Value.WishlistItems.Remove(item);
+        await db.Value.SaveChangesAsync();
 
         return WishListItemToModel(item);
     }
@@ -1027,7 +1061,8 @@ public class CollectionTrackingService : ICollectionTrackingService
         if (model.Quantity.HasValue && model.Quantity <= 0)
             throw new Exception("Quantity cannot be 0");
 
-        var wi = await _db.WishlistItems
+        using var db = _db.Invoke();
+        var wi = await db.Value.WishlistItems
             .Include(w => w.Scryfall)
             .Include(w => w.OfferedPrices)
                 .ThenInclude(o => o.Vendor)
@@ -1037,7 +1072,7 @@ public class CollectionTrackingService : ICollectionTrackingService
 
         ScryfallMetadataResolver? resolver = null;
         if (scryfallApiClient != null)
-            resolver = new ScryfallMetadataResolver(_db, scryfallApiClient);
+            resolver = new ScryfallMetadataResolver(db.Value, scryfallApiClient);
 
         if (model.CardName != null)
             wi.CardName = model.CardName;
@@ -1084,10 +1119,11 @@ public class CollectionTrackingService : ICollectionTrackingService
             await wi.ApplyScryfallMetadataAsync(resolver, true, cancel);
         }
 
-        await _db.SaveChangesAsync();
+        await db.Value.SaveChangesAsync();
+
         foreach (var offer in wi.OfferedPrices)
         {
-            await _db.Entry(offer)
+            await db.Value.Entry(offer)
                 .Reference(nameof(VendorPrice.Vendor))
                 .LoadAsync();
         }
@@ -1097,7 +1133,8 @@ public class CollectionTrackingService : ICollectionTrackingService
 
     public WishlistSpendSummaryModel GetWishlistSpend()
     {
-        var items = _db.Set<WishlistItem>()
+        using var db = _db.Invoke();
+        var items = db.Value.Set<WishlistItem>()
             .Include(w => w.OfferedPrices)
                 .ThenInclude(p => p.Vendor)
             .Where(w => w.OfferedPrices.Count > 0);
@@ -1122,7 +1159,8 @@ public class CollectionTrackingService : ICollectionTrackingService
 
     public async ValueTask<DeckModel> GetDeckAsync(int deckId, IScryfallApiClient? scryfallApiClient, CancellationToken cancel)
     {
-        var deck = await _db.Set<Deck>()
+        using var db = _db.Invoke();
+        var deck = await db.Value.Set<Deck>()
             .Include(d => d.Cards)
                 .ThenInclude(c => c.Scryfall)
             .FirstOrDefaultAsync(d => d.Id == deckId);
@@ -1133,7 +1171,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         var mainDeck = new List<DeckCardModel>();
         var sideboard = new List<DeckCardModel>();
 
-        var resolver = new ScryfallMetadataResolver(_db, scryfallApiClient);
+        var resolver = new ScryfallMetadataResolver(db.Value, scryfallApiClient);
         bool bSaveChanges = false;
 
         foreach (var sku in deck.Cards)
@@ -1166,7 +1204,7 @@ public class CollectionTrackingService : ICollectionTrackingService
 
         if (bSaveChanges)
         {
-            await _db.SaveChangesAsync(cancel);
+            await db.Value.SaveChangesAsync(cancel);
         }
 
         return new DeckModel { Name = deck.Name, Id = deck.Id, MainDeck = mainDeck.ToArray(), Sideboard = sideboard.ToArray() };
@@ -1182,7 +1220,8 @@ public class CollectionTrackingService : ICollectionTrackingService
 
     public async ValueTask<MoveWishlistItemsToCollectionResult> MoveWishlistItemsToCollectionAsync(MoveWishlistItemsToCollectionInputModel model)
     {
-        var items = _db.Set<WishlistItem>()
+        using var db = _db.Invoke();
+        var items = db.Value.Set<WishlistItem>()
             .Include(wi => wi.Scryfall)
             .Where(wi => model.WishlistItemIds.Contains(wi.Id))
             .ToList();
@@ -1193,13 +1232,13 @@ public class CollectionTrackingService : ICollectionTrackingService
             converted.Add(new(item.Id, item.CreateSku(model.ContainerId)));
         }
 
-        _db.Set<WishlistItem>().RemoveRange(items);
-        await _db.Set<CardSku>().AddRangeAsync(converted.Select(c => c.sku));
-        await _db.SaveChangesAsync();
+        db.Value.Set<WishlistItem>().RemoveRange(items);
+        await db.Value.Set<CardSku>().AddRangeAsync(converted.Select(c => c.sku));
+        await db.Value.SaveChangesAsync();
 
         foreach (var added in converted)
         {
-            await _db.Entry(added.sku).Reference(nameof(CardSku.Scryfall)).LoadAsync();
+            await db.Value.Entry(added.sku).Reference(nameof(CardSku.Scryfall)).LoadAsync();
         }
 
         return new MoveWishlistItemsToCollectionResult { CreatedSkus = converted.Select(c => new WishlistItemMoveResult(c.id, CardSkuToModel(c.sku))).ToArray() };
@@ -1207,15 +1246,17 @@ public class CollectionTrackingService : ICollectionTrackingService
 
     public IEnumerable<NotesModel> GetNotes()
     {
-        return _db.Notes.Select(n => new NotesModel { Id = n.Id, Notes = n.Text, Title = n.Title });
+        using var db = _db.Invoke();
+        return db.Value.Notes.Select(n => new NotesModel { Id = n.Id, Notes = n.Text, Title = n.Title }).ToList();
     }
 
     public async ValueTask<NotesModel> UpdateNotesAsync(int? id, string? title, string notes)
     {
         Notes? n = null;
+        using var db = _db.Invoke();
         if (id.HasValue)
         {
-            n = await _db.Notes.FindAsync(id.Value);
+            n = await db.Value.Notes.FindAsync(id.Value);
             if (n == null)
                 throw new Exception("Notes not found");
             n.Title = title;
@@ -1224,9 +1265,9 @@ public class CollectionTrackingService : ICollectionTrackingService
         else 
         {
             n = new Notes() { Title = title, Text = notes };
-            await _db.Notes.AddAsync(n);
+            await db.Value.Notes.AddAsync(n);
         }
-        await _db.SaveChangesAsync();
+        await db.Value.SaveChangesAsync();
         return new NotesModel
         {
             Id = n.Id,
@@ -1237,18 +1278,20 @@ public class CollectionTrackingService : ICollectionTrackingService
 
     public async ValueTask<bool> DeleteNotesAsync(int id)
     {
-        var n = await _db.Notes.FindAsync(id);
+        using var db = _db.Invoke();
+        var n = await db.Value.Notes.FindAsync(id);
         if (n == null)
             return false;
-        _db.Notes.Remove(n);
-        await _db.SaveChangesAsync();
+        db.Value.Notes.Remove(n);
+        await db.Value.SaveChangesAsync();
         return true;
     }
 
     public async ValueTask<Dictionary<string, ScryfallResolvedCard>> ResolveEditionsForCardsAsync(IEnumerable<string> cardNames, IScryfallApiClient client)
     {
+        using var db = _db.Invoke();
         var resolved = new Dictionary<string, ScryfallResolvedCard>();
-        var sfMetaResolver = new ScryfallMetadataResolver(_db, client);
+        var sfMetaResolver = new ScryfallMetadataResolver(db.Value, client);
         var cancel = CancellationToken.None;
         bool bSave = false;
         foreach (var cardName in cardNames.Distinct())
@@ -1262,15 +1305,16 @@ public class CollectionTrackingService : ICollectionTrackingService
         }
         if (bSave)
         {
-            await _db.SaveChangesAsync(cancel);
+            await db.Value.SaveChangesAsync(cancel);
         }
         return resolved;
     }
 
     public WishlistBuyingListModel GenerateBuyingList()
     {
+        using var db = _db.Invoke();
         var ret = new WishlistBuyingListModel();
-        var wishlist = _db.Set<WishlistItem>()
+        var wishlist = db.Value.Set<WishlistItem>()
             .Include(w => w.OfferedPrices);
         foreach (var item in wishlist)
         {
