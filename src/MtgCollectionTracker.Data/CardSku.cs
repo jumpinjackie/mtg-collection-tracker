@@ -117,6 +117,8 @@ public class CardSku : IScryfallMetaLinkable
             Comments = this.Comments,
             Condition = this.Condition,
             
+            CollectorNumber = this.CollectorNumber,
+
             Container = this.Container,
             ContainerId = this.ContainerId,
             Deck = this.Deck,
