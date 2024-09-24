@@ -6,26 +6,40 @@
 	         xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
              x:Class="MtgCollectionTracker.Views.DeckCollectionView"
 			 x:DataType="vm:DeckCollectionViewModel">
-	<DockPanel>
-		<StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
-			<Button IsEnabled="{Binding !IsBusy}" Command="{Binding AddDeckCommand}" Content="Add New" HorizontalAlignment="Center" />
-			<Button IsEnabled="{Binding CanRunAgainstSelectedDeck}" Command="{Binding DismantleDeckCommand}" Content="Dismantle" HorizontalAlignment="Center" />
-			<Button IsEnabled="{Binding CanRunAgainstSelectedDeck}" Command="{Binding CanIBuildThisDeckCommand}" Content="Can I Build?" HorizontalAlignment="Center" />
-			<Button IsEnabled="{Binding CanRunAgainstSelectedDeck}" Command="{Binding ViewDeckContentsCommand}" Content="View Deck" HorizontalAlignment="Center" />
-			<Button IsEnabled="{Binding CanRunAgainstSelectedDeck}" Command="{Binding ViewDeckVisuallyCommand}" Content="View Deck 2" HorizontalAlignment="Center" />
-			<Button IsEnabled="{Binding CanRunAgainstSelectedDeck}" Command="{Binding CheckDeckLegalityCommand}" Content="Check Legality" HorizontalAlignment="Center" />
-			<Button IsEnabled="{Binding !IsBusy}" Command="{Binding RefreshDecksCommand}" Content="Refresh" HorizontalAlignment="Center" />
-			<TextBlock Margin="6" VerticalAlignment="Center" IsVisible="{Binding IsBusy}">Fetching missing images/metadata from Scryfall. Please wait ...</TextBlock>
-		</StackPanel>
-		<Panel>
-			<ListBox IsEnabled="{Binding !IsBusy}" IsVisible="{Binding Decks.Count}" ItemsSource="{Binding Decks}" SelectedItem="{Binding SelectedDeck}" Background="Transparent" Margin="0 20">
-				<ListBox.ItemsPanel>
-					<ItemsPanelTemplate>
-						<WrapPanel />
-					</ItemsPanelTemplate>
-				</ListBox.ItemsPanel>
-			</ListBox>
-			<TextBlock IsVisible="{Binding !Decks.Count}" VerticalAlignment="Center" HorizontalAlignment="Center" Text="You have no decks in your collection. Add one using the action below" />
-		</Panel>
-	</DockPanel>
+	<SplitView IsPaneOpen="True" DisplayMode="Inline" OpenPaneLength="200">
+		<SplitView.Pane>
+			<StackPanel Spacing="8">
+				<TextBlock FontSize="18">Format Filter</TextBlock>
+				<ListBox SelectionMode="Multiple" ItemsSource="{Binding Formats}" SelectedItems="{Binding SelectedFormats}">
+					<ListBox.ItemTemplate>
+						<DataTemplate>
+							<TextBlock Text="{Binding}"/>
+						</DataTemplate>
+					</ListBox.ItemTemplate>
+				</ListBox>
+				<Button Command="{Binding ResetFiltersCommand}">Reset Filters</Button>
+			</StackPanel>
+		</SplitView.Pane>
+		<DockPanel>
+			<StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
+				<Button IsEnabled="{Binding !IsBusy}" Command="{Binding AddDeckCommand}" Content="Add New" HorizontalAlignment="Center" />
+				<Button IsEnabled="{Binding CanRunAgainstSelectedDeck}" Command="{Binding DismantleDeckCommand}" Content="Dismantle" HorizontalAlignment="Center" />
+				<Button IsEnabled="{Binding CanRunAgainstSelectedDeck}" Command="{Binding ViewDeckContentsCommand}" Content="View Deck" HorizontalAlignment="Center" />
+				<Button IsEnabled="{Binding CanRunAgainstSelectedDeck}" Command="{Binding ViewDeckVisuallyCommand}" Content="View Deck 2" HorizontalAlignment="Center" />
+				<Button IsEnabled="{Binding CanRunAgainstSelectedDeck}" Command="{Binding CheckDeckLegalityCommand}" Content="Check Legality" HorizontalAlignment="Center" />
+				<Button IsEnabled="{Binding !IsBusy}" Command="{Binding RefreshDecksCommand}" Content="Refresh" HorizontalAlignment="Center" />
+				<TextBlock Margin="6" VerticalAlignment="Center" IsVisible="{Binding IsBusy}">Fetching missing images/metadata from Scryfall. Please wait ...</TextBlock>
+			</StackPanel>
+			<Panel>
+				<ListBox IsEnabled="{Binding !IsBusy}" IsVisible="{Binding Decks.Count}" ItemsSource="{Binding Decks}" SelectedItem="{Binding SelectedDeck}" Background="Transparent" Margin="0 20">
+					<ListBox.ItemsPanel>
+						<ItemsPanelTemplate>
+							<WrapPanel />
+						</ItemsPanelTemplate>
+					</ListBox.ItemsPanel>
+				</ListBox>
+				<TextBlock IsVisible="{Binding !Decks.Count}" VerticalAlignment="Center" HorizontalAlignment="Center" Text="You have no decks for your selected formats in your collection. Add one using the action below" />
+			</Panel>
+		</DockPanel>
+	</SplitView>
 </UserControl>

@@ -114,7 +114,7 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
-    public IEnumerable<DeckSummaryModel> GetDecks(string? format)
+    public IEnumerable<DeckSummaryModel> GetDecks(DeckFilterModel filter)
     {
         throw new System.NotImplementedException();
     }
@@ -190,6 +190,16 @@ public class StubCollectionTrackingService : ICollectionTrackingService
     }
 
     public ValueTask<WishlistItemModel> UpdateWishlistItemAsync(UpdateWishlistItemInputModel model, IScryfallApiClient? scryfallApiClient, CancellationToken cancel)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public IEnumerable<string> GetDeckFormats()
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public bool HasOtherDecksInFormat(string format)
     {
         throw new System.NotImplementedException();
     }

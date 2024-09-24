@@ -22,7 +22,7 @@ namespace MtgCollectionTracker.Core.Services
         ValueTask<CardSkuModel> GetCardSkuByIdAsync(int id, CancellationToken cancel);
         PaginatedCardSkuModel GetCardsForContainer(int containerId, FetchContainerPageModel options);
         IEnumerable<ContainerSummaryModel> GetContainers();
-        IEnumerable<DeckSummaryModel> GetDecks(string? format);
+        IEnumerable<DeckSummaryModel> GetDecks(DeckFilterModel filter);
         bool IsBasicLand(string cardName);
         string PrintDeck(int deckId, bool reportProxyUsage);
         ValueTask<(CardSkuModel sku, bool wasMerged)> RemoveFromDeckAsync(RemoveFromDeckInputModel model);
@@ -44,5 +44,7 @@ namespace MtgCollectionTracker.Core.Services
         ValueTask<bool> DeleteNotesAsync(int id);
         ValueTask<Dictionary<string, ScryfallResolvedCard>> ResolveEditionsForCardsAsync(IEnumerable<string> cardNames, IScryfallApiClient client);
         WishlistBuyingListModel GenerateBuyingList();
+        IEnumerable<string> GetDeckFormats();
+        bool HasOtherDecksInFormat(string format);
     }
 }

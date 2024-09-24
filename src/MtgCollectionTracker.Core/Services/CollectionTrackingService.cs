@@ -126,11 +126,11 @@ public class CollectionTrackingService : ICollectionTrackingService
             .ToList();
     }
 
-    public IEnumerable<DeckSummaryModel> GetDecks(string? format)
+    public IEnumerable<DeckSummaryModel> GetDecks(DeckFilterModel filter)
     {
-        Expression<Func<Deck, bool>> predicate = string.IsNullOrEmpty(format)
+        Expression<Func<Deck, bool>> predicate = !filter.Formats.Any()
             ? d => true
-            : d => d.Format == format;
+            : d => filter.Formats.Contains(d.Format);
         using var db = _db.Invoke();
         return db.Value
             .Decks
@@ -1325,5 +1325,17 @@ public class CollectionTrackingService : ICollectionTrackingService
             }
         }
         return ret;
+    }
+
+    public IEnumerable<string> GetDeckFormats()
+    {
+        using var db = _db.Invoke();
+        return db.Value.Decks.Where(d => d.Format != null).Select(d => d.Format).Distinct().ToList();
+    }
+
+    public bool HasOtherDecksInFormat(string format)
+    {
+        using var db = _db.Invoke();
+        return db.Value.Decks.Any(d => d.Format == format);
     }
 }

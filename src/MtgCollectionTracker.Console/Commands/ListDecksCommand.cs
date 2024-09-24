@@ -16,7 +16,7 @@ internal class ListDecksCommand : CommandBase
     {
         var service = serviceProvider.GetRequiredService<CollectionTrackingService>();
 
-        var decks = service.GetDecks(this.Format);
+        var decks = service.GetDecks(new () { Formats = string.IsNullOrEmpty(this.Format) ? [] : [this.Format] });
         var table = new ConsoleTable(
             nameof(DeckSummaryModel.Id),
             nameof(DeckSummaryModel.Name),

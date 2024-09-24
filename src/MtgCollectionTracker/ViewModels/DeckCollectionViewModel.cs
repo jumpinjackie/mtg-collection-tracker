@@ -26,6 +26,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
         base.ThrowIfNotDesignMode();
         _vmFactory = new StubViewModelFactory();
         _service = new StubCollectionTrackingService();
+        this.SelectedFormats.CollectionChanged += SelectedFormats_CollectionChanged;
         this.IsActive = true;
     }
 
@@ -35,6 +36,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
         _vmFactory = vmFactory;
         _service = service;
         _scryfallApiClient = scryfallApiClient;
+        this.SelectedFormats.CollectionChanged += SelectedFormats_CollectionChanged;
         this.IsActive = true;
     }
 
@@ -42,10 +44,40 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
     {
         if (!Avalonia.Controls.Design.IsDesignMode)
         {
-            this.RefreshDecks();
+            this.ResetFiltersCommand.Execute(null);
         }
         base.OnActivated();
     }
+
+    private bool _silentSelectedFormatsUpdate = false;
+
+    private void SelectedFormats_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        if (_silentSelectedFormatsUpdate)
+            return;
+
+        this.RefreshDecks();
+    }
+
+    [RelayCommand]
+    private void ResetFilters()
+    {
+        this.Formats.Clear();
+        this.SelectedFormats.Clear();
+
+        var formats = _service.GetDeckFormats();
+        foreach (var fmt in formats)
+        {
+            this.Formats.Add(fmt);
+            this.SelectedFormats.Add(fmt);
+        }
+
+        this.RefreshDecks();
+    }
+
+    public ObservableCollection<string> Formats { get; } = new();
+
+    public ObservableCollection<string> SelectedFormats { get; } = new();
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanRunAgainstSelectedDeck))]
@@ -84,7 +116,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
                     {
                         await _service.DismantleDeckAsync(new() { DeckId = this.SelectedDeck.DeckId });
                         this.Messenger.ToastNotify("Deck dismantled");
-                        this.Messenger.Send(new DeckDismantledMessage { Id = this.SelectedDeck.DeckId });
+                        this.Messenger.Send(new DeckDismantledMessage { Id = this.SelectedDeck.DeckId, Format = this.SelectedDeck.Format });
                     })
             });
         }
@@ -94,17 +126,11 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
     private void RefreshDecks()
     {
         this.Decks.Clear();
-        var decks = _service.GetDecks(null);
+        var decks = _service.GetDecks(new DeckFilterModel { Formats = this.SelectedFormats });
         foreach (var deck in decks)
         {
             this.Decks.Add(_vmFactory.Deck().WithData(deck));
         }
-    }
-
-    [RelayCommand]
-    private void CanIBuildThisDeck()
-    {
-
     }
 
     [RelayCommand]
@@ -147,6 +173,20 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
     void IRecipient<DeckCreatedMessage>.Receive(DeckCreatedMessage message)
     {
         this.Decks.Add(_vmFactory.Deck().WithData(message.Deck));
+
+        if (!string.IsNullOrEmpty(message.Deck.Format) && !this.Formats.Contains(message.Deck.Format))
+        {
+            this.Formats.Add(message.Deck.Format);
+            try
+            {
+                _silentSelectedFormatsUpdate = true;
+                this.SelectedFormats.Add(message.Deck.Format);
+            }
+            finally
+            {
+                _silentSelectedFormatsUpdate = false;
+            }
+        }
     }
 
     void IRecipient<DeckDismantledMessage>.Receive(DeckDismantledMessage message)
@@ -154,5 +194,20 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
         var item = this.Decks.FirstOrDefault(d => d.DeckId == message.Id);
         if (item != null)
             this.Decks.Remove(item);
+
+        // If this was the last deck in this format, remove format from filter list
+        if (!_service.HasOtherDecksInFormat(message.Format))
+        {
+            this.Formats.Remove(message.Format);
+            try
+            {
+                _silentSelectedFormatsUpdate = true;
+                this.SelectedFormats.Remove(message.Format);
+            }
+            finally
+            {
+                _silentSelectedFormatsUpdate = false;
+            }
+        }
     }
 }
