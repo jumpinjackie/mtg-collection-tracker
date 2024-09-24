@@ -3,7 +3,6 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
-			 xmlns:svc="clr-namespace:MtgCollectionTracker.Services"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="MtgCollectionTracker.Views.ContainerBrowseView"
 			 x:DataType="vm:ContainerBrowseViewModel">
@@ -12,9 +11,6 @@
          to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
 		<vm:ContainerBrowseViewModel />
 	</Design.DataContext>
-	<UserControl.Resources>
-		<svc:EnumToBooleanConverter x:Key="EnumToBoolConverter" />
-	</UserControl.Resources>
 	<DockPanel>
 		<StackPanel DockPanel.Dock="Top">
 			<Grid ColumnDefinitions="160, *, 160">

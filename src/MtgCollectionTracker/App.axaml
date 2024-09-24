@@ -2,10 +2,12 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              x:Class="MtgCollectionTracker.App"
 			 xmlns:local="using:MtgCollectionTracker"
+			 xmlns:svc="clr-namespace:MtgCollectionTracker.Services"
 			 xmlns:dialogHostAvalonia="clr-namespace:DialogHostAvalonia;assembly=DialogHost.Avalonia"
              RequestedThemeVariant="Dark">
 	<Application.Resources>
 		<ResourceDictionary>
+			<svc:EnumToBooleanConverter x:Key="EnumToBoolConverter" />
 			<ResourceDictionary.MergedDictionaries>
 				<ResourceInclude Source="/Assets/VectorIcons.axaml" />
 			</ResourceDictionary.MergedDictionaries>
