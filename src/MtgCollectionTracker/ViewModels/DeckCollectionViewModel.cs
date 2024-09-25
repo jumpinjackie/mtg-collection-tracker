@@ -167,7 +167,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
     [RelayCommand]
     private void CheckDeckLegality()
     {
-
+        Messenger.ToastNotify("Feature not implemented yet");
     }
 
     void IRecipient<DeckCreatedMessage>.Receive(DeckCreatedMessage message)

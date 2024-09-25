@@ -191,7 +191,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     [RelayCommand]
     private void ViewSelectedSku()
     {
-
+        Messenger.ToastNotify("Feature not implemented yet");
     }
 
     [RelayCommand]

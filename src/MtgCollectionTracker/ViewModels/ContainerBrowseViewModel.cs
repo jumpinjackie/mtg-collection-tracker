@@ -154,7 +154,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
     [RelayCommand]
     private void ViewSelectedSku()
     {
-
+        Messenger.ToastNotify("Feature not implemented yet");
     }
 
     [RelayCommand]
