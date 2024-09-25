@@ -75,11 +75,18 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
     private bool _hasResult = false;
 
     [ObservableProperty]
+    private bool _showShortDetails = false;
+
+    [ObservableProperty]
     private string _checkResultSummary = string.Empty;
 
     private readonly List<DeckListCardItem> _deckListCardItems = new();
 
     public ObservableCollection<DeckListCardItem> DeckListReportItems { get; } = new();
+
+    public ObservableCollection<string> FromDecks { get; } = new();
+
+    public ObservableCollection<string> FromContainers { get; } = new();
 
     [ObservableProperty]
     private bool _showShortOnly;
@@ -147,6 +154,7 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
 
         this.CheckResultSummary = string.Empty;
         _deckListCardItems.Clear();
+        this.HasShort = false;
         this.HasResult = false;
         this.ShowShortOnly = false;
 
@@ -185,7 +193,7 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
             }
             if (SparesOnly)
             {
-                text.AppendLine("You may be able to build this deck if you allow for cards already used in other decks");
+                text.AppendLine("You may be able to build this deck if you allow for cards already used in other decks. In this case, the unique list of decks to get these cards from are shown in the list above.");
             }
             text.Append("If your decklist contains split, adventure or double-faced cards, they may be marked missing if you did not specify the full name and do not already own at least one of the cards in your collection. In such cases, make sure to use the full name for both sides and use '//' instead of '/' as the separator");
         }
@@ -200,6 +208,13 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
     {
         // Update observable list
         this.DeckListReportItems.Clear();
+
+        this.FromContainers.Clear();
+        this.FromDecks.Clear();
+
+        var decks = new HashSet<string>();
+        var containers = new HashSet<string>();
+
         foreach (var card in _deckListCardItems)
         {
             if (this.ShowShortOnly) 
@@ -207,12 +222,26 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
                 if (card.Short > 0)
                 {
                     DeckListReportItems.Add(card);
+                    decks.UnionWith(card.FromDecks);
+                    containers.UnionWith(card.FromContainers);
                 }
             }
             else
             {
                 DeckListReportItems.Add(card);
+                decks.UnionWith(card.FromDecks);
+                containers.UnionWith(card.FromContainers);
             }
+        }
+
+        foreach (var d in decks.OrderBy(s => s))
+        {
+            this.FromDecks.Add(d);
+        }
+
+        foreach (var c in containers.OrderBy(s => s))
+        {
+            this.FromContainers.Add(c);
         }
     }
 }

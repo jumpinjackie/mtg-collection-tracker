@@ -54,6 +54,16 @@
 			</TextBlock>
 			<DockPanel IsVisible="{Binding HasResult}">
 				<StackPanel Margin="10" DockPanel.Dock="Bottom">
+					<Grid IsVisible="{Binding HasShort}" ColumnDefinitions="50*, 50*">
+						<StackPanel Grid.Column="0">
+							<TextBlock Margin="6" FontSize="14">From Decks</TextBlock>
+							<ListBox MaxHeight="180" ItemsSource="{Binding FromDecks}" />
+						</StackPanel>
+						<StackPanel Grid.Column="1">
+							<TextBlock Margin="6" FontSize="14">From Containers</TextBlock>
+							<ListBox MaxHeight="180" ItemsSource="{Binding FromContainers}" />
+						</StackPanel>
+					</Grid>
 					<TextBlock Text="{Binding CheckResultSummary}" Margin="10" TextWrapping="Wrap" />
 					<StackPanel IsVisible="{Binding HasShort}" Orientation="Horizontal" Spacing="10">
 						<Button Command="{Binding AddToWishlistCommand}">Add missing to Wishlist</Button>
