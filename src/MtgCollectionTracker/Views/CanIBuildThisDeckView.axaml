@@ -83,8 +83,22 @@
 						<DataGridTextColumn Header="Qty" Binding="{Binding Requested}"/>
 						<DataGridTextColumn Header="Card Name" Binding="{Binding CardName}"/>
 						<DataGridTextColumn Header="Short" Binding="{Binding ShortTxt}"/>
-						<DataGridTextColumn Header="From Decks" Binding="{Binding FromDecks}"/>
-						<DataGridTextColumn Header="From Containers" Binding="{Binding FromContainers}"/>
+						<DataGridTemplateColumn Header="From Decks">
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<!-- Margin/VerticalAlignment determied from inspecting the standard cell properties -->
+									<TextBlock Margin="12,0,12,0" VerticalAlignment="Center" Text="{Binding FromDecksShort}" ToolTip.Tip="{Binding FromDecksFull}" />
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+						<DataGridTemplateColumn Header="From Containers">
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<!-- Margin/VerticalAlignment determied from inspecting the standard cell properties -->
+									<TextBlock Margin="12,0,12,0" VerticalAlignment="Center" Text="{Binding FromContainersShort}" ToolTip.Tip="{Binding FromContainersFull}" />
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
 					</DataGrid.Columns>
 				</DataGrid>
 			</DockPanel>

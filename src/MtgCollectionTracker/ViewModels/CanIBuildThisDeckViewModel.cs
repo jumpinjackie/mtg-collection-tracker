@@ -15,11 +15,23 @@ using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public record DeckListCardItem(string CardName, int Requested, int Short, string FromDecks, string FromContainers)
+public record DeckListCardItem(string CardName, int Requested, int Short, HashSet<string> FromDecks, HashSet<string> FromContainers)
 {
     public bool IsShort => Short > 0;
 
     public string ShortTxt => Short > 0 ? Short.ToString() : string.Empty;
+
+    // Anything more than 2 items is impractical to display on a table cell, so just provide
+    // a count summary if that's the case
+    public string FromDecksShort => FromDecks.Count > 2 ? $"{FromDecks.Count} different decks" : string.Join(", ", FromDecks);
+
+    public string FromDecksFull => string.Join(Environment.NewLine, FromDecks);
+
+    // Anything more than 2 items is impractical to display on a table cell, so just provide
+    // a count summary if that's the case
+    public string FromContainersShort => FromContainers.Count > 2 ? $"{FromContainers.Count} different containers" : string.Join(", ", FromContainers);
+
+    public string FromContainersFull => string.Join(Environment.NewLine, FromContainers);
 }
 
 public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
@@ -148,14 +160,10 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
             if (shortAmt > 0)
                 this.HasShort = true;
 
-            // Anything more than 2 items is impractical to display on a table cell, so just provide
-            // a count summary if that's the case
-            var fromDecksStr = fromDecks.Count > 2 ? $"{fromDecks.Count} different decks" : string.Join(", ", fromDecks);
-            var fromContainersStr = fromContainers.Count > 2 ? $"{fromContainers.Count} different containers" : string.Join(", ", fromContainers);
             if (!string.IsNullOrEmpty(suggestedName))
-                _deckListCardItems.Add(new(suggestedName, card.Count, shortAmt, fromDecksStr, fromContainersStr));
+                _deckListCardItems.Add(new(suggestedName, card.Count, shortAmt, fromDecks, fromContainers));
             else
-                _deckListCardItems.Add(new(card.CardName, card.Count, shortAmt, fromDecksStr, fromContainersStr));
+                _deckListCardItems.Add(new(card.CardName, card.Count, shortAmt, fromDecks, fromContainers));
         }
 
         var text = new StringBuilder();
