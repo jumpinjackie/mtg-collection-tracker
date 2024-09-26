@@ -3,18 +3,35 @@ using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MtgCollectionTracker.Core;
 using MtgCollectionTracker.Core.Model;
+using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Data;
+using MtgCollectionTracker.Services.Stubs;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
 public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
 {
+    readonly ICollectionTrackingService _service;
+
+    public WishlistItemViewModel(ICollectionTrackingService service)
+    {
+        _service = service;
+    }
+
+    public WishlistItemViewModel()
+    {
+        _service = new StubCollectionTrackingService();
+    }
+
     public int Id { get; private set; }
+
+    public string? ScryfallId { get; private set; }
 
     [ObservableProperty]
     private string _cardName = "CARDNAME";
@@ -38,14 +55,59 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
     private string? _comments;
 
     [ObservableProperty]
-    private Bitmap? _cardImage;
+    private Task<Bitmap?> _cardImage;
 
 
-    private Bitmap? _frontFaceImage;
+    public Task<Bitmap?> FrontFaceImageSmall => GetSmallFrontFaceImageAsync();
 
-    //TODO: Figure out if it's possible to "flip" the front face image to its
-    //back face image. Right now this is unused
-    private Bitmap? _backFaceImage;
+    public Task<Bitmap?> BackFaceImageSmall => GetSmallBackFaceImageAsync();
+
+    private async Task<Bitmap?> GetSmallFrontFaceImageAsync()
+    {
+        if (this.ScryfallId != null)
+        {
+            using var stream = await _service.GetSmallFrontFaceImageAsync(this.ScryfallId);
+            return new Bitmap(stream);
+        }
+        return null;
+    }
+
+    private async Task<Bitmap?> GetSmallBackFaceImageAsync()
+    {
+        if (this.ScryfallId != null)
+        {
+            using var stream = await _service.GetSmallBackFaceImageAsync(this.ScryfallId);
+            return new Bitmap(stream);
+        }
+        return null;
+    }
+
+    [ObservableProperty]
+    private Task<Bitmap?> _cardImageLarge;
+
+    public Task<Bitmap?> FrontFaceImageLarge => GetLargeFrontFaceImageAsync();
+
+    public Task<Bitmap?> BackFaceImageLarge => GetLargeBackFaceImageAsync();
+
+    private async Task<Bitmap?> GetLargeFrontFaceImageAsync()
+    {
+        if (this.ScryfallId != null)
+        {
+            using var stream = await _service.GetLargeFrontFaceImageAsync(this.ScryfallId);
+            return new Bitmap(stream);
+        }
+        return null;
+    }
+
+    private async Task<Bitmap?> GetLargeBackFaceImageAsync()
+    {
+        if (this.ScryfallId != null)
+        {
+            using var stream = await _service.GetLargeBackFaceImageAsync(this.ScryfallId);
+            return new Bitmap(stream);
+        }
+        return null;
+    }
 
     [ObservableProperty]
     private bool _isFrontFace;
@@ -61,14 +123,16 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
 
     private void SwitchToFront()
     {
-        this.CardImage = _frontFaceImage;
+        this.CardImage = this.FrontFaceImageSmall;
+        this.CardImageLarge = this.FrontFaceImageLarge;
         this.IsFrontFace = true;
         this.SwitchLabel = "Switch to Back";
     }
 
     private void SwitchToBack()
     {
-        this.CardImage = _backFaceImage;
+        this.CardImage = this.BackFaceImageSmall;
+        this.CardImageLarge = this.BackFaceImageLarge;
         this.IsFrontFace = false;
         this.SwitchLabel = "Switch to Front";
     }
@@ -115,6 +179,7 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
     public WishlistItemViewModel WithData(WishlistItemModel item)
     {
         this.Id = item.Id;
+        this.ScryfallId = item.ScryfallId;
         this.IsDoubleFaced = item.IsDoubleFaced;
         this.CollectorNumber = item.CollectorNumber;
         this.OriginalCardName = item.CardName;
@@ -169,17 +234,6 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
             this.BestTotal = "$?";
             this.BestVendors = "none";
             this.VendorExplanation = null;
-        }
-
-        if (item.ImageSmall != null)
-        {
-            using var ms = new MemoryStream(item.ImageSmall);
-            _frontFaceImage = new Bitmap(ms);
-        }
-        if (item.BackImageSmall != null)
-        {
-            using var ms = new MemoryStream(item.BackImageSmall);
-            _backFaceImage = new Bitmap(ms);
         }
         this.SwitchToFront();
         return this;

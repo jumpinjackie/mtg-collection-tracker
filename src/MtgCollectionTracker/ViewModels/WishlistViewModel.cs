@@ -7,8 +7,10 @@ using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
+using ScryfallApi.Client;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
@@ -17,6 +19,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
 {
     readonly IViewModelFactory _vmFactory;
     readonly ICollectionTrackingService _service;
+    readonly IScryfallApiClient? _scryfallApiClient;
 
     public WishlistViewModel()
     {
@@ -27,10 +30,11 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
         this.IsActive = true;
     }
 
-    public WishlistViewModel(IViewModelFactory vmFactory, ICollectionTrackingService service)
+    public WishlistViewModel(IViewModelFactory vmFactory, ICollectionTrackingService service, IScryfallApiClient scryfallApiClient)
     {
         _vmFactory = vmFactory;
         _service = service;
+        _scryfallApiClient = scryfallApiClient;
         this.Behavior = new(this);
         this.IsActive = true;
     }
@@ -162,6 +166,40 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
         });
     }
 
+    [RelayCommand]
+    private async Task UpdateMetadata()
+    {
+        if (Behavior.SelectedItems.Count > 0)
+        {
+            using (((IViewModelWithBusyState)this).StartBusyState())
+            {
+                int updated = 0;
+                var ids = Behavior.SelectedItems.Select(c => c.Id).ToList();
+                var callback = new UpdateCardMetadataProgressCallback
+                {
+                    OnProgress = (processed, total) =>
+                    {
+                        Messenger.ToastNotify($"Updated metadata for {processed} of {total} wishlist item(s)");
+                    }
+                };
+                var updatedWishlist = await _service.UpdateWishlistMetadataAsync(ids, _scryfallApiClient, callback, CancellationToken.None);
+                foreach (var w in updatedWishlist)
+                {
+                    var wishM = this.Cards.FirstOrDefault(c => c.Id == w.Id);
+                    if (wishM != null)
+                    {
+                        wishM.WithData(w);
+                        updated++;
+                    }
+                }
+                if (updated > 0)
+                {
+                    Messenger.ToastNotify($"Metadata updated for {updated} wishlist item(s)");
+                }
+            }
+        }
+    }
+
     void IRecipient<CardsAddedToWishlistMessage>.Receive(CardsAddedToWishlistMessage message)
     {
         foreach (var item in message.Added)
@@ -183,6 +221,6 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
 
     void IMultiModeCardListBehaviorHost.HandleBusyChanged(bool oldValue, bool newValue)
     {
-        throw new System.NotImplementedException();
+        
     }
 }

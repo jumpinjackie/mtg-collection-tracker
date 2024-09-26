@@ -2,6 +2,7 @@
 using MtgCollectionTracker.Core.Services;
 using ScryfallApi.Client;
 using System.Collections.Generic;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -174,7 +175,7 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<IEnumerable<CardSkuModel>> UpdateCardMetadataAsync(IEnumerable<int> ids, IScryfallApiClient scryfallApiClient, CancellationToken cancel)
+    public ValueTask<IEnumerable<CardSkuModel>> UpdateCardMetadataAsync(ICollection<int> ids, IScryfallApiClient scryfallApiClient, UpdateCardMetadataProgressCallback? callback, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
@@ -200,6 +201,31 @@ public class StubCollectionTrackingService : ICollectionTrackingService
     }
 
     public bool HasOtherDecksInFormat(string format)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public ValueTask<Stream?> GetLargeFrontFaceImageAsync(string scryfallId)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public ValueTask<Stream?> GetLargeBackFaceImageAsync(string scryfallId)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public ValueTask<Stream?> GetSmallFrontFaceImageAsync(string scryfallId)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public ValueTask<Stream?> GetSmallBackFaceImageAsync(string scryfallId)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public ValueTask<IEnumerable<WishlistItemModel>> UpdateWishlistMetadataAsync(ICollection<int> ids, IScryfallApiClient scryfallApiClient, UpdateCardMetadataProgressCallback? callback, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }

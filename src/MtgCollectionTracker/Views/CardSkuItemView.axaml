@@ -16,7 +16,7 @@
 			<Canvas Width="200" Height="280">
 				<Panel Canvas.Left="0" Canvas.Top="0" Canvas.Bottom="0" Canvas.Right="0" Background="#7FFF22DD">
 					<!-- TODO: If this is even possible, do a flip animation for double-faced cards -->
-					<Image Width="200" Stretch="Uniform" Source="{Binding CardImage}" />
+					<Image Width="200" Stretch="Uniform" Source="{Binding CardImage^}" />
 					<Panel Height="280" IsVisible="{Binding CardImage, Converter={x:Static ObjectConverters.IsNull}}">
 						<PathIcon Height="75" Width="75" Data="{StaticResource card}" />
 					</Panel>

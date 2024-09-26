@@ -197,7 +197,7 @@ internal class ScryfallMetadataResolver
                 if (sfMeta.ImageSmall == null)
                 {
                     byte[]? imageSmall = null;
-                    var smallUri = sfCardMeta.GetFrontFaceImageUri("small");
+                    var smallUri = sfCardMeta.GetFrontFaceImageUri(IMG_SIZE_SMALL);
                     if (smallUri != null)
                     {
                         try
@@ -211,10 +211,10 @@ internal class ScryfallMetadataResolver
                 }
 
                 // Small card image (back face)
-                if (sfMeta.BackImageSmall == null )
+                if (sfMeta.BackImageSmall == null)
                 {
                     byte[]? imageSmall = null;
-                    var smallUri = sfCardMeta.GetBackFaceImageUri("small");
+                    var smallUri = sfCardMeta.GetBackFaceImageUri(IMG_SIZE_LARGE);
                     if (smallUri != null)
                     {
                         try
@@ -227,12 +227,49 @@ internal class ScryfallMetadataResolver
                     }
                 }
 
+                // Large card image (front face)
+                if (sfMeta.ImageLarge == null)
+                {
+                    byte[]? imageLarge = null;
+                    var smallUri = sfCardMeta.GetFrontFaceImageUri(IMG_SIZE_LARGE);
+                    if (smallUri != null)
+                    {
+                        try
+                        {
+                            imageLarge = await _http.GetByteArrayAsync(smallUri, cancel);
+                            sfMeta.ImageLarge = imageLarge;
+                            this.ScryfallSmallImageFetches++;
+                        }
+                        catch { }
+                    }
+                }
+
+                // Large card image (back face)
+                if (sfMeta.BackImageLarge == null)
+                {
+                    byte[]? imageLarge = null;
+                    var smallUri = sfCardMeta.GetBackFaceImageUri(IMG_SIZE_LARGE);
+                    if (smallUri != null)
+                    {
+                        try
+                        {
+                            imageLarge = await _http.GetByteArrayAsync(smallUri, cancel);
+                            sfMeta.BackImageLarge = imageLarge;
+                            this.ScryfallSmallImageFetches++;
+                        }
+                        catch { }
+                    }
+                }
+
                 _dict.Add(key, sfMeta);
             }
         }
 
         return sfMeta;
     }
+
+    const string IMG_SIZE_SMALL = "small";
+    const string IMG_SIZE_LARGE = "large";
 
     static string ParseType(string typeLine)
     {

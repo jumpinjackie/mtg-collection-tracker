@@ -57,7 +57,7 @@
 					</ListBox.ItemsPanel>
 				</ListBox>
 				<!-- TODO: Same templatization to avoid XAML duplication -->
-				<SplitView IsPaneOpen="True" PanePlacement="Right">
+				<SplitView IsPaneOpen="True" PanePlacement="Right" OpenPaneLength="400">
 					<SplitView.IsVisible>
 						<MultiBinding Converter="{x:Static BoolConverters.And}">
 							<Binding Path="ShowSearchResults" />
@@ -72,11 +72,11 @@
 						I'm just not expert enough yet
 						-->
 						<StackPanel IsVisible="{Binding Behavior.HasSelectedCardSku}" VerticalAlignment="Center" HorizontalAlignment="Center">
-							<Canvas Width="200" Height="280">
+							<Canvas Width="400" Height="560">
 								<Panel Canvas.Left="0" Canvas.Top="0" Canvas.Bottom="0" Canvas.Right="0" Background="#7FFF22DD">
 									<!-- TODO: If this is even possible, do a flip animation for double-faced cards -->
-									<Image Width="200" Stretch="Uniform" Source="{Binding Behavior.SelectedItems[0].CardImage}" />
-									<Panel Height="280" IsVisible="{Binding Behavior.SelectedItems[0].CardImage, Converter={x:Static ObjectConverters.IsNull}}">
+									<Image Width="400" Stretch="Uniform" Source="{Binding Behavior.SelectedItems[0].CardImageLarge^}" />
+									<Panel Height="560" IsVisible="{Binding Behavior.SelectedItems[0].CardImageLarge, Converter={x:Static ObjectConverters.IsNull}}">
 										<PathIcon Height="75" Width="75" Data="{StaticResource card}" />
 									</Panel>
 								</Panel>

@@ -21,6 +21,8 @@ public class WishlistItemModel
 {
     public int Id { get; set; }
 
+    public string? ScryfallId { get; set; }
+
     public int Quantity { get; set; }
 
     public required string CardName { get; set; }
@@ -38,10 +40,6 @@ public class WishlistItemModel
     public bool IsLand { get; set; }
 
     public bool IsDoubleFaced { get; set; }
-
-    public byte[]? ImageSmall { get; set; }
-
-    public byte[]? BackImageSmall { get; set; }
 
     public required List<VendorOfferModel> Offers { get; set; }
 }

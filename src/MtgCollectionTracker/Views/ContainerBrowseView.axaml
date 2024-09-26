@@ -46,7 +46,7 @@
 						</ItemsPanelTemplate>
 					</ListBox.ItemsPanel>
 				</ListBox>
-				<SplitView IsPaneOpen="True" PanePlacement="Right" IsVisible="{Binding Behavior.IsTableMode}">
+				<SplitView IsPaneOpen="True" PanePlacement="Right" IsVisible="{Binding Behavior.IsTableMode}" OpenPaneLength="400">
 					<SplitView.Pane>
 						<!-- 
 						TODO: I'm sure there's a way to templatize this content to avoid current
@@ -55,11 +55,11 @@
 						I'm just not expert enough yet
 						-->
 						<StackPanel IsVisible="{Binding Behavior.HasSelectedCardSku}" VerticalAlignment="Center" HorizontalAlignment="Center">
-							<Canvas Width="200" Height="280">
+							<Canvas Width="400" Height="560">
 								<Panel Canvas.Left="0" Canvas.Top="0" Canvas.Bottom="0" Canvas.Right="0" Background="#7FFF22DD">
 									<!-- TODO: If this is even possible, do a flip animation for double-faced cards -->
-									<Image Width="200" Stretch="Uniform" Source="{Binding Behavior.SelectedItems[0].CardImage}" />
-									<Panel Height="280" IsVisible="{Binding Behavior.SelectedItems[0].CardImage, Converter={x:Static ObjectConverters.IsNull}}">
+									<Image Width="400" Stretch="Uniform" Source="{Binding Behavior.SelectedItems[0].CardImageLarge^}" />
+									<Panel Height="560" IsVisible="{Binding Behavior.SelectedItems[0].CardImageLarge, Converter={x:Static ObjectConverters.IsNull}}">
 										<PathIcon Height="75" Width="75" Data="{StaticResource card}" />
 									</Panel>
 								</Panel>

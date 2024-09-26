@@ -178,8 +178,15 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
             using (((IViewModelWithBusyState)this).StartBusyState())
             {
                 int updated = 0;
-                var ids = Behavior.SelectedItems.Select(c => c.Id);
-                var updatedSkus = await _service.UpdateCardMetadataAsync(ids, _scryfallApiClient, CancellationToken.None);
+                var ids = Behavior.SelectedItems.Select(c => c.Id).ToList();
+                var callback = new UpdateCardMetadataProgressCallback
+                {
+                    OnProgress = (processed, total) =>
+                    {
+                        Messenger.ToastNotify($"Updated metadata for {processed} of {total} sku(s)");
+                    }
+                };
+                var updatedSkus = await _service.UpdateCardMetadataAsync(ids, _scryfallApiClient, callback, CancellationToken.None);
                 foreach (var sku in updatedSkus)
                 {
                     var skuM = this.SearchResults.FirstOrDefault(c => c.Id == sku.Id);

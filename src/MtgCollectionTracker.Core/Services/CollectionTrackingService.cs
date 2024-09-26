@@ -126,9 +126,9 @@ public class CollectionTrackingService : ICollectionTrackingService
             .ToList();
     }
 
-    public IEnumerable<DeckSummaryModel> GetDecks(DeckFilterModel filter)
+    public IEnumerable<DeckSummaryModel> GetDecks(DeckFilterModel? filter)
     {
-        Expression<Func<Deck, bool>> predicate = !filter.Formats.Any()
+        Expression<Func<Deck, bool>> predicate = (filter == null || !filter.Formats.Any())
             ? d => true
             : d => filter.Formats.Contains(d.Format);
         using var db = _db.Invoke();
@@ -219,8 +219,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             Language = c.Language != null ? c.Language.Code : "en",
             CollectorNumber = c.CollectorNumber,
             Quantity = c.Quantity,
-            ImageSmall = c.Scryfall!.ImageSmall,
-            BackImageSmall = c.Scryfall!.BackImageSmall,
+            ScryfallId = c.ScryfallId,
             // A double-faced card has back-face image, but if we haven't loaded SF metadata
             // for this card yet, then a DFC should have '//' in its card name
             IsDoubleFaced = c.Scryfall != null
@@ -259,10 +258,41 @@ public class CollectionTrackingService : ICollectionTrackingService
         };
     }
 
-    public async ValueTask<IEnumerable<CardSkuModel>> UpdateCardMetadataAsync(IEnumerable<int> ids, IScryfallApiClient scryfallApiClient, CancellationToken cancel)
+    public async ValueTask<IEnumerable<WishlistItemModel>> UpdateWishlistMetadataAsync(ICollection<int> ids, IScryfallApiClient scryfallApiClient, UpdateCardMetadataProgressCallback? callback, CancellationToken cancel)
     {
         using var db = _db.Invoke();
-        var cards = new List<CardSkuModel>();
+        var cards = new List<WishlistItemModel>(ids.Count);
+        var wishlist = db.Value.WishlistItems
+            .Include(c => c.Scryfall)
+            .Include(c => c.Language)
+            .Where(c => ids.Contains(c.Id));
+
+        var resolver = new ScryfallMetadataResolver(db.Value, scryfallApiClient);
+        foreach (var w in wishlist)
+        {
+            await w.ApplyScryfallMetadataAsync(resolver, true, cancel);
+            cards.Add(WishListItemToModel(w));
+
+            if (callback != null)
+            {
+                if (cards.Count % callback.ReportFrequency == 0)
+                {
+                    callback.OnProgress?.Invoke(cards.Count, ids.Count);
+                }
+            }
+        }
+
+        await db.Value.SaveChangesAsync(cancel);
+
+        System.Diagnostics.Debug.WriteLine($"SF stats (cache hits: {resolver.CacheHits}, api: {resolver.ScryfallApiCalls}, small img: {resolver.ScryfallSmallImageFetches})");
+
+        return cards;
+    }
+
+    public async ValueTask<IEnumerable<CardSkuModel>> UpdateCardMetadataAsync(ICollection<int> ids, IScryfallApiClient scryfallApiClient, UpdateCardMetadataProgressCallback? callback, CancellationToken cancel)
+    {
+        using var db = _db.Invoke();
+        var cards = new List<CardSkuModel>(ids.Count);
         var skus = db.Value.Cards
             .Include(c => c.Scryfall)
             .Include(c => c.Deck)
@@ -275,6 +305,14 @@ public class CollectionTrackingService : ICollectionTrackingService
         {
             await c.ApplyScryfallMetadataAsync(resolver, true, cancel);
             cards.Add(CardSkuToModel(c));
+
+            if (callback != null)
+            {
+                if (cards.Count % callback.ReportFrequency == 0)
+                {
+                    callback.OnProgress?.Invoke(cards.Count, ids.Count);
+                }
+            }
         }
 
         await db.Value.SaveChangesAsync(cancel);
@@ -403,8 +441,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             Language = w.Language?.Code ?? "en",
             CollectorNumber = w.CollectorNumber,
             Quantity = w.Quantity,
-            ImageSmall = w.Scryfall?.ImageSmall,
-            BackImageSmall = w.Scryfall?.BackImageSmall,
+            ScryfallId = w.ScryfallId,
             // A double-faced card has back-face image, but if we haven't loaded SF metadata
             // for this card yet, then a DFC should have '//' in its card name
             IsDoubleFaced = w.Scryfall?.BackImageSmall != null || w.CardName.Contains(" // "),
@@ -436,8 +473,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             Language = c.Language?.Code ?? "en",
             CollectorNumber = c.CollectorNumber,
             Quantity = c.Quantity,
-            ImageSmall = c.Scryfall?.ImageSmall,
-            BackImageSmall = c.Scryfall?.BackImageSmall,
+            ScryfallId = c.ScryfallId,
             // A double-faced card has back-face image, but if we haven't loaded SF metadata
             // for this card yet, then a DFC should have '//' in its card name
             IsDoubleFaced = c.Scryfall?.BackImageSmall != null || c.CardName.Contains(" // ")
@@ -459,8 +495,7 @@ public class CollectionTrackingService : ICollectionTrackingService
                 Language = w.Language!.Code ?? "en",
                 CollectorNumber = w.CollectorNumber,
                 Quantity = w.Quantity,
-                ImageSmall = w.Scryfall!.ImageSmall,
-                BackImageSmall = w.Scryfall!.BackImageSmall,
+                ScryfallId = w.ScryfallId,
                 // A double-faced card has back-face image, but if we haven't loaded SF metadata
                 // for this card yet, then a DFC should have '//' in its card name
                 IsDoubleFaced = w.Scryfall!.BackImageSmall != null || w.CardName.Contains(" // "),
@@ -1337,5 +1372,40 @@ public class CollectionTrackingService : ICollectionTrackingService
     {
         using var db = _db.Invoke();
         return db.Value.Decks.Any(d => d.Format == format);
+    }
+
+    private async ValueTask<Stream?> GetCardFaceImageAsync(string scryfallId, string tag, Expression<Func<ScryfallCardMetadata, byte[]?>> selector)
+    {
+        using var db = _db.Invoke();
+        var imgBytes = await db.Value.Set<ScryfallCardMetadata>()
+            .Where(m => m.Id == scryfallId)
+            .Select(selector)
+            .FirstOrDefaultAsync();
+        if (imgBytes != null)
+        {
+            var stream = MemoryStreamPool.GetStream(tag, imgBytes);
+            return stream;
+        }
+        return null;
+    }
+
+    public async ValueTask<Stream?> GetLargeFrontFaceImageAsync(string scryfallId)
+    {
+        return await GetCardFaceImageAsync(scryfallId, "img_front_face_large", m => m.ImageLarge);
+    }
+
+    public async ValueTask<Stream?> GetLargeBackFaceImageAsync(string scryfallId)
+    {
+        return await GetCardFaceImageAsync(scryfallId, "img_back_face_large", m => m.BackImageLarge);
+    }
+
+    public async ValueTask<Stream?> GetSmallFrontFaceImageAsync(string scryfallId)
+    {
+        return await GetCardFaceImageAsync(scryfallId, "img_front_face_small", m => m.ImageSmall);
+    }
+
+    public async ValueTask<Stream?> GetSmallBackFaceImageAsync(string scryfallId)
+    {
+        return await GetCardFaceImageAsync(scryfallId, "img_back_face_small", m => m.BackImageSmall);
     }
 }

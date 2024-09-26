@@ -3,6 +3,13 @@ using ScryfallApi.Client;
 
 namespace MtgCollectionTracker.Core.Services
 {
+    public class UpdateCardMetadataProgressCallback
+    {
+        public int ReportFrequency { get; set; } = 10;
+
+        public Action<int, int>? OnProgress { get; set; }
+    }
+
     public record CheckQuantityResult(int ShortAmount, HashSet<string> FromDeckNames, HashSet<string> FromContainerNames, string? SuggestedName);
 
     public interface ICollectionTrackingService
@@ -17,12 +24,13 @@ namespace MtgCollectionTracker.Core.Services
         ValueTask<DeckSummaryModel> CreateDeckAsync(string name, string? format, int? containerId);
         ValueTask<CardSkuModel> DeleteCardSkuAsync(int skuId);
         ValueTask<DismantleDeckResult> DismantleDeckAsync(DismantleDeckInputModel model);
-        ValueTask<IEnumerable<CardSkuModel>> UpdateCardMetadataAsync(IEnumerable<int> ids, IScryfallApiClient scryfallApiClient, CancellationToken cancel);
+        ValueTask<IEnumerable<CardSkuModel>> UpdateCardMetadataAsync(ICollection<int> ids, IScryfallApiClient scryfallApiClient, UpdateCardMetadataProgressCallback? callback, CancellationToken cancel);
+        ValueTask<IEnumerable<WishlistItemModel>> UpdateWishlistMetadataAsync(ICollection<int> ids, IScryfallApiClient scryfallApiClient, UpdateCardMetadataProgressCallback? callback, CancellationToken cancel);
         IEnumerable<CardSkuModel> GetCards(CardQueryModel query);
         ValueTask<CardSkuModel> GetCardSkuByIdAsync(int id, CancellationToken cancel);
         PaginatedCardSkuModel GetCardsForContainer(int containerId, FetchContainerPageModel options);
         IEnumerable<ContainerSummaryModel> GetContainers();
-        IEnumerable<DeckSummaryModel> GetDecks(DeckFilterModel filter);
+        IEnumerable<DeckSummaryModel> GetDecks(DeckFilterModel? filter);
         bool IsBasicLand(string cardName);
         string PrintDeck(int deckId, bool reportProxyUsage);
         ValueTask<(CardSkuModel sku, bool wasMerged)> RemoveFromDeckAsync(RemoveFromDeckInputModel model);
@@ -46,5 +54,9 @@ namespace MtgCollectionTracker.Core.Services
         WishlistBuyingListModel GenerateBuyingList();
         IEnumerable<string> GetDeckFormats();
         bool HasOtherDecksInFormat(string format);
+        ValueTask<Stream?> GetLargeFrontFaceImageAsync(string scryfallId);
+        ValueTask<Stream?> GetLargeBackFaceImageAsync(string scryfallId);
+        ValueTask<Stream?> GetSmallFrontFaceImageAsync(string scryfallId);
+        ValueTask<Stream?> GetSmallBackFaceImageAsync(string scryfallId);
     }
 }

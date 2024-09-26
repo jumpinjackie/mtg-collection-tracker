@@ -6,6 +6,8 @@ public class CardSkuModel
 {
     public int Id { get; set; }
 
+    public string? ScryfallId { get; set; }
+
     public int Quantity { get; set; }
 
     public required string CardName { get; set; }
@@ -31,10 +33,6 @@ public class CardSkuModel
     public bool IsLand { get; set; }
 
     public bool IsDoubleFaced { get; set; }
-
-    public byte[]? ImageSmall { get; set; }
-
-    public byte[]? BackImageSmall { get; set; }
 
     public string GetDescription(bool withId = true) => withId
         ? $"({Quantity}x {CardName}, {Edition}, id: {Id})"

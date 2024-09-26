@@ -2,8 +2,11 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using MtgCollectionTracker.Core.Model;
+using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Data;
+using MtgCollectionTracker.Services.Stubs;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
@@ -15,7 +18,21 @@ public enum CardItemViewMode
 
 public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem
 {
+    readonly ICollectionTrackingService _service;
+
+    public CardSkuItemViewModel(ICollectionTrackingService service)
+    {
+        _service = service;
+    }
+
+    public CardSkuItemViewModel()
+    {
+        _service = new StubCollectionTrackingService();
+    }
+
     public int Id { get; private set; }
+
+    public string? ScryfallId { get; private set; }
 
     [ObservableProperty]
     private string _cardName = "CARDNAME";
@@ -36,14 +53,31 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem
     private string? _comments;
 
     [ObservableProperty]
-    private Bitmap? _cardImage;
+    private Task<Bitmap?> _cardImage;
 
-    
-    private Bitmap? _frontFaceImage;
+    public Task<Bitmap?> FrontFaceImageSmall => GetSmallFrontFaceImageAsync();
 
-    //TODO: Figure out if it's possible to "flip" the front face image to its
-    //back face image. Right now this is unused
-    private Bitmap? _backFaceImage;
+    public Task<Bitmap?> BackFaceImageSmall => GetSmallBackFaceImageAsync();
+
+    private async Task<Bitmap?> GetSmallFrontFaceImageAsync()
+    {
+        if (this.ScryfallId != null)
+        {
+            using var stream = await _service.GetSmallFrontFaceImageAsync(this.ScryfallId);
+            return new Bitmap(stream);
+        }
+        return null;
+    }
+
+    private async Task<Bitmap?> GetSmallBackFaceImageAsync()
+    {
+        if (this.ScryfallId != null)
+        {
+            using var stream = await _service.GetSmallBackFaceImageAsync(this.ScryfallId);
+            return new Bitmap(stream);
+        }
+        return null;
+    }
 
     [ObservableProperty]
     private string? _containerName;
@@ -68,14 +102,16 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem
 
     private void SwitchToFront()
     {
-        this.CardImage = _frontFaceImage;
+        this.CardImage = this.FrontFaceImageSmall;
+        this.CardImageLarge = this.FrontFaceImageLarge;
         this.IsFrontFace = true;
         this.SwitchLabel = "Switch to Back";
     }
 
     private void SwitchToBack()
     {
-        this.CardImage = _backFaceImage;
+        this.CardImage = this.BackFaceImageSmall;
+        this.CardImageLarge = this.BackFaceImageLarge;
         this.IsFrontFace = false;
         this.SwitchLabel = "Switch to Front";
     }
@@ -106,9 +142,37 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem
     public int ProxyQty { get; private set; }
     public int RealQty { get; private set; }
 
+    [ObservableProperty]
+    private Task<Bitmap?> _cardImageLarge;
+
+    public Task<Bitmap?> FrontFaceImageLarge => GetLargeFrontFaceImageAsync();
+
+    public Task<Bitmap?> BackFaceImageLarge => GetLargeBackFaceImageAsync();
+
+    private async Task<Bitmap?> GetLargeFrontFaceImageAsync()
+    {
+        if (this.ScryfallId != null)
+        {
+            using var stream = await _service.GetLargeFrontFaceImageAsync(this.ScryfallId);
+            return new Bitmap(stream);
+        }
+        return null;
+    }
+
+    private async Task<Bitmap?> GetLargeBackFaceImageAsync()
+    {
+        if (this.ScryfallId != null)
+        {
+            using var stream = await _service.GetLargeBackFaceImageAsync(this.ScryfallId);
+            return new Bitmap(stream);
+        }
+        return null;
+    }
+
     public CardSkuItemViewModel WithData(CardSkuModel sku)
     {
         this.Id = sku.Id;
+        this.ScryfallId = sku.ScryfallId;
         this.IsDoubleFaced = sku.IsDoubleFaced;
         this.IsSideboard = sku.IsSideboard;
         this.CollectorNumber = sku.CollectorNumber;
@@ -132,16 +196,6 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem
         this.ContainerName = sku.ContainerName;
         this.DeckName = sku.DeckName;
         this.IsFoil = sku.IsFoil;
-        if (sku.ImageSmall != null)
-        {
-            using var ms = new MemoryStream(sku.ImageSmall);
-            _frontFaceImage = new Bitmap(ms);
-        }
-        if (sku.BackImageSmall != null)
-        {
-            using var ms = new MemoryStream(sku.BackImageSmall);
-            _backFaceImage = new Bitmap(ms);
-        }
         this.SwitchToFront();
         return this;
     }

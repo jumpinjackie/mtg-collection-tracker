@@ -19,14 +19,18 @@
 			<Button IsEnabled="{Binding Behavior.HasOneSelectedItem}" Command="{Binding DeleteCardsCommand}" Content="Delete" />
 			<Button IsEnabled="{Binding !Behavior.IsBusy}" Command="{Binding ManageVendorsCommand}" Content="Manage Vendors" />
 			<Button Command="{Binding GenerateBuyingListCommand}" Content="Generate Buying List" />
+			<Button IsEnabled="{Binding Behavior.HasAtLeastOneSelectedItem}" Command="{Binding UpdateMetadataCommand}" Content="Update Metadata" HorizontalAlignment="Center" />
 			<TextBlock Margin="6" VerticalAlignment="Center" Text="{Binding WishlistSummary}" />
 		</StackPanel>
 		<Panel>
 			<DockPanel>
-				<StackPanel DockPanel.Dock="Top" Spacing="20" Orientation="Horizontal">
-					<TextBlock VerticalAlignment="Center">View as:</TextBlock>
-					<RadioButton GroupName="View Mode" IsChecked="{Binding Behavior.ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:CardItemViewMode.VisualList}}" Content="Visual List"/>
-					<RadioButton GroupName="View Mode" IsChecked="{Binding Behavior.ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:CardItemViewMode.Table}}" Content="Table"/>
+				<StackPanel DockPanel.Dock="Top">
+					<StackPanel Spacing="20" Orientation="Horizontal">
+						<TextBlock VerticalAlignment="Center">View as:</TextBlock>
+						<RadioButton GroupName="View Mode" IsChecked="{Binding Behavior.ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:CardItemViewMode.VisualList}}" Content="Visual List"/>
+						<RadioButton GroupName="View Mode" IsChecked="{Binding Behavior.ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:CardItemViewMode.Table}}" Content="Table"/>
+					</StackPanel>
+					<ProgressBar IsIndeterminate="True" IsVisible="{Binding Behavior.IsBusy}" />
 				</StackPanel>
 				<ListBox IsVisible="{Binding Behavior.IsListMode}" IsEnabled="{Binding !Behavior.IsBusy}" SelectionMode="Multiple" SelectedItems="{Binding Behavior.SelectedItems}" ItemsSource="{Binding Cards}" Background="Transparent" Margin="0 20">
 					<ListBox.ItemsPanel>
@@ -36,7 +40,7 @@
 					</ListBox.ItemsPanel>
 				</ListBox>
 				<!-- TODO: Same templatization to avoid XAML duplication -->
-				<SplitView IsPaneOpen="True" PanePlacement="Right" IsVisible="{Binding Behavior.IsTableMode}">
+				<SplitView IsPaneOpen="True" PanePlacement="Right" IsVisible="{Binding Behavior.IsTableMode}" OpenPaneLength="400">
 					<SplitView.Pane>
 						<!-- 
 						TODO: I'm sure there's a way to templatize this content to avoid current
@@ -45,11 +49,11 @@
 						I'm just not expert enough yet
 						-->
 						<StackPanel IsVisible="{Binding Behavior.HasSelectedCardSku}" VerticalAlignment="Center" HorizontalAlignment="Center">
-							<Canvas Width="200" Height="280">
+							<Canvas Width="400" Height="560">
 								<Panel Canvas.Left="0" Canvas.Top="0" Canvas.Bottom="0" Canvas.Right="0" Background="#7FFF22DD">
 									<!-- TODO: If this is even possible, do a flip animation for double-faced cards -->
-									<Image Width="200" Stretch="Uniform" Source="{Binding Behavior.SelectedItems[0].CardImage}" />
-									<Panel Height="280" IsVisible="{Binding Behavior.SelectedItems[0].CardImage, Converter={x:Static ObjectConverters.IsNull}}">
+									<Image Width="400" Stretch="Uniform" Source="{Binding Behavior.SelectedItems[0].CardImageLarge^}" />
+									<Panel Height="560" IsVisible="{Binding Behavior.SelectedItems[0].CardImageLarge, Converter={x:Static ObjectConverters.IsNull}}">
 										<PathIcon Height="75" Width="75" Data="{StaticResource card}" />
 									</Panel>
 								</Panel>
