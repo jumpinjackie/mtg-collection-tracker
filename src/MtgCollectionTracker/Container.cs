@@ -60,7 +60,7 @@ public partial class Container : IContainer<MainViewModel>
     public DbContextOptions<CardsDbContext> CreateDbContextOptions()
     {
         return new DbContextOptionsBuilder<CardsDbContext>()
-            .UseSqlite("Data Source=collection.sqlite;Cache=Shared")
+            .UseSqlite("Data Source=collection.sqlite")
             .Options;
     }
 
