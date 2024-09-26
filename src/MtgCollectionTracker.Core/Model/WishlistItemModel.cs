@@ -42,4 +42,6 @@ public class WishlistItemModel
     public bool IsDoubleFaced { get; set; }
 
     public required List<VendorOfferModel> Offers { get; set; }
+
+    public string[] Tags { get; set; }
 }

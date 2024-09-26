@@ -6,8 +6,6 @@ using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Data;
 using MtgCollectionTracker.Services.Stubs;
 using System;
-using System.Collections.ObjectModel;
-using System.IO;
 using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
@@ -211,7 +209,7 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem
         this.IsFoil = sku.IsFoil;
         this.TagList = sku.Tags;
         this.Tags = string.Join(Environment.NewLine, this.TagList);
-        this.TagsText = $"{this.TagList.Length} tags";
+        this.TagsText = $"{this.TagList.Length} tag(s)";
         this.SwitchToFront();
         return this;
     }

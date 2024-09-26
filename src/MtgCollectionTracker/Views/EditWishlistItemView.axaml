@@ -48,6 +48,18 @@
 					</ComboBox.ItemTemplate>
 				</ComboBox>
 			</Grid>
+			<Grid RowDefinitions="Auto, 60" ColumnDefinitions="30, *">
+				<CheckBox Grid.Row="0" Grid.ColumnSpan="2" IsChecked="{Binding ApplyTags}">
+					<TextBlock VerticalAlignment="Center">Tags</TextBlock>
+				</CheckBox>
+				<ListBox IsEnabled="{Binding ApplyTags}" Height="40" Grid.Row="1" Grid.ColumnSpan="2" SelectionMode="Multiple, Toggle" ItemsSource="{Binding AllTags}" SelectedItems="{Binding Tags}">
+					<ListBox.ItemsPanel>
+						<ItemsPanelTemplate>
+							<StackPanel Orientation="Horizontal" />
+						</ItemsPanelTemplate>
+					</ListBox.ItemsPanel>
+				</ListBox>
+			</Grid>
 			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="30, *">
 				<CheckBox Grid.Row="0" Grid.ColumnSpan="2" IsChecked="{Binding ApplyOffers}">
 					<TextBlock VerticalAlignment="Center">Vendor Prices</TextBlock>

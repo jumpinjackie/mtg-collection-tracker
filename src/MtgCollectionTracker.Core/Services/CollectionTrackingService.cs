@@ -440,6 +440,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             CardName = w.CardName,
             Condition = w.Condition,
             Edition = w.Edition,
+            Tags = w.Tags.Select(t => t.Name).ToArray(),
             Id = w.Id,
             IsFoil = w.IsFoil,
             IsLand = w.IsLand,
@@ -493,6 +494,7 @@ public class CollectionTrackingService : ICollectionTrackingService
                 CardName = w.CardName,
                 Condition = w.Condition,
                 Edition = w.Edition,
+                Tags = w.Tags.Select(t => t.Name).ToArray(),
                 Id = w.Id,
                 IsFoil = w.IsFoil,
                 IsLand = w.IsLand,
@@ -1130,6 +1132,9 @@ public class CollectionTrackingService : ICollectionTrackingService
         if (model.IsFoil.HasValue)
             wi.IsFoil = model.IsFoil.Value;
 
+        if (model.ApplyTags)
+            wi.SyncTags(model.Tags ?? []);
+
         if (model.VendorOffers != null)
         {
             foreach (var off in model.VendorOffers)
@@ -1451,14 +1456,16 @@ public class CollectionTrackingService : ICollectionTrackingService
         tagSet.RemoveRange(toRemove);
         await db.Value.SaveChangesAsync(cancel);
 
-        int detached = 0;
-        // Now bulk delete these tags from all referencing SKUs
+        int skuDetached = 0;
+        int wishlistDetached = 0;
+        // Now bulk delete these tags from all referencing SKUs and wishlist items
         // Has to be raw SQL as we can't do ExecuteDelete() on EF owned types, unless I'm mistaken.
         foreach (var t in toRemove)
         {
-            detached += await db.Value.Database.ExecuteSqlRawAsync("DELETE FROM [CardSkuTag] WHERE [Name] = {0}", t.Name);
+            skuDetached += await db.Value.Database.ExecuteSqlRawAsync("DELETE FROM [CardSkuTag] WHERE [Name] = {0}", t.Name);
+            wishlistDetached += await db.Value.Database.ExecuteSqlRawAsync("DELETE FROM [WishlistItemTag] WHERE [Name] = {0}", t.Name);
         }
 
-        return new ApplyTagsResult(toAdd.Count, toRemove.Count, detached, tagSet.Select(t => t.Name).ToList());
+        return new ApplyTagsResult(toAdd.Count, toRemove.Count, skuDetached + wishlistDetached, tagSet.Select(t => t.Name).ToList());
     }
 }

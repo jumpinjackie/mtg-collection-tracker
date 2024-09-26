@@ -32,4 +32,8 @@ public class UpdateWishlistItemInputModel
     public CardCondition? Condition { get; set; }
 
     public IEnumerable<UpdateVendorOfferInputModel>? VendorOffers { get; set; }
+
+    public ICollection<string>? Tags { get; set; }
+
+    public bool ApplyTags { get; set; }
 }

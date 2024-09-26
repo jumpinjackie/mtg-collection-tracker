@@ -42,6 +42,7 @@ public partial class EditWishlistItemViewModel : DialogContentViewModel
     {
         base.ThrowIfNotDesignMode();
         _service = new StubCollectionTrackingService();
+        this.AllTags = ["Foo", "Bar", "Baz"];
         this.Languages = [
             new LanguageViewModel("en", "en", "English"),
             new LanguageViewModel("es", "sp", "Spanish"),
@@ -55,6 +56,7 @@ public partial class EditWishlistItemViewModel : DialogContentViewModel
     {
         _service = service;
         _scryfallApiClient = scryfallApiClient;
+        this.AllTags = service.GetTags().ToList();
         this.Languages = service.GetLanguages().Select(lang => new LanguageViewModel(lang.Code, lang.PrintedCode, lang.Name)).ToArray();
     }
 
@@ -120,6 +122,10 @@ public partial class EditWishlistItemViewModel : DialogContentViewModel
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
+    private bool _applyTags;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
     private string? _cardName;
 
     [ObservableProperty]
@@ -147,9 +153,14 @@ public partial class EditWishlistItemViewModel : DialogContentViewModel
             || this.ApplyEdition
             || this.ApplyLanguage
             || this.ApplyQuantity
+            || this.ApplyTags
             || this.ApplyOffers
             || this.IsFoil.HasValue;
     }
+
+    public List<string> AllTags { get; }
+
+    public ObservableCollection<string> Tags { get; } = new();
 
     [RelayCommand]
     private void AddOffer()
@@ -180,6 +191,9 @@ public partial class EditWishlistItemViewModel : DialogContentViewModel
             m.Language = Language.Code;
         if (!string.IsNullOrEmpty(CollectorNumber) && ApplyCollector)
             m.CollectorNumber = CollectorNumber;
+        m.ApplyTags = ApplyTags;
+        if (ApplyTags)
+            m.Tags = Tags.Distinct().ToList();
 
         m.IsFoil = this.IsFoil;
 

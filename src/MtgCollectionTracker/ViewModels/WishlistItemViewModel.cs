@@ -8,7 +8,6 @@ using MtgCollectionTracker.Data;
 using MtgCollectionTracker.Services.Stubs;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -137,6 +136,17 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
         this.SwitchLabel = "Switch to Front";
     }
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasTags))]
+    private string _tags;
+
+    [ObservableProperty]
+    private string _tagsText;
+
+    public bool HasTags => !string.IsNullOrWhiteSpace(this.Tags);
+
+    public string[] TagList { get; set; }
+
     [RelayCommand]
     private void SwitchFace()
     {
@@ -235,6 +245,9 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
             this.BestVendors = "none";
             this.VendorExplanation = null;
         }
+        this.TagList = item.Tags;
+        this.Tags = string.Join(Environment.NewLine, this.TagList);
+        this.TagsText = $"{this.TagList.Length} tag(s)";
         this.SwitchToFront();
         return this;
     }
