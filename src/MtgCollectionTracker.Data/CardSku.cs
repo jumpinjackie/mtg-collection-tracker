@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore.Metadata.Conventions;
+using System.ComponentModel.DataAnnotations;
 
 namespace MtgCollectionTracker.Data;
 
@@ -97,7 +98,42 @@ public class CardSku : IScryfallMetaLinkable
     /// <summary>
     /// Tags applied for this card
     /// </summary>
-    public ICollection<Tag> Tags { get; } = new List<Tag>();
+    public ICollection<CardSkuTag> Tags { get; } = new List<CardSkuTag>();
+
+    public bool SyncTags(ICollection<string> tags)
+    {
+        bool bDirty = false;
+        var toAdd = new List<CardSkuTag>();
+        var toRemove = new List<CardSkuTag>();
+        foreach (var inTag in tags)
+        {
+            if (!this.Tags.Any(t => t.Name == inTag))
+            {
+                toAdd.Add(new CardSkuTag { Name = inTag });
+            }
+        }
+        foreach (var currentTag in this.Tags)
+        {
+            if (!tags.Any(t => t == currentTag.Name))
+            {
+                toRemove.Add(currentTag);
+            }
+        }
+        if (toRemove.Count > 0)
+        {
+            foreach (var r in toRemove)
+            {
+                this.Tags.Remove(r);
+                bDirty = true;
+            }
+        }
+        foreach (var a in toAdd)
+        {
+            this.Tags.Add(a);
+            bDirty = true;
+        }
+        return bDirty;
+    }
 
     /// <summary>
     /// Creates a new <see cref="CardSku"/> with the specified quantity

@@ -4,8 +4,7 @@ namespace MtgCollectionTracker.Data;
 
 public class Tag
 {
-    public int Id { get; set; }
-
+    [Key]
     [MaxLength(48)]
     public required string Name { get; set; }
 }

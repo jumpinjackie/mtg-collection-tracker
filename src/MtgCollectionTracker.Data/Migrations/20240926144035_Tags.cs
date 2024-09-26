@@ -11,28 +11,45 @@ namespace MtgCollectionTracker.Data.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Tag",
+                name: "CardSkuTag",
                 columns: table => new
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
                     Name = table.Column<string>(type: "TEXT", maxLength: 48, nullable: false),
-                    CardSkuId = table.Column<int>(type: "INTEGER", nullable: true)
+                    CardSkuId = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Tag", x => x.Id);
+                    table.PrimaryKey("PK_CardSkuTag", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Tag_Cards_CardSkuId",
+                        name: "FK_CardSkuTag_Cards_CardSkuId",
                         column: x => x.CardSkuId,
                         principalTable: "Cards",
-                        principalColumn: "Id");
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Tag",
+                columns: table => new
+                {
+                    Name = table.Column<string>(type: "TEXT", maxLength: 48, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Tag", x => x.Name);
                 });
 
             migrationBuilder.CreateIndex(
-                name: "IX_Tag_CardSkuId",
-                table: "Tag",
+                name: "IX_CardSkuTag_CardSkuId",
+                table: "CardSkuTag",
                 column: "CardSkuId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CardSkuTag_Name",
+                table: "CardSkuTag",
+                column: "Name");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Tag_Name",
@@ -44,6 +61,9 @@ namespace MtgCollectionTracker.Data.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "CardSkuTag");
+
             migrationBuilder.DropTable(
                 name: "Tag");
         }

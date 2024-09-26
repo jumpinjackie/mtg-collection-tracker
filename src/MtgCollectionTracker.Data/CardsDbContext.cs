@@ -26,6 +26,13 @@ public class CardsDbContext : DbContext
         modelBuilder.Entity<Container>().HasIndex(nameof(Container.Name)).IsUnique();
         modelBuilder.Entity<Deck>().HasIndex(nameof(Deck.Name)).IsUnique();
         modelBuilder.Entity<Tag>().HasIndex(nameof(Tag.Name)).IsUnique();
+        modelBuilder.Entity<CardSku>()
+            .OwnsMany(c => c.Tags, cb =>
+            {
+                cb.HasKey("Id");
+                cb.HasIndex(t => t.Name);
+                cb.Property(t => t.Name).IsRequired();
+            });
         modelBuilder.Entity<ScryfallCardMetadata>().HasIndex(nameof(ScryfallCardMetadata.CardName), nameof(ScryfallCardMetadata.Edition), nameof(ScryfallCardMetadata.Language), nameof(ScryfallCardMetadata.CollectorNumber));
 
         modelBuilder.Entity<CardLanguage>().HasData(

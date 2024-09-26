@@ -333,21 +333,11 @@ namespace MtgCollectionTracker.Data.Migrations
 
             modelBuilder.Entity("MtgCollectionTracker.Data.Tag", b =>
                 {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int?>("CardSkuId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<string>("Name")
-                        .IsRequired()
                         .HasMaxLength(48)
                         .HasColumnType("TEXT");
 
-                    b.HasKey("Id");
-
-                    b.HasIndex("CardSkuId");
+                    b.HasKey("Name");
 
                     b.HasIndex("Name")
                         .IsUnique();
@@ -467,6 +457,32 @@ namespace MtgCollectionTracker.Data.Migrations
                         .WithMany()
                         .HasForeignKey("ScryfallId");
 
+                    b.OwnsMany("MtgCollectionTracker.Data.CardSkuTag", "Tags", b1 =>
+                        {
+                            b1.Property<int>("Id")
+                                .ValueGeneratedOnAdd()
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<int>("CardSkuId")
+                                .HasColumnType("INTEGER");
+
+                            b1.Property<string>("Name")
+                                .IsRequired()
+                                .HasMaxLength(48)
+                                .HasColumnType("TEXT");
+
+                            b1.HasKey("Id");
+
+                            b1.HasIndex("CardSkuId");
+
+                            b1.HasIndex("Name");
+
+                            b1.ToTable("CardSkuTag");
+
+                            b1.WithOwner()
+                                .HasForeignKey("CardSkuId");
+                        });
+
                     b.Navigation("Container");
 
                     b.Navigation("Deck");
@@ -474,6 +490,8 @@ namespace MtgCollectionTracker.Data.Migrations
                     b.Navigation("Language");
 
                     b.Navigation("Scryfall");
+
+                    b.Navigation("Tags");
                 });
 
             modelBuilder.Entity("MtgCollectionTracker.Data.Deck", b =>
@@ -483,13 +501,6 @@ namespace MtgCollectionTracker.Data.Migrations
                         .HasForeignKey("ContainerId");
 
                     b.Navigation("Container");
-                });
-
-            modelBuilder.Entity("MtgCollectionTracker.Data.Tag", b =>
-                {
-                    b.HasOne("MtgCollectionTracker.Data.CardSku", null)
-                        .WithMany("Tags")
-                        .HasForeignKey("CardSkuId");
                 });
 
             modelBuilder.Entity("MtgCollectionTracker.Data.VendorPrice", b =>
@@ -524,11 +535,6 @@ namespace MtgCollectionTracker.Data.Migrations
                     b.Navigation("Language");
 
                     b.Navigation("Scryfall");
-                });
-
-            modelBuilder.Entity("MtgCollectionTracker.Data.CardSku", b =>
-                {
-                    b.Navigation("Tags");
                 });
 
             modelBuilder.Entity("MtgCollectionTracker.Data.Container", b =>
