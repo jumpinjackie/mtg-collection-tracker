@@ -135,7 +135,7 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
-    public IEnumerable<WishlistItemModel> GetWishlistItems()
+    public IEnumerable<WishlistItemModel> GetWishlistItems(WishlistItemFilter filter)
     {
         throw new System.NotImplementedException();
     }

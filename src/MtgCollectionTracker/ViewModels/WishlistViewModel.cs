@@ -26,6 +26,8 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
         this.ThrowIfNotDesignMode();
         _vmFactory = new StubViewModelFactory();
         _service = new StubCollectionTrackingService();
+        this.Tags = ["Foo", "Bar", "Baz"];
+        this.SelectedTags.CollectionChanged += Tags_CollectionChanged;
         this.Behavior = new(this);
         this.IsActive = true;
     }
@@ -35,22 +37,40 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
         _vmFactory = vmFactory;
         _service = service;
         _scryfallApiClient = scryfallApiClient;
+        var tags = service.GetTags();
+        foreach (var t in tags)
+        {
+            this.Tags.Add(t);
+        }
+        this.SelectedTags.CollectionChanged += Tags_CollectionChanged;
         this.Behavior = new(this);
         this.IsActive = true;
+    }
+
+    private void Tags_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        this.LoadWishlist();
     }
 
     protected override void OnActivated()
     {
         if (!Avalonia.Controls.Design.IsDesignMode)
         {
-            var items = _service.GetWishlistItems();
-            foreach (var item in items)
-            {
-                this.Cards.Add(_vmFactory.WishListItem().WithData(item));
-            }
-            this.ApplySummary();
+            this.LoadWishlist();
         }
         base.OnActivated();
+    }
+
+    private void LoadWishlist()
+    {
+        this.Cards.Clear();
+        var filter = new WishlistItemFilter(this.SelectedTags.Count > 0 ? this.SelectedTags : null);
+        var items = _service.GetWishlistItems(filter);
+        foreach (var item in items)
+        {
+            this.Cards.Add(_vmFactory.WishListItem().WithData(item));
+        }
+        this.ApplySummary();
     }
 
     bool IViewModelWithBusyState.IsBusy
@@ -60,6 +80,10 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
     }
 
     public MultiModeCardListBehavior<WishlistItemViewModel> Behavior { get; }
+
+    public ObservableCollection<string> Tags { get; } = new();
+
+    public ObservableCollection<string> SelectedTags { get; } = new();
 
     public ObservableCollection<WishlistItemViewModel> Cards { get; } = new();
 

@@ -485,10 +485,17 @@ public class CollectionTrackingService : ICollectionTrackingService
         };
     }
 
-    public IEnumerable<WishlistItemModel> GetWishlistItems()
+    public IEnumerable<WishlistItemModel> GetWishlistItems(WishlistItemFilter filter)
     {
         using var db = _db.Invoke();
-        return db.Value.WishlistItems.Include(w => w.Scryfall)
+
+        Expression<Func<WishlistItem, bool>> predicate = w => true;
+        if (filter?.Tags != null)
+            predicate = w => w.Tags.Any(t => filter.Tags.Contains(t.Name));
+
+        return db.Value.WishlistItems
+            .Include(w => w.Scryfall)
+            .Where(predicate)
             .Select(w => new WishlistItemModel
             {
                 CardName = w.CardName,

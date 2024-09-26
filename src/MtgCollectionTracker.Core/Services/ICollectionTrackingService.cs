@@ -10,6 +10,8 @@ namespace MtgCollectionTracker.Core.Services
         public Action<int, int>? OnProgress { get; set; }
     }
 
+    public record WishlistItemFilter(IEnumerable<string>? Tags);
+
     public record ApplyTagsResult(int Added, int Deleted, int Detached, List<string> CurrentTags);
 
     public record CheckQuantityResult(int ShortAmount, HashSet<string> FromDeckNames, HashSet<string> FromContainerNames, string? SuggestedName);
@@ -40,7 +42,7 @@ namespace MtgCollectionTracker.Core.Services
         ValueTask<int> UpdateCardSkuAsync(UpdateCardSkuInputModel model, IScryfallApiClient? scryfallApiClient, CancellationToken cancel);
         CollectionSummaryModel GetCollectionSummary();
         ValueTask<ICollection<WishlistItemModel>> AddMultipleToWishlistAsync(IEnumerable<AddToWishlistInputModel> items, IScryfallApiClient? scryfallClient);
-        IEnumerable<WishlistItemModel> GetWishlistItems();
+        IEnumerable<WishlistItemModel> GetWishlistItems(WishlistItemFilter filter);
         ValueTask<(int created, int deleted)> ApplyVendorsAsync(ApplyVendorsInputModel model);
         IEnumerable<VendorModel> GetVendors();
         ValueTask<WishlistItemModel> UpdateWishlistItemAsync(UpdateWishlistItemInputModel model, IScryfallApiClient? scryfallApiClient, CancellationToken cancel);

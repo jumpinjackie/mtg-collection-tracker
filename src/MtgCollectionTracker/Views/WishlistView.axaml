@@ -29,6 +29,14 @@
 						<TextBlock VerticalAlignment="Center">View as:</TextBlock>
 						<RadioButton GroupName="View Mode" IsChecked="{Binding Behavior.ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:CardItemViewMode.VisualList}}" Content="Visual List"/>
 						<RadioButton GroupName="View Mode" IsChecked="{Binding Behavior.ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:CardItemViewMode.Table}}" Content="Table"/>
+						<TextBlock VerticalAlignment="Center" IsVisible="{Binding Tags, Converter={StaticResource CollectionNotEmpty}}">Filter by tags:</TextBlock>
+						<ListBox IsVisible="{Binding Tags, Converter={StaticResource CollectionNotEmpty}}" IsEnabled="{Binding !Behavior.IsBusy}" Height="32" Grid.Row="1" Grid.ColumnSpan="2" SelectionMode="Multiple, Toggle" ItemsSource="{Binding Tags}" SelectedItems="{Binding SelectedTags}">
+							<ListBox.ItemsPanel>
+								<ItemsPanelTemplate>
+									<StackPanel Orientation="Horizontal" />
+								</ItemsPanelTemplate>
+							</ListBox.ItemsPanel>
+						</ListBox>
 					</StackPanel>
 					<ProgressBar IsIndeterminate="True" IsVisible="{Binding Behavior.IsBusy}" />
 				</StackPanel>

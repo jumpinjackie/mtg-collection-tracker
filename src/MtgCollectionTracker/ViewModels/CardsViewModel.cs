@@ -36,7 +36,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
         _vmFactory = new StubViewModelFactory();
         _service = new StubCollectionTrackingService();
         this.Behavior = new(this);
-        this.Tags.CollectionChanged += Tags_CollectionChanged;
+        this.SelectedTags.CollectionChanged += Tags_CollectionChanged;
         this.IsActive = true;
     }
 
