@@ -70,6 +70,10 @@ internal class ScryfallMetadataResolver
             pageNo++;
             try
             {
+                var query = string.IsNullOrWhiteSpace(key.edition)
+                    ? key.cardName
+                    : $"set:{key.edition} {key.cardName}";
+
                 var sfCards = await _scryfallApiClient.Cards.Search(key.cardName, pageNo, new SearchOptions()
                 {
                     IncludeMultilingual = true,
@@ -77,7 +81,9 @@ internal class ScryfallMetadataResolver
                 });
                 this.ScryfallApiCalls++;
                 cards.AddRange(sfCards.Data.Where(c => string.Equals(c.Name, key.cardName, StringComparison.OrdinalIgnoreCase)));
-                if (!sfCards.HasMore)
+                // If no edition specified, we can stop after this as in this case we just want the un-editioned
+                // card to match to *any* printing of this card
+                if (!sfCards.HasMore || string.IsNullOrWhiteSpace(key.edition))
                     break;
             }
             catch (ScryfallApiException se)
