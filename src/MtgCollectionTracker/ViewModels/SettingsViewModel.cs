@@ -3,6 +3,7 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services;
+using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using System;
 using System.Collections.ObjectModel;
@@ -72,7 +73,8 @@ public partial class SettingsViewModel : RecipientViewModelBase
         var tags = this.Tags.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         var res = await _service.ApplyTagsAsync(tags, cancel);
 
-        Messenger.ToastNotify($"Tags applied ({res.Added} added, {res.Deleted} deleted)");
+        Messenger.ToastNotify($"Tags applied ({res.Added} added, {res.Deleted} deleted, {res.Detached} detached)");
+        Messenger.Send(new TagsAppliedMessage { CurrentTags = res.CurrentTags });
 
         var t = string.Join(Environment.NewLine, tags);
         _origTags = t;

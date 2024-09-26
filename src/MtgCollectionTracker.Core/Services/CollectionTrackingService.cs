@@ -1451,6 +1451,14 @@ public class CollectionTrackingService : ICollectionTrackingService
         tagSet.RemoveRange(toRemove);
         await db.Value.SaveChangesAsync(cancel);
 
-        return new ApplyTagsResult(toAdd.Count, toRemove.Count);
+        int detached = 0;
+        // Now bulk delete these tags from all referencing SKUs
+        // Has to be raw SQL as we can't do ExecuteDelete() on EF owned types, unless I'm mistaken.
+        foreach (var t in toRemove)
+        {
+            detached += await db.Value.Database.ExecuteSqlRawAsync("DELETE FROM [CardSkuTag] WHERE [Name] = {0}", t.Name);
+        }
+
+        return new ApplyTagsResult(toAdd.Count, toRemove.Count, detached, tagSet.Select(t => t.Name).ToList());
     }
 }

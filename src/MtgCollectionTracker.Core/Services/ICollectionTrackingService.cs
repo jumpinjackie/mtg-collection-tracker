@@ -10,7 +10,7 @@ namespace MtgCollectionTracker.Core.Services
         public Action<int, int>? OnProgress { get; set; }
     }
 
-    public record ApplyTagsResult(int Added, int Deleted);
+    public record ApplyTagsResult(int Added, int Deleted, int Detached, List<string> CurrentTags);
 
     public record CheckQuantityResult(int ShortAmount, HashSet<string> FromDeckNames, HashSet<string> FromContainerNames, string? SuggestedName);
 

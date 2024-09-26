@@ -24,7 +24,7 @@ public partial class TagSelectionViewModel : ObservableObject
     private bool _isSelected;
 }
 
-public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAddedMessage>, IViewModelWithBusyState, IMultiModeCardListBehaviorHost
+public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAddedMessage>, IViewModelWithBusyState, IMultiModeCardListBehaviorHost, IRecipient<TagsAppliedMessage>
 {
     readonly IViewModelFactory _vmFactory;
     readonly ICollectionTrackingService _service;
@@ -358,5 +358,22 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     void IMultiModeCardListBehaviorHost.HandleBusyChanged(bool oldValue, bool newValue)
     {
         this.OnPropertyChanged(nameof(CanSearch));
+    }
+
+    void IRecipient<TagsAppliedMessage>.Receive(TagsAppliedMessage message)
+    {
+        this.Tags.Clear();
+        foreach (var t in message.CurrentTags)
+        {
+            this.Tags.Add(t);
+        }
+
+        var toRemove = this.SelectedTags.Except(message.CurrentTags).ToList();
+
+        // Remove selected tags no longer relevant
+        foreach (var st in toRemove)
+        {
+            this.SelectedTags.Remove(st);
+        }
     }
 }
