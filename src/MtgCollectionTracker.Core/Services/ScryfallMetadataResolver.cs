@@ -74,7 +74,7 @@ internal class ScryfallMetadataResolver
                     ? key.cardName
                     : $"set:{key.edition} {key.cardName}";
 
-                var sfCards = await _scryfallApiClient.Cards.Search(key.cardName, pageNo, new SearchOptions()
+                var sfCards = await _scryfallApiClient.Cards.Search(query, pageNo, new SearchOptions()
                 {
                     IncludeMultilingual = true,
                     Mode = SearchOptions.RollupMode.Prints
