@@ -70,7 +70,8 @@ internal class ScryfallMetadataResolver
             pageNo++;
             try
             {
-                var query = string.IsNullOrWhiteSpace(key.edition)
+                bool hasValidEdition = !string.IsNullOrWhiteSpace(key.edition) && key.edition != "proxy";
+                var query = !hasValidEdition
                     ? key.cardName
                     : $"set:{key.edition} {key.cardName}";
 
@@ -83,7 +84,7 @@ internal class ScryfallMetadataResolver
                 cards.AddRange(sfCards.Data.Where(c => string.Equals(c.Name, key.cardName, StringComparison.OrdinalIgnoreCase)));
                 // If no edition specified, we can stop after this as in this case we just want the un-editioned
                 // card to match to *any* printing of this card
-                if (!sfCards.HasMore || string.IsNullOrWhiteSpace(key.edition))
+                if (!sfCards.HasMore || !hasValidEdition)
                     break;
             }
             catch (ScryfallApiException se)
