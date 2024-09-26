@@ -22,6 +22,7 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
         this.Wishlist = vmFactory.Wishlist();
         this.Notes = vmFactory.Notes();
         this.CanIBuild = vmFactory.CanIBuild();
+        this.Settings = vmFactory.Settings();
         this.IsActive = true;
     }
 
@@ -33,6 +34,7 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
         this.Wishlist = vmFactory.Wishlist();
         this.Notes = vmFactory.Notes();
         this.CanIBuild = vmFactory.CanIBuild();
+        this.Settings = vmFactory.Settings();
         this.IsActive = true;
     }
 
@@ -49,6 +51,8 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
     public CanIBuildThisDeckViewModel CanIBuild { get; }
 
     public NotesViewModel Notes { get; }
+
+    public SettingsViewModel Settings { get; }
 
     private Stack<DialogViewModel> _dialogStack = new();
 

@@ -1,0 +1,25 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="MtgCollectionTracker.Views.SettingsView"
+			 xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
+			 x:DataType="vm:SettingsViewModel">
+	<Design.DataContext>
+		<!-- This only sets the DataContext for the previewer in an IDE,
+         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+		<vm:SettingsViewModel />
+	</Design.DataContext>
+	<TabControl TabStripPlacement="Left">
+		<TabItem Header="Tags">
+			<DockPanel>
+				<TextBlock DockPanel.Dock="Top" Margin="8">Edit card tags here (one per line). Deleting a tag will delete associated tag data on existing card SKUs</TextBlock>
+				<StackPanel DockPanel.Dock="Bottom" Margin="8" Orientation="Horizontal">
+					<Button Command="{Binding SaveTagsCommand}">Save</Button>
+				</StackPanel>
+				<TextBox Margin="8" Text="{Binding Tags}" AcceptsReturn="True" />
+			</DockPanel>
+		</TabItem>
+	</TabControl>
+</UserControl>

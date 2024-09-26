@@ -33,6 +33,9 @@
 			<TabItem Header="Notes">
 				<views:NotesView DataContext="{Binding Notes}" />
 			</TabItem>
+			<TabItem Header="Settings">
+				<views:SettingsView DataContext="{Binding Settings}" />
+			</TabItem>
 		</TabControl>
 	</dialogHost:DialogHost>
 </UserControl>

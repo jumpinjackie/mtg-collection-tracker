@@ -3,6 +3,7 @@ using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Data;
 using ScryfallApi.Client;
 using StrongInject;
+using System.Data;
 using System.Linq.Expressions;
 using System.Text;
 
@@ -1404,5 +1405,44 @@ public class CollectionTrackingService : ICollectionTrackingService
     public async ValueTask<Stream?> GetSmallBackFaceImageAsync(string scryfallId)
     {
         return await GetCardFaceImageAsync(scryfallId, "img_back_face_small", m => m.BackImageSmall);
+    }
+
+    public IEnumerable<string> GetTags()
+    {
+        using var db = _db.Invoke();
+        return db.Value.Set<Tag>().Select(t => t.Name).ToList();
+    }
+
+    public async ValueTask<ApplyTagsResult> ApplyTagsAsync(IEnumerable<string> tags, CancellationToken cancel)
+    {
+        using var db = _db.Invoke();
+
+        var tagSet = db.Value.Set<Tag>();
+        var currentTags = tagSet.ToList();
+        var inTags = tags.ToHashSet();
+        var toAdd = new List<Tag>();
+        var toRemove = new List<Tag>();
+
+        foreach (var inTag in inTags)
+        {
+            if (!currentTags.Any(t => t.Name == inTag)) // Not present, add this
+            {
+                toAdd.Add(new Tag { Name = inTag });
+            }
+        }
+
+        foreach (var eTag in currentTags)
+        {
+            if (!inTags.Contains(eTag.Name)) // Current tag not in new one, remove this
+            {
+                toRemove.Add(eTag);
+            }
+        }
+
+        await tagSet.AddRangeAsync(toAdd, cancel);
+        tagSet.RemoveRange(toRemove);
+        await db.Value.SaveChangesAsync(cancel);
+
+        return new ApplyTagsResult(toAdd.Count, toRemove.Count);
     }
 }

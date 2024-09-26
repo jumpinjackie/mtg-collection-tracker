@@ -19,6 +19,8 @@ public interface IViewModelFactory
 
     WishlistItemViewModel WishListItem();
 
+    SettingsViewModel Settings();
+
     EditWishlistItemViewModel EditWishlistItem();
 
     CardSkuItemViewModel CardSku();

@@ -10,6 +10,8 @@ namespace MtgCollectionTracker.Core.Services
         public Action<int, int>? OnProgress { get; set; }
     }
 
+    public record ApplyTagsResult(int Added, int Deleted);
+
     public record CheckQuantityResult(int ShortAmount, HashSet<string> FromDeckNames, HashSet<string> FromContainerNames, string? SuggestedName);
 
     public interface ICollectionTrackingService
@@ -58,5 +60,7 @@ namespace MtgCollectionTracker.Core.Services
         ValueTask<Stream?> GetLargeBackFaceImageAsync(string scryfallId);
         ValueTask<Stream?> GetSmallFrontFaceImageAsync(string scryfallId);
         ValueTask<Stream?> GetSmallBackFaceImageAsync(string scryfallId);
+        IEnumerable<string> GetTags();
+        ValueTask<ApplyTagsResult> ApplyTagsAsync(IEnumerable<string> tags, CancellationToken cancel);
     }
 }

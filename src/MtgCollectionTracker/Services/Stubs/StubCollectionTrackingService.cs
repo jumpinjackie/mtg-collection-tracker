@@ -229,4 +229,14 @@ public class StubCollectionTrackingService : ICollectionTrackingService
     {
         throw new System.NotImplementedException();
     }
+
+    public IEnumerable<string> GetTags()
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public ValueTask<ApplyTagsResult> ApplyTagsAsync(IEnumerable<string> tags, CancellationToken cancel)
+    {
+        throw new System.NotImplementedException();
+    }
 }

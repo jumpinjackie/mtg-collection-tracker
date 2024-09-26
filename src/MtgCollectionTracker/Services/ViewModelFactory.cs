@@ -17,6 +17,7 @@ public class ViewModelFactory : IViewModelFactory
     readonly Func<ContainerSetViewModel> _containerSet;
     readonly Func<WishlistViewModel> _wishlist;
     readonly Func<CanIBuildThisDeckViewModel> _canIBuild;
+    readonly Func<SettingsViewModel> _settings;
     readonly Func<NotesViewModel> _notes;
     readonly Func<ContainerViewModel> _container;
     readonly Func<DialogViewModel> _drawer;
@@ -40,6 +41,7 @@ public class ViewModelFactory : IViewModelFactory
                             Func<ContainerSetViewModel> containerSet,
                             Func<WishlistViewModel> wishlist,
                             Func<CanIBuildThisDeckViewModel> canIBuild,
+                            Func<SettingsViewModel> settings,
                             Func<NotesViewModel> notes,
                             Func<ContainerViewModel> container,
                             Func<DialogViewModel> drawer,
@@ -63,6 +65,7 @@ public class ViewModelFactory : IViewModelFactory
         _containerSet = containerSet;
         _wishlist = wishlist;
         _canIBuild = canIBuild;
+        _settings = settings;
         _notes = notes;
         _container = container;
         _drawer = drawer;
@@ -96,6 +99,8 @@ public class ViewModelFactory : IViewModelFactory
     public NotesViewModel Notes() => _notes();
 
     public CanIBuildThisDeckViewModel CanIBuild() => _canIBuild();
+
+    public SettingsViewModel Settings() => _settings();
 
     public ContainerViewModel Container() => _container();
 
