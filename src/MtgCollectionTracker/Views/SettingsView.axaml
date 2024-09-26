@@ -14,7 +14,7 @@
 	<TabControl TabStripPlacement="Left">
 		<TabItem Header="Tags">
 			<DockPanel>
-				<TextBlock DockPanel.Dock="Top" Margin="8">Edit card tags here (one per line). Deleting a tag will delete associated tag data on existing card SKUs</TextBlock>
+				<TextBlock DockPanel.Dock="Top" Margin="8">Edit card tags here (one per line). Deleting a tag will delete associated tag data on existing card SKUs and wishlist items</TextBlock>
 				<StackPanel DockPanel.Dock="Bottom" Margin="8" Orientation="Horizontal">
 					<Button Command="{Binding SaveTagsCommand}">Save</Button>
 				</StackPanel>

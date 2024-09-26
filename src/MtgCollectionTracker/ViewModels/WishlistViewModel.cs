@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithBusyState, IRecipient<CardsAddedToWishlistMessage>, IRecipient<WishlistItemUpdatedMessage>, IMultiModeCardListBehaviorHost
+public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithBusyState, IRecipient<CardsAddedToWishlistMessage>, IRecipient<WishlistItemUpdatedMessage>, IMultiModeCardListBehaviorHost, IRecipient<TagsAppliedMessage>
 {
     readonly IViewModelFactory _vmFactory;
     readonly ICollectionTrackingService _service;
@@ -248,5 +248,22 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
     void IMultiModeCardListBehaviorHost.HandleBusyChanged(bool oldValue, bool newValue)
     {
         
+    }
+
+    void IRecipient<TagsAppliedMessage>.Receive(TagsAppliedMessage message)
+    {
+        this.Tags.Clear();
+        foreach (var t in message.CurrentTags)
+        {
+            this.Tags.Add(t);
+        }
+
+        var toRemove = this.SelectedTags.Except(message.CurrentTags).ToList();
+
+        // Remove selected tags no longer relevant
+        foreach (var st in toRemove)
+        {
+            this.SelectedTags.Remove(st);
+        }
     }
 }
