@@ -221,7 +221,7 @@ internal class ScryfallMetadataResolver
                 if (sfMeta.BackImageSmall == null)
                 {
                     byte[]? imageSmall = null;
-                    var smallUri = sfCardMeta.GetBackFaceImageUri(IMG_SIZE_LARGE);
+                    var smallUri = sfCardMeta.GetBackFaceImageUri(IMG_SIZE_NORMAL);
                     if (smallUri != null)
                     {
                         try
@@ -238,7 +238,7 @@ internal class ScryfallMetadataResolver
                 if (sfMeta.ImageLarge == null)
                 {
                     byte[]? imageLarge = null;
-                    var smallUri = sfCardMeta.GetFrontFaceImageUri(IMG_SIZE_LARGE);
+                    var smallUri = sfCardMeta.GetFrontFaceImageUri(IMG_SIZE_NORMAL);
                     if (smallUri != null)
                     {
                         try
@@ -255,7 +255,7 @@ internal class ScryfallMetadataResolver
                 if (sfMeta.BackImageLarge == null)
                 {
                     byte[]? imageLarge = null;
-                    var smallUri = sfCardMeta.GetBackFaceImageUri(IMG_SIZE_LARGE);
+                    var smallUri = sfCardMeta.GetBackFaceImageUri(IMG_SIZE_NORMAL);
                     if (smallUri != null)
                     {
                         try
@@ -276,7 +276,7 @@ internal class ScryfallMetadataResolver
     }
 
     const string IMG_SIZE_SMALL = "small";
-    const string IMG_SIZE_LARGE = "large";
+    const string IMG_SIZE_NORMAL = "normal";
 
     static string ParseType(string typeLine)
     {
