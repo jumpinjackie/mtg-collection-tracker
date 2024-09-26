@@ -95,6 +95,11 @@ public class CardSku : IScryfallMetaLinkable
     public bool IsLand { get; set; }
 
     /// <summary>
+    /// Tags applied for this card
+    /// </summary>
+    public ICollection<Tag> Tags { get; } = new List<Tag>();
+
+    /// <summary>
     /// Creates a new <see cref="CardSku"/> with the specified quantity
     /// </summary>
     /// <param name="quantity"></param>
