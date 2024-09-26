@@ -115,6 +115,27 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
         this.PageNumber--;
     }
 
+    [RelayCommand]
+    private void EditSelectedSku()
+    {
+        if (Behavior.SelectedItems.Count == 1)
+        {
+            Messenger.Send(new OpenDialogMessage
+            {
+                DrawerWidth = 600,
+                ViewModel = _vmFactory.Drawer().WithContent("Edit Sku", _vmFactory.EditCardSku().WithSku(Behavior.SelectedItems[0]))
+            });
+        }
+        else if (Behavior.SelectedItems.Count > 1)
+        {
+            Messenger.Send(new OpenDialogMessage
+            {
+                DrawerWidth = 600,
+                ViewModel = _vmFactory.Drawer().WithContent("Edit Skus", _vmFactory.EditCardSku().WithSkus(Behavior.SelectedItems))
+            });
+        }
+    }
+
     public ContainerBrowseViewModel WithContainerId(int containerId)
     {
         _containerId = containerId;
