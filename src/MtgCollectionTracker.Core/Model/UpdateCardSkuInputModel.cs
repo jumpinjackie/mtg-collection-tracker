@@ -35,4 +35,8 @@ public class UpdateCardSkuInputModel
     public bool UnsetContainer { get; set; }
 
     public bool UpdateMetadata { get; set; }
+
+    public ICollection<string>? Tags { get; set; }
+
+    public bool ApplyTags { get; set; }
 }

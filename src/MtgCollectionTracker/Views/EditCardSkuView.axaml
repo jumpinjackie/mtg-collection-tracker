@@ -84,6 +84,18 @@
 				</CheckBox>
 				<TextBox Grid.Row="1" Grid.ColumnSpan="2" IsEnabled="{Binding ApplyComments}" Text="{Binding Comments}" />
 			</Grid>
+			<Grid RowDefinitions="Auto, 60" ColumnDefinitions="30, *">
+				<CheckBox Grid.Row="0" Grid.ColumnSpan="2" IsChecked="{Binding ApplyTags}">
+					<TextBlock VerticalAlignment="Center">Tags</TextBlock>
+				</CheckBox>
+				<ListBox IsEnabled="{Binding ApplyTags}" Height="40" Grid.Row="1" Grid.ColumnSpan="2" SelectionMode="Multiple" ItemsSource="{Binding AllTags}" SelectedItems="{Binding Tags}">
+					<ListBox.ItemsPanel>
+						<ItemsPanelTemplate>
+							<StackPanel Orientation="Horizontal" />
+						</ItemsPanelTemplate>
+					</ListBox.ItemsPanel>
+				</ListBox>
+			</Grid>
 			<StackPanel Orientation="Horizontal" Spacing="6">
 				<CheckBox IsThreeState="True" IsChecked="{Binding IsLand}">Is Land?</CheckBox>
 				<CheckBox IsThreeState="True" IsChecked="{Binding IsFoil}">Is Foil?</CheckBox>

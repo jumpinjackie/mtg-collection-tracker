@@ -5,6 +5,8 @@ using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Data;
 using MtgCollectionTracker.Services.Stubs;
+using System;
+using System.Collections.ObjectModel;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -149,6 +151,17 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem
 
     public Task<Bitmap?> BackFaceImageLarge => GetLargeBackFaceImageAsync();
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasTags))]
+    private string _tags;
+
+    [ObservableProperty]
+    private string _tagsText;
+
+    public bool HasTags => !string.IsNullOrWhiteSpace(this.Tags);
+
+    public string[] TagList { get; set; }
+
     private async Task<Bitmap?> GetLargeFrontFaceImageAsync()
     {
         if (this.ScryfallId != null)
@@ -196,6 +209,9 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem
         this.ContainerName = sku.ContainerName;
         this.DeckName = sku.DeckName;
         this.IsFoil = sku.IsFoil;
+        this.TagList = sku.Tags;
+        this.Tags = string.Join(Environment.NewLine, this.TagList);
+        this.TagsText = $"{this.TagList.Length} tags";
         this.SwitchToFront();
         return this;
     }

@@ -8,6 +8,7 @@ using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using ScryfallApi.Client;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -39,12 +40,14 @@ public partial class EditCardSkuViewModel : DialogContentViewModel
             new ContainerViewModel().WithData(new()  { Id = 1, Name = "My Binder"}),
             new ContainerViewModel().WithData(new()  { Id = 2, Name = "My Shoebox"})
         ];
+        this.AllTags = ["Foo", "Bar", "Baz"];
     }
 
     public EditCardSkuViewModel(ICollectionTrackingService service, IViewModelFactory vmFactory, IScryfallApiClient scryfallApiClient)
     {
         _service = service;
         _scryfallApiClient = scryfallApiClient;
+        this.AllTags = service.GetTags().ToList();
         this.Languages = service.GetLanguages().Select(lang => new LanguageViewModel(lang.Code, lang.PrintedCode, lang.Name)).ToArray();
         this.AvailableDecks = service.GetDecks(null).Select(deck => vmFactory.Deck().WithData(deck));
         this.AvailableContainers = service.GetContainers().Select(cnt => new ContainerViewModel().WithData(cnt)).ToList();
@@ -75,10 +78,21 @@ public partial class EditCardSkuViewModel : DialogContentViewModel
         this.Language = this.Languages.FirstOrDefault(lang => lang.Code == sku.Language);
         this.Quantity = sku.OriginalEdition == "PROXY" ? sku.ProxyQty : sku.RealQty;
         this.Comments = sku.Comments;
+        
+        this.Tags.Clear();
+        foreach (var t in sku.TagList)
+        {
+            this.Tags.Add(t);
+        }
+
         return this;
     }
 
-    private IEnumerable<CardSkuItemViewModel> _origItems;
+    private List<CardSkuItemViewModel> _origItems;
+
+    public List<string> AllTags { get; }
+
+    public ObservableCollection<string> Tags { get; } = new();
 
     public EditCardSkuViewModel WithSkus(IEnumerable<CardSkuItemViewModel> skus)
     {
@@ -104,8 +118,8 @@ public partial class EditCardSkuViewModel : DialogContentViewModel
         this.CollectorNumber = uniqCollectors.Count == 1 ? uniqCollectors.First() : null;
         this.Edition = uniqEditions.Count == 1 ? uniqEditions.First() : null;
         this.Language = uniqLanguages.Count == 1 ? this.Languages.FirstOrDefault(lang => lang.Code == uniqLanguages.First()) : null;
-        
         this.Comments = uniqComments.Count == 1 ? uniqComments.First() : null;
+
         return this;
     }
 
@@ -140,6 +154,10 @@ public partial class EditCardSkuViewModel : DialogContentViewModel
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
     private bool _applyContainer;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
+    private bool _applyTags;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
@@ -192,6 +210,7 @@ public partial class EditCardSkuViewModel : DialogContentViewModel
             || this.ApplyEdition
             || this.ApplyLanguage
             || this.ApplyQuantity
+            || this.ApplyTags
             || this.IsFoil.HasValue
             || this.IsLand.HasValue
             || this.IsSideboard.HasValue
@@ -222,6 +241,9 @@ public partial class EditCardSkuViewModel : DialogContentViewModel
             m.DeckId = Deck.DeckId;
         if (Container != null && ApplyContainer)
             m.ContainerId = Container.Id;
+        m.ApplyTags = ApplyTags;
+        if (ApplyTags)
+            m.Tags = Tags.Distinct().ToList();
 
         m.IsLand = IsLand;
         m.IsFoil = IsFoil;

@@ -34,6 +34,8 @@ public class CardSkuModel
 
     public bool IsDoubleFaced { get; set; }
 
+    public string[] Tags { get; set; }
+
     public string GetDescription(bool withId = true) => withId
         ? $"({Quantity}x {CardName}, {Edition}, id: {Id})"
         : $"({Quantity}x {CardName}, {Edition})";

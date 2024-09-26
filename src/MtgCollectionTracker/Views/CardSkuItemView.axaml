@@ -49,6 +49,10 @@
 			<PathIcon Grid.Column="0" Data="{StaticResource deckbox}" />
 			<TextBlock Grid.Column="1" Text="{Binding DeckName}" VerticalAlignment="Center" />
 		</Grid>
+		<Grid IsVisible="{Binding HasTags}" ColumnDefinitions="30, *" ToolTip.Tip="{Binding Tags}">
+			<PathIcon Grid.Column="0" Data="{StaticResource tag_regular}" />
+			<TextBlock Grid.Column="1" Text="{Binding TagsText}" VerticalAlignment="Center" />
+		</Grid>
 		<Button IsVisible="{Binding IsDoubleFaced}" Grid.Column="0" HorizontalAlignment="Center" Content="{Binding SwitchLabel}" Command="{Binding SwitchFaceCommand}" />
 	</StackPanel>
 </UserControl>

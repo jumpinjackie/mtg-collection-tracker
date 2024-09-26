@@ -213,6 +213,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             ContainerName = c.Container != null ? c.Container.Name + " (" + c.ContainerId + ")" : null,
             DeckName = c.Deck != null ? c.Deck.Name + " (" + c.DeckId + ")" : null,
             Edition = c.Edition,
+            Tags = c.Tags.Select(t => t.Name).ToArray(),
             Id = c.Id,
             IsFoil = c.IsFoil,
             IsLand = c.IsLand,
@@ -466,6 +467,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             ContainerName = c.Container?.Name,
             DeckName = c.Deck?.Name,
             Edition = c.Edition,
+            Tags = c.Tags.Select(t => t.Name).ToArray(),
             Id = c.Id,
             IsFoil = c.IsFoil,
             IsLand = c.IsLand,
@@ -938,6 +940,9 @@ public class CollectionTrackingService : ICollectionTrackingService
                 sku.IsFoil = model.IsFoil.Value;
             if (model.IsSideboard.HasValue)
                 sku.IsSideboard = model.IsSideboard.Value;
+
+            if (model.ApplyTags)
+                sku.SyncTags(model.Tags ?? []);
 
             if (model.UnsetDeck)
             {
