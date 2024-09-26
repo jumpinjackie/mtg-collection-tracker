@@ -442,9 +442,8 @@ public class CollectionTrackingService : ICollectionTrackingService
             CollectorNumber = w.CollectorNumber,
             Quantity = w.Quantity,
             ScryfallId = w.ScryfallId,
-            // A double-faced card has back-face image, but if we haven't loaded SF metadata
-            // for this card yet, then a DFC should have '//' in its card name
-            IsDoubleFaced = w.Scryfall?.BackImageSmall != null || w.CardName.Contains(" // "),
+            // A double-faced card has back-face image
+            IsDoubleFaced = w.Scryfall?.BackImageSmall != null,
             Offers = w.OfferedPrices?.Select(o => new VendorOfferModel
             {
                 VendorId = o.VendorId,
@@ -474,9 +473,8 @@ public class CollectionTrackingService : ICollectionTrackingService
             CollectorNumber = c.CollectorNumber,
             Quantity = c.Quantity,
             ScryfallId = c.ScryfallId,
-            // A double-faced card has back-face image, but if we haven't loaded SF metadata
-            // for this card yet, then a DFC should have '//' in its card name
-            IsDoubleFaced = c.Scryfall?.BackImageSmall != null || c.CardName.Contains(" // ")
+            // A double-faced card has back-face image
+            IsDoubleFaced = c.Scryfall?.BackImageSmall != null
         };
     }
 
@@ -496,9 +494,8 @@ public class CollectionTrackingService : ICollectionTrackingService
                 CollectorNumber = w.CollectorNumber,
                 Quantity = w.Quantity,
                 ScryfallId = w.ScryfallId,
-                // A double-faced card has back-face image, but if we haven't loaded SF metadata
-                // for this card yet, then a DFC should have '//' in its card name
-                IsDoubleFaced = w.Scryfall!.BackImageSmall != null || w.CardName.Contains(" // "),
+                // A double-faced card has back-face image
+                IsDoubleFaced = w.Scryfall!.BackImageSmall != null,
                 Offers = w.OfferedPrices.Select(o => new VendorOfferModel
                 {
                     VendorId = o.VendorId,
