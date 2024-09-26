@@ -75,13 +75,54 @@ public class WishlistItem : IScryfallMetaLinkable
     public VendorPrice? BestOffer => OfferedPrices?.OrderBy(op => op.Price).FirstOrDefault();
 
     /// <summary>
+    /// Tags applied for this wishlist item
+    /// </summary>
+    public ICollection<WishlistItemTag> Tags { get; } = new List<WishlistItemTag>();
+    
+    public bool SyncTags(ICollection<string> tags)
+    {
+        bool bDirty = false;
+        var toAdd = new List<WishlistItemTag>();
+        var toRemove = new List<WishlistItemTag>();
+        foreach (var inTag in tags)
+        {
+            if (!this.Tags.Any(t => t.Name == inTag))
+            {
+                toAdd.Add(new WishlistItemTag { Name = inTag });
+            }
+        }
+        foreach (var currentTag in this.Tags)
+        {
+            if (!tags.Any(t => t == currentTag.Name))
+            {
+                toRemove.Add(currentTag);
+            }
+        }
+        if (toRemove.Count > 0)
+        {
+            foreach (var r in toRemove)
+            {
+                this.Tags.Remove(r);
+                bDirty = true;
+            }
+        }
+        foreach (var a in toAdd)
+        {
+            this.Tags.Add(a);
+            bDirty = true;
+        }
+        return bDirty;
+    }
+
+
+    /// <summary>
     /// Creates a new SKU for this wishlist item
     /// </summary>
     /// <param name="containerId"></param>
     /// <returns></returns>
     public CardSku CreateSku(int? containerId)
     {
-        return new CardSku
+        var sku = new CardSku
         {
             CardName = this.CardName,
             Edition = this.Edition,
@@ -94,5 +135,11 @@ public class WishlistItem : IScryfallMetaLinkable
             LanguageId = this.LanguageId,
             ContainerId = containerId
         };
+        foreach (var t in this.Tags)
+        {
+            sku.Tags.Add(new CardSkuTag { Name = t.Name });
+        }
+
+        return sku;
     }
 }

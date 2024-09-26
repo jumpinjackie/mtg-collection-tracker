@@ -33,6 +33,13 @@ public class CardsDbContext : DbContext
                 cb.HasIndex(t => t.Name);
                 cb.Property(t => t.Name).IsRequired();
             });
+        modelBuilder.Entity<WishlistItem>()
+            .OwnsMany(w => w.Tags, cb =>
+            {
+                cb.HasKey("Id");
+                cb.HasIndex(t => t.Name);
+                cb.Property(t => t.Name).IsRequired();
+            });
         modelBuilder.Entity<ScryfallCardMetadata>().HasIndex(nameof(ScryfallCardMetadata.CardName), nameof(ScryfallCardMetadata.Edition), nameof(ScryfallCardMetadata.Language), nameof(ScryfallCardMetadata.CollectorNumber));
 
         modelBuilder.Entity<CardLanguage>().HasData(
