@@ -22,6 +22,14 @@
 				<CheckBox IsEnabled="{Binding !Behavior.IsBusy}" IsChecked="{Binding NoProxies}">Omit proxies</CheckBox>
 				<CheckBox IsEnabled="{Binding !Behavior.IsBusy}" IsChecked="{Binding NotInDecks}">Omit cards already in decks</CheckBox>
 				<CheckBox IsEnabled="{Binding !Behavior.IsBusy}" IsChecked="{Binding UnParented}">Show only un-parented</CheckBox>
+				<TextBlock VerticalAlignment="Center" IsVisible="{Binding Tags, Converter={StaticResource CollectionNotEmpty}}">Filter by tags:</TextBlock>
+				<ListBox IsVisible="{Binding Tags, Converter={StaticResource CollectionNotEmpty}}" IsEnabled="{Binding !Behavior.IsBusy}" Height="32" Grid.Row="1" Grid.ColumnSpan="2" SelectionMode="Multiple" ItemsSource="{Binding Tags}" SelectedItems="{Binding SelectedTags}">
+					<ListBox.ItemsPanel>
+						<ItemsPanelTemplate>
+							<StackPanel Orientation="Horizontal" />
+						</ItemsPanelTemplate>
+					</ListBox.ItemsPanel>
+				</ListBox>
 			</StackPanel>
 		</StackPanel>
 		<StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">

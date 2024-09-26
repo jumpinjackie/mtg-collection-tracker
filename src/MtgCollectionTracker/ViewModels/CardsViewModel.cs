@@ -15,6 +15,15 @@ using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
+public partial class TagSelectionViewModel : ObservableObject
+{
+    [ObservableProperty]
+    private string _name = string.Empty;
+
+    [ObservableProperty]
+    private bool _isSelected;
+}
+
 public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAddedMessage>, IViewModelWithBusyState, IMultiModeCardListBehaviorHost
 {
     readonly IViewModelFactory _vmFactory;
@@ -27,6 +36,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
         _vmFactory = new StubViewModelFactory();
         _service = new StubCollectionTrackingService();
         this.Behavior = new(this);
+        this.Tags.CollectionChanged += Tags_CollectionChanged;
         this.IsActive = true;
     }
 
@@ -40,7 +50,13 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
         _service = service;
         _scryfallApiClient = scryfallApiClient;
         this.Behavior = new(this);
+        this.SelectedTags.CollectionChanged += Tags_CollectionChanged;
         this.IsActive = true;
+    }
+
+    private void Tags_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        this.PerformSearchCommand.Execute(null);
     }
 
     protected override void OnActivated()
@@ -54,6 +70,11 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
         {
             var totals = _service.GetCollectionSummary();
             ApplyTotals(totals);
+            this.Tags.Clear();
+            foreach (var t in _service.GetTags())
+            {
+                this.Tags.Add(t);
+            }
         }
     }
 
@@ -113,10 +134,15 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     [ObservableProperty]
     private bool _hasNoResults;
 
+    public ObservableCollection<string> Tags { get; } = new();
+
+    public ObservableCollection<string> SelectedTags { get; } = new();
+
     [RelayCommand]
     private async Task PerformSearch()
     {
-        if (!this.UnParented && string.IsNullOrEmpty(this.SearchText))
+        var hasMinSearchParams = !string.IsNullOrWhiteSpace(this.SearchText) || this.SelectedTags.Count > 0 || this.UnParented;
+        if (!hasMinSearchParams)
             return;
 
         using (((IViewModelWithBusyState)this).StartBusyState())
@@ -124,10 +150,11 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
             this.ShowFirstTimeMessage = false;
             this.ShowSearchResults = true;
 
-            await Task.Delay(1000);
+            await Task.Delay(500);
             var cards = _service.GetCards(new Core.Model.CardQueryModel
             {
                 SearchFilter = this.SearchText,
+                Tags = this.SelectedTags.Count > 0 ? this.SelectedTags : null,
                 NoProxies = this.NoProxies,
                 NotInDecks = this.NotInDecks,
                 UnParented = this.UnParented,

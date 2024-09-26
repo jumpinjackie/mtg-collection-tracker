@@ -8,6 +8,7 @@
 	<Application.Resources>
 		<ResourceDictionary>
 			<svc:EnumToBooleanConverter x:Key="EnumToBoolConverter" />
+			<svc:CollectionNotEmptyConverter x:Key="CollectionNotEmpty" />
 			<ResourceDictionary.MergedDictionaries>
 				<ResourceInclude Source="/Assets/VectorIcons.axaml" />
 			</ResourceDictionary.MergedDictionaries>
