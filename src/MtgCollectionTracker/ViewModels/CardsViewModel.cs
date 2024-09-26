@@ -272,6 +272,8 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
                         Messenger.ToastNotify($"Updated metadata for {processed} of {total} sku(s)");
                     }
                 };
+                // FIXME: With multiple selections, it seems in general one needs to invoke this twice for the new
+                // metadata to stick. I currently don't know why this is the case
                 var updatedSkus = await _service.UpdateCardMetadataAsync(ids, _scryfallApiClient, callback, CancellationToken.None);
                 foreach (var sku in updatedSkus)
                 {

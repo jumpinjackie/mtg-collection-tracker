@@ -182,6 +182,8 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
                         Messenger.ToastNotify($"Updated metadata for {processed} of {total} wishlist item(s)");
                     }
                 };
+                // FIXME: With multiple selections, it seems in general one needs to invoke this twice for the new
+                // metadata to stick. I currently don't know why this is the case
                 var updatedWishlist = await _service.UpdateWishlistMetadataAsync(ids, _scryfallApiClient, callback, CancellationToken.None);
                 foreach (var w in updatedWishlist)
                 {
