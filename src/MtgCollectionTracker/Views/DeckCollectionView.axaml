@@ -10,7 +10,7 @@
 		<SplitView.Pane>
 			<StackPanel Spacing="8">
 				<TextBlock FontSize="18">Format Filter</TextBlock>
-				<ListBox SelectionMode="Multiple" ItemsSource="{Binding Formats}" SelectedItems="{Binding SelectedFormats}">
+				<ListBox SelectionMode="Multiple, Toggle" ItemsSource="{Binding Formats}" SelectedItems="{Binding SelectedFormats}">
 					<ListBox.ItemTemplate>
 						<DataTemplate>
 							<TextBlock Text="{Binding}"/>
