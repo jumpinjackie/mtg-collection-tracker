@@ -180,7 +180,8 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
             text.AppendLine("Congratulations! Your collection has the cards to build this deck");
             if (!SparesOnly)
             {
-                text.AppendLine("Please note. You may need to dismantle one or more of your existing decks to build this one.");
+                if (FromDecks.Count > 0)
+                    text.AppendLine("Please note. You may need to dismantle one or more of your existing decks to build this one.");
                 text.AppendLine("If you want to check if this is possible without dismantling any existing deck, re-run this check with 'Spares Only' checked");
             }
         }
