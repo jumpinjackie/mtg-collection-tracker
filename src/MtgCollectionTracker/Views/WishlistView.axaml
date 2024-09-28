@@ -25,10 +25,7 @@
 		<Panel>
 			<DockPanel>
 				<StackPanel DockPanel.Dock="Top">
-					<StackPanel Spacing="20" Orientation="Horizontal">
-						<TextBlock VerticalAlignment="Center">View as:</TextBlock>
-						<RadioButton GroupName="View Mode" IsChecked="{Binding Behavior.ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:CardItemViewMode.VisualList}}" Content="Visual List"/>
-						<RadioButton GroupName="View Mode" IsChecked="{Binding Behavior.ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:CardItemViewMode.Table}}" Content="Table"/>
+					<StackPanel IsVisible="{Binding Tags, Converter={StaticResource CollectionNotEmpty}}" Spacing="20" Orientation="Horizontal">
 						<TextBlock VerticalAlignment="Center" IsVisible="{Binding Tags, Converter={StaticResource CollectionNotEmpty}}">Filter by tags:</TextBlock>
 						<ListBox IsVisible="{Binding Tags, Converter={StaticResource CollectionNotEmpty}}" IsEnabled="{Binding !Behavior.IsBusy}" Height="32" Grid.Row="1" Grid.ColumnSpan="2" SelectionMode="Multiple, Toggle" ItemsSource="{Binding Tags}" SelectedItems="{Binding SelectedTags}">
 							<ListBox.ItemsPanel>
@@ -37,6 +34,11 @@
 								</ItemsPanelTemplate>
 							</ListBox.ItemsPanel>
 						</ListBox>
+					</StackPanel>
+					<StackPanel Spacing="20" Orientation="Horizontal">
+						<TextBlock VerticalAlignment="Center">View as:</TextBlock>
+						<RadioButton GroupName="View Mode" IsChecked="{Binding Behavior.ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:CardItemViewMode.VisualList}}" Content="Visual List"/>
+						<RadioButton GroupName="View Mode" IsChecked="{Binding Behavior.ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:CardItemViewMode.Table}}" Content="Table"/>
 					</StackPanel>
 					<ProgressBar IsIndeterminate="True" IsVisible="{Binding Behavior.IsBusy}" />
 				</StackPanel>
