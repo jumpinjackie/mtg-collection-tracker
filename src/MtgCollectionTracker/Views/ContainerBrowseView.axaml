@@ -28,6 +28,7 @@
 			<!--
 			<Button IsEnabled="{Binding Behavior.HasOneSelectedItem}" Command="{Binding ViewSelectedSkuCommand}" Content="View Details" HorizontalAlignment="Center" />
 			-->
+			<Button IsEnabled="{Binding Behavior.IsItemSplittable}" Command="{Binding SplitSelectedSkuCommand}" Content="Split" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding Behavior.HasAtLeastOneSelectedItem}" Command="{Binding EditSelectedSkuCommand}" Content="Edit" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding Behavior.HasAtLeastOneSelectedItem}" Command="{Binding SendSkusToContainerCommand}" Content="Send to Deck/Container" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding Behavior.HasAtLeastOneSelectedItem}" Command="{Binding UpdateSkuMetadataCommand}" Content="Update Metadata" HorizontalAlignment="Center" />

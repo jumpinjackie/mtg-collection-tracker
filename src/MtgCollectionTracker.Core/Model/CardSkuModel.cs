@@ -18,7 +18,11 @@ public class CardSkuModel
 
     public string? CollectorNumber { get; set; }
 
+    public int? DeckId { get; set; }
+
     public string? DeckName { get; set; }
+
+    public int? ContainerId { get; set; }
 
     public string? ContainerName { get; set; }
 

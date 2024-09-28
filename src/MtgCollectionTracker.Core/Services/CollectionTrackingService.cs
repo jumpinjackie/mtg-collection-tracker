@@ -218,7 +218,9 @@ public class CollectionTrackingService : ICollectionTrackingService
             CardName = c.CardName,
             Comments = c.Comments,
             Condition = c.Condition,
+            ContainerId = c.ContainerId,
             ContainerName = c.Container != null ? c.Container.Name + " (" + c.ContainerId + ")" : null,
+            DeckId = c.DeckId,
             DeckName = c.Deck != null ? c.Deck.Name + " (" + c.DeckId + ")" : null,
             Edition = c.Edition,
             Tags = c.Tags.Select(t => t.Name).ToArray(),
@@ -473,7 +475,9 @@ public class CollectionTrackingService : ICollectionTrackingService
             CardName = c.CardName,
             Comments = c.Comments,
             Condition = c.Condition,
+            ContainerId = c.ContainerId,
             ContainerName = c.Container?.Name,
+            DeckId = c.DeckId,
             DeckName = c.Deck?.Name,
             Edition = c.Edition,
             Tags = c.Tags.Select(t => t.Name).ToArray(),
@@ -897,9 +901,6 @@ public class CollectionTrackingService : ICollectionTrackingService
             .FirstOrDefaultAsync(c => c.Id == model.CardSkuId);
         if (sku == null)
             throw new Exception("Card sku not found");
-
-        if (sku.DeckId != null)
-            throw new Exception("Card sku belongs to an existing deck and cannot be split off");
 
         if (model.Quantity <= 0)
             throw new Exception("Quantity must be greater than 0");

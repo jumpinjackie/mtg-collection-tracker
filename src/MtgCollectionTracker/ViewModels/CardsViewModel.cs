@@ -24,7 +24,7 @@ public partial class TagSelectionViewModel : ObservableObject
     private bool _isSelected;
 }
 
-public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAddedMessage>, IViewModelWithBusyState, IMultiModeCardListBehaviorHost, IRecipient<TagsAppliedMessage>, IRecipient<CardsSentToContainerMessage>, IRecipient<CardsSentToDeckMessage>
+public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAddedMessage>, IViewModelWithBusyState, IMultiModeCardListBehaviorHost, IRecipient<TagsAppliedMessage>, IRecipient<CardsSentToContainerMessage>, IRecipient<CardsSentToDeckMessage>, IRecipient<CardSkuSplitMessage>
 {
     readonly IViewModelFactory _vmFactory;
     readonly ICollectionTrackingService _service;
@@ -423,6 +423,30 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
         foreach (var st in toRemove)
         {
             this.SelectedTags.Remove(st);
+        }
+    }
+
+    void IRecipient<CardSkuSplitMessage>.Receive(CardSkuSplitMessage message)
+    {
+        var toUpdate = this.SearchResults
+                .Where(r => r.Id == message.SplitSkuId)
+                .Select(r => r.Id)
+                .ToList();
+        var updatedSkus = _service.GetCards(new() { CardSkuIds = toUpdate });
+        foreach (var sku in updatedSkus)
+        {
+            var item = this.SearchResults.FirstOrDefault(r => r.Id == sku.Id);
+            if (item != null)
+            {
+                item.WithData(sku);
+                var idx = this.SearchResults.IndexOf(item);
+                // Add the new split sku as well
+                var newSku = _service.GetCards(new() { CardSkuIds = [message.NewSkuId] }).ToList();
+                if (newSku.Count == 1)
+                {
+                    this.SearchResults.Insert(idx, _vmFactory.CardSku().WithData(newSku[0]));
+                }
+            }
         }
     }
 }

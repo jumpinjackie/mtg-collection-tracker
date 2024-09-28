@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewModelWithBusyState, IMultiModeCardListBehaviorHost, IRecipient<CardsSentToDeckMessage>
+public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewModelWithBusyState, IMultiModeCardListBehaviorHost, IRecipient<CardsSentToDeckMessage>, IRecipient<CardSkuSplitMessage>
 {
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
@@ -231,6 +231,34 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
         }
     }
 
+    [RelayCommand]
+    private void SplitSelectedSku()
+    {
+        if (Behavior.IsItemSplittable)
+        {
+            var selected = Behavior.SelectedItems[0];
+            var vm = _vmFactory.SplitCardSku();
+            vm.CardSkuId = selected.Id;
+            if (selected.ProxyQty > 1)
+            {
+                vm.CurrentQuantity = selected.ProxyQty;
+            }
+            else if (selected.RealQty > 1)
+            {
+                vm.CurrentQuantity = selected.RealQty;
+            }
+            if (vm.CurrentQuantity == 0)
+                return;
+
+            vm.SplitQuantity = vm.SplitMin;
+            Messenger.Send(new OpenDialogMessage
+            {
+                DrawerWidth = 300,
+                ViewModel = _vmFactory.Drawer().WithContent("Split Card SKU", vm)
+            });
+        }
+    }
+
     bool IViewModelWithBusyState.IsBusy
     {
         get => Behavior.IsBusy;
@@ -248,5 +276,29 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
         // This item was moved out of this container, so refresh current page
         if (this.PageNumber > 0)
             FetchPage(this.PageNumber);
+    }
+
+    void IRecipient<CardSkuSplitMessage>.Receive(CardSkuSplitMessage message)
+    {
+        var toUpdate = this.SearchResults
+                .Where(r => r.Id == message.SplitSkuId)
+                .Select(r => r.Id)
+                .ToList();
+        var updatedSkus = _service.GetCards(new() { CardSkuIds = toUpdate });
+        foreach (var sku in updatedSkus)
+        {
+            var item = this.SearchResults.FirstOrDefault(r => r.Id == sku.Id);
+            if (item != null)
+            {
+                item.WithData(sku);
+                var idx = this.SearchResults.IndexOf(item);
+                // Add the new split sku as well
+                var newSku = _service.GetCards(new() { CardSkuIds = [message.NewSkuId] }).ToList();
+                if (newSku.Count == 1)
+                {
+                    this.SearchResults.Insert(idx, _vmFactory.CardSku().WithData(newSku[0]));
+                }
+            }
+        }
     }
 }
