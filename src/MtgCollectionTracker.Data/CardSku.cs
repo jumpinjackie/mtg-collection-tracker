@@ -150,7 +150,7 @@ public class CardSku : IScryfallMetaLinkable
         this.Quantity -= quantity;
 
         // Then clone this sku with the new quantity
-        return new CardSku
+        var newSku = new CardSku
         {
             Quantity = quantity,
 
@@ -173,5 +173,13 @@ public class CardSku : IScryfallMetaLinkable
             IsSideboard = this.IsSideboard,
             Language = this.Language,
         };
+
+        // Copy tags
+        foreach (var t in this.Tags)
+        {
+            newSku.Tags.Add(new CardSkuTag { Name = t.Name });
+        }
+
+        return newSku;
     }
 }
