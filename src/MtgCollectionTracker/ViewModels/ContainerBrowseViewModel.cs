@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewModelWithBusyState, IMultiModeCardListBehaviorHost
+public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewModelWithBusyState, IMultiModeCardListBehaviorHost, IRecipient<CardsSentToDeckMessage>
 {
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
@@ -165,10 +165,14 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
     [RelayCommand]
     private void AddSkus()
     {
+        var vm = _vmFactory.AddCards();
+        if (_containerId.HasValue)
+            vm = vm.WithTargetContainer(_containerId.Value);
+
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 800,
-            ViewModel = _vmFactory.Drawer().WithContent("Add Cards", _vmFactory.AddCards())
+            ViewModel = _vmFactory.Drawer().WithContent("Add Cards", vm)
         });
     }
 
@@ -237,5 +241,12 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
     {
         this.OnPropertyChanged(nameof(PreviousEnabled));
         this.OnPropertyChanged(nameof(NextEnabled));
+    }
+
+    void IRecipient<CardsSentToDeckMessage>.Receive(CardsSentToDeckMessage message)
+    {
+        // This item was moved out of this container, so refresh current page
+        if (this.PageNumber > 0)
+            FetchPage(this.PageNumber);
     }
 }

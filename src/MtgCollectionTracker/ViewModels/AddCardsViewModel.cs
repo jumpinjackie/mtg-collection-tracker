@@ -200,4 +200,15 @@ public partial class AddCardsViewModel : DialogContentViewModel
     {
         Messenger.Send(new CloseDialogMessage());
     }
+
+    [ObservableProperty]
+    private bool _lockedTargetContainer = false;
+
+    public AddCardsViewModel WithTargetContainer(int containerId)
+    {
+        this.SelectedContainer = this.AvailableContainers?.FirstOrDefault(c => c.Id == containerId);
+        if (this.SelectedContainer != null)
+            this.LockedTargetContainer = true;
+        return this;
+    }
 }

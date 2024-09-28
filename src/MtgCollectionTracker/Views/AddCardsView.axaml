@@ -78,14 +78,20 @@
 				<Button Command="{Binding AddRowCommand}">Add Row</Button>
 				<Button Command="{Binding ImportCommand}">Import Rows</Button>
 			</StackPanel>
-			<TextBlock Margin="6">Add these cards to container</TextBlock>
-			<ComboBox Margin="6" SelectedItem="{Binding SelectedContainer}" ItemsSource="{Binding AvailableContainers}">
-				<ComboBox.ItemTemplate>
-					<DataTemplate x:DataType="vm:ContainerViewModel">
-						<TextBlock Text="{Binding Name}" />
-					</DataTemplate>
-				</ComboBox.ItemTemplate>
-			</ComboBox>
+			<TextBlock Margin="6" IsVisible="{Binding LockedTargetContainer}">
+				<Run>These cards will be added to:</Run>
+				<Run Text="{Binding SelectedContainer.Name}" />
+			</TextBlock>
+			<StackPanel IsVisible="{Binding !LockedTargetContainer}">
+				<TextBlock Margin="6">Add these cards to container</TextBlock>
+				<ComboBox Margin="6" SelectedItem="{Binding SelectedContainer}" ItemsSource="{Binding AvailableContainers}">
+					<ComboBox.ItemTemplate>
+						<DataTemplate x:DataType="vm:ContainerViewModel">
+							<TextBlock Text="{Binding Name}" />
+						</DataTemplate>
+					</ComboBox.ItemTemplate>
+				</ComboBox>
+			</StackPanel>
 		</StackPanel>
 	</DockPanel>
 </UserControl>
