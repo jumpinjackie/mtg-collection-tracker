@@ -1,5 +1,7 @@
-﻿namespace MtgCollectionTracker.Services.Messaging;
+﻿using System.Collections.Generic;
 
-internal record CardsSentToContainerMessage(int TotalSkus, string ContainerName);
+namespace MtgCollectionTracker.Services.Messaging;
 
-internal record CardsSentToDeckMessage(int TotalSkus, string DeckName);
+internal record CardsSentToContainerMessage(int ContainerId, int TotalSkus, string ContainerName, List<int> SkuIds);
+
+internal record CardsSentToDeckMessage(int DeckId, int TotalSkus, string DeckName, List<int> SkuIds);

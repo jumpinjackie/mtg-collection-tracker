@@ -34,6 +34,7 @@
 			</ComboBox>
 			<CheckBox IsChecked="{Binding UnSetDeck}">Un-set currently assigned deck</CheckBox>
 			<CheckBox IsChecked="{Binding UnSetContainer}">Un-set currently assigned container</CheckBox>
+			<CheckBox IsThreeState="True" IsChecked="{Binding MarkAsSideboard}">Mark as sideboard card</CheckBox>
 			<TextBlock Margin="6" LineSpacing="6" TextWrapping="WrapWithOverflow">
 				The following card SKUs will be added to the specified container or deck
 			</TextBlock>

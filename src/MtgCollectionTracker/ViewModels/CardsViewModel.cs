@@ -24,7 +24,7 @@ public partial class TagSelectionViewModel : ObservableObject
     private bool _isSelected;
 }
 
-public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAddedMessage>, IViewModelWithBusyState, IMultiModeCardListBehaviorHost, IRecipient<TagsAppliedMessage>
+public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAddedMessage>, IViewModelWithBusyState, IMultiModeCardListBehaviorHost, IRecipient<TagsAppliedMessage>, IRecipient<CardsSentToContainerMessage>, IRecipient<CardsSentToDeckMessage>
 {
     readonly IViewModelFactory _vmFactory;
     readonly ICollectionTrackingService _service;
@@ -353,6 +353,55 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
         this.SkuTotal += message.SkuTotal;
         this.ProxyTotal += message.ProxyTotal;
         this.CardTotal += message.CardsTotal;
+    }
+
+    void IRecipient<CardsSentToContainerMessage>.Receive(CardsSentToContainerMessage message)
+    {
+        // Un-parented items have no container, so remove from the search results any skus in this
+        // list (which have been moved to a new container)
+        if (this.UnParented)
+        {
+            var toRemove = this.SearchResults.Where(r => message.SkuIds.Contains(r.Id)).ToList();
+            foreach (var r in toRemove)
+                this.SearchResults.Remove(r);
+        }
+        else // Update existing skus in current search results set to reflect updated containers
+        {
+            var toUpdate = this.SearchResults
+                .Where(r => message.SkuIds.Contains(r.Id))
+                .Select(r => r.Id)
+                .ToList();
+            var updatedSkus = _service.GetCards(new() { CardSkuIds = toUpdate });
+            foreach (var sku in updatedSkus)
+            {
+                this.SearchResults.FirstOrDefault(r => r.Id == sku.Id)?.WithData(sku);
+            }
+        }
+    }
+
+    void IRecipient<CardsSentToDeckMessage>.Receive(CardsSentToDeckMessage message)
+    {
+        // Un-parented items have no container, so remove from the search results any skus in this
+        // list (which have been moved to a deck). Also remove any results that previously were not
+        // part of any deck (because they now are)
+        if (this.UnParented || this.NotInDecks)
+        {
+            var toRemove = this.SearchResults.Where(r => message.SkuIds.Contains(r.Id)).ToList();
+            foreach (var r in toRemove)
+                this.SearchResults.Remove(r);
+        }
+        else // Update existing skus in current search results set to reflect updated decks
+        {
+            var toUpdate = this.SearchResults
+                .Where(r => message.SkuIds.Contains(r.Id))
+                .Select(r => r.Id)
+                .ToList();
+            var updatedSkus = _service.GetCards(new() { CardSkuIds = toUpdate });
+            foreach (var sku in updatedSkus)
+            {
+                this.SearchResults.FirstOrDefault(r => r.Id == sku.Id)?.WithData(sku);
+            }
+        }
     }
 
     void IMultiModeCardListBehaviorHost.HandleBusyChanged(bool oldValue, bool newValue)

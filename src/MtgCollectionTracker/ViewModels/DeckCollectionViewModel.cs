@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewModelWithBusyState, IRecipient<DeckCreatedMessage>, IRecipient<DeckDismantledMessage>
+public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewModelWithBusyState, IRecipient<DeckCreatedMessage>, IRecipient<DeckDismantledMessage>, IRecipient<CardsSentToDeckMessage>
 {
     readonly IViewModelFactory _vmFactory;
     readonly ICollectionTrackingService _service;
@@ -207,6 +207,21 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
             finally
             {
                 _silentSelectedFormatsUpdate = false;
+            }
+        }
+    }
+
+    void IRecipient<CardsSentToDeckMessage>.Receive(CardsSentToDeckMessage message)
+    {
+        // Update totals of given deck
+        var deck = this.Decks.FirstOrDefault(d => d.DeckId == message.DeckId);
+        if (deck != null)
+        {
+            var sum = _service.GetDecks(new() { Formats = [], Ids = [deck.DeckId] });
+            foreach (var s  in sum)
+            {
+                if (deck.DeckId == s.Id)
+                    deck.WithData(s);
             }
         }
     }

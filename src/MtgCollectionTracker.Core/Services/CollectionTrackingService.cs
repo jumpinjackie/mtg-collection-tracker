@@ -132,11 +132,16 @@ public class CollectionTrackingService : ICollectionTrackingService
         Expression<Func<Deck, bool>> predicate = (filter == null || !filter.Formats.Any())
             ? d => true
             : d => filter.Formats.Contains(d.Format);
+        Expression<Func<Deck, bool>> predicate2 = (filter == null || !(filter.Ids?.Any() == true))
+            ? d => true
+            : d => filter.Ids.Contains(d.Id);
+
         using var db = _db.Invoke();
         return db.Value
             .Decks
-            .Where(predicate)
             .Include(d => d.Container)
+            .Where(predicate)
+            .Where(predicate2)
             .OrderBy(d => d.Name)
             .Select(d => new DeckSummaryModel
             {

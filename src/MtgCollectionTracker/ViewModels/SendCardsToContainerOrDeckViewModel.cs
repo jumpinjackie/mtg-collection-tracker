@@ -7,6 +7,7 @@ using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using ScryfallApi.Client;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -70,13 +71,18 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
     [NotifyCanExecuteChangedFor(nameof(SendCardsCommand))]
     private bool _unSetContainer;
 
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SendCardsCommand))]
+    private bool? _markAsSideboard;
+
     public IEnumerable<ContainerViewModel>? AvailableContainers { get; internal set; }
 
     public IEnumerable<DeckViewModel>? AvailableDecks { get; internal set; }
 
     public IEnumerable<CardSkuItemViewModel>? Cards { get; internal set; }
 
-    private bool CanSendCards() => this.SelectedContainer != null || this.SelectedDeck != null || this.UnSetContainer || this.UnSetDeck;
+    [MemberNotNullWhen(true, nameof(SelectedContainer), nameof(SelectedDeck), nameof(Cards))]
+    private bool CanSendCards() => this.Cards?.Any() == true && (this.SelectedContainer != null || this.SelectedDeck != null || this.UnSetContainer || this.UnSetDeck || this.MarkAsSideboard.HasValue);
 
     public SendCardsToContainerOrDeckViewModel WithCards(IEnumerable<CardSkuItemViewModel> cards)
     {
@@ -91,14 +97,15 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
     {
         if (CanSendCards())
         {
-            var skuIds = this.Cards.Select(c => c.Id);
+            var skuIds = this.Cards.Select(c => c.Id).ToList();
             var res = await _service.UpdateCardSkuAsync(new()
             {
                 Ids = skuIds,
                 ContainerId = this.SelectedContainer?.Id,
                 DeckId = this.SelectedDeck?.DeckId,
                 UnsetDeck = this.UnSetDeck,
-                UnsetContainer = this.UnSetContainer
+                UnsetContainer = this.UnSetContainer,
+                IsSideboard = this.MarkAsSideboard
             }, _scryfallApiClient, CancellationToken.None);
             /*
             // Update existing selection with updated model
@@ -111,9 +118,9 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
             }
             */
             if (this.SelectedContainer != null)
-                Messenger.Send(new CardsSentToContainerMessage(res, this.SelectedContainer.Name));
+                Messenger.Send(new CardsSentToContainerMessage(this.SelectedContainer.Id, res, this.SelectedContainer.Name, skuIds));
             if (this.SelectedDeck != null)
-                Messenger.Send(new CardsSentToDeckMessage(res, this.SelectedDeck.Name));
+                Messenger.Send(new CardsSentToDeckMessage(this.SelectedDeck.DeckId, res, this.SelectedDeck.Name, skuIds));
             Messenger.Send(new CloseDialogMessage());
         }
     }
