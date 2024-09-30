@@ -10,14 +10,14 @@ using System.Linq;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class DeckListVisualViewModel : DialogContentViewModel
+public partial class DeckDetailsViewModel : DialogContentViewModel
 {
     readonly ICollectionTrackingService _service;
 
     [ObservableProperty]
     private string _name;
 
-    public DeckListVisualViewModel()
+    public DeckDetailsViewModel()
     {
         base.ThrowIfNotDesignMode();
         _service = new StubCollectionTrackingService();
@@ -25,7 +25,7 @@ public partial class DeckListVisualViewModel : DialogContentViewModel
         this.Name = "Test Deck";
     }
 
-    public DeckListVisualViewModel(ICollectionTrackingService service)
+    public DeckDetailsViewModel(ICollectionTrackingService service)
     {
         _service = service;
         this.IsActive = true;
@@ -44,7 +44,7 @@ public partial class DeckListVisualViewModel : DialogContentViewModel
     [ObservableProperty]
     private bool _isGrouped = true;
 
-    public DeckListVisualViewModel WithDeck(DeckModel deck)
+    public DeckDetailsViewModel WithDeck(DeckModel deck)
     {
         int mdTotal = 0;
         int sbTotal = 0;

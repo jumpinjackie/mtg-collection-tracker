@@ -39,7 +39,7 @@ public interface IViewModelFactory
 
     DeckListViewModel DeckList();
 
-    DeckListVisualViewModel DeckVisual();
+    DeckDetailsViewModel DeckVisual();
 
     ContainerBrowseViewModel BrowseContainer();
 

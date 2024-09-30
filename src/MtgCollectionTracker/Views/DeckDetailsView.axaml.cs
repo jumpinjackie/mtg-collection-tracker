@@ -2,9 +2,9 @@ using Avalonia.Controls;
 
 namespace MtgCollectionTracker.Views
 {
-    public partial class DeckListVisualView : UserControl
+    public partial class DeckDetailsView : UserControl
     {
-        public DeckListVisualView()
+        public DeckDetailsView()
         {
             InitializeComponent();
         }

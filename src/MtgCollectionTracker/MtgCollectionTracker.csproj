@@ -47,6 +47,9 @@
     <Compile Update="Views\DeckCollectionView.axaml.cs">
       <DependentUpon>DeckCollectionView.axaml</DependentUpon>
     </Compile>
+    <Compile Update="Views\DeckDetailsView.axaml.cs">
+      <DependentUpon>DeckDetailsView.axaml</DependentUpon>
+    </Compile>
     <Compile Update="Views\DialogView.axaml.cs">
       <DependentUpon>DialogView.axaml</DependentUpon>
     </Compile>
