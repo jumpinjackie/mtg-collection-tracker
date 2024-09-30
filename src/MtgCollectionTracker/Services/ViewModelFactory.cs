@@ -23,8 +23,7 @@ public class ViewModelFactory : IViewModelFactory
     readonly Func<DialogViewModel> _drawer;
     readonly Func<AddCardsViewModel> _addCards;
     readonly Func<AddCardsToWishlistViewModel> _addCardsToWishlist;
-    readonly Func<DeckListViewModel> _deckList;
-    readonly Func<DeckDetailsViewModel> _deckVisual;
+    readonly Func<DeckDetailsViewModel> _deckDetails;
     readonly Func<ContainerBrowseViewModel> _browseContainer;
     readonly Func<EditCardSkuViewModel> _editCardSku;
     readonly Func<SplitCardSkuViewModel> _splitCardSku;
@@ -47,8 +46,7 @@ public class ViewModelFactory : IViewModelFactory
                             Func<DialogViewModel> drawer,
                             Func<AddCardsViewModel> addCards,
                             Func<AddCardsToWishlistViewModel> addCardsToWishlist,
-                            Func<DeckListViewModel> deckList,
-                            Func<DeckDetailsViewModel> deckVisual,
+                            Func<DeckDetailsViewModel> deckDetails,
                             Func<ContainerBrowseViewModel> browseContainer,
                             Func<EditCardSkuViewModel> editCardSku,
                             Func<SplitCardSkuViewModel> splitCardSku,
@@ -71,8 +69,7 @@ public class ViewModelFactory : IViewModelFactory
         _drawer = drawer;
         _addCards = addCards;
         _addCardsToWishlist = addCardsToWishlist;
-        _deckList = deckList;
-        _deckVisual = deckVisual;
+        _deckDetails = deckDetails;
         _browseContainer = browseContainer;
         _editCardSku = editCardSku;
         _splitCardSku = splitCardSku;
@@ -110,9 +107,7 @@ public class ViewModelFactory : IViewModelFactory
 
     public AddCardsToWishlistViewModel AddCardsToWishlist() => _addCardsToWishlist();
 
-    public DeckListViewModel DeckList() => _deckList();
-
-    public DeckDetailsViewModel DeckVisual() => _deckVisual();
+    public DeckDetailsViewModel DeckDetails() => _deckDetails();
 
     public ContainerBrowseViewModel BrowseContainer() => _browseContainer();
 

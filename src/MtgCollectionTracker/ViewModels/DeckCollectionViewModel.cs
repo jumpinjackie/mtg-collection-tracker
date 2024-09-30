@@ -134,20 +134,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
     }
 
     [RelayCommand]
-    private void ViewDeckContents()
-    {
-        if (this.SelectedDeck != null)
-        {
-            Messenger.Send(new OpenDialogMessage
-            {
-                DrawerWidth = 450,
-                ViewModel = _vmFactory.Drawer().WithContent("Deck List", _vmFactory.DeckList().WithDeck(this.SelectedDeck.DeckId, this.SelectedDeck.Name))
-            });
-        }
-    }
-
-    [RelayCommand]
-    private async Task ViewDeckVisually()
+    private async Task ViewDeckDetails()
     {
         if (this.SelectedDeck != null)
         {
@@ -159,7 +146,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 1280,
-                ViewModel = _vmFactory.Drawer().WithContent("Deck: " + deck.Name, _vmFactory.DeckVisual().WithDeck(deck))
+                ViewModel = _vmFactory.Drawer().WithContent("Deck: " + deck.Name, _vmFactory.DeckDetails().WithDeck(deck))
             });
         }
     }

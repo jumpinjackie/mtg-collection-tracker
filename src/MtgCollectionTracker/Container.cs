@@ -30,7 +30,6 @@ namespace MtgCollectionTracker;
 [Register(typeof(CanIBuildThisDeckViewModel), Scope.InstancePerResolution)]
 [Register(typeof(SettingsViewModel), Scope.InstancePerResolution)]
 [Register(typeof(DeckViewModel), Scope.InstancePerResolution)]
-[Register(typeof(DeckListViewModel), Scope.InstancePerResolution)]
 [Register(typeof(DeckDetailsViewModel), Scope.InstancePerResolution)]
 [Register(typeof(EditCardSkuViewModel), Scope.InstancePerResolution)]
 [Register(typeof(SplitCardSkuViewModel), Scope.InstancePerResolution)]

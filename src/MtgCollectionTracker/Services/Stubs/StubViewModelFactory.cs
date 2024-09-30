@@ -34,9 +34,7 @@ public class StubViewModelFactory : IViewModelFactory
 
     public AddCardsToWishlistViewModel AddCardsToWishlist() => new AddCardsToWishlistViewModel();
 
-    public DeckListViewModel DeckList() => new DeckListViewModel();
-
-    public DeckDetailsViewModel DeckVisual() => new DeckDetailsViewModel();
+    public DeckDetailsViewModel DeckDetails() => new DeckDetailsViewModel();
 
     public ContainerBrowseViewModel BrowseContainer() => new ContainerBrowseViewModel();
 

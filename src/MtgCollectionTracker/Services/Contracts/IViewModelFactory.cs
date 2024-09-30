@@ -37,9 +37,7 @@ public interface IViewModelFactory
 
     SendCardsToContainerOrDeckViewModel SendCardsToContainer();
 
-    DeckListViewModel DeckList();
-
-    DeckDetailsViewModel DeckVisual();
+    DeckDetailsViewModel DeckDetails();
 
     ContainerBrowseViewModel BrowseContainer();
 
