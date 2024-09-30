@@ -22,8 +22,6 @@ public class CollectionTrackingService : ICollectionTrackingService
         _db = db;
     }
 
-    const int SIDEBOARD_LIMIT = 15;
-
     static string FixCardName(string name)
     {
         // This card doesn't exist on paper. Use the paper name
@@ -62,7 +60,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             .Include(c => c.Container)
             .Where(s => s.CardName == searchName);
         if (noProxies)
-            skus = skus.Where(s => !proxySets.Contains(s.Edition));
+            skus = skus.Where(s => !DeckPrinter.IsProxyEdition(s.Edition));
         if (sparesOnly) // A spare is any sku not belonging to an existing deck
             skus = skus.Where(s => s.DeckId == null);
 
@@ -197,7 +195,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             queryable = queryable.Where(c => c.ContainerId == null && c.DeckId == null);
 
         if (query.NoProxies)
-            queryable = queryable.Where(c => !proxySets.Contains(c.Edition));
+            queryable = queryable.Where(c => !DeckPrinter.IsProxyEdition(c.Edition));
 
         if (query.NotInDecks)
             queryable = queryable.Where(c => c.DeckId == null);
@@ -424,7 +422,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             .Where(c => c.IsSideboard)
             .Sum(c => c.Quantity);
 
-        if (model.IsSideboard && sbTotal + model.Quantity > SIDEBOARD_LIMIT)
+        if (model.IsSideboard && sbTotal + model.Quantity > DeckPrinter.SIDEBOARD_LIMIT)
             throw new InvalidOperationException($"This operation would go over the sideboard limit");
 
         var newSku = sku.RemoveQuantity(model.Quantity);
@@ -698,27 +696,6 @@ public class CollectionTrackingService : ICollectionTrackingService
         };
     }
 
-    static HashSet<string> proxySets = [
-        "PROXY",
-        // World Championship decks
-        "PTC",
-        "WC97",
-        "WC98",
-        "WC99",
-        "WC00",
-        "WC01",
-        "WC02",
-        "WC03",
-        "WC04",
-        // Collector's edition
-        "CED",
-        "CEI",
-        // 30th Anniversary Edition. 15 card proxy booster packs, all for the low-low price of $1000 USD a pack!
-        "30A"
-    ];
-
-    static bool IsProxyEdition(string edition) => proxySets.Contains(edition);
-
     public string PrintDeck(int deckId, bool reportProxyUsage)
     {
         using var db = _db.Invoke();
@@ -727,81 +704,10 @@ public class CollectionTrackingService : ICollectionTrackingService
             throw new Exception("Deck not found");
 
         var cards = deck.Cards.ToList();
-        var deckTotal = cards.Sum(c => c.Quantity);
-        var proxyTotal = cards.Where(c => IsProxyEdition(c.Edition)).Sum(c => c.Quantity);
-        var mdNonLandTotal = cards.Where(c => !c.IsSideboard && !c.IsLand).Sum(c => c.Quantity);
-        var mdLandTotal = cards.Where(c => !c.IsSideboard && c.IsLand).Sum(c => c.Quantity);
-        var sbTotal = cards.Where(c => c.IsSideboard).Sum(c => c.Quantity);
-
-        var mdNonLand = cards.Where(c => !c.IsSideboard && !c.IsLand)
-            .GroupBy(c => new { c.CardName })
-            .Select(grp => new { Name = grp.Key.CardName, Count = grp.Sum(c => c.Quantity), ProxyCount = grp.Where(c => IsProxyEdition(c.Edition)).Sum(c => c.Quantity) });
-
-        var mdLand = cards.Where(c => !c.IsSideboard && c.IsLand)
-            .GroupBy(c => new { c.CardName })
-            .Select(grp => new { Name = grp.Key.CardName, Count = grp.Sum(c => c.Quantity), ProxyCount = grp.Where(c => IsProxyEdition(c.Edition)).Sum(c => c.Quantity) });
-
-        var sb = cards.Where(c => c.IsSideboard)
-            .GroupBy(c => new { c.CardName })
-            .Select(grp => new { Name = grp.Key.CardName, Count = grp.Sum(c => c.Quantity), ProxyCount = grp.Where(c => IsProxyEdition(c.Edition)).Sum(c => c.Quantity) });
-
         var text = new StringBuilder();
-        text.AppendLine($"Deck Name: {deck.Name}");
-        if (!string.IsNullOrEmpty(deck.Format))
-            text.AppendLine($"Format: {deck.Format}");
-        text.AppendLine();
 
-        text.AppendLine($"// Main Deck ({mdNonLandTotal} / {mdNonLandTotal + mdLandTotal})");
-        foreach (var item in mdNonLand)
-        {
-            if (item.ProxyCount > 0 && reportProxyUsage)
-                text.AppendLine($"{item.Count} {item.Name} [{item.ProxyCount} proxies]");
-            else
-                text.AppendLine($"{item.Count} {item.Name}");
-        }
-        text.AppendLine($"// Lands ({mdLandTotal} / {mdNonLandTotal + mdLandTotal})");
-        foreach (var item in mdLand)
-        {
-            if (item.ProxyCount > 0 && reportProxyUsage)
-                text.AppendLine($"{item.Count} {item.Name} [{item.ProxyCount} proxies]");
-            else
-                text.AppendLine($"{item.Count} {item.Name}");
-        }
+        DeckPrinter.Print(deck.Name, deck.Format, deck.Cards, s => text.AppendLine(s), reportProxyUsage);
 
-        if (sbTotal > 0)
-        {
-            if (sbTotal < SIDEBOARD_LIMIT)
-                text.AppendLine($"// Sideboard ({sbTotal}, {SIDEBOARD_LIMIT - sbTotal} card(s) short!)");
-            else
-                text.AppendLine($"// Sideboard ({sbTotal})");
-            foreach (var item in sb)
-            {
-                if (item.ProxyCount > 0 && reportProxyUsage)
-                    text.AppendLine($"{item.Count} {item.Name} [{item.ProxyCount} proxies]");
-                else
-                    text.AppendLine($"{item.Count} {item.Name}");
-            }
-        }
-        else
-        {
-            text.AppendLine("// WARNING: This deck has no sideboard!");
-        }
-
-        if (reportProxyUsage)
-        {
-            if (proxyTotal > 0)
-            {
-                text.AppendLine();
-                text.AppendLine("Proxy stats:");
-                text.AppendLine($"  {proxyTotal} cards [{((double)proxyTotal / (double)deckTotal):P2} of the deck] is proxies or originates from sets not legal for sanctioned tournaments");
-                text.AppendLine("This deck cannot be played in DCI/Wizards sanctioned tournaments");
-            }
-            else
-            {
-                text.AppendLine();
-                text.AppendLine("This deck has no proxies");
-            }
-        }
         return text.ToString();
     }
 
@@ -1252,7 +1158,7 @@ public class CollectionTrackingService : ICollectionTrackingService
                     Type = sku.Scryfall?.Type,
                     ManaValue = sku.Scryfall?.ManaValue ?? -1,
                     IsLand = sku.IsLand,
-                    IsProxy = sku.Edition == "PROXY"
+                    Edition = sku.Edition
                 };
                 if (sku.IsSideboard)
                     sideboard.Add(card);

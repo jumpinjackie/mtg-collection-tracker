@@ -1,5 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore.Metadata.Conventions;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
 namespace MtgCollectionTracker.Data;
 
@@ -10,7 +9,7 @@ namespace MtgCollectionTracker.Data;
 /// <see cref="CardSku"/> instances may belong to a <see cref="Container"/> or a <see cref="Deck"/>
 /// or both
 /// </summary>
-public class CardSku : IScryfallMetaLinkable
+public class CardSku : IScryfallMetaLinkable, IDeckPrintableSlot
 {
     public int Id { get; set; }
 

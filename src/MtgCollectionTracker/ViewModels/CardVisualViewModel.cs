@@ -1,8 +1,9 @@
 ﻿using Avalonia.Media.Imaging;
+using MtgCollectionTracker.Data;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public class CardVisualViewModel : ViewModelBase
+public class CardVisualViewModel : ViewModelBase, IDeckPrintableSlot
 {
     public required string CardName { get; set; }
 
@@ -21,4 +22,8 @@ public class CardVisualViewModel : ViewModelBase
     public bool IsGrouped { get; set; }
 
     public string CardNameBgColor => IsProxy ? "RosyBrown" : "Gray";
+
+    public bool IsSideboard { get; set; }
+
+    public required string Edition { get; set; }
 }
