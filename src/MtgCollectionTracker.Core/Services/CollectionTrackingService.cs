@@ -58,7 +58,8 @@ public class CollectionTrackingService : ICollectionTrackingService
         var skus = db.Value.Cards
             .Include(c => c.Deck)
             .Include(c => c.Container)
-            .Where(s => s.CardName == searchName);
+            // TODO: Need a dedicated normalized and ascii-folded column to search against
+            .Where(s => s.CardName.ToLower() == searchName.ToLower());
         if (noProxies)
             skus = skus.Where(s => !DeckPrinter.IsProxyEdition(s.Edition));
         if (sparesOnly) // A spare is any sku not belonging to an existing deck
@@ -76,7 +77,8 @@ public class CollectionTrackingService : ICollectionTrackingService
             skus = db.Value.Cards
                 .Include(c => c.Deck)
                 .Include(c => c.Container)
-                .Where(s => s.CardName.StartsWith(searchName2));
+                // TODO: Need a dedicated normalized and ascii-folded column to search against
+                .Where(s => s.CardName.ToLower().StartsWith(searchName2.ToLower()));
 
             matchingSkus.AddRange(skus);
 
@@ -195,7 +197,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             queryable = queryable.Where(c => c.ContainerId == null && c.DeckId == null);
 
         if (query.NoProxies)
-            queryable = queryable.Where(c => !DeckPrinter.IsProxyEdition(c.Edition));
+            queryable = queryable.Where(DeckPrinter.IsNotProxyEditionExpr);
 
         if (query.NotInDecks)
             queryable = queryable.Where(c => c.DeckId == null);
@@ -1152,11 +1154,12 @@ public class CollectionTrackingService : ICollectionTrackingService
                 var card = new DeckCardModel
                 {
                     SkuId = sku.Id,
+                    ScryfallId = sku.ScryfallId,
                     CardName = sku.CardName,
-                    FrontFaceImage = sku.Scryfall?.ImageSmall!,
-                    BackFaceImage = sku.Scryfall?.BackImageSmall,
                     Type = sku.Scryfall?.Type,
                     ManaValue = sku.Scryfall?.ManaValue ?? -1,
+                    // A double-faced card has back-face image
+                    IsDoubleFaced = sku.Scryfall?.BackImageSmall != null,
                     IsLand = sku.IsLand,
                     Edition = sku.Edition
                 };
