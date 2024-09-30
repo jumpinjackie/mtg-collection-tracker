@@ -17,100 +17,116 @@
 			<RadioButton GroupName="View Mode" IsChecked="{Binding Mode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:DeckViewMode.Text}}" Content="Text"/>
 			<RadioButton GroupName="View Mode" IsChecked="{Binding Mode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:DeckViewMode.VisualBySku}}" Content="Visual (by SKU)"/>
 			<RadioButton GroupName="View Mode" IsChecked="{Binding Mode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:DeckViewMode.VisualByCardName}}" Content="Visual (by Card Name)"/>
+			<RadioButton GroupName="View Mode" IsChecked="{Binding Mode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:DeckViewMode.TableBySku}}" Content="Table (by SKU)"/>
+			<RadioButton GroupName="View Mode" IsChecked="{Binding Mode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:DeckViewMode.TableByCardName}}" Content="Table (by Card Name)"/>
 		</StackPanel>
-		<!-- By Text -->
-		<ScrollViewer IsVisible="{Binding Mode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:DeckViewMode.Text}}">
-			<TextBlock TextWrapping="Wrap" Text="{Binding DeckListText}" />
-		</ScrollViewer>
-		<!-- Visual by SKU -->
-		<SplitView IsVisible="{Binding Mode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:DeckViewMode.VisualBySku}}"
-				   IsPaneOpen="True"
-				   DisplayMode="CompactInline"
-				   PanePlacement="Right"
-				   OpenPaneLength="400">
-			<SplitView.Pane>
-				<DockPanel>
-					<StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-						<TextBlock xml:space="preserve">Sideboard: </TextBlock>
-						<TextBlock Text="{Binding SideboardSize}" />
-					</StackPanel>
-					<ListBox ScrollViewer.VerticalScrollBarVisibility="Auto" ItemsSource="{Binding SideboardBySku}" Background="Transparent">
-						<ListBox.ItemsPanel>
-							<ItemsPanelTemplate>
-								<WrapPanel />
-							</ItemsPanelTemplate>
-						</ListBox.ItemsPanel>
-						<ListBox.Styles>
-							<Style Selector="ListBoxItem">
-								<Setter Property="Padding" Value="2" />
-							</Style>
-						</ListBox.Styles>
-					</ListBox>
-				</DockPanel>
-			</SplitView.Pane>
-			<DockPanel>
-				<StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-					<TextBlock xml:space="preserve">Main Deck: </TextBlock>
-					<TextBlock Text="{Binding MainDeckSize}" />
-				</StackPanel>
-				<ListBox ScrollViewer.VerticalScrollBarVisibility="Auto" ItemsSource="{Binding MainDeckBySku}" Background="Transparent">
-					<ListBox.ItemsPanel>
-						<ItemsPanelTemplate>
-							<WrapPanel />
-						</ItemsPanelTemplate>
-					</ListBox.ItemsPanel>
-					<ListBox.Styles>
-						<Style Selector="ListBoxItem">
-							<Setter Property="Padding" Value="2" />
-						</Style>
-					</ListBox.Styles>
-				</ListBox>
-			</DockPanel>
-		</SplitView>
-		<!-- Visual by card name -->
-		<SplitView IsVisible="{Binding Mode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:DeckViewMode.VisualByCardName}}"
-				   IsPaneOpen="True"
-				   DisplayMode="CompactInline"
-				   PanePlacement="Right"
-				   OpenPaneLength="400">
-			<SplitView.Pane>
-				<DockPanel>
-					<StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-						<TextBlock xml:space="preserve">Sideboard: </TextBlock>
-						<TextBlock Text="{Binding SideboardSize}" />
-					</StackPanel>
-					<ListBox ScrollViewer.VerticalScrollBarVisibility="Auto" ItemsSource="{Binding SideboardByCardName}" Background="Transparent">
-						<ListBox.ItemsPanel>
-							<ItemsPanelTemplate>
-								<WrapPanel />
-							</ItemsPanelTemplate>
-						</ListBox.ItemsPanel>
-						<ListBox.Styles>
-							<Style Selector="ListBoxItem">
-								<Setter Property="Padding" Value="2" />
-							</Style>
-						</ListBox.Styles>
-					</ListBox>
-				</DockPanel>
-			</SplitView.Pane>
-			<DockPanel>
-				<StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
-					<TextBlock xml:space="preserve">Main Deck: </TextBlock>
-					<TextBlock Text="{Binding MainDeckSize}" />
-				</StackPanel>
-				<ListBox ScrollViewer.VerticalScrollBarVisibility="Auto" ItemsSource="{Binding MainDeckByCardName}" Background="Transparent">
-					<ListBox.ItemsPanel>
-						<ItemsPanelTemplate>
-							<WrapPanel />
-						</ItemsPanelTemplate>
-					</ListBox.ItemsPanel>
-					<ListBox.Styles>
-						<Style Selector="ListBoxItem">
-							<Setter Property="Padding" Value="2" />
-						</Style>
-					</ListBox.Styles>
-				</ListBox>
-			</DockPanel>
-		</SplitView>
+		<StackPanel IsVisible="{Binding IsSkuBasedMode}" DockPanel.Dock="Bottom" Margin="8" Orientation="Horizontal">
+			<!-- TODO: Add cards to this deck command -->
+			<Button IsEnabled="{Binding Behavior.HasAtLeastOneSelectedItem}" Command="{Binding SendSkusToContainerCommand}" Content="Send to Deck/Container" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding Behavior.IsItemSplittable}" Command="{Binding SplitSelectedSkuCommand}" Content="Split" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding Behavior.HasAtLeastOneSelectedItem}" Command="{Binding UpdateSkuMetadataCommand}" Content="Update Metadata" HorizontalAlignment="Center" />
+			<!-- TODO: Remove from this deck command -->
+		</StackPanel>
+		<Grid>
+			<!-- By Text -->
+			<ScrollViewer IsVisible="{Binding Mode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:DeckViewMode.Text}}">
+				<TextBlock TextWrapping="Wrap" Text="{Binding DeckListText}" />
+			</ScrollViewer>
+			<!-- Visual -->
+			<Panel IsVisible="{Binding IsVisualMode}">
+				<SplitView IsPaneOpen="True"
+						   DisplayMode="CompactInline"
+						   PanePlacement="Right"
+						   OpenPaneLength="400">
+					<SplitView.Pane>
+						<DockPanel>
+							<StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+								<TextBlock xml:space="preserve">Sideboard: </TextBlock>
+								<TextBlock Text="{Binding SideboardSize}" />
+							</StackPanel>
+							<ListBox ScrollViewer.VerticalScrollBarVisibility="Auto" ItemsSource="{Binding Sideboard}" Background="Transparent">
+								<ListBox.ItemsPanel>
+									<ItemsPanelTemplate>
+										<WrapPanel />
+									</ItemsPanelTemplate>
+								</ListBox.ItemsPanel>
+								<ListBox.Styles>
+									<Style Selector="ListBoxItem">
+										<Setter Property="Padding" Value="2" />
+									</Style>
+								</ListBox.Styles>
+							</ListBox>
+						</DockPanel>
+					</SplitView.Pane>
+					<DockPanel>
+						<StackPanel DockPanel.Dock="Top" Orientation="Horizontal">
+							<TextBlock xml:space="preserve">Main Deck: </TextBlock>
+							<TextBlock Text="{Binding MainDeckSize}" />
+						</StackPanel>
+						<ListBox ScrollViewer.VerticalScrollBarVisibility="Auto" ItemsSource="{Binding MainDeck}" Background="Transparent">
+							<ListBox.ItemsPanel>
+								<ItemsPanelTemplate>
+									<WrapPanel />
+								</ItemsPanelTemplate>
+							</ListBox.ItemsPanel>
+							<ListBox.Styles>
+								<Style Selector="ListBoxItem">
+									<Setter Property="Padding" Value="2" />
+								</Style>
+							</ListBox.Styles>
+						</ListBox>
+					</DockPanel>
+				</SplitView>
+			</Panel>
+			<!-- Table view -->
+			<Panel IsVisible="{Binding IsTableMode}">
+				<SplitView IsPaneOpen="True"
+						   DisplayMode="CompactInline"
+						   PanePlacement="Right"
+						   OpenPaneLength="400">
+					<SplitView.Pane>
+						<!-- 
+						TODO: I'm sure there's a way to templatize this content to avoid current
+						XAML duplication with CardSkuItemView.axaml
+						
+						I'm just not expert enough yet
+						-->
+						<StackPanel IsVisible="{Binding Behavior.HasSelectedCardSku}" VerticalAlignment="Center" HorizontalAlignment="Center">
+							<Canvas Width="400" Height="560">
+								<Panel Canvas.Left="0" Canvas.Top="0" Canvas.Bottom="0" Canvas.Right="0" Background="#7FFF22DD">
+									<!-- TODO: If this is even possible, do a flip animation for double-faced cards -->
+									<Image Width="400" Stretch="Uniform" Source="{Binding Behavior.SelectedRow.CardImageLarge^}" />
+									<Panel Height="560" IsVisible="{Binding Behavior.SelectedRow.CardImageLarge, Converter={x:Static ObjectConverters.IsNull}}">
+										<PathIcon Height="75" Width="75" Data="{StaticResource card}" />
+									</Panel>
+								</Panel>
+							</Canvas>
+							<Button IsVisible="{Binding Behavior.SelectedRow.IsDoubleFaced}" Grid.Column="0" HorizontalAlignment="Center" Content="{Binding Behavior.SelectedItems[0].SwitchLabel}" Command="{Binding Behavior.SelectedItems[0].SwitchFaceCommand}" />
+						</StackPanel>
+					</SplitView.Pane>
+					<Grid>
+						<!-- 
+						NOTE: Can only have single selection mode as multi-selection data binding
+						is not currently supported :( 
+						-->
+						<DataGrid ItemsSource="{Binding TableList}"
+								  CanUserReorderColumns="True"
+								  CanUserResizeColumns="True"
+								  CanUserSortColumns="True"
+								  GridLinesVisibility="All"
+								  IsReadOnly="True"
+								  SelectionMode="Single"
+								  SelectedItem="{Binding Behavior.SelectedRow}"
+								  BorderThickness="1">
+							<DataGrid.Columns>
+								<DataGridTextColumn Header="Qty" Binding="{Binding Quantity}"/>
+								<DataGridTextColumn Header="Card Name" Binding="{Binding CardName}"/>
+								<DataGridTextColumn Header="Is Sideboard?" Binding="{Binding IsSideboard}"/>
+							</DataGrid.Columns>
+						</DataGrid>
+					</Grid>
+				</SplitView>
+			</Panel>
+		</Grid>
 	</DockPanel>
 </UserControl>

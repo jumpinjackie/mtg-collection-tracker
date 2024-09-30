@@ -16,7 +16,7 @@ public enum CardItemViewMode
     Table
 }
 
-public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem
+public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendableCardItem
 {
     readonly ICollectionTrackingService _service;
 
@@ -159,6 +159,8 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem
     public bool HasTags => !string.IsNullOrWhiteSpace(this.Tags);
 
     public string[] TagList { get; set; }
+
+    int ISendableCardItem.Quantity => DeckPrinter.IsProxyEdition(this.Edition) ? this.ProxyQty : this.RealQty;
 
     private async Task<Bitmap?> GetLargeFrontFaceImageAsync()
     {

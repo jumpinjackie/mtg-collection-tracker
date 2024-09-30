@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -27,6 +28,10 @@ public static class DeckPrinter
         // 30th Anniversary Edition. 15 card proxy booster packs, all for the low-low price of $1000 USD a pack!
         "30A"
     ];
+
+    public static Expression<Func<CardSku, bool>> IsProxyEditionExpr => c => proxySets.Contains(c.Edition);
+
+    public static Expression<Func<CardSku, bool>> IsNotProxyEditionExpr => c => !proxySets.Contains(c.Edition);
 
     public static bool IsProxyEdition(string edition) => proxySets.Contains(edition);
 

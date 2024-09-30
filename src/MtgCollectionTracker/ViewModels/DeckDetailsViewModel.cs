@@ -1,15 +1,20 @@
-﻿using Avalonia.Media.Imaging;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
-using MtgCollectionTracker.Data;
+using MtgCollectionTracker.Services;
+using MtgCollectionTracker.Services.Contracts;
+using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
+using ScryfallApi.Client;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
@@ -37,46 +42,68 @@ public enum DeckViewMode
     VisualByCardName
 }
 
-public partial class DeckDetailsViewModel : DialogContentViewModel
+public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCardListBehaviorHost, IViewModelWithBusyState
 {
     readonly ICollectionTrackingService _service;
+    readonly IViewModelFactory _vmFactory;
+    readonly IScryfallApiClient? _scryfallApiClient;
 
     [ObservableProperty]
     private string _name;
 
     public DeckDetailsViewModel()
+        : base(WeakReferenceMessenger.Default)
     {
         base.ThrowIfNotDesignMode();
         _service = new StubCollectionTrackingService();
+        _vmFactory = new StubViewModelFactory();
+        this.Behavior = new(this);
         this.IsActive = true;
         this.Name = "Test Deck";
     }
 
-    public DeckDetailsViewModel(ICollectionTrackingService service)
+    public DeckDetailsViewModel(ICollectionTrackingService service,
+                                IViewModelFactory vmFactory,
+                                IScryfallApiClient scryfallApiClient,
+                                IMessenger messenger)
+        : base(messenger)
     {
         _service = service;
+        _vmFactory = vmFactory;
+        _scryfallApiClient = scryfallApiClient;
+        this.Behavior = new(this);
         this.IsActive = true;
     }
 
+    bool IViewModelWithBusyState.IsBusy
+    {
+        get => Behavior.IsBusy;
+        set => Behavior.IsBusy = value;
+    }
+
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsTableMode))]
+    [NotifyPropertyChangedFor(nameof(IsVisualMode))]
+    [NotifyPropertyChangedFor(nameof(IsSkuBasedMode))]
     private DeckViewMode _mode = DeckViewMode.Text;
+
+    public bool IsSkuBasedMode => this.Mode == DeckViewMode.TableBySku || this.Mode == DeckViewMode.VisualBySku;
+
+    // For table view
+    public MultiModeCardListBehavior<CardVisualViewModel> Behavior { get; }
+
+    public ObservableCollection<CardVisualViewModel> TableList { get; } = new();
 
     // For text view
 
     [ObservableProperty]
     private string _deckListText;
 
-    // For visual view (by SKU)
+    // For visual view
 
-    public ObservableCollection<CardVisualViewModel> MainDeckBySku { get; } = new();
+    public ObservableCollection<CardVisualViewModel> MainDeck { get; } = new();
 
-    public ObservableCollection<CardVisualViewModel> SideboardBySku { get; } = new();
-
-    // For visual view (by card name)
-
-    public ObservableCollection<CardVisualViewModel> MainDeckByCardName { get; } = new();
-
-    public ObservableCollection<CardVisualViewModel> SideboardByCardName { get; } = new();
+    public ObservableCollection<CardVisualViewModel> Sideboard { get; } = new();
     
     // Misc properties
 
@@ -86,92 +113,210 @@ public partial class DeckDetailsViewModel : DialogContentViewModel
     [ObservableProperty]
     private int _sideboardSize;
 
-    public record CardSlotImpl(int Quantity, string CardName, string Edition, bool IsLand, bool IsSideboard) : IDeckPrintableSlot;
+    private DeckModel _origDeck;
 
-    [RelayCommand]
-    private void PrintDeck(bool reportProxyUsage)
+    partial void OnModeChanged(DeckViewMode value) => UpdateView(value);
+
+    public bool IsVisualMode => this.Mode == DeckViewMode.VisualByCardName || this.Mode == DeckViewMode.VisualBySku;
+
+    public bool IsTableMode => this.Mode == DeckViewMode.TableByCardName || this.Mode == DeckViewMode.TableBySku;
+
+    [ObservableProperty]
+    private bool _reportProxyUsage = false;
+
+    private void UpdateView(DeckViewMode mode)
     {
-        var text = new StringBuilder();
-        DeckPrinter.Print(_origDeck.Name, _origDeck.Format, _cards, s => text.AppendLine(s), reportProxyUsage);
-        this.DeckListText = text.ToString();
+        switch (mode)
+        {
+            case DeckViewMode.Text:
+                var text = new StringBuilder();
+                DeckPrinter.Print(_origDeck.Name, _origDeck.Format, _origDeck.GetCards(), s => text.AppendLine(s), this.ReportProxyUsage);
+                this.DeckListText = text.ToString();
+                break;
+            case DeckViewMode.VisualByCardName:
+                UpdateVisual(_service, _origDeck, ref _mainDeckByCardName, this.MainDeck, ref _sideboardByCardName, this.Sideboard, c => c.CardName);
+                break;
+            case DeckViewMode.VisualBySku:
+                UpdateVisual(_service, _origDeck, ref _mainDeckBySku, this.MainDeck, ref _sideboardBySku, this.Sideboard, c => c.SkuId);
+                break;
+            case DeckViewMode.TableByCardName:
+                UpdateTable(_service, _origDeck, ref _mainDeckByCardName, ref _sideboardByCardName, this.TableList, c => c.CardName);
+                break;
+            case DeckViewMode.TableBySku:
+                UpdateTable(_service, _origDeck, ref _mainDeckBySku, ref _sideboardBySku, this.TableList, c => c.SkuId);
+                break;
+        }
     }
 
-    private List<IDeckPrintableSlot> _cards = new();
+    private List<CardVisualViewModel> _mainDeckBySku;
+    private List<CardVisualViewModel> _sideboardBySku;
+    private List<CardVisualViewModel> _mainDeckByCardName;
+    private List<CardVisualViewModel> _sideboardByCardName;
 
-    private DeckModel _origDeck;
+    static void UpdateTable<T>(ICollectionTrackingService service, 
+                               DeckModel deck,
+                               ref List<CardVisualViewModel> maindeckBackingList,
+                               ref List<CardVisualViewModel> sideboardBackingList,
+                               ObservableCollection<CardVisualViewModel> table,
+                               Func<DeckCardModel, T> grouping)
+    {
+        InitBackingLists(service, deck, ref maindeckBackingList, ref sideboardBackingList, grouping);
+        table.Clear();
+        foreach (var c in maindeckBackingList)
+            table.Add(c);
+        foreach (var c in sideboardBackingList)
+            table.Add(c);
+    }
+
+    static void InitBackingLists<T>(ICollectionTrackingService service,
+                                    DeckModel deck,
+                                    ref List<CardVisualViewModel> maindeckBackingList,
+                                    ref List<CardVisualViewModel> sideboardBackingList,
+                                    Func<DeckCardModel, T> grouping)
+    {
+        // Init the backing list only once
+        if (maindeckBackingList == null)
+        {
+            maindeckBackingList = new();
+            var md = new List<CardVisualViewModel>();
+            foreach (var grp in deck.MainDeck.GroupBy(grouping))
+            {
+                var card = grp.First();
+
+                var cm = new CardVisualViewModel(service) { IsGrouped = true, Id = card.SkuId, ScryfallId = card.ScryfallId, IsDoubleFaced = card.IsDoubleFaced, Quantity = grp.Count(), CardName = card.CardName, Type = card.Type, IsLand = card.IsLand, IsProxy = DeckPrinter.IsProxyEdition(card.Edition) };
+                cm.SwitchToFront();
+                md.Add(cm);
+            }
+            // Non-lands before lands
+            foreach (var c in md.OrderBy(m => m.IsLand).ThenBy(m => m.Type))
+                maindeckBackingList.Add(c);
+        }
+        // Init the backing list only once
+        if (sideboardBackingList == null)
+        {
+            sideboardBackingList = new();
+            foreach (var grp in deck.Sideboard.GroupBy(grouping))
+            {
+                var card = grp.First();
+                var cm = new CardVisualViewModel(service) { IsGrouped = true, Id = card.SkuId, ScryfallId = card.ScryfallId, IsDoubleFaced = card.IsDoubleFaced, Quantity = grp.Count(), CardName = card.CardName, Type = card.Type, IsLand = card.IsLand, IsProxy = DeckPrinter.IsProxyEdition(card.Edition), IsSideboard = true };
+                cm.SwitchToFront();
+                sideboardBackingList.Add(cm);
+            }
+        }
+    }
+
+    static void UpdateVisual<T>(ICollectionTrackingService service,
+                                DeckModel deck,
+                                ref List<CardVisualViewModel> maindeckBackingList,
+                                ObservableCollection<CardVisualViewModel> maindeck,
+                                ref List<CardVisualViewModel> sideboardBackingList,
+                                ObservableCollection<CardVisualViewModel> sideboard,
+                                Func<DeckCardModel, T> grouping)
+    {
+
+        InitBackingLists(service, deck, ref maindeckBackingList, ref sideboardBackingList, grouping);
+        // Sync backing list to their respective ObservableCollection
+        maindeck.Clear();
+        sideboard.Clear();
+        foreach (var c in maindeckBackingList)
+            maindeck.Add(c);
+        foreach (var c in sideboardBackingList)
+            sideboard.Add(c);
+    }
 
     public DeckDetailsViewModel WithDeck(DeckModel deck)
     {
-        int mdTotal = 0;
-        int sbTotal = 0;
         this.Name = deck.Name;
 
         _origDeck = deck;
 
-        // Setup data by SKU
-        {
-            var md = new List<CardVisualViewModel>();
-            foreach (var grp in deck.MainDeck.GroupBy(c => c.SkuId))
-            {
-                var card = grp.First();
+        this.MainDeckSize = _origDeck.MainDeck.Length;
+        this.SideboardSize = _origDeck.Sideboard.Length;
 
-                var cm = new CardVisualViewModel { IsGrouped = true, Quantity = grp.Count(), CardName = card.CardName, Type = card.Type, IsLand = card.IsLand, Edition = card.Edition, IsProxy = DeckPrinter.IsProxyEdition(card.Edition), CardImage = TryGetFrontFaceImage(card) };
-                md.Add(cm);
-                mdTotal += grp.Count();
-            }
-            // Non-lands before lands
-            foreach (var c in md.OrderBy(m => m.IsLand).ThenBy(m => m.Type))
-                this.MainDeckBySku.Add(c);
-
-            foreach (var grp in deck.Sideboard.GroupBy(c => c.SkuId))
-            {
-                var card = grp.First();
-                this.SideboardBySku.Add(new CardVisualViewModel { IsGrouped = true, Quantity = grp.Count(), CardName = card.CardName, Type = card.Type, IsLand = card.IsLand, Edition = card.Edition, IsProxy = DeckPrinter.IsProxyEdition(card.Edition), CardImage = TryGetFrontFaceImage(card), IsSideboard = true });
-                sbTotal += grp.Count();
-            }
-        }
-
-        // Setup data by card name
-        {
-            var md = new List<CardVisualViewModel>();
-            foreach (var grp in deck.MainDeck.GroupBy(c => c.CardName))
-            {
-                var card = grp.First();
-
-                var cm = new CardVisualViewModel { IsGrouped = true, Quantity = grp.Count(), CardName = card.CardName, Type = card.Type, IsLand = card.IsLand, Edition = card.Edition, IsProxy = DeckPrinter.IsProxyEdition(card.Edition), CardImage = TryGetFrontFaceImage(card) };
-                md.Add(cm);
-            }
-            // Non-lands before lands
-            foreach (var c in md.OrderBy(m => m.IsLand).ThenBy(m => m.Type))
-                this.MainDeckByCardName.Add(c);
-
-            foreach (var grp in deck.Sideboard.GroupBy(c => c.CardName))
-            {
-                var card = grp.First();
-                this.SideboardByCardName.Add(new CardVisualViewModel { IsGrouped = true, Quantity = grp.Count(), CardName = card.CardName, Type = card.Type, IsLand = card.IsLand, Edition = card.Edition, IsProxy = DeckPrinter.IsProxyEdition(card.Edition), CardImage = TryGetFrontFaceImage(card), IsSideboard = true });
-            }
-        }
-
-        // The slots by card name are printable
-        _cards.AddRange(this.MainDeckByCardName);
-        _cards.AddRange(this.SideboardByCardName);
-
-        // Default to without proxy stats
-        this.PrintDeck(false);
-
-        this.MainDeckSize = mdTotal;
-        this.SideboardSize = sbTotal;
+        this.UpdateView(this.Mode);
 
         return this;
+    }
 
-        static Bitmap? TryGetFrontFaceImage(DeckCardModel card)
+    [RelayCommand]
+    private void SplitSelectedSku()
+    {
+        if (Behavior.IsItemSplittable)
         {
-            if (card.FrontFaceImage != null)
+            var selected = Behavior.SelectedItems[0];
+            var vm = _vmFactory.SplitCardSku();
+            vm.CardSkuId = selected.Id;
+            if (selected.ProxyQty > 1)
             {
-                using var ms = new MemoryStream(card.FrontFaceImage);
-                return new Bitmap(ms);
+                vm.CurrentQuantity = selected.ProxyQty;
             }
-            return null;
+            else if (selected.RealQty > 1)
+            {
+                vm.CurrentQuantity = selected.RealQty;
+            }
+            if (vm.CurrentQuantity == 0)
+                return;
+
+            vm.SplitQuantity = vm.SplitMin;
+            Messenger.Send(new OpenDialogMessage
+            {
+                DrawerWidth = 300,
+                ViewModel = _vmFactory.Drawer().WithContent("Split Card SKU", vm)
+            });
         }
     }
+
+    [RelayCommand]
+    private void SendSkusToContainer()
+    {
+        if (Behavior.SelectedItems.Count > 0)
+        {
+            Messenger.Send(new OpenDialogMessage
+            {
+                DrawerWidth = 800,
+                ViewModel = _vmFactory.Drawer().WithContent("Send Cards To Deck or Container", _vmFactory.SendCardsToContainer().WithCards(Behavior.SelectedItems))
+            });
+        }
+    }
+
+    [RelayCommand]
+    private async Task UpdateSkuMetadata()
+    {
+        if (Behavior.SelectedItems.Count > 0)
+        {
+            using (((IViewModelWithBusyState)this).StartBusyState())
+            {
+                int updated = 0;
+                var ids = Behavior.SelectedItems.Select(c => c.Id).ToList();
+                var callback = new UpdateCardMetadataProgressCallback
+                {
+                    OnProgress = (processed, total) =>
+                    {
+                        Messenger.ToastNotify($"Updated metadata for {processed} of {total} sku(s)");
+                    }
+                };
+                // FIXME: With multiple selections, it seems in general one needs to invoke this twice for the new
+                // metadata to stick. I currently don't know why this is the case
+                var updatedSkus = await _service.UpdateCardMetadataAsync(ids, _scryfallApiClient, callback, CancellationToken.None);
+                /*
+                foreach (var sku in updatedSkus)
+                {
+                    var skuM = this.SearchResults.FirstOrDefault(c => c.Id == sku.Id);
+                    if (skuM != null)
+                    {
+                        skuM.WithData(sku);
+                        updated++;
+                    }
+                }
+                if (updated > 0)
+                {
+                    Messenger.ToastNotify($"Metadata updated for {updated} sku(s)");
+                }
+                */
+                Messenger.ToastNotify("Metadata updated");
+            }
+        }
+    }
+
+    public void HandleBusyChanged(bool oldValue, bool newValue) { }
 }

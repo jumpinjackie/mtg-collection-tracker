@@ -14,11 +14,24 @@ using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
+public interface ISendableCardItem
+{
+    int Id { get; }
+
+    int Quantity { get; }
+
+    string CardName { get; }
+
+    string Edition { get; }
+}
+
 public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewModel
 {
     readonly IViewModelFactory _vmFactory;
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
+
+    record MockSendableCard(int Id, int Quantity, string CardName, string Edition) : ISendableCardItem;
 
     public SendCardsToContainerOrDeckViewModel(IMessenger messenger, IViewModelFactory vmFactory, ICollectionTrackingService service, IScryfallApiClient scryfallApiClient)
         : base(messenger)
@@ -39,15 +52,15 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
             new ContainerViewModel().WithData(new() { Id = 3, Name = "Shoe Box" })
         ];
         this.Cards = [
-            new CardSkuItemViewModel().WithData(new() { Quantity = 1, CardName = "Black Lotus", Edition = "LEB" }),
-                new CardSkuItemViewModel().WithData(new() { Quantity = 1, CardName = "Mox Jet", Edition = "LEB" }),
-                new CardSkuItemViewModel().WithData(new() { Quantity = 1, CardName = "Mox Ruby", Edition = "LEB" }),
-                new CardSkuItemViewModel().WithData(new() { Quantity = 1, CardName = "Mox Emerald", Edition = "LEB" }),
-                new CardSkuItemViewModel().WithData(new() { Quantity = 1, CardName = "Mox Pearl", Edition = "LEB" }),
-                new CardSkuItemViewModel().WithData(new() { Quantity = 1, CardName = "Mox Sapphire", Edition = "LEB" }),
-                new CardSkuItemViewModel().WithData(new() { Quantity = 1, CardName = "Ancestral Recall", Edition = "LEB" }),
-                new CardSkuItemViewModel().WithData(new() { Quantity = 1, CardName = "Time Walk", Edition = "LEB" }),
-                new CardSkuItemViewModel().WithData(new() { Quantity = 1, CardName = "Timetwister", Edition = "LEB" })
+            new MockSendableCard(1, 1, "Black Lotus", "LEB"),
+            new MockSendableCard(2, 1, "Mox Jet", "LEB"),
+            new MockSendableCard(3, 1, "Mox Ruby", "LEB"),
+            new MockSendableCard(4, 1, "Mox Emerald", "LEB"),
+            new MockSendableCard(5, 1, "Mox Pearl", "LEB"),
+            new MockSendableCard(6, 1, "Mox Sapphire", "LEB"),
+            new MockSendableCard(7, 1, "Ancestral Recall", "LEB"),
+            new MockSendableCard(8, 1, "Time Walk", "LEB"),
+            new MockSendableCard(9, 1, "Timetwister", "LEB")
         ];
         this.AvailableDecks = [
             new DeckViewModel().WithData(new(){ Id = 1, Name = "My Vintage Deck" }),
@@ -79,12 +92,12 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
 
     public IEnumerable<DeckViewModel>? AvailableDecks { get; internal set; }
 
-    public IEnumerable<CardSkuItemViewModel>? Cards { get; internal set; }
+    public IEnumerable<ISendableCardItem>? Cards { get; internal set; }
 
     [MemberNotNullWhen(true, nameof(SelectedContainer), nameof(SelectedDeck), nameof(Cards))]
     private bool CanSendCards() => this.Cards?.Any() == true && (this.SelectedContainer != null || this.SelectedDeck != null || this.UnSetContainer || this.UnSetDeck || this.MarkAsSideboard.HasValue);
 
-    public SendCardsToContainerOrDeckViewModel WithCards(IEnumerable<CardSkuItemViewModel> cards)
+    public SendCardsToContainerOrDeckViewModel WithCards(IEnumerable<ISendableCardItem> cards)
     {
         this.Cards = cards;
         this.AvailableContainers = _service.GetContainers().Select(c => _vmFactory.Container().WithData(c)).ToList();
