@@ -1374,7 +1374,8 @@ public class CollectionTrackingService : ICollectionTrackingService
         using var db = _db.Invoke();
         var ret = new WishlistBuyingListModel();
         var wishlist = db.Value.Set<WishlistItem>()
-            .Include(w => w.OfferedPrices);
+            .Include(w => w.OfferedPrices)
+                .ThenInclude(o => o.Vendor);
         foreach (var item in wishlist)
         {
             var (subTotal, vendors, isComplete) = item.OfferedPrices.ComputeBestPrice(item.Quantity);
