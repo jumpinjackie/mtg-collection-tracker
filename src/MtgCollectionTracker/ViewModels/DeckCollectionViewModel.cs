@@ -8,6 +8,7 @@ using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using ScryfallApi.Client;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
@@ -15,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewModelWithBusyState, IRecipient<DeckCreatedMessage>, IRecipient<DeckDismantledMessage>, IRecipient<CardsSentToDeckMessage>
+public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewModelWithBusyState, IRecipient<DeckCreatedMessage>, IRecipient<DeckDismantledMessage>, IRecipient<CardsSentToDeckMessage>, IRecipient<CardsRemovedFromDeckMessage>, IRecipient<DeckTotalsChangedMessage>
 {
     readonly IViewModelFactory _vmFactory;
     readonly ICollectionTrackingService _service;
@@ -200,16 +201,28 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
 
     void IRecipient<CardsSentToDeckMessage>.Receive(CardsSentToDeckMessage message)
     {
-        // Update totals of given deck
-        var deck = this.Decks.FirstOrDefault(d => d.DeckId == message.DeckId);
-        if (deck != null)
+        UpdateDeckTotals([message.DeckId]);
+    }
+
+    private void UpdateDeckTotals(IEnumerable<int> deckIds)
+    {
+        // Update totals of given decks
+        var sum = _service.GetDecks(new() { Formats = [], Ids = deckIds });
+        foreach (var s in sum)
         {
-            var sum = _service.GetDecks(new() { Formats = [], Ids = [deck.DeckId] });
-            foreach (var s  in sum)
-            {
-                if (deck.DeckId == s.Id)
-                    deck.WithData(s);
-            }
+            var deck = this.Decks.FirstOrDefault(d => d.DeckId == s.Id);
+            deck?.WithData(s);
         }
+    }
+
+    void IRecipient<CardsRemovedFromDeckMessage>.Receive(CardsRemovedFromDeckMessage message)
+    {
+        if (message.DeckId.HasValue)
+            UpdateDeckTotals([message.DeckId.Value]);
+    }
+
+    void IRecipient<DeckTotalsChangedMessage>.Receive(DeckTotalsChangedMessage message)
+    {
+        UpdateDeckTotals(message.DeckIds);
     }
 }

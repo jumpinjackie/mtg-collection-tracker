@@ -19,6 +19,21 @@ public class DeckCardModel
     public bool IsDoubleFaced { get; set; }
 
     public string? ScryfallId { get; internal set; }
+
+    public DeckCardModel WithSkuId(int id)
+    {
+        return new DeckCardModel
+        {
+            SkuId = id,
+            CardName = this.CardName,
+            Type = this.Type,
+            ManaValue = this.ManaValue,
+            Edition = this.Edition,
+            IsLand = this.IsLand,
+            IsDoubleFaced = this.IsDoubleFaced,
+            ScryfallId = this.ScryfallId
+        };
+    }
 }
 
 public record CardSlotImpl(int Quantity, string CardName, string Edition, bool IsLand, bool IsSideboard) : IDeckPrintableSlot;
@@ -31,9 +46,9 @@ public class DeckModel
 
     public string? Format { get; set; }
 
-    public DeckCardModel[] MainDeck { get; set; }
+    public List<DeckCardModel> MainDeck { get; set; }
 
-    public DeckCardModel[] Sideboard { get; set; }
+    public List<DeckCardModel> Sideboard { get; set; }
 
     public IEnumerable<IDeckPrintableSlot> GetCards()
     {

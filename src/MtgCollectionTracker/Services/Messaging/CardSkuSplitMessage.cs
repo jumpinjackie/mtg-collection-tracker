@@ -6,6 +6,8 @@ internal class CardSkuSplitMessage
 
     public int? DeckId { get; set; }
 
+    public required int Quantity { get; set; }
+
     public required int SplitSkuId { get; set; }
 
     public required int NewSkuId { get; set; }

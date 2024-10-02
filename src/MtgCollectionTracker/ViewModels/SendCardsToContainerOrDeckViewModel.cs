@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Core.Services;
+using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
@@ -120,20 +121,19 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
                 UnsetContainer = this.UnSetContainer,
                 IsSideboard = this.MarkAsSideboard
             }, _scryfallApiClient, CancellationToken.None);
-            /*
-            // Update existing selection with updated model
-            var updatedSkus = _service.GetCards(new() { CardSkuIds = skuIds });
-            foreach (var sku in updatedSkus)
-            {
-                var c = this.Cards.FirstOrDefault(card => card.Id == sku.Id);
-                if (c != null)
-                    c.WithData(sku);
-            }
-            */
+
             if (this.SelectedContainer != null)
-                Messenger.Send(new CardsSentToContainerMessage(this.SelectedContainer.Id, res, this.SelectedContainer.Name, skuIds));
+            {
+                var affectedSkus = res.ChangedContainer().Where(s => s.NewContainerId == this.SelectedContainer.Id).Select(s => s.Id).ToList();
+                Messenger.Send(new CardsSentToContainerMessage(this.SelectedContainer.Id, affectedSkus.Count, this.SelectedContainer.Name, affectedSkus));
+            }
             if (this.SelectedDeck != null)
-                Messenger.Send(new CardsSentToDeckMessage(this.SelectedDeck.DeckId, res, this.SelectedDeck.Name, skuIds));
+            {
+                var affectedSkus = res.ChangedDecks().Where(s => s.NewDeckId == this.SelectedDeck.DeckId).Select(s => s.Id).ToList();
+                Messenger.Send(new CardsSentToDeckMessage(this.SelectedDeck.DeckId, affectedSkus.Count, this.SelectedDeck.Name, affectedSkus));
+            }
+
+            Messenger.HandleSkuUpdate(res);
             Messenger.Send(new CloseDialogMessage());
         }
     }

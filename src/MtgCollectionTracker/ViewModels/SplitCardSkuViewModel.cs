@@ -48,7 +48,7 @@ public partial class SplitCardSkuViewModel : DialogContentViewModel
                 CardSkuId = this.CardSkuId,
                 Quantity = this.SplitQuantity
             });
-            Messenger.Send(new CardSkuSplitMessage { NewSkuId = res.Id, SplitSkuId = this.CardSkuId, ContainerId = res.ContainerId, DeckId = res.DeckId });
+            Messenger.Send(new CardSkuSplitMessage { Quantity = this.SplitQuantity, NewSkuId = res.Id, SplitSkuId = this.CardSkuId, ContainerId = res.ContainerId, DeckId = res.DeckId });
             Messenger.Send(new NotificationMessage { Content = "Card SKU split" });
             Messenger.Send(new CloseDialogMessage());
         }

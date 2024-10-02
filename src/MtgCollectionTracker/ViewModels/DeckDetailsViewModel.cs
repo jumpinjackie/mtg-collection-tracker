@@ -11,6 +11,7 @@ using ScryfallApi.Client;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -42,7 +43,7 @@ public enum DeckViewMode
     VisualByCardName
 }
 
-public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCardListBehaviorHost, IViewModelWithBusyState
+public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCardListBehaviorHost, IViewModelWithBusyState, IRecipient<CardSkuSplitMessage>, IRecipient<CardsRemovedFromDeckMessage>
 {
     readonly ICollectionTrackingService _service;
     readonly IViewModelFactory _vmFactory;
@@ -148,10 +149,10 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
         }
     }
 
-    private List<CardVisualViewModel> _mainDeckBySku;
-    private List<CardVisualViewModel> _sideboardBySku;
-    private List<CardVisualViewModel> _mainDeckByCardName;
-    private List<CardVisualViewModel> _sideboardByCardName;
+    private List<CardVisualViewModel>? _mainDeckBySku;
+    private List<CardVisualViewModel>? _sideboardBySku;
+    private List<CardVisualViewModel>? _mainDeckByCardName;
+    private List<CardVisualViewModel>? _sideboardByCardName;
 
     static void UpdateTable<T>(ICollectionTrackingService service, 
                                DeckModel deck,
@@ -230,8 +231,8 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
 
         _origDeck = deck;
 
-        this.MainDeckSize = _origDeck.MainDeck.Length;
-        this.SideboardSize = _origDeck.Sideboard.Length;
+        this.MainDeckSize = _origDeck.MainDeck.Count;
+        this.SideboardSize = _origDeck.Sideboard.Count;
 
         this.UpdateView(this.Mode);
 
@@ -286,7 +287,6 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
         {
             using (((IViewModelWithBusyState)this).StartBusyState())
             {
-                int updated = 0;
                 var ids = Behavior.SelectedItems.Select(c => c.Id).ToList();
                 var callback = new UpdateCardMetadataProgressCallback
                 {
@@ -299,6 +299,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
                 // metadata to stick. I currently don't know why this is the case
                 var updatedSkus = await _service.UpdateCardMetadataAsync(ids, _scryfallApiClient, callback, CancellationToken.None);
                 /*
+                int updated = 0;
                 foreach (var sku in updatedSkus)
                 {
                     var skuM = this.SearchResults.FirstOrDefault(c => c.Id == sku.Id);
@@ -319,4 +320,54 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
     }
 
     public void HandleBusyChanged(bool oldValue, bool newValue) { }
+
+    void IRecipient<CardSkuSplitMessage>.Receive(CardSkuSplitMessage message)
+    {
+        if (message.DeckId == _origDeck.Id)
+        {
+            int mdm = UpdateList(_origDeck.MainDeck, message.SplitSkuId, message.NewSkuId, message.Quantity);
+            int sbm = UpdateList(_origDeck.Sideboard, message.SplitSkuId, message.NewSkuId, message.Quantity);
+
+            this.MainDeckSize = _origDeck.MainDeck.Count;
+            this.SideboardSize = _origDeck.Sideboard.Count;
+
+            // Bit nuclear, but will do the job for now
+            _mainDeckByCardName = _mainDeckBySku = _sideboardByCardName = _sideboardBySku = null;
+            UpdateView(this.Mode);
+
+            static int UpdateList(List<DeckCardModel> list, int skuId, int newSkuId, int quantity)
+            {
+                int moved = 0;
+                var skus = list.FindAll(c => c.SkuId == skuId);
+                if (skus.Count > 0)
+                {
+                    Debug.Assert(quantity > 0 && quantity < skus.Count);
+                    for (int i = 0; i < quantity; i++)
+                    {
+                        var newCard = skus[0].WithSkuId(newSkuId);
+                        list.Remove(skus[i]);
+                        list.Add(newCard);
+                        moved++;
+                    }
+                }
+                return moved;
+            }
+        }
+    }
+
+    void IRecipient<CardsRemovedFromDeckMessage>.Receive(CardsRemovedFromDeckMessage message)
+    {
+        if (message.DeckId == _origDeck.Id)
+        {
+            _origDeck.MainDeck.RemoveAll(c => message.SkuIds.Contains(c.SkuId));
+            _origDeck.Sideboard.RemoveAll(c => message.SkuIds.Contains(c.SkuId));
+
+            this.MainDeckSize = _origDeck.MainDeck.Count;
+            this.SideboardSize = _origDeck.Sideboard.Count;
+
+            // Bit nuclear, but will do the job for now
+            _mainDeckByCardName = _mainDeckBySku = _sideboardByCardName = _sideboardBySku = null;
+            UpdateView(this.Mode);
+        }
+    }
 }

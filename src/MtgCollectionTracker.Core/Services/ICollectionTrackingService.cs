@@ -12,9 +12,20 @@ namespace MtgCollectionTracker.Core.Services
 
     public record WishlistItemFilter(IEnumerable<string>? Tags);
 
-    public record ApplyTagsResult(int Added, int Deleted, int Detached, List<string> CurrentTags);
+    public record struct ApplyTagsResult(int Added, int Deleted, int Detached, List<string> CurrentTags);
 
-    public record CheckQuantityResult(int ShortAmount, HashSet<string> FromDeckNames, HashSet<string> FromContainerNames, string? SuggestedName);
+    public record struct CheckQuantityResult(int ShortAmount, HashSet<string> FromDeckNames, HashSet<string> FromContainerNames, string? SuggestedName);
+
+    public record struct SkuUpdateInfo(int Id, int OldQuantity, int NewQuantity, int? OldDeckId, int? NewDeckId, int? OldContainerId, int? NewContainerId);
+
+    public record struct UpdateCardSkuResult(int RecordsAffected, List<SkuUpdateInfo> Skus)
+    {
+        public IEnumerable<int> DeckChangedTotals() => Skus.Where(s => s.OldQuantity != s.NewQuantity && s.OldDeckId.HasValue && s.OldDeckId == s.NewDeckId).Select(s => s.OldDeckId.Value);
+
+        public IEnumerable<SkuUpdateInfo> ChangedDecks() => Skus.Where(s => s.OldDeckId != s.NewDeckId);
+
+        public IEnumerable<SkuUpdateInfo> ChangedContainer() => Skus.Where(s => s.OldContainerId != s.NewContainerId);
+    }
 
     public interface ICollectionTrackingService
     {
@@ -39,7 +50,7 @@ namespace MtgCollectionTracker.Core.Services
         string PrintDeck(int deckId, bool reportProxyUsage);
         ValueTask<(CardSkuModel sku, bool wasMerged)> RemoveFromDeckAsync(RemoveFromDeckInputModel model);
         Task<CardSkuModel> SplitCardSkuAsync(SplitCardSkuInputModel model);
-        ValueTask<int> UpdateCardSkuAsync(UpdateCardSkuInputModel model, IScryfallApiClient? scryfallApiClient, CancellationToken cancel);
+        ValueTask<UpdateCardSkuResult> UpdateCardSkuAsync(UpdateCardSkuInputModel model, IScryfallApiClient? scryfallApiClient, CancellationToken cancel);
         CollectionSummaryModel GetCollectionSummary();
         ValueTask<ICollection<WishlistItemModel>> AddMultipleToWishlistAsync(IEnumerable<AddToWishlistInputModel> items, IScryfallApiClient? scryfallClient);
         IEnumerable<WishlistItemModel> GetWishlistItems(WishlistItemFilter filter);

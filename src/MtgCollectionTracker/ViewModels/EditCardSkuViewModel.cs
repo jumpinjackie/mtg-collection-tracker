@@ -253,8 +253,8 @@ public partial class EditCardSkuViewModel : DialogContentViewModel
         if (UnsetDeck.HasValue)
             m.UnsetDeck = UnsetDeck.Value;
 
-        await _service.UpdateCardSkuAsync(m, _scryfallApiClient, cancel);
-
+        var res = await _service.UpdateCardSkuAsync(m, _scryfallApiClient, cancel);
+        Messenger.HandleSkuUpdate(res);
         Messenger.ToastNotify("Card Sku(s) updated");
 
         if (_origItem != null)

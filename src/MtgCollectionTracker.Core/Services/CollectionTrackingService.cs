@@ -829,7 +829,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         return CardSkuToModel(newSku);
     }
 
-    public async ValueTask<int> UpdateCardSkuAsync(UpdateCardSkuInputModel model, IScryfallApiClient? scryfallApiClient, CancellationToken cancel)
+    public async ValueTask<UpdateCardSkuResult> UpdateCardSkuAsync(UpdateCardSkuInputModel model, IScryfallApiClient? scryfallApiClient, CancellationToken cancel)
     {
         if (model.Quantity.HasValue && model.Quantity <= 0)
             throw new Exception("Quantity cannot be 0");
@@ -840,8 +840,18 @@ public class CollectionTrackingService : ICollectionTrackingService
         if (scryfallApiClient != null)
             resolver = new ScryfallMetadataResolver(db.Value, scryfallApiClient);
 
+        var updatedSkus = new List<SkuUpdateInfo>();
         foreach (var sku in skus)
         {
+            int oldQty = sku.Quantity;
+            int? oldDeckId = null;
+            int? newDeckId = null;
+            int? oldContainerId = null;
+            int? newContainerId = null;
+
+            oldDeckId = sku.DeckId;
+            oldContainerId = sku.ContainerId;
+
             if (model.CardName != null)
                 sku.CardName = model.CardName;
             if (model.Condition != null)
@@ -885,11 +895,17 @@ public class CollectionTrackingService : ICollectionTrackingService
             {
                 await sku.ApplyScryfallMetadataAsync(resolver, true, cancel);
             }
+
+            newDeckId = sku.DeckId;
+            newContainerId = sku.ContainerId;
+            int newQty = sku.Quantity;
+
+            updatedSkus.Add(new SkuUpdateInfo(sku.Id, oldQty, newQty, oldDeckId, newDeckId, oldContainerId, newContainerId));
         }
 
         var res = await db.Value.SaveChangesAsync();
 
-        return res;
+        return new UpdateCardSkuResult(res, updatedSkus);
     }
 
     record struct CardIdentityKey(string name, string edition, string? language, CardCondition? condition, string? comments);
@@ -1175,7 +1191,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             await db.Value.SaveChangesAsync(cancel);
         }
 
-        return new DeckModel { Name = deck.Name, Id = deck.Id, MainDeck = mainDeck.ToArray(), Sideboard = sideboard.ToArray() };
+        return new DeckModel { Name = deck.Name, Id = deck.Id, MainDeck = mainDeck, Sideboard = sideboard };
     }
 
     static bool IsIncompleteForDeckDisplay(CardSku sku)
