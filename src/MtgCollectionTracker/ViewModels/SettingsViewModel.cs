@@ -23,10 +23,13 @@ public partial class SettingsViewModel : RecipientViewModelBase
 {
     readonly ICollectionTrackingService _service;
 
+    public DatabaseMaintenanceViewModel Maintenance { get; }
+
     public SettingsViewModel(ICollectionTrackingService service, IMessenger messenger)
         : base(messenger)
     {
         _service = service;
+        this.Maintenance = new(service, messenger);
         this.IsActive = true;
     }
 
@@ -35,6 +38,7 @@ public partial class SettingsViewModel : RecipientViewModelBase
     {
         this.ThrowIfNotDesignMode();
         _service = new StubCollectionTrackingService();
+        this.Maintenance = new();
         this.IsActive = true;
     }
 

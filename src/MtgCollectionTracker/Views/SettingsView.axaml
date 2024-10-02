@@ -4,6 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="MtgCollectionTracker.Views.SettingsView"
+			 xmlns:views="clr-namespace:MtgCollectionTracker.Views"
 			 xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
 			 x:DataType="vm:SettingsViewModel">
 	<Design.DataContext>
@@ -20,6 +21,9 @@
 				</StackPanel>
 				<TextBox Margin="8" Text="{Binding Tags}" AcceptsReturn="True" />
 			</DockPanel>
+		</TabItem>
+		<TabItem Header="Database">
+			<views:DatabaseMaintenanceView DataContext="{Binding Maintenance}" />
 		</TabItem>
 	</TabControl>
 </UserControl>
