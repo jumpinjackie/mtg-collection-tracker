@@ -1,8 +1,10 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using MtgCollectionTracker.Core;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
+using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
@@ -224,5 +226,20 @@ public partial class EditWishlistItemViewModel : DialogContentViewModel
     private void Cancel()
     {
         Messenger.Send(new CloseDialogMessage());
+    }
+
+    [RelayCommand]
+    private async Task CheckName()
+    {
+        if (!string.IsNullOrWhiteSpace(this.CardName) && _scryfallApiClient != null)
+        {
+            var (res, _) = await _scryfallApiClient.CheckCardNameAsync(this.CardName);
+            if (res != null && this.CardName != res)
+            {
+                this.CardName = res;
+                this.ApplyCardName = true;
+                Messenger.ToastNotify("Card name fixed up");
+            }
+        }
     }
 }

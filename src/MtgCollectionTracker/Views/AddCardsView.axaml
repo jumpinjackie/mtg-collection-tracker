@@ -21,7 +21,8 @@
 				Add cards to your collection by filling in the card SKUs in the grid below.<LineBreak />
 				The following columns must always be filled in: Qty, Card Name, Edition.<LineBreak />
 				Edition must be the code for the relevant set. Consult Scryfall for the proper codes.<LineBreak />
-				If language is not specified, English (en) is assumed.
+				If language is not specified, English (en) is assumed.<LineBreak />
+				If you're unsure about the card name, or the card name has hard-to-type accented characters, click "Check/Fix Card Names" button 
 			</TextBlock>
 			<DataGrid Name="AddCardsDataGrid"
 				      ItemsSource="{Binding Cards}"
@@ -77,6 +78,7 @@
 			<StackPanel Orientation="Horizontal">
 				<Button Command="{Binding AddRowCommand}">Add Row</Button>
 				<Button Command="{Binding ImportCommand}">Import Rows</Button>
+				<Button Command="{Binding CheckCardNamesCommand}">Check/Fix Card Names</Button>
 			</StackPanel>
 			<TextBlock Margin="6" IsVisible="{Binding LockedTargetContainer}">
 				<Run>These cards will be added to:</Run>

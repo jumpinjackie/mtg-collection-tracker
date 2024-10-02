@@ -1,6 +1,7 @@
-﻿using MtgCollectionTracker.Core.Model;
-using MtgCollectionTracker.Core.Services;
+﻿using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Data;
+using ScryfallApi.Client;
+using ScryfallApi.Client.Models;
 
 namespace MtgCollectionTracker.Core;
 
@@ -8,6 +9,81 @@ public record VendorOffer(string Name, int Qty, decimal Price, string? Notes);
 
 public static class PublicExtensionMethods
 {
+    // From: https://gist.github.com/Davidblkx/e12ab0bb2aff7fd8072632b396538560
+    static int LevenshteinDist(string source1, string source2) //O(n*m)
+    {
+        var source1Length = source1.Length;
+        var source2Length = source2.Length;
+
+        var matrix = new int[source1Length + 1, source2Length + 1];
+
+        // First calculation, if one entry is empty return full length
+        if (source1Length == 0)
+            return source2Length;
+
+        if (source2Length == 0)
+            return source1Length;
+
+        // Initialization of matrix with row size source1Length and columns size source2Length
+        for (var i = 0; i <= source1Length; matrix[i, 0] = i++) { }
+        for (var j = 0; j <= source2Length; matrix[0, j] = j++) { }
+
+        // Calculate rows and collumns distances
+        for (var i = 1; i <= source1Length; i++)
+        {
+            for (var j = 1; j <= source2Length; j++)
+            {
+                var cost = (source2[j - 1] == source1[i - 1]) ? 0 : 1;
+
+                matrix[i, j] = Math.Min(
+                    Math.Min(matrix[i - 1, j] + 1, matrix[i, j - 1] + 1),
+                    matrix[i - 1, j - 1] + cost);
+            }
+        }
+        // return result
+        return matrix[source1Length, source2Length];
+    }
+
+    public static async Task<(string? name, int apiCalls)> CheckCardNameAsync(this IScryfallApiClient client, string name, string? setHint = null)
+    {
+        int apiCalls = 0;
+        var cards = new HashSet<string>();
+        int pageNo = 0;
+        while (true)
+        {
+            pageNo++;
+            try
+            {
+                var sfCards = await client.Cards.Search(name, pageNo, new SearchOptions()
+                {
+                    IncludeMultilingual = true,
+                    Mode = SearchOptions.RollupMode.Prints
+                });
+                apiCalls++;
+                if (setHint != null)
+                    cards.UnionWith(sfCards.Data.Where(c => c.Set.ToLower() == setHint.ToLower()).Select(c => c.Name));
+                else
+                    cards.UnionWith(sfCards.Data.Select(c => c.Name));
+                if (!sfCards.HasMore)
+                    break;
+            }
+            catch (ScryfallApiException se)
+            {
+                break;
+            }
+        }
+
+        if (cards.Count == 0)
+            return (null, apiCalls);
+
+        if (cards.Count == 1)
+            return (cards.First(), apiCalls);
+
+        // In the event of in-exact match, prefer name with shortest levenshtein distance
+        var match = cards.OrderBy(c => LevenshteinDist(c, name)).First();
+        return (match, apiCalls);
+    }
+
     public static (decimal TotalPrice, List<VendorOffer> Vendors, bool IsComplete) ComputeBestPrice<T>(this IEnumerable<T> offers, int requiredQty)
         where T : IVendorOffer
     {

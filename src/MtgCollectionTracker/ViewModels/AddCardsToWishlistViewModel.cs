@@ -4,9 +4,11 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using CsvHelper;
 using CsvHelper.Configuration;
+using MtgCollectionTracker.Core;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Data;
+using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using ScryfallApi.Client;
@@ -198,5 +200,25 @@ public partial class AddCardsToWishlistViewModel : DialogContentViewModel
     private void Cancel()
     {
         Messenger.Send(new CloseDialogMessage());
+    }
+
+    [RelayCommand]
+    private async Task CheckCardNames()
+    {
+        if (_scryfallApiClient != null)
+        {
+            int cardsFixed = 0;
+            foreach (var sku in this.Cards)
+            {
+                var (res, _) = await _scryfallApiClient.CheckCardNameAsync(sku.CardName);
+                if (res != null && sku.CardName != res)
+                {
+                    sku.CardName = res;
+                    cardsFixed++;
+                }
+            }
+            if (cardsFixed > 0)
+                Messenger.ToastNotify($"{cardsFixed} card name(s) fixed up");
+        }
     }
 }

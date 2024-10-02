@@ -18,11 +18,12 @@
 		</StackPanel>
 		<StackPanel Spacing="6">
 			<TextBlock>Tick the following fields to apply edits for</TextBlock>
-			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="30, *">
+			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="30, *, 90">
 				<CheckBox Grid.Row="0" Grid.ColumnSpan="2" IsChecked="{Binding ApplyCardName}">
 					<TextBlock VerticalAlignment="Center">Card Name (must have both names separated by // for adventure and double-faced cards)</TextBlock>
 				</CheckBox>
 				<TextBox Grid.Row="1" Grid.ColumnSpan="2" IsEnabled="{Binding ApplyCardName}" Text="{Binding CardName}" />
+				<Button Command="{Binding CheckNameCommand}" Grid.Row="1" Grid.Column="2" Width="90" VerticalAlignment="Center" HorizontalAlignment="Center">Check/Fix</Button>
 			</Grid>
 			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="30, *">
 				<CheckBox Grid.Row="0" Grid.ColumnSpan="2" IsChecked="{Binding ApplyQuantity}">
