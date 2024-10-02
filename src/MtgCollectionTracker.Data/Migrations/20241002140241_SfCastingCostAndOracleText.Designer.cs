@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MtgCollectionTracker.Data;
 
@@ -10,9 +11,11 @@ using MtgCollectionTracker.Data;
 namespace MtgCollectionTracker.Data.Migrations
 {
     [DbContext(typeof(CardsDbContext))]
-    partial class CardsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20241002140241_SfCastingCostAndOracleText")]
+    partial class SfCastingCostAndOracleText
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.8");
@@ -301,12 +304,6 @@ namespace MtgCollectionTracker.Data.Migrations
                         .HasMaxLength(5)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("ColorIdentity")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Colors")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Edition")
                         .IsRequired()
                         .HasMaxLength(5)
@@ -329,15 +326,9 @@ namespace MtgCollectionTracker.Data.Migrations
                         .HasMaxLength(650)
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Power")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("Rarity")
                         .IsRequired()
                         .HasMaxLength(11)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Toughness")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Type")

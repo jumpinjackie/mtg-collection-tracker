@@ -131,6 +131,7 @@ internal static class InternalExtensionMethods
         {
             sku.IsLand = sku.Scryfall?.CardType?.StartsWith("Land") == true || sku.Scryfall?.CardType?.StartsWith("Basic Land") == true;
         }
+        // TODO: This would be point to apply an ascii-folded/normalised card name
     }
 
     public static Uri? GetFrontFaceImageUri(this ScryfallApi.Client.Models.Card card, string size)

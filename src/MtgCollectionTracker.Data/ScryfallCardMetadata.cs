@@ -39,6 +39,38 @@ public class ScryfallCardMetadata
     /// </summary>
     public int? ManaValue { get; set; }
 
+    /// <summary>
+    /// The card's oracle text
+    /// </summary>
+    [MaxLength(650)] // The current world record holder (Dance of the Dead) is 641 characters
+    public string? OracleText { get; set; }
+
+    /// <summary>
+    /// The card's colors
+    /// </summary>
+    public string[]? Colors { get; set; }
+
+    /// <summary>
+    /// The card's color identity (for commander purposes)
+    /// </summary>
+    public string[]? ColorIdentity { get; set; }
+
+    /// <summary>
+    /// The card's power (for creatures)
+    /// </summary>
+    public string? Power { get; set; }
+
+    /// <summary>
+    /// The card's toughness (for creatures)
+    /// </summary>
+    public string? Toughness { get; set; }
+
+    /// <summary>
+    /// The card's casting cost
+    /// </summary>
+    [MaxLength(32)]
+    public string? CastingCost { get; set; }
+
     [MaxLength(11)]
     public required string Rarity { get; set; }
 

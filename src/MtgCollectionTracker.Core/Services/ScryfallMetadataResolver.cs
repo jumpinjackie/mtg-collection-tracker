@@ -221,6 +221,28 @@ internal class ScryfallMetadataResolver
                 if (sfMeta.ManaValue == null)
                     sfMeta.ManaValue = (int)sfCardMeta.Cmc;
 
+                // Casting cost
+                if (sfMeta.CastingCost == null)
+                    sfMeta.CastingCost = sfCardMeta.ManaCost;
+
+                // Oracle text
+                if (sfMeta.OracleText != sfCardMeta.OracleText)
+                    sfMeta.OracleText = sfCardMeta.OracleText;
+
+                // P/T
+                if (sfMeta.Power == null)
+                    sfMeta.Power = sfCardMeta.Power;
+                if (sfMeta.Toughness == null)
+                    sfMeta.Toughness = sfCardMeta.Toughness;
+
+                // Color
+                if (sfMeta.Colors == null)
+                    sfMeta.Colors = sfCardMeta.Colors;
+
+                // Color Identity
+                if (sfMeta.ColorIdentity == null)
+                    sfMeta.ColorIdentity = sfCardMeta.ColorIdentity;
+
                 // Small card image (front face)
                 if (sfMeta.ImageSmall == null)
                 {
