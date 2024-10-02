@@ -12,7 +12,7 @@
          to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
 		<vm:SettingsViewModel />
 	</Design.DataContext>
-	<TabControl TabStripPlacement="Left">
+	<TabControl IsEnabled="{Binding !IsBusy}" TabStripPlacement="Left">
 		<TabItem Header="Tags">
 			<DockPanel>
 				<TextBlock DockPanel.Dock="Top" Margin="8">Edit card tags here (one per line). Deleting a tag will delete associated tag data on existing card SKUs and wishlist items</TextBlock>

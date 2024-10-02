@@ -14,7 +14,7 @@
 		<vm:MainViewModel />
 	</Design.DataContext>
 	<dialogHost:DialogHost PopupPositioner="{Binding DialogPositioner}" DisableOpeningAnimation="True" CloseOnClickAway="False">
-		<TabControl Margin="5">
+		<TabControl IsEnabled="{Binding !IsBusy}" Margin="5">
 			<TabItem Header="Cards">
 				<views:CardsView DataContext="{Binding Cards}" />
 			</TabItem>

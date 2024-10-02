@@ -265,6 +265,8 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
         set => Behavior.IsBusy = value;
     }
 
+    IMessenger IViewModelWithBusyState.Messenger => this.Messenger;
+
     void IMultiModeCardListBehaviorHost.HandleBusyChanged(bool oldValue, bool newValue)
     {
         this.OnPropertyChanged(nameof(PreviousEnabled));

@@ -26,6 +26,8 @@ public partial class DatabaseMaintenanceViewModel : RecipientViewModelBase, IVie
         _service = new StubCollectionTrackingService();
     }
 
+    IMessenger IViewModelWithBusyState.Messenger => this.Messenger;
+
     [ObservableProperty]
     private int? _total;
 
@@ -46,6 +48,8 @@ public partial class DatabaseMaintenanceViewModel : RecipientViewModelBase, IVie
     {
         using (((IViewModelWithBusyState)this).StartBusyState())
         {
+            Messenger.ToastNotify("Adding missing metadata. Please wait ...");
+
             this.Total = 100;
             this.Completed = 0;
             await Task.Delay(1000, cancel);
@@ -80,6 +84,8 @@ public partial class DatabaseMaintenanceViewModel : RecipientViewModelBase, IVie
     {
         using (((IViewModelWithBusyState)this).StartBusyState())
         {
+            Messenger.ToastNotify("Rebuilding all metadata. Please wait ...");
+
             this.Total = 100;
             this.Completed = 0;
             await Task.Delay(1000, cancel);

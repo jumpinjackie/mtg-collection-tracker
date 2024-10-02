@@ -59,6 +59,8 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
         this.PerformSearchCommand.Execute(null);
     }
 
+    IMessenger IViewModelWithBusyState.Messenger => this.Messenger;
+
     protected override void OnActivated()
     {
         base.OnActivated();

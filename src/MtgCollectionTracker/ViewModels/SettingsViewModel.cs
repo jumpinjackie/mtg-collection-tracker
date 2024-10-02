@@ -19,7 +19,7 @@ public partial class TagViewModel : ObservableObject
     private string _name = string.Empty;
 }
 
-public partial class SettingsViewModel : RecipientViewModelBase
+public partial class SettingsViewModel : RecipientViewModelBase, IRecipient<GlobalBusyMessage>
 {
     readonly ICollectionTrackingService _service;
 
@@ -84,4 +84,12 @@ public partial class SettingsViewModel : RecipientViewModelBase
         _origTags = t;
         this.Tags = t;
     }
+
+    void IRecipient<GlobalBusyMessage>.Receive(GlobalBusyMessage message)
+    {
+        this.IsBusy = message.IsBusy;
+    }
+
+    [ObservableProperty]
+    private bool _isBusy;
 }

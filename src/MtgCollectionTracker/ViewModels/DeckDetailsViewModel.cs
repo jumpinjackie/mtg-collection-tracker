@@ -88,6 +88,8 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
     [NotifyPropertyChangedFor(nameof(IsSkuBasedMode))]
     private DeckViewMode _mode = DeckViewMode.Text;
 
+    IMessenger IViewModelWithBusyState.Messenger => this.Messenger;
+
     public bool IsSkuBasedMode => this.Mode == DeckViewMode.TableBySku || this.Mode == DeckViewMode.VisualBySku;
 
     // For table view

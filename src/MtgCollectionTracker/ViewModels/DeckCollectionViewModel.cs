@@ -41,6 +41,8 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
         this.IsActive = true;
     }
 
+    IMessenger IViewModelWithBusyState.Messenger => this.Messenger;
+
     protected override void OnActivated()
     {
         if (!Avalonia.Controls.Design.IsDesignMode)

@@ -47,6 +47,8 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
         this.IsActive = true;
     }
 
+    IMessenger IViewModelWithBusyState.Messenger => this.Messenger;
+
     private void Tags_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
         this.LoadWishlist();

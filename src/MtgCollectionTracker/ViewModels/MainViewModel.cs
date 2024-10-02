@@ -1,4 +1,5 @@
 ﻿using Avalonia.Controls.Notifications;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using DialogHostAvalonia.Positioners;
 using MtgCollectionTracker.Services;
@@ -10,7 +11,7 @@ using System.Linq;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDialogMessage>, IRecipient<CloseDialogMessage>, IRecipient<NotificationMessage>, IRecipient<CardsAddedMessage>, IRecipient<CardsSentToContainerMessage>, IRecipient<CardsSentToDeckMessage>, IRecipient<CardsAddedToWishlistMessage>, IRecipient<WishlistItemUpdatedMessage>
+public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDialogMessage>, IRecipient<CloseDialogMessage>, IRecipient<NotificationMessage>, IRecipient<CardsAddedMessage>, IRecipient<CardsSentToContainerMessage>, IRecipient<CardsSentToDeckMessage>, IRecipient<CardsAddedToWishlistMessage>, IRecipient<WishlistItemUpdatedMessage>, IRecipient<GlobalBusyMessage>
 {
     public MainViewModel()
     {
@@ -118,6 +119,14 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
     {
         this.NotificationManager?.Show("Wishlist item updated");
     }
+
+    void IRecipient<GlobalBusyMessage>.Receive(GlobalBusyMessage message)
+    {
+        this.IsBusy = message.IsBusy;
+    }
+
+    [ObservableProperty]
+    private bool _isBusy;
 
     public WindowNotificationManager? NotificationManager { get; set; }
 }
