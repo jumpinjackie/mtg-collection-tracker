@@ -168,6 +168,18 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
 
     public string? OriginalEdition { get; set; }
 
+    public string? CastingCost { get; set; }
+
+    public string? OracleText { get; set; }
+
+    public string? CardType { get; set; }
+
+    public string? PT { get; set; }
+
+    public string[]? Colors { get; set; }
+
+    public string[]? ColorIdentity { get; set; }
+
     public int ProxyQty { get; private set; }
     public int RealQty { get; private set; }
 
@@ -190,6 +202,17 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
     {
         this.Id = item.Id;
         this.ScryfallId = item.ScryfallId;
+
+        this.CastingCost = item.CastingCost;
+        this.ColorIdentity = item.ColorIdentity;
+        this.Colors = item.Colors;
+        this.CardType = item.CardType;
+        this.OracleText = item.OracleText;
+        if (item.Power != null && item.Toughness != null)
+        {
+            this.PT = item.Power + "/" + item.Toughness;
+        }
+
         this.IsDoubleFaced = item.IsDoubleFaced;
         this.CollectorNumber = item.CollectorNumber;
         this.OriginalCardName = item.CardName;

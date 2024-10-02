@@ -238,6 +238,13 @@ public class CollectionTrackingService : ICollectionTrackingService
             CollectorNumber = c.CollectorNumber,
             Quantity = c.Quantity,
             ScryfallId = c.ScryfallId,
+            CardType = c.Scryfall != null ? c.Scryfall.CardType : null,
+            Power = c.Scryfall != null ? c.Scryfall.Power : null,
+            Toughness = c.Scryfall != null ? c.Scryfall.Toughness : null,
+            CastingCost = c.Scryfall != null ? c.Scryfall.CastingCost : null,
+            OracleText = c.Scryfall != null ? c.Scryfall.OracleText : null,
+            Colors = c.Scryfall != null ? c.Scryfall.Colors : null,
+            ColorIdentity = c.Scryfall != null ? c.Scryfall.ColorIdentity : null,
             // A double-faced card has back-face image, but if we haven't loaded SF metadata
             // for this card yet, then a DFC should have '//' in its card name
             IsDoubleFaced = c.Scryfall != null
@@ -461,6 +468,13 @@ public class CollectionTrackingService : ICollectionTrackingService
             CollectorNumber = w.CollectorNumber,
             Quantity = w.Quantity,
             ScryfallId = w.ScryfallId,
+            CardType = w.Scryfall != null ? w.Scryfall.CardType : null,
+            Power = w.Scryfall != null ? w.Scryfall.Power : null,
+            Toughness = w.Scryfall != null ? w.Scryfall.Toughness : null,
+            CastingCost = w.Scryfall != null ? w.Scryfall.CastingCost : null,
+            OracleText = w.Scryfall != null ? w.Scryfall.OracleText : null,
+            Colors = w.Scryfall != null ? w.Scryfall.Colors : null,
+            ColorIdentity = w.Scryfall != null ? w.Scryfall.ColorIdentity : null,
             // A double-faced card has back-face image
             IsDoubleFaced = w.Scryfall?.BackImageSmall != null,
             Offers = w.OfferedPrices?.Select(o => new VendorOfferModel
@@ -495,6 +509,13 @@ public class CollectionTrackingService : ICollectionTrackingService
             CollectorNumber = c.CollectorNumber,
             Quantity = c.Quantity,
             ScryfallId = c.ScryfallId,
+            CardType = c.Scryfall != null ? c.Scryfall.CardType : null,
+            Power = c.Scryfall != null ? c.Scryfall.Power : null,
+            Toughness = c.Scryfall != null ? c.Scryfall.Toughness : null,
+            CastingCost = c.Scryfall != null ? c.Scryfall.CastingCost : null,
+            OracleText = c.Scryfall != null ? c.Scryfall.OracleText : null,
+            Colors = c.Scryfall != null ? c.Scryfall.Colors : null,
+            ColorIdentity = c.Scryfall != null ? c.Scryfall.ColorIdentity : null,
             // A double-faced card has back-face image
             IsDoubleFaced = c.Scryfall?.BackImageSmall != null
         };
@@ -524,6 +545,13 @@ public class CollectionTrackingService : ICollectionTrackingService
                 CollectorNumber = w.CollectorNumber,
                 Quantity = w.Quantity,
                 ScryfallId = w.ScryfallId,
+                CardType = w.Scryfall != null ? w.Scryfall.CardType : null,
+                Power = w.Scryfall != null ? w.Scryfall.Power : null,
+                Toughness = w.Scryfall != null ? w.Scryfall.Toughness : null,
+                CastingCost = w.Scryfall != null ? w.Scryfall.CastingCost : null,
+                OracleText = w.Scryfall != null ? w.Scryfall.OracleText : null,
+                Colors = w.Scryfall != null ? w.Scryfall.Colors : null,
+                ColorIdentity = w.Scryfall != null ? w.Scryfall.ColorIdentity : null,
                 // A double-faced card has back-face image
                 IsDoubleFaced = w.Scryfall!.BackImageSmall != null,
                 Offers = w.OfferedPrices.Select(o => new VendorOfferModel
@@ -1180,6 +1208,13 @@ public class CollectionTrackingService : ICollectionTrackingService
                     CardName = sku.CardName,
                     Type = sku.Scryfall?.Type,
                     ManaValue = sku.Scryfall?.ManaValue ?? -1,
+                    CardType = sku.Scryfall != null ? sku.Scryfall.CardType : null,
+                    Power = sku.Scryfall != null ? sku.Scryfall.Power : null,
+                    Toughness = sku.Scryfall != null ? sku.Scryfall.Toughness : null,
+                    CastingCost = sku.Scryfall != null ? sku.Scryfall.CastingCost : null,
+                    OracleText = sku.Scryfall != null ? sku.Scryfall.OracleText : null,
+                    Colors = sku.Scryfall != null ? sku.Scryfall.Colors : null,
+                    ColorIdentity = sku.Scryfall != null ? sku.Scryfall.ColorIdentity : null,
                     // A double-faced card has back-face image
                     IsDoubleFaced = sku.Scryfall?.BackImageSmall != null,
                     IsLand = sku.IsLand,

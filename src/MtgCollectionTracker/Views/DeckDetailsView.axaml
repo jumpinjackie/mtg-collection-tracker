@@ -92,6 +92,18 @@
 						I'm just not expert enough yet
 						-->
 						<StackPanel IsVisible="{Binding Behavior.HasSelectedCardSku}" VerticalAlignment="Center" HorizontalAlignment="Center">
+							<TextBlock TextAlignment="Center">
+								<Run Text="{Binding Behavior.SelectedRow.CardName}" />
+								<Run Text=" - " />
+								<Run Text="{Binding Behavior.SelectedRow.CastingCost}" />
+								<LineBreak />
+								<Run Text="{Binding Behavior.SelectedRow.CardType}" />
+								<LineBreak />
+								<Run Text="{Binding Behavior.SelectedRow.PT}" />
+								<LineBreak />
+								<Run Text="{Binding Behavior.SelectedRow.Edition}" />
+							</TextBlock>
+							<TextBlock Margin="8" TextWrapping="WrapWithOverflow" Text="{Binding Behavior.SelectedRow.OracleText}" />
 							<Canvas Width="400" Height="560">
 								<Panel Canvas.Left="0" Canvas.Top="0" Canvas.Bottom="0" Canvas.Right="0" Background="#7FFF22DD">
 									<!-- TODO: If this is even possible, do a flip animation for double-faced cards -->
@@ -122,6 +134,11 @@
 								<DataGridTextColumn Header="Qty" Binding="{Binding Quantity}"/>
 								<DataGridTextColumn Header="Card Name" Binding="{Binding CardName}"/>
 								<DataGridTextColumn Header="Is Sideboard?" Binding="{Binding IsSideboard}"/>
+
+								<DataGridTextColumn Header="CardType" Binding="{Binding CardType}"/>
+								<DataGridTextColumn Header="Casting Cost" Binding="{Binding CastingCost}"/>
+								<DataGridTextColumn Header="P/T" Binding="{Binding PT}"/>
+
 							</DataGrid.Columns>
 						</DataGrid>
 					</Grid>

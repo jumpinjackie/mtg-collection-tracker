@@ -20,6 +20,20 @@ public class DeckCardModel
 
     public string? ScryfallId { get; internal set; }
 
+    public string? CastingCost { get; set; }
+
+    public string? OracleText { get; set; }
+
+    public string? CardType { get; set; }
+
+    public string? Power { get; set; }
+
+    public string? Toughness { get; set; }
+
+    public string[]? Colors { get; set; }
+
+    public string[]? ColorIdentity { get; set; }
+
     public DeckCardModel WithSkuId(int id)
     {
         return new DeckCardModel
@@ -31,7 +45,14 @@ public class DeckCardModel
             Edition = this.Edition,
             IsLand = this.IsLand,
             IsDoubleFaced = this.IsDoubleFaced,
-            ScryfallId = this.ScryfallId
+            ScryfallId = this.ScryfallId,
+            CastingCost = this.CastingCost,
+            OracleText = this.OracleText,
+            CardType = this.CardType,
+            Power = this.Power,
+            Toughness = this.Toughness,
+            Colors = this.Colors,
+            ColorIdentity = this.ColorIdentity
         };
     }
 }

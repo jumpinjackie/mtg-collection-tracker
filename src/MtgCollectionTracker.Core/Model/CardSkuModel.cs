@@ -40,6 +40,20 @@ public class CardSkuModel
 
     public string[] Tags { get; set; }
 
+    public string? CastingCost { get; set; }
+
+    public string? OracleText { get; set; }
+
+    public string? CardType { get; set; }
+
+    public string? Power { get; set; }
+
+    public string? Toughness { get; set; }
+
+    public string[]? Colors { get; set; }
+
+    public string[]? ColorIdentity { get; set; }
+
     public string GetDescription(bool withId = true) => withId
         ? $"({Quantity}x {CardName}, {Edition}, id: {Id})"
         : $"({Quantity}x {CardName}, {Edition})";

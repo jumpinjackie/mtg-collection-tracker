@@ -135,6 +135,18 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
 
     public string? OriginalEdition { get; set; }
 
+    public string? CastingCost { get; set; }
+
+    public string? OracleText { get; set; }
+
+    public string? CardType { get; set; }
+
+    public string? PT { get; set; }
+
+    public string[]? Colors { get; set; }
+
+    public string[]? ColorIdentity { get; set; }
+
     public bool HasContainer => !string.IsNullOrEmpty(this.ContainerName);
 
     public bool HasDeck => !string.IsNullOrEmpty(this.DeckName);
@@ -186,6 +198,17 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
     {
         this.Id = sku.Id;
         this.ScryfallId = sku.ScryfallId;
+
+        this.CastingCost = sku.CastingCost;
+        this.ColorIdentity = sku.ColorIdentity;
+        this.Colors = sku.Colors;
+        this.CardType = sku.CardType;
+        this.OracleText = sku.OracleText;
+        if (sku.Power != null && sku.Toughness != null)
+        {
+            this.PT = sku.Power + "/" + sku.Toughness;
+        }
+
         this.IsDoubleFaced = sku.IsDoubleFaced;
         this.IsSideboard = sku.IsSideboard;
         this.CollectorNumber = sku.CollectorNumber;

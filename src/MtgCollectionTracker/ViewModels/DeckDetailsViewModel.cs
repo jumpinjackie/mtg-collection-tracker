@@ -105,7 +105,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
     public ObservableCollection<CardVisualViewModel> MainDeck { get; } = new();
 
     public ObservableCollection<CardVisualViewModel> Sideboard { get; } = new();
-    
+
     // Misc properties
 
     [ObservableProperty]
@@ -154,7 +154,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
     private List<CardVisualViewModel>? _mainDeckByCardName;
     private List<CardVisualViewModel>? _sideboardByCardName;
 
-    static void UpdateTable<T>(ICollectionTrackingService service, 
+    static void UpdateTable<T>(ICollectionTrackingService service,
                                DeckModel deck,
                                ref List<CardVisualViewModel> maindeckBackingList,
                                ref List<CardVisualViewModel> sideboardBackingList,
@@ -183,8 +183,19 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
             foreach (var grp in deck.MainDeck.GroupBy(grouping))
             {
                 var card = grp.First();
-
-                var cm = new CardVisualViewModel(service) { IsGrouped = true, Id = card.SkuId, ScryfallId = card.ScryfallId, IsDoubleFaced = card.IsDoubleFaced, Quantity = grp.Count(), CardName = card.CardName, Type = card.Type, IsLand = card.IsLand, IsProxy = DeckPrinter.IsProxyEdition(card.Edition), Edition = card.Edition }.ApplyQuantities();
+                var cm = new CardVisualViewModel(service)
+                {
+                    IsGrouped = true,
+                    Id = card.SkuId,
+                    ScryfallId = card.ScryfallId,
+                    IsDoubleFaced = card.IsDoubleFaced,
+                    Quantity = grp.Count(),
+                    CardName = card.CardName,
+                    Type = card.Type,
+                    IsLand = card.IsLand,
+                    IsProxy = DeckPrinter.IsProxyEdition(card.Edition),
+                    Edition = card.Edition,
+                }.ApplyQuantities().ApplyScryfallMetadata(card);
                 cm.SwitchToFront();
                 md.Add(cm);
             }
@@ -199,7 +210,20 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
             foreach (var grp in deck.Sideboard.GroupBy(grouping))
             {
                 var card = grp.First();
-                var cm = new CardVisualViewModel(service) { IsGrouped = true, Id = card.SkuId, ScryfallId = card.ScryfallId, IsDoubleFaced = card.IsDoubleFaced, Quantity = grp.Count(), CardName = card.CardName, Type = card.Type, IsLand = card.IsLand, IsProxy = DeckPrinter.IsProxyEdition(card.Edition), Edition = card.Edition, IsSideboard = true }.ApplyQuantities();
+                var cm = new CardVisualViewModel(service)
+                {
+                    IsGrouped = true,
+                    Id = card.SkuId,
+                    ScryfallId = card.ScryfallId,
+                    IsDoubleFaced = card.IsDoubleFaced,
+                    Quantity = grp.Count(),
+                    CardName = card.CardName,
+                    Type = card.Type,
+                    IsLand = card.IsLand,
+                    IsProxy = DeckPrinter.IsProxyEdition(card.Edition),
+                    Edition = card.Edition,
+                    IsSideboard = true
+                }.ApplyQuantities().ApplyScryfallMetadata(card);
                 cm.SwitchToFront();
                 sideboardBackingList.Add(cm);
             }

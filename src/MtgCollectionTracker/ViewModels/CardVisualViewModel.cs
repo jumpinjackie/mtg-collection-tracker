@@ -1,6 +1,7 @@
 ﻿using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services.Stubs;
 using System.Threading.Tasks;
@@ -141,12 +142,39 @@ public partial class CardVisualViewModel : ViewModelBase, ICardSkuItem, ISendabl
 
     public string Edition { get; set; }
 
+    public string? CastingCost { get; set; }
+
+    public string? OracleText { get; set; }
+
+    public string? CardType { get; set; }
+
+    public string? PT { get; set; }
+
+    public string[]? Colors { get; set; }
+
+    public string[]? ColorIdentity { get; set; }
+
     public CardVisualViewModel ApplyQuantities()
     {
         if (IsProxy)
             this.ProxyQty = this.Quantity;
         else
             this.RealQty = this.Quantity;
+        return this;
+    }
+
+    public CardVisualViewModel ApplyScryfallMetadata(DeckCardModel sku)
+    {
+        this.CastingCost = sku.CastingCost;
+        this.ColorIdentity = sku.ColorIdentity;
+        this.Colors = sku.Colors;
+        this.CardType = sku.CardType;
+        this.OracleText = sku.OracleText;
+        if (sku.Power != null && sku.Toughness != null)
+        {
+            this.PT = sku.Power + "/" + sku.Toughness;
+        }
+
         return this;
     }
 }
