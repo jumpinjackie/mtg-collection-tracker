@@ -239,4 +239,14 @@ public class StubCollectionTrackingService : ICollectionTrackingService
     {
         throw new System.NotImplementedException();
     }
+
+    public ValueTask AddMissingMetadataAsync(UpdateCardMetadataProgressCallback callback, IScryfallApiClient scryfallApiClient, CancellationToken cancel)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public ValueTask RebuildAllMetadataAsync(UpdateCardMetadataProgressCallback callback, IScryfallApiClient scryfallApiClient, CancellationToken cancel)
+    {
+        throw new System.NotImplementedException();
+    }
 }

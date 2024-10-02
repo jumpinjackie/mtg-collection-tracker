@@ -15,11 +15,13 @@
 		<TextBlock Margin="10">Choose a database maintenance function below</TextBlock>
 		<StackPanel Margin="10" Spacing="10">
 			<TextBlock>To add missing scryfall metadata (images, oracle text, etc) for cards in your collection, click the button below</TextBlock>
+			<TextBlock>WARNING: This may take a while if you have lots of cards with missing metadata</TextBlock>
 			<Button IsEnabled="{Binding !IsBusy}" Command="{Binding UpdateMissingMetadataCommand}">Add Missing Scryfall Metdata</Button>
 			<ProgressBar IsVisible="{Binding UpdateMissingMetadataCommand.IsRunning}" ShowProgressText="True" Value="{Binding Completed}" Maximum="{Binding Total}" ProgressTextFormat="{}{0}/{3} metadata items processed ({1:0}%)" />
 		</StackPanel>
 		<StackPanel Margin="10" Spacing="10">
 			<TextBlock>To rebuild all scryfall metadata (images, oracle text, etc) for cards in your collection, click the button below</TextBlock>
+			<TextBlock>WARNING: This may take a while if you have a large collection</TextBlock>
 			<Button IsEnabled="{Binding !IsBusy}" Command="{Binding RebuildAllMetadataCommand}">Rebuild all Scryfall Metdata</Button>
 			<ProgressBar IsVisible="{Binding RebuildAllMetadataCommand.IsRunning}" ShowProgressText="True" Value="{Binding Completed}" Maximum="{Binding Total}" ProgressTextFormat="{}{0}/{3} metadata items processed ({1:0}%)" />
 		</StackPanel>

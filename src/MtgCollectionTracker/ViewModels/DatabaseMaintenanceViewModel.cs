@@ -5,6 +5,7 @@ using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Stubs;
+using ScryfallApi.Client;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -13,11 +14,13 @@ namespace MtgCollectionTracker.ViewModels;
 public partial class DatabaseMaintenanceViewModel : RecipientViewModelBase, IViewModelWithBusyState
 {
     readonly ICollectionTrackingService _service;
+    readonly IScryfallApiClient? _client;
 
-    public DatabaseMaintenanceViewModel(ICollectionTrackingService service, IMessenger messenger)
+    public DatabaseMaintenanceViewModel(ICollectionTrackingService service, IScryfallApiClient client, IMessenger messenger)
         : base(messenger)
     {
         _service = service;
+        _client = client;
     }
 
     public DatabaseMaintenanceViewModel()
@@ -46,28 +49,22 @@ public partial class DatabaseMaintenanceViewModel : RecipientViewModelBase, IVie
     [RelayCommand]
     private async Task UpdateMissingMetadata(CancellationToken cancel)
     {
+        if (_client == null)
+            return;
+
         using (((IViewModelWithBusyState)this).StartBusyState())
         {
             Messenger.ToastNotify("Adding missing metadata. Please wait ...");
 
-            this.Total = 100;
-            this.Completed = 0;
-            await Task.Delay(1000, cancel);
-            this.Completed = 10;
-            await Task.Delay(1000, cancel);
-            this.Completed = 20;
-            await Task.Delay(1000, cancel);
-            this.Completed = 40;
-            await Task.Delay(1000, cancel);
-            this.Completed = 50;
-            await Task.Delay(1000, cancel);
-            this.Completed = 60;
-            await Task.Delay(1000, cancel);
-            this.Completed = 70;
-            await Task.Delay(1000, cancel);
-            this.Completed = 90;
-            await Task.Delay(1000, cancel);
-            this.Completed = 100;
+            var cb = new UpdateCardMetadataProgressCallback
+            {
+                OnProgress = (processed, total) =>
+                {
+                    this.Completed = processed;
+                    this.Total = total;
+                }
+            };
+            await _service.AddMissingMetadataAsync(cb, _client, cancel);
 
             Messenger.ToastNotify("Missing metadata processed");
         }
@@ -82,28 +79,23 @@ public partial class DatabaseMaintenanceViewModel : RecipientViewModelBase, IVie
     [RelayCommand]
     private async Task RebuildAllMetadata(CancellationToken cancel)
     {
+        if (_client == null)
+            return;
+
+
         using (((IViewModelWithBusyState)this).StartBusyState())
         {
             Messenger.ToastNotify("Rebuilding all metadata. Please wait ...");
 
-            this.Total = 100;
-            this.Completed = 0;
-            await Task.Delay(1000, cancel);
-            this.Completed = 10;
-            await Task.Delay(1000, cancel);
-            this.Completed = 20;
-            await Task.Delay(1000, cancel);
-            this.Completed = 40;
-            await Task.Delay(1000, cancel);
-            this.Completed = 50;
-            await Task.Delay(1000, cancel);
-            this.Completed = 60;
-            await Task.Delay(1000, cancel);
-            this.Completed = 70;
-            await Task.Delay(1000, cancel);
-            this.Completed = 90;
-            await Task.Delay(1000, cancel);
-            this.Completed = 100;
+            var cb = new UpdateCardMetadataProgressCallback
+            {
+                OnProgress = (processed, total) =>
+                {
+                    this.Completed = processed;
+                    this.Total = total;
+                }
+            };
+            await _service.RebuildAllMetadataAsync(cb, _client, cancel);
 
             Messenger.ToastNotify("All metadata rebuilt");
         }

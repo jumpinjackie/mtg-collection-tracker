@@ -5,6 +5,7 @@ using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
+using ScryfallApi.Client;
 using System;
 using System.Collections.ObjectModel;
 using System.Text;
@@ -25,11 +26,11 @@ public partial class SettingsViewModel : RecipientViewModelBase, IRecipient<Glob
 
     public DatabaseMaintenanceViewModel Maintenance { get; }
 
-    public SettingsViewModel(ICollectionTrackingService service, IMessenger messenger)
+    public SettingsViewModel(ICollectionTrackingService service, IScryfallApiClient client, IMessenger messenger)
         : base(messenger)
     {
         _service = service;
-        this.Maintenance = new(service, messenger);
+        this.Maintenance = new(service, client, messenger);
         this.IsActive = true;
     }
 

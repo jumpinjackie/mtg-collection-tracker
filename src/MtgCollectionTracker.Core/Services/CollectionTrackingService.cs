@@ -1448,4 +1448,63 @@ public class CollectionTrackingService : ICollectionTrackingService
 
         return new ApplyTagsResult(toAdd.Count, toRemove.Count, skuDetached + wishlistDetached, tagSet.Select(t => t.Name).ToList());
     }
+
+    public async ValueTask AddMissingMetadataAsync(UpdateCardMetadataProgressCallback callback, IScryfallApiClient scryfallApiClient, CancellationToken cancel)
+    {
+        List<int> skuIdsToProcess;
+        int processed = 0;
+        {
+            using var db = _db.Invoke();
+            skuIdsToProcess = db.Value.Cards.Where(c => c.Scryfall == null).Select(c => c.Id).ToList();
+
+            callback.OnProgress?.Invoke(processed, skuIdsToProcess.Count);
+        }
+
+        foreach (var batch in skuIdsToProcess.Chunk(callback.ReportFrequency))
+        {
+            if (cancel.IsCancellationRequested)
+                break;
+
+            await this.UpdateCardMetadataAsync(batch, scryfallApiClient, null, cancel);
+            processed += batch.Length;
+            callback.OnProgress?.Invoke(processed, skuIdsToProcess.Count);
+        }
+    }
+
+    public async ValueTask RebuildAllMetadataAsync(UpdateCardMetadataProgressCallback callback, IScryfallApiClient scryfallApiClient, CancellationToken cancel)
+    {
+        using (var db = _db.Invoke())
+        {
+            // Null out all scryall metadata references
+            db.Value.Set<CardSku>()
+                .ExecuteUpdate(u => u.SetProperty(c => c.ScryfallId, c => null));
+            db.Value.Set<WishlistItem>()
+                .ExecuteUpdate(u => u.SetProperty(c => c.ScryfallId, c => null));
+
+            // Now empty scryfall metadata table
+            var affected = await db.Value.Database.ExecuteSqlAsync($"DELETE FROM ScryfallCardMetadata", cancel);
+            var affected2 = await db.Value.Database.ExecuteSqlAsync($"DELETE FROM SQLITE_SEQUENCE WHERE name='ScryfallCardMetadata'", cancel);
+        }
+
+        // Now rebuild everything
+
+        List<int> skuIdsToProcess;
+        int processed = 0;
+        {
+            using var db = _db.Invoke();
+            skuIdsToProcess = db.Value.Cards.Where(c => c.Scryfall == null).Select(c => c.Id).ToList();
+
+            callback.OnProgress?.Invoke(processed, skuIdsToProcess.Count);
+        }
+
+        foreach (var batch in skuIdsToProcess.Chunk(callback.ReportFrequency))
+        {
+            if (cancel.IsCancellationRequested)
+                break;
+
+            await this.UpdateCardMetadataAsync(batch, scryfallApiClient, null, cancel);
+            processed += batch.Length;
+            callback.OnProgress?.Invoke(processed, skuIdsToProcess.Count);
+        }
+    }
 }
