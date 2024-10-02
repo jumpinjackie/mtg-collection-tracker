@@ -108,8 +108,14 @@ public class CollectionTrackingService : ICollectionTrackingService
                 fromContainerNames.Add("<un-assigned>");
         }
 
+        // TODO: Need a dedicated normalized and ascii-folded column to search against
+        var wishlistTotal = db.Value
+            .WishlistItems
+            .Where(w => w.CardName.ToLower() == searchName.ToLower())
+            .Sum(w => w.Quantity);
+
         var availableTotal = matchingSkus.Sum(s => s.Quantity);
-        return new (wantQty - availableTotal, fromDeckNames, fromContainerNames, suggestedName);
+        return new (wantQty - availableTotal, fromDeckNames, fromContainerNames, suggestedName, wishlistTotal);
     }
 
     public IEnumerable<ContainerSummaryModel> GetContainers()

@@ -36,22 +36,43 @@ internal class ScryfallMetadataResolver
         if (_scryfallApiClient == null)
             return (null, false);
 
-        // Resolve scryfall metadata
-        var sfCards = await _scryfallApiClient.Cards.Search(cardName, 1, new SearchOptions()
+        Card? sfc = null;
+        int pageNo = 0;
+        while (true)
         {
-            IncludeMultilingual = true,
-            Mode = SearchOptions.RollupMode.Prints
-        });
-        this.ScryfallApiCalls++;
+            pageNo++;
+            try
+            {
+                // Resolve scryfall metadata
+                var sfCards = await _scryfallApiClient.Cards.Search(cardName, pageNo, new SearchOptions()
+                {
+                    IncludeMultilingual = true,
+                    Mode = SearchOptions.RollupMode.Prints
+                });
+                this.ScryfallApiCalls++;
+                if (sfCards.Data.Count > 0)
+                {
+                    // Get first matching oldest paper printing of card name
+                    sfc = sfCards.Data.OrderBy(c => c.ReleasedAt).FirstOrDefault(c => c.Name.ToLower() == cardName.ToLower() && c.Games?.Contains("paper") == true);
+                }
 
-        if (sfCards.Data.Count > 0)
+                // Break if no more results or found one
+                if (!sfCards.HasMore || sfc != null)
+                    break;
+            }
+            catch (ScryfallApiException se)
+            {
+                break;
+            }
+        }
+
+        if (sfc != null)
         {
-            var sfc = sfCards.Data.First();
-
             var res = new ScryfallResolvedCard(sfc.Name, sfc.Set.ToUpper());
             var (_, added) = await TryAddMetadataAsync(res.CardName, res.Edition, sfc, cancel);
             return (res, added);
         }
+        
         return (null, false);
     }
 

@@ -14,7 +14,7 @@ namespace MtgCollectionTracker.Core.Services
 
     public record struct ApplyTagsResult(int Added, int Deleted, int Detached, List<string> CurrentTags);
 
-    public record struct CheckQuantityResult(int ShortAmount, HashSet<string> FromDeckNames, HashSet<string> FromContainerNames, string? SuggestedName);
+    public record struct CheckQuantityResult(int ShortAmount, HashSet<string> FromDeckNames, HashSet<string> FromContainerNames, string? SuggestedName, int WishlistAmount);
 
     public record struct SkuUpdateInfo(int Id, int OldQuantity, int NewQuantity, int? OldDeckId, int? NewDeckId, int? OldContainerId, int? NewContainerId);
 

@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public record DeckListCardItem(string CardName, int Requested, int Short, HashSet<string> FromDecks, HashSet<string> FromContainers)
+public record DeckListCardItem(string CardName, int Requested, int Short, HashSet<string> FromDecks, HashSet<string> FromContainers, int WishlistTotal)
 {
     public bool IsShort => Short > 0;
 
@@ -102,17 +102,18 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
     [RelayCommand]
     private async Task AddToWishlist()
     {
-        var shortOnly = _deckListCardItems.Where(d => d.Short > 0).ToList();
+        var shortOnly = _deckListCardItems.Where(d => d.Short > 0 && d.Short > d.WishlistTotal).ToList();
         if (shortOnly.Count > 0)
         {
             var wishlistItems = new List<(int qty, string cardName, string edition)>();
             var resolved = await _service.ResolveEditionsForCardsAsync(shortOnly.Select(c => c.CardName), _client!);
             foreach (var c in shortOnly)
             {
+                var deficit = c.Short - c.WishlistTotal;
                 if (resolved.TryGetValue(c.CardName, out var ed))
-                    wishlistItems.Add((c.Short, ed.CardName ?? c.CardName, ed.Edition ?? string.Empty));
+                    wishlistItems.Add((deficit, ed.CardName ?? c.CardName, ed.Edition ?? string.Empty));
                 else
-                    wishlistItems.Add((c.Short, c.CardName, string.Empty));
+                    wishlistItems.Add((deficit, c.CardName, string.Empty));
             }
 
             Messenger.Send(new OpenDialogMessage
@@ -164,14 +165,14 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
                 continue;
 
             //Stdout($"Checking availability of: {card.CardName}");
-            var (shortAmt, fromDecks, fromContainers, suggestedName) = await _service.CheckQuantityShortfallAsync(card.CardName, card.Count, this.NoProxies, this.SparesOnly);
+            var (shortAmt, fromDecks, fromContainers, suggestedName, wishlistAmt) = await _service.CheckQuantityShortfallAsync(card.CardName, card.Count, this.NoProxies, this.SparesOnly);
             if (shortAmt > 0)
                 this.HasShort = true;
 
             if (!string.IsNullOrEmpty(suggestedName))
-                _deckListCardItems.Add(new(suggestedName, card.Count, shortAmt, fromDecks, fromContainers));
+                _deckListCardItems.Add(new(suggestedName, card.Count, shortAmt, fromDecks, fromContainers, wishlistAmt));
             else
-                _deckListCardItems.Add(new(card.CardName, card.Count, shortAmt, fromDecks, fromContainers));
+                _deckListCardItems.Add(new(card.CardName, card.Count, shortAmt, fromDecks, fromContainers, wishlistAmt));
         }
 
         var text = new StringBuilder();
