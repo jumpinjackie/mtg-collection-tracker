@@ -44,7 +44,7 @@
 								<TextBlock xml:space="preserve">Sideboard: </TextBlock>
 								<TextBlock Text="{Binding SideboardSize}" />
 							</StackPanel>
-							<ListBox ScrollViewer.VerticalScrollBarVisibility="Auto" ItemsSource="{Binding Sideboard}" Background="Transparent">
+							<ListBox ScrollViewer.VerticalScrollBarVisibility="Auto" ItemsSource="{Binding Sideboard}" SelectedItem="{Binding Behavior.SelectedRow}" Background="Transparent">
 								<ListBox.ItemsPanel>
 									<ItemsPanelTemplate>
 										<WrapPanel />
@@ -63,7 +63,7 @@
 							<TextBlock xml:space="preserve">Main Deck: </TextBlock>
 							<TextBlock Text="{Binding MainDeckSize}" />
 						</StackPanel>
-						<ListBox ScrollViewer.VerticalScrollBarVisibility="Auto" ItemsSource="{Binding MainDeck}" Background="Transparent">
+						<ListBox ScrollViewer.VerticalScrollBarVisibility="Auto" ItemsSource="{Binding MainDeck}" SelectedItem="{Binding Behavior.SelectedRow}" Background="Transparent">
 							<ListBox.ItemsPanel>
 								<ItemsPanelTemplate>
 									<WrapPanel />

@@ -183,7 +183,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
             {
                 var card = grp.First();
 
-                var cm = new CardVisualViewModel(service) { IsGrouped = true, Id = card.SkuId, ScryfallId = card.ScryfallId, IsDoubleFaced = card.IsDoubleFaced, Quantity = grp.Count(), CardName = card.CardName, Type = card.Type, IsLand = card.IsLand, IsProxy = DeckPrinter.IsProxyEdition(card.Edition) };
+                var cm = new CardVisualViewModel(service) { IsGrouped = true, Id = card.SkuId, ScryfallId = card.ScryfallId, IsDoubleFaced = card.IsDoubleFaced, Quantity = grp.Count(), CardName = card.CardName, Type = card.Type, IsLand = card.IsLand, IsProxy = DeckPrinter.IsProxyEdition(card.Edition), Edition = card.Edition }.ApplyQuantities();
                 cm.SwitchToFront();
                 md.Add(cm);
             }
@@ -198,7 +198,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
             foreach (var grp in deck.Sideboard.GroupBy(grouping))
             {
                 var card = grp.First();
-                var cm = new CardVisualViewModel(service) { IsGrouped = true, Id = card.SkuId, ScryfallId = card.ScryfallId, IsDoubleFaced = card.IsDoubleFaced, Quantity = grp.Count(), CardName = card.CardName, Type = card.Type, IsLand = card.IsLand, IsProxy = DeckPrinter.IsProxyEdition(card.Edition), IsSideboard = true };
+                var cm = new CardVisualViewModel(service) { IsGrouped = true, Id = card.SkuId, ScryfallId = card.ScryfallId, IsDoubleFaced = card.IsDoubleFaced, Quantity = grp.Count(), CardName = card.CardName, Type = card.Type, IsLand = card.IsLand, IsProxy = DeckPrinter.IsProxyEdition(card.Edition), Edition = card.Edition, IsSideboard = true }.ApplyQuantities();
                 cm.SwitchToFront();
                 sideboardBackingList.Add(cm);
             }
@@ -274,7 +274,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 800,
-                ViewModel = _vmFactory.Drawer().WithContent("Send Cards To Deck or Container", _vmFactory.SendCardsToContainer().WithCards(Behavior.SelectedItems))
+                ViewModel = _vmFactory.Drawer().WithContent("Send Cards To Deck or Container", _vmFactory.SendCardsToContainer().WithCards(Behavior.SelectedItems.ToList()))
             });
         }
     }
