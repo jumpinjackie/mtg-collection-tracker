@@ -44,10 +44,10 @@ public static class PublicExtensionMethods
         return matrix[source1Length, source2Length];
     }
 
-    public static async Task<(string? name, int apiCalls)> CheckCardNameAsync(this IScryfallApiClient client, string name, string? setHint = null)
+    public static async Task<(string? name, string? correctEdition, int apiCalls)> CheckCardNameAsync(this IScryfallApiClient client, string name, string? setHint = null)
     {
         int apiCalls = 0;
-        var cards = new HashSet<string>();
+        var allCards = new HashSet<(string name, string set)>();
         int pageNo = 0;
         while (true)
         {
@@ -60,10 +60,7 @@ public static class PublicExtensionMethods
                     Mode = SearchOptions.RollupMode.Prints
                 });
                 apiCalls++;
-                if (setHint != null)
-                    cards.UnionWith(sfCards.Data.Where(c => c.Set.ToLower() == setHint.ToLower()).Select(c => c.Name));
-                else
-                    cards.UnionWith(sfCards.Data.Select(c => c.Name));
+                allCards.UnionWith(sfCards.Data.Select(c => (c.Name, c.Set)));
                 if (!sfCards.HasMore)
                     break;
             }
@@ -73,15 +70,23 @@ public static class PublicExtensionMethods
             }
         }
 
-        if (cards.Count == 0)
-            return (null, apiCalls);
+        if (allCards.Count == 0)
+            return (null, null, apiCalls);
 
-        if (cards.Count == 1)
-            return (cards.First(), apiCalls);
+        if (allCards.Count == 1)
+            return (allCards.First().name, allCards.First().set, apiCalls);
 
         // In the event of in-exact match, prefer name with shortest levenshtein distance
-        var match = cards.OrderBy(c => LevenshteinDist(c, name)).First();
-        return (match, apiCalls);
+        if (!string.IsNullOrWhiteSpace(setHint))
+        {
+            // The set codes will be in lower case, so lower case our input to avoid potential
+            // levenshtein false positives due to mismatched casing
+            var inSetHint = setHint.ToLower();
+            var first = allCards.OrderBy(c => LevenshteinDist(c.name, name)).ThenBy(c => LevenshteinDist(c.set, inSetHint)).First();
+            return (first.name, first.set, apiCalls);
+        }
+        var match = allCards.OrderBy(c => LevenshteinDist(c.name, name)).First();
+        return (match.name, match.set, apiCalls);
     }
 
     public static (decimal TotalPrice, List<VendorOffer> Vendors, bool IsComplete) ComputeBestPrice<T>(this IEnumerable<T> offers, int requiredQty)

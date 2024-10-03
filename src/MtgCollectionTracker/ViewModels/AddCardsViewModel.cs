@@ -220,17 +220,22 @@ public partial class AddCardsViewModel : DialogContentViewModel
         if (_scryfallApiClient != null)
         {
             int cardsFixed = 0;
+            int editionsFixed = 0;
             foreach (var sku in this.Cards)
             {
-                var (res, _) = await _scryfallApiClient.CheckCardNameAsync(sku.CardName);
+                var (res, correctEdition, _) = await _scryfallApiClient.CheckCardNameAsync(sku.CardName, sku.Edition);
                 if (res != null && sku.CardName != res)
                 {
                     sku.CardName = res;
                     cardsFixed++;
                 }
+                if (correctEdition != null && sku.Edition.ToLower() != correctEdition.ToLower())
+                {
+                    sku.Edition = correctEdition.ToUpper();
+                    editionsFixed++;
+                }
             }
-            if (cardsFixed > 0)
-                Messenger.ToastNotify($"{cardsFixed} card name(s) fixed up");
+            Messenger.ToastNotify($"{cardsFixed} card name(s) and {editionsFixed} edition(s) fixed up");
         }
     }
 }

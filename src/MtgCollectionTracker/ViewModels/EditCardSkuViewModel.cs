@@ -286,12 +286,18 @@ public partial class EditCardSkuViewModel : DialogContentViewModel
     {
         if (!string.IsNullOrWhiteSpace(this.CardName) && _scryfallApiClient != null)
         {
-            var (res, _) = await _scryfallApiClient.CheckCardNameAsync(this.CardName);
+            var (res, correctEdition, _) = await _scryfallApiClient.CheckCardNameAsync(this.CardName, this.Edition);
             if (res != null && this.CardName != res)
             {
                 this.CardName = res;
                 this.ApplyCardName = true;
                 Messenger.ToastNotify("Card name fixed up");
+            }
+            if (correctEdition != null && this.Edition != null && this.Edition.ToLower() != correctEdition.ToLower())
+            {
+                this.Edition = correctEdition.ToUpper();
+                this.ApplyEdition = true;
+                Messenger.ToastNotify("Card edition fixed up");
             }
         }
     }
