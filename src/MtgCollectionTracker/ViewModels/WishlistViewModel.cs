@@ -115,11 +115,11 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
                 DrawerWidth = 400,
                 ViewModel = _vmFactory.Drawer().WithConfirmation(
                     "Delete Wishlist Item",
-                    $"Are you sure you want to delete this wishlist item?",
+                    $"Are you sure you want to delete this wishlist item ({item.QuantityNum}x {item.CardName}, {item.Edition}, {item.Language ?? "en"})?",
                     async () =>
                     {
                         await _service.DeleteWishlistItemAsync(item.Id);
-                        Messenger.ToastNotify($"Wishlist item ({item.CardName}, {item.Language ?? "en"}) deleted");
+                        Messenger.ToastNotify($"Wishlist item ({item.QuantityNum}x {item.CardName}, {item.Edition}, {item.Language ?? "en"}) deleted");
                         Behavior.SelectedItems.Remove(item);
                         this.Cards.Remove(item);
                         this.ApplySummary();

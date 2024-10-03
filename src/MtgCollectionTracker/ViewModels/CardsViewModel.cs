@@ -332,13 +332,13 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
                 DrawerWidth = 400,
                 ViewModel = _vmFactory.Drawer().WithConfirmation(
                     "Delete Card SKU",
-                    $"Are you sure you want to delete this SKU?",
+                    $"Are you sure you want to delete this SKU ({sku.Quantity}x {sku.CardName}, {sku.Edition}, {sku.Language ?? "en"})?",
                     async () =>
                     {
                         using (((IViewModelWithBusyState)this).StartBusyState())
                         {
                             await _service.DeleteCardSkuAsync(sku.Id);
-                            Messenger.ToastNotify($"Card SKU ({sku.CardName}, {sku.Language ?? "en"}) deleted");
+                            Messenger.ToastNotify($"Card SKU ({sku.Quantity}x {sku.CardName}, {sku.Edition}, {sku.Language ?? "en"}) deleted");
                             Behavior.SelectedItems.Remove(sku);
                             this.SearchResults.Remove(sku);
                             this.SkuTotal -= 1;
