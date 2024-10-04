@@ -47,7 +47,7 @@ public static class PublicExtensionMethods
     public static async Task<(string? name, string? correctEdition, int apiCalls)> CheckCardNameAsync(this IScryfallApiClient client, string name, string? setHint = null)
     {
         int apiCalls = 0;
-        var allCards = new HashSet<(string name, string set)>();
+        var allCards = new HashSet<(string name, string set, string releasedAt)>();
         int pageNo = 0;
         while (true)
         {
@@ -60,11 +60,12 @@ public static class PublicExtensionMethods
                     Mode = SearchOptions.RollupMode.Prints
                 });
                 apiCalls++;
-                allCards.UnionWith(sfCards.Data.Select(c => (c.Name, c.Set)));
+                // Only consider paper results. We are managing a *paper*-based card collection after all!
+                allCards.UnionWith(sfCards.Data.Where(c => c.Games?.Contains("paper") == true).Select(c => (c.Name, c.Set, c.ReleasedAt)));
                 if (!sfCards.HasMore)
                     break;
             }
-            catch (ScryfallApiException se)
+            catch
             {
                 break;
             }
@@ -82,10 +83,10 @@ public static class PublicExtensionMethods
             // The set codes will be in lower case, so lower case our input to avoid potential
             // levenshtein false positives due to mismatched casing
             var inSetHint = setHint.ToLower();
-            var first = allCards.OrderBy(c => LevenshteinDist(c.name, name)).ThenBy(c => LevenshteinDist(c.set, inSetHint)).First();
+            var first = allCards.OrderBy(c => LevenshteinDist(c.name, name)).ThenBy(c => LevenshteinDist(c.set, inSetHint)).ThenBy(c => c.releasedAt).First();
             return (first.name, first.set, apiCalls);
         }
-        var match = allCards.OrderBy(c => LevenshteinDist(c.name, name)).First();
+        var match = allCards.OrderBy(c => LevenshteinDist(c.name, name)).ThenBy(c => c.releasedAt).First();
         return (match.name, match.set, apiCalls);
     }
 
