@@ -22,6 +22,14 @@ public class WishlistItem : IScryfallMetaLinkable
     public required string CardName { get; set; }
 
     /// <summary>
+    /// The normalized name of the card. This is the <see cref="CardName"/> with all accented characters
+    /// and diacritics replaced with ascii equivalents and lower-cased. Search is done against this property
+    /// instead of <see cref="CardName"/>
+    /// </summary>
+    [MaxLength(255)]
+    public string? NormalizedCardName { get; set; }
+
+    /// <summary>
     /// The code for the card's edition
     /// </summary>
     [MaxLength(5)]
@@ -125,6 +133,7 @@ public class WishlistItem : IScryfallMetaLinkable
         var sku = new CardSku
         {
             CardName = this.CardName,
+            NormalizedCardName = Utils.NormalizeCardName(this.CardName),
             Edition = this.Edition,
             CollectorNumber = this.CollectorNumber,
             Quantity = this.Quantity,

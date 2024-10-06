@@ -58,8 +58,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         var skus = db.Value.Cards
             .Include(c => c.Deck)
             .Include(c => c.Container)
-            // TODO: Need a dedicated normalized and ascii-folded column to search against
-            .Where(s => s.CardName.ToLower() == searchName.ToLower());
+            .Where(s => s.CardName.ToLower() == searchName.ToLower() || s.NormalizedCardName == searchName.ToLower());
         if (noProxies)
             skus = skus.Where(s => !DeckPrinter.IsProxyEdition(s.Edition));
         if (sparesOnly) // A spare is any sku not belonging to an existing deck
@@ -77,8 +76,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             skus = db.Value.Cards
                 .Include(c => c.Deck)
                 .Include(c => c.Container)
-                // TODO: Need a dedicated normalized and ascii-folded column to search against
-                .Where(s => s.CardName.ToLower().StartsWith(searchName2.ToLower()));
+                .Where(s => s.CardName.ToLower().StartsWith(searchName2.ToLower()) || s.NormalizedCardName.StartsWith(searchName2.ToLower()));
 
             matchingSkus.AddRange(skus);
 
@@ -108,10 +106,9 @@ public class CollectionTrackingService : ICollectionTrackingService
                 fromContainerNames.Add("<un-assigned>");
         }
 
-        // TODO: Need a dedicated normalized and ascii-folded column to search against
         var wishlistTotal = db.Value
             .WishlistItems
-            .Where(w => w.CardName.ToLower() == searchName.ToLower())
+            .Where(w => w.CardName.ToLower() == searchName.ToLower() || w.NormalizedCardName == searchName.ToLower())
             .Sum(w => w.Quantity);
 
         var availableTotal = matchingSkus.Sum(s => s.Quantity);
@@ -187,7 +184,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         if (!string.IsNullOrEmpty(query.SearchFilter))
         {
             var s = FixCardName(query.SearchFilter);
-            queryable = queryable.Where(c => c.CardName.ToLower().Contains(s.ToLower()));
+            queryable = queryable.Where(c => c.CardName.ToLower().Contains(s.ToLower()) || c.NormalizedCardName.Contains(s.ToLower()));
         }
         else if (query.CardSkuIds != null)
         {
@@ -570,6 +567,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         var cards = items.Select(model => new WishlistItem
         {
             CardName = model.CardName,
+            NormalizedCardName = Utils.NormalizeCardName(model.CardName),
             Condition = model.Condition,
             Edition = model.Edition,
             CollectorNumber = model.CollectorNumber,
@@ -619,6 +617,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         var cards = items.Select(model => new CardSku
         {
             CardName = model.CardName,
+            NormalizedCardName = Utils.NormalizeCardName(model.CardName),
             Comments = model.Comments,
             Condition = model.Condition,
             ContainerId = containerId,
@@ -656,6 +655,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         var c = new CardSku
         {
             CardName = model.CardName,
+            NormalizedCardName = Utils.NormalizeCardName(model.CardName),
             Comments = model.Comments,
             Condition = model.Condition,
             ContainerId = containerId,
@@ -887,7 +887,10 @@ public class CollectionTrackingService : ICollectionTrackingService
             oldContainerId = sku.ContainerId;
 
             if (model.CardName != null)
+            {
                 sku.CardName = model.CardName;
+                sku.NormalizedCardName = Utils.NormalizeCardName(model.CardName);
+            }
             if (model.Condition != null)
                 sku.Condition = model.Condition;
             if (model.Comments != null)
@@ -1089,7 +1092,10 @@ public class CollectionTrackingService : ICollectionTrackingService
             resolver = new ScryfallMetadataResolver(db.Value, scryfallApiClient);
 
         if (model.CardName != null)
+        {
             wi.CardName = model.CardName;
+            wi.NormalizedCardName = Utils.NormalizeCardName(model.CardName);
+        }
         if (model.Condition != null)
             wi.Condition = model.Condition;
         if (model.Edition != null)
