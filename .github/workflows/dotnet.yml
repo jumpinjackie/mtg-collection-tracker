@@ -40,7 +40,7 @@ jobs:
     - name: Publish windows
       run: pupnet --runtime win-x64 --kind zip --skip-yes --app-version ${{env.VERSION}}
     #- name: Publish windows single file
-    #  run: dotnet publish -c Release -r win-x64 -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishTrimmed=true --self-contained -o publish/desktop-sf/win-x64 ./src/Maestro.Desktop
+    #  run: dotnet publish -c Release -r win-x64 -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishTrimmed=true --self-contained -o publish/desktop-sf/win-x64 ./src/MtgCollectionTracker.Desktop
     - name: Publish linux
       run: pupnet --runtime linux-x64 --kind zip --skip-yes --app-version ${{env.VERSION}}
     - name: Publish osx
