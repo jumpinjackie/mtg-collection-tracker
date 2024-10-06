@@ -82,7 +82,6 @@ public partial class DatabaseMaintenanceViewModel : RecipientViewModelBase, IVie
         if (_client == null)
             return;
 
-
         using (((IViewModelWithBusyState)this).StartBusyState())
         {
             Messenger.ToastNotify("Rebuilding all metadata. Please wait ...");
@@ -98,6 +97,27 @@ public partial class DatabaseMaintenanceViewModel : RecipientViewModelBase, IVie
             await _service.RebuildAllMetadataAsync(cb, _client, cancel);
 
             Messenger.ToastNotify("All metadata rebuilt");
+        }
+    }
+
+    [RelayCommand]
+    private async Task NormalizeCardNames(CancellationToken cancel)
+    {
+        using (((IViewModelWithBusyState)this).StartBusyState())
+        {
+            Messenger.ToastNotify("Normalizing card names. Please wait ...");
+
+            var cb = new UpdateCardMetadataProgressCallback
+            {
+                OnProgress = (processed, total) =>
+                {
+                    this.Completed = processed;
+                    this.Total = total;
+                }
+            };
+            await _service.NormalizeCardNamesAsync(cb, cancel);
+
+            Messenger.ToastNotify("All card names normalized");
         }
     }
 }

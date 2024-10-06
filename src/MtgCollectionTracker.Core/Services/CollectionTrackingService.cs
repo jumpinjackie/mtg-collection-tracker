@@ -1513,4 +1513,57 @@ public class CollectionTrackingService : ICollectionTrackingService
             callback.OnProgress?.Invoke(processed, skuIdsToProcess.Count);
         }
     }
+
+    public async ValueTask NormalizeCardNamesAsync(UpdateCardMetadataProgressCallback callback, CancellationToken cancel)
+    {
+        List<int> skuIdsToProcess;
+        List<int> wishlistToProcess;
+        int total = 0;
+        int processed = 0;
+        {
+            using var db = _db.Invoke();
+            skuIdsToProcess = db.Value.Cards.Select(c => c.Id).ToList();
+            wishlistToProcess = db.Value.WishlistItems.Select(c => c.Id).ToList();
+            total = skuIdsToProcess.Count + wishlistToProcess.Count;
+            callback.OnProgress?.Invoke(processed, total);
+        }
+
+        var cardSkus = new List<CardSku>();
+        foreach (var batch in skuIdsToProcess.Chunk(callback.ReportFrequency))
+        {
+            cardSkus.Clear();
+            if (cancel.IsCancellationRequested)
+                break;
+
+            using var db = _db.Invoke();
+            cardSkus.AddRange(db.Value.Cards.Where(c => batch.Contains(c.Id)));
+            foreach (var item in cardSkus)
+            {
+                item.NormalizedCardName = Utils.NormalizeCardName(item.CardName);
+            }
+            await db.Value.SaveChangesAsync(cancel);
+
+            processed += batch.Length;
+            callback.OnProgress?.Invoke(processed, total);
+        }
+
+        var wishlistItems = new List<WishlistItem>();
+        foreach (var batch in wishlistToProcess.Chunk(callback.ReportFrequency))
+        {
+            wishlistItems.Clear();
+            if (cancel.IsCancellationRequested)
+                break;
+
+            using var db = _db.Invoke();
+            wishlistItems.AddRange(db.Value.WishlistItems.Where(c => batch.Contains(c.Id)));
+            foreach (var item in wishlistItems)
+            {
+                item.NormalizedCardName = Utils.NormalizeCardName(item.CardName);
+            }
+            await db.Value.SaveChangesAsync(cancel);
+
+            processed += batch.Length;
+            callback.OnProgress?.Invoke(processed, total);
+        }
+    }
 }
