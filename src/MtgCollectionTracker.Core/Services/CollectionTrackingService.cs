@@ -1458,12 +1458,15 @@ public class CollectionTrackingService : ICollectionTrackingService
     public async ValueTask AddMissingMetadataAsync(UpdateCardMetadataProgressCallback callback, IScryfallApiClient scryfallApiClient, CancellationToken cancel)
     {
         List<int> skuIdsToProcess;
+        List<int> wishlistToProcess;
         int processed = 0;
+        int total = 0;
         {
             using var db = _db.Invoke();
             skuIdsToProcess = db.Value.Cards.Where(c => c.Scryfall == null).Select(c => c.Id).ToList();
-
-            callback.OnProgress?.Invoke(processed, skuIdsToProcess.Count);
+            wishlistToProcess = db.Value.WishlistItems.Where(c => c.Scryfall == null).Select(c => c.Id).ToList();
+            total = skuIdsToProcess.Count + wishlistToProcess.Count;
+            callback.OnProgress?.Invoke(processed, total);
         }
 
         foreach (var batch in skuIdsToProcess.Chunk(callback.ReportFrequency))
@@ -1473,7 +1476,17 @@ public class CollectionTrackingService : ICollectionTrackingService
 
             await this.UpdateCardMetadataAsync(batch, scryfallApiClient, null, cancel);
             processed += batch.Length;
-            callback.OnProgress?.Invoke(processed, skuIdsToProcess.Count);
+            callback.OnProgress?.Invoke(processed, total);
+        }
+
+        foreach (var batch in wishlistToProcess.Chunk(callback.ReportFrequency))
+        {
+            if (cancel.IsCancellationRequested)
+                break;
+
+            await this.UpdateWishlistMetadataAsync(batch, scryfallApiClient, null, cancel);
+            processed += batch.Length;
+            callback.OnProgress?.Invoke(processed, total);
         }
     }
 
@@ -1493,25 +1506,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         }
 
         // Now rebuild everything
-
-        List<int> skuIdsToProcess;
-        int processed = 0;
-        {
-            using var db = _db.Invoke();
-            skuIdsToProcess = db.Value.Cards.Where(c => c.Scryfall == null).Select(c => c.Id).ToList();
-
-            callback.OnProgress?.Invoke(processed, skuIdsToProcess.Count);
-        }
-
-        foreach (var batch in skuIdsToProcess.Chunk(callback.ReportFrequency))
-        {
-            if (cancel.IsCancellationRequested)
-                break;
-
-            await this.UpdateCardMetadataAsync(batch, scryfallApiClient, null, cancel);
-            processed += batch.Length;
-            callback.OnProgress?.Invoke(processed, skuIdsToProcess.Count);
-        }
+        await this.AddMissingMetadataAsync(callback, scryfallApiClient, cancel);
     }
 
     public async ValueTask NormalizeCardNamesAsync(UpdateCardMetadataProgressCallback callback, CancellationToken cancel)
