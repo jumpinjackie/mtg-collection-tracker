@@ -143,7 +143,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     [RelayCommand]
     private async Task PerformSearch()
     {
-        var hasMinSearchParams = !string.IsNullOrWhiteSpace(this.SearchText) || this.SelectedTags.Count > 0 || this.UnParented;
+        var hasMinSearchParams = !string.IsNullOrWhiteSpace(this.SearchText) || this.SelectedTags.Count > 0 || this.UnParented || this.MissingMetadata;
         if (!hasMinSearchParams)
             return;
 
@@ -160,6 +160,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
                 NoProxies = this.NoProxies,
                 NotInDecks = this.NotInDecks,
                 UnParented = this.UnParented,
+                MissingMetadata = this.MissingMetadata,
                 IncludeScryfallMetadata = true
             });
             this.SearchResults.Clear();
@@ -196,12 +197,20 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
         this.PerformSearchCommand.Execute(null);
     }
 
+    partial void OnMissingMetadataChanged(bool value)
+    {
+        this.PerformSearchCommand.Execute(null);
+    }
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CanSearch))]
     private string? _searchText;
 
     [ObservableProperty]
     private bool _unParented;
+
+    [ObservableProperty]
+    private bool _missingMetadata;
 
     public bool CanSearch
     {
@@ -210,7 +219,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
             if (((IViewModelWithBusyState)this).IsBusy)
                 return false;
 
-            if (!this.UnParented)
+            if (!this.UnParented && !this.MissingMetadata)
                 return !string.IsNullOrWhiteSpace(SearchText);
 
             return true;

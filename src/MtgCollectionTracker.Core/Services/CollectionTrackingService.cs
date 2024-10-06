@@ -199,6 +199,9 @@ public class CollectionTrackingService : ICollectionTrackingService
         if (query.UnParented)
             queryable = queryable.Where(c => c.ContainerId == null && c.DeckId == null);
 
+        if (query.MissingMetadata)
+            queryable = queryable.Where(c => c.ScryfallId == null);
+
         if (query.NoProxies)
             queryable = queryable.Where(DeckPrinter.IsNotProxyEditionExpr);
 
