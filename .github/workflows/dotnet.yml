@@ -1,0 +1,107 @@
+
+# This workflow will build a .NET project
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-net
+
+name: .NET
+
+on:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+env:
+  VERSION: "1.0.0"
+  VERSION_PUPNET: "1.0.0-1"
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.0.x
+    - name: Add libfuse
+      run: sudo apt-get install libfuse2
+    #- name: Add wasm workload
+    #  run: dotnet workload install wasm-tools
+    - name: Add pupnet
+      run: dotnet tool install -g KuiperZone.PupNet
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore
+    - name: Test
+      run: dotnet test --no-build --verbosity normal
+    - name: Publish windows
+      run: pupnet --runtime win-x64 --kind zip --skip-yes --app-version ${{env.VERSION}}
+    #- name: Publish windows single file
+    #  run: dotnet publish -c Release -r win-x64 -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishTrimmed=true --self-contained -o publish/desktop-sf/win-x64 ./src/Maestro.Desktop
+    - name: Publish linux
+      run: pupnet --runtime linux-x64 --kind zip --skip-yes --app-version ${{env.VERSION}}
+    - name: Publish osx
+      run: pupnet --runtime osx-x64 --kind zip --skip-yes --app-version ${{env.VERSION}}
+    #- name: Publish WASM AppBundle
+    #  run: |
+    #    dotnet publish -c Release -r browser-wasm ./src/Maestro.Browser
+    #    cp -R ./src/Maestro.Browser/bin/Release/net8.0/browser-wasm/AppBundle ./artifacts/browser-wasm
+    #    tar -zcf ./artifacts/files/mtg-collection-tracker-${{env.VERSION}}-browser-wasm.tar.gz -C ./artifacts/browser-wasm .
+    - name: Publish linux appimage
+      run: pupnet --runtime linux-x64 --kind appimage --skip-yes --app-version ${{env.VERSION}}
+    #- name: Deploy WASM AppBundle to GH pages
+    #  uses: peaceiris/actions-gh-pages@v3
+    #  with:
+    #    github_token: ${{ secrets.GITHUB_TOKEN }}
+    #    destination_dir: ${{ github.ref_name }}
+    #    publish_dir: ./artifacts/browser-wasm
+    - name: Final checks/prep before upload
+      run: |
+        ls -la artifacts/files
+        mkdir -p artifacts/desktop/win-x64
+        mkdir -p artifacts/desktop/linux-x64
+        mkdir -p artifacts/desktop/osx-x64
+        unzip artifacts/files/mtg-collection-tracker-${{env.VERSION_PUPNET}}.win-x64.zip -d artifacts/desktop/win-x64
+        unzip artifacts/files/mtg-collection-tracker-${{env.VERSION_PUPNET}}.linux-x64.zip -d artifacts/desktop/linux-x64
+        unzip artifacts/files/mtg-collection-tracker-${{env.VERSION_PUPNET}}.osx-x64.zip -d artifacts/desktop/osx-x64
+        chmod +x artifacts/files/*.AppImage
+        ls -la artifacts
+        ls -la artifacts/desktop
+    - name: Upload Windows artifact for this build
+      uses: actions/upload-artifact@v4
+      with:
+        name: mtg-collection-tracker-${{env.VERSION}}-win-x64
+        path: artifacts/desktop/win-x64
+    - name: Upload Linux artifact for this build
+      uses: actions/upload-artifact@v4
+      with:
+        name: mtg-collection-tracker-${{env.VERSION}}-linux-x64
+        path: artifacts/desktop/linux-x64
+    - name: Upload OSX artifact for this build
+      uses: actions/upload-artifact@v4
+      with:
+        name: mtg-collection-tracker-${{env.VERSION}}-osx-x64
+        path: artifacts/desktop/osx-x64
+    #- name: Upload WASM AppBundle artifact for this build
+    #  uses: actions/upload-artifact@v4
+    #  with:
+    #    name: mtg-collection-tracker-${{env.VERSION}}-browser-wasm
+    #    path: artifacts/browser-wasm
+    - name: Upload AppImage artifact for this build
+      uses: actions/upload-artifact@v4
+      with:
+        name: mtg-collection-tracker-${{env.VERSION}}.AppImage
+        path: artifacts/files/*.AppImage
+    - name: Create release from tag
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        draft: true
+        prerelease: true
+        files: |
+          artifacts/files/*.zip
+          artifacts/files/*.tar.gz
+          artifacts/files/*.AppImage
