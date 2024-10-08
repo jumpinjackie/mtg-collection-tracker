@@ -216,7 +216,8 @@ public partial class AddCardsToWishlistViewModel : DialogContentViewModel
                     sku.CardName = res;
                     cardsFixed++;
                 }
-                if (correctEdition != null && sku.Edition.ToLower() != correctEdition.ToLower())
+                // Only apply correct edition if not proxy
+                if (correctEdition != null && sku.Edition.ToLower() != "proxy" && sku.Edition.ToLower() != correctEdition.ToLower())
                 {
                     sku.Edition = correctEdition.ToUpper();
                     editionsFixed++;

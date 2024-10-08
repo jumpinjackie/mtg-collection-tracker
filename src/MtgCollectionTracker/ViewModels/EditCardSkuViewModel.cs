@@ -286,6 +286,8 @@ public partial class EditCardSkuViewModel : DialogContentViewModel
     [RelayCommand]
     private async Task CheckName()
     {
+        bool bFixedCardName = false;
+        bool bFixedEdition = false;
         if (!string.IsNullOrWhiteSpace(this.CardName) && _scryfallApiClient != null)
         {
             var (res, correctEdition, _) = await _scryfallApiClient.CheckCardNameAsync(this.CardName, this.Edition);
@@ -294,12 +296,20 @@ public partial class EditCardSkuViewModel : DialogContentViewModel
                 this.CardName = res;
                 this.ApplyCardName = true;
                 Messenger.ToastNotify("Card name fixed up");
+                bFixedCardName = true;
             }
-            if (correctEdition != null && this.Edition != null && this.Edition.ToLower() != correctEdition.ToLower())
+            // Only apply correct edition if not proxy
+            if (correctEdition != null && this.Edition != null && this.Edition.ToLower() != "proxy" && this.Edition.ToLower() != correctEdition.ToLower())
             {
                 this.Edition = correctEdition.ToUpper();
                 this.ApplyEdition = true;
                 Messenger.ToastNotify("Card edition fixed up");
+                bFixedEdition = true;
+            }
+
+            if (!bFixedCardName && !bFixedEdition)
+            {
+                Messenger.ToastNotify("Card name/edition is correct. No actions taken");
             }
         }
     }
