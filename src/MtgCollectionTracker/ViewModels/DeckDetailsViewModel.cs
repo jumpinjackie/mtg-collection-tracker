@@ -132,9 +132,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
         switch (mode)
         {
             case DeckViewMode.Text:
-                var text = new StringBuilder();
-                DeckPrinter.Print(_origDeck.Name, _origDeck.Format, _origDeck.GetCards(), s => text.AppendLine(s), this.ReportProxyUsage);
-                this.DeckListText = text.ToString();
+                this.DeckListText = _service.PrintDeck(_origDeck.Id, false);
                 break;
             case DeckViewMode.VisualByCardName:
                 UpdateVisual(_service, _origDeck, ref _mainDeckByCardName, this.MainDeck, ref _sideboardByCardName, this.Sideboard, c => c.CardName);
@@ -291,6 +289,18 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
                 ViewModel = _vmFactory.Drawer().WithContent("Split Card SKU", vm)
             });
         }
+    }
+
+    [RelayCommand]
+    private void ShowProxyUsage()
+    {
+        this.DeckListText = _service.PrintDeck(_origDeck.Id, true);
+    }
+
+    [RelayCommand]
+    private void HideProxyUsage()
+    {
+        this.DeckListText = _service.PrintDeck(_origDeck.Id, false);
     }
 
     [RelayCommand]

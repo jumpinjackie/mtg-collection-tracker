@@ -29,9 +29,15 @@
 		</StackPanel>
 		<Grid>
 			<!-- By Text -->
-			<ScrollViewer IsVisible="{Binding Mode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:DeckViewMode.Text}}">
-				<TextBlock TextWrapping="Wrap" Text="{Binding DeckListText}" />
-			</ScrollViewer>
+			<DockPanel IsVisible="{Binding Mode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:DeckViewMode.Text}}">
+				<StackPanel Margin="10" Spacing="10" DockPanel.Dock="Bottom" Orientation="Horizontal">
+					<Button Command="{Binding ShowProxyUsageCommand}">Show Proxy Usage</Button>
+					<Button Command="{Binding HideProxyUsageCommand}">Hide Proxy Usage</Button>
+				</StackPanel>
+				<ScrollViewer>
+					<TextBlock TextWrapping="Wrap" Text="{Binding DeckListText}" />
+				</ScrollViewer>
+			</DockPanel>
 			<!-- Visual -->
 			<Panel IsVisible="{Binding IsVisualMode}">
 				<SplitView IsPaneOpen="True"
