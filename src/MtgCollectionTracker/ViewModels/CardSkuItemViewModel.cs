@@ -27,7 +27,14 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
 
     public CardSkuItemViewModel()
     {
+        this.ThrowIfNotDesignMode();
         _service = new StubCollectionTrackingService();
+        _deckName = "Some Deck";
+        _containerName = "Some Container";
+        this.Comments = "Some comments";
+        this.TagList = ["foo", "bar"];
+        this.Tags = string.Join(Environment.NewLine, this.TagList);
+        this.TagsText = $"{this.TagList.Length} tag(s)";
     }
 
     public int Id { get; private set; }
@@ -146,6 +153,8 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
     public string[]? Colors { get; set; }
 
     public string[]? ColorIdentity { get; set; }
+
+    public bool HasComments => !string.IsNullOrWhiteSpace(this.Comments);
 
     public bool HasContainer => !string.IsNullOrEmpty(this.ContainerName);
 

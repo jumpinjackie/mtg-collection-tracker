@@ -49,9 +49,18 @@
 			<PathIcon Grid.Column="0" Data="{StaticResource deckbox}" />
 			<TextBlock Grid.Column="1" Text="{Binding DeckName}" VerticalAlignment="Center" />
 		</Grid>
-		<Grid IsVisible="{Binding HasTags}" ColumnDefinitions="30, *" ToolTip.Tip="{Binding Tags}">
-			<PathIcon Grid.Column="0" Data="{StaticResource tag_regular}" />
-			<TextBlock Grid.Column="1" Text="{Binding TagsText}" VerticalAlignment="Center" />
+		<Grid ColumnDefinitions="*, 30">
+			<Grid.IsVisible>
+				<MultiBinding Converter="{x:Static BoolConverters.Or}">
+					<Binding Path="HasTags" />
+					<Binding Path="HasComments" />
+				</MultiBinding>
+			</Grid.IsVisible>
+			<Grid ColumnDefinitions="30, *" Grid.Column="0" IsVisible="{Binding HasTags}" ToolTip.Tip="{Binding Tags}">
+				<PathIcon Grid.Column="0" Data="{StaticResource tag_regular}" />
+				<TextBlock Grid.Column="1" Text="{Binding TagsText}" VerticalAlignment="Center" />
+			</Grid>
+			<PathIcon Grid.Column="2" IsVisible="{Binding HasComments}" Data="{StaticResource comment_regular}" ToolTip.Tip="{Binding Comments}" />
 		</Grid>
 		<Button IsVisible="{Binding IsDoubleFaced}" Grid.Column="0" HorizontalAlignment="Center" Content="{Binding SwitchLabel}" Command="{Binding SwitchFaceCommand}" />
 	</StackPanel>

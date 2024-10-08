@@ -112,8 +112,8 @@
 								<DataGridTextColumn Header="Collector #" Binding="{Binding CollectorNumber}"/>
 								<!--
 								<DataGridTextColumn Header="Foil?" Binding="{Binding IsFoil}"/>
-								-->
 								<DataGridTextColumn Header="Comments" Binding="{Binding Comments}"/>
+								-->
 							</DataGrid.Columns>
 						</DataGrid>
 					</Grid>

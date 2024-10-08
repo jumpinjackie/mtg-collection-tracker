@@ -25,7 +25,11 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
 
     public WishlistItemViewModel()
     {
+        this.ThrowIfNotDesignMode();
         _service = new StubCollectionTrackingService();
+        this.TagList = ["foo", "bar"];
+        this.Tags = string.Join(Environment.NewLine, this.TagList);
+        this.TagsText = $"{this.TagList.Length} tag(s)";
     }
 
     public int Id { get; private set; }
@@ -51,11 +55,7 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
     private string _condition = CardCondition.NearMint.ToString();
 
     [ObservableProperty]
-    private string? _comments;
-
-    [ObservableProperty]
     private Task<Bitmap?> _cardImage;
-
 
     public Task<Bitmap?> FrontFaceImageSmall => GetSmallFrontFaceImageAsync();
 
