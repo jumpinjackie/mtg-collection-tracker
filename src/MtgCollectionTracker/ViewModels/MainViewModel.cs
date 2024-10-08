@@ -107,12 +107,12 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
 
     void IRecipient<CardsSentToContainerMessage>.Receive(CardsSentToContainerMessage message)
     {
-        this.NotificationManager?.Show($"{message.TotalSkus} SKU(s) moved to container ({message.ContainerName})");
+        this.NotificationManager?.Show($"{message.SkuIds.Count} SKU(s) moved to container ({message.ContainerName})");
     }
 
     void IRecipient<CardsSentToDeckMessage>.Receive(CardsSentToDeckMessage message)
     {
-        this.NotificationManager?.Show($"{message.TotalSkus} SKU(s) moved to deck ({message.DeckName})");
+        this.NotificationManager?.Show($"{message.SkuIds.Count} SKU(s) moved to deck ({message.DeckName})");
     }
 
     void IRecipient<WishlistItemUpdatedMessage>.Receive(WishlistItemUpdatedMessage message)

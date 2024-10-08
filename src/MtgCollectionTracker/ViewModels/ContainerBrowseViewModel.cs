@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewModelWithBusyState, IMultiModeCardListBehaviorHost, IRecipient<CardsSentToDeckMessage>, IRecipient<CardSkuSplitMessage>
+public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewModelWithBusyState, IMultiModeCardListBehaviorHost, IRecipient<CardsSentToDeckMessage>, IRecipient<CardSkuSplitMessage>, IRecipient<CardsSentToContainerMessage>, IRecipient<CardsOrphanedMessage>
 {
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
@@ -81,17 +81,17 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
             });
             Behavior.SelectedItems.Clear();
             Behavior.SelectedRow = null;
-            this.SearchResults.Clear();
+            this.CurrentPage.Clear();
             foreach (var sku in page.Items)
             {
-                this.SearchResults.Add(_vmFactory.CardSku().WithData(sku));
+                this.CurrentPage.Add(_vmFactory.CardSku().WithData(sku));
             }
-            this.HasNoResults = this.SearchResults.Count == 0;
+            this.HasNoResults = this.CurrentPage.Count == 0;
             var from = Math.Max(page.PageNumber, 0) * page.PageSize;
             var to = Math.Min((page.PageNumber + 1) * page.PageSize, page.Total);
             this.PageSummary = $"Viewing {from} - {to} of {page.Total} skus";
             this.CanGoPrevious = (oneBasedPageNumber - 1) > 0;
-            this.CanGoNext = (this.SearchResults.Count == page.PageSize);
+            this.CanGoNext = (this.CurrentPage.Count == page.PageSize);
         }
     }
 
@@ -160,7 +160,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
     [ObservableProperty]
     private bool _hasNoResults;
 
-    public ObservableCollection<CardSkuItemViewModel> SearchResults { get; } = new();
+    public ObservableCollection<CardSkuItemViewModel> CurrentPage { get; } = new();
 
     [RelayCommand]
     private void AddSkus()
@@ -216,7 +216,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
                 var updatedSkus = await _service.UpdateCardMetadataAsync(ids, _scryfallApiClient, callback, CancellationToken.None);
                 foreach (var sku in updatedSkus)
                 {
-                    var skuM = this.SearchResults.FirstOrDefault(c => c.Id == sku.Id);
+                    var skuM = this.CurrentPage.FirstOrDefault(c => c.Id == sku.Id);
                     if (skuM != null)
                     {
                         skuM.WithData(sku);
@@ -282,25 +282,54 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
 
     void IRecipient<CardSkuSplitMessage>.Receive(CardSkuSplitMessage message)
     {
-        var toUpdate = this.SearchResults
+        var toUpdate = this.CurrentPage
                 .Where(r => r.Id == message.SplitSkuId)
                 .Select(r => r.Id)
                 .ToList();
         var updatedSkus = _service.GetCards(new() { CardSkuIds = toUpdate });
         foreach (var sku in updatedSkus)
         {
-            var item = this.SearchResults.FirstOrDefault(r => r.Id == sku.Id);
+            var item = this.CurrentPage.FirstOrDefault(r => r.Id == sku.Id);
             if (item != null)
             {
                 item.WithData(sku);
-                var idx = this.SearchResults.IndexOf(item);
+                var idx = this.CurrentPage.IndexOf(item);
                 // Add the new split sku as well
                 var newSku = _service.GetCards(new() { CardSkuIds = [message.NewSkuId] }).ToList();
                 if (newSku.Count == 1)
                 {
-                    this.SearchResults.Insert(idx, _vmFactory.CardSku().WithData(newSku[0]));
+                    this.CurrentPage.Insert(idx, _vmFactory.CardSku().WithData(newSku[0]));
                 }
             }
+        }
+    }
+
+    void IRecipient<CardsSentToContainerMessage>.Receive(CardsSentToContainerMessage message)
+    {
+        // Remove from current page any skus no longer in this container
+        if (message.ContainerId != _containerId)
+        {
+            var toRemove = this.CurrentPage
+               .Where(r => message.SkuIds.Contains(r.Id))
+               .ToList();
+
+            foreach (var remove in toRemove)
+            {
+                this.CurrentPage.Remove(remove);
+            }
+        }
+    }
+
+    void IRecipient<CardsOrphanedMessage>.Receive(CardsOrphanedMessage message)
+    {
+        // Remove from current page any skus no longer in this container
+        var toRemove = this.CurrentPage
+               .Where(r => message.SkuIds.Contains(r.Id))
+               .ToList();
+
+        foreach (var remove in toRemove)
+        {
+            this.CurrentPage.Remove(remove);
         }
     }
 }

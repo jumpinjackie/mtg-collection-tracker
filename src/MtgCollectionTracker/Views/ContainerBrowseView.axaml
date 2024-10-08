@@ -41,7 +41,7 @@
 					<RadioButton GroupName="View Mode" IsChecked="{Binding Behavior.ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:CardItemViewMode.VisualList}}" Content="Visual List"/>
 					<RadioButton GroupName="View Mode" IsChecked="{Binding Behavior.ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:CardItemViewMode.Table}}" Content="Table"/>
 				</StackPanel>
-				<ListBox IsEnabled="{Binding !Behavior.IsBusy}" IsVisible="{Binding Behavior.IsListMode}" ItemsSource="{Binding SearchResults}" SelectionMode="Multiple" SelectedItems="{Binding Behavior.SelectedItems}" Background="Transparent" Margin="0 20">
+				<ListBox IsEnabled="{Binding !Behavior.IsBusy}" IsVisible="{Binding Behavior.IsListMode}" ItemsSource="{Binding CurrentPage}" SelectionMode="Multiple" SelectedItems="{Binding Behavior.SelectedItems}" Background="Transparent" Margin="0 20">
 					<ListBox.ItemsPanel>
 						<ItemsPanelTemplate>
 							<WrapPanel />
@@ -74,7 +74,7 @@
 						NOTE: Can only have single selection mode as multi-selection data binding
 						is not currently supported :( 
 						-->
-						<DataGrid ItemsSource="{Binding SearchResults}"
+						<DataGrid ItemsSource="{Binding CurrentPage}"
 								  CanUserReorderColumns="True"
 								  CanUserResizeColumns="True"
 								  CanUserSortColumns="True"

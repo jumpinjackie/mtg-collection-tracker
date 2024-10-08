@@ -25,6 +25,8 @@ namespace MtgCollectionTracker.Core.Services
         public IEnumerable<SkuUpdateInfo> ChangedDecks() => Skus.Where(s => s.OldDeckId != s.NewDeckId);
 
         public IEnumerable<SkuUpdateInfo> ChangedContainer() => Skus.Where(s => s.OldContainerId != s.NewContainerId);
+
+        public IEnumerable<SkuUpdateInfo> Orphaned() => Skus.Where(s => s.OldContainerId.HasValue && !s.NewContainerId.HasValue);
     }
 
     public interface ICollectionTrackingService

@@ -17,13 +17,19 @@ internal static class MessengerExtensions
         foreach (var grp in res.ChangedContainer().GroupBy(s => s.OldContainerId))
         {
             var affectedSkus = grp.Select(s => s.Id).ToList();
-            messenger.Send(new CardsRemovedFromContainerMessage(grp.Key, affectedSkus.Count, affectedSkus));
+            messenger.Send(new CardsRemovedFromContainerMessage(grp.Key, affectedSkus));
         }
 
         foreach (var grp in res.ChangedDecks().GroupBy(s => s.OldDeckId))
         {
             var affectedSkus = grp.Select(s => s.Id).ToList();
-            messenger.Send(new CardsRemovedFromDeckMessage(grp.Key, affectedSkus.Count, affectedSkus));
+            messenger.Send(new CardsRemovedFromDeckMessage(grp.Key, affectedSkus));
+        }
+
+        var orphaned = res.Orphaned().Select(s => s.Id).ToList();
+        if (orphaned.Count > 0)
+        {
+            messenger.Send(new CardsOrphanedMessage(orphaned));
         }
 
         var decksChangedTotals = res.DeckChangedTotals().ToList();

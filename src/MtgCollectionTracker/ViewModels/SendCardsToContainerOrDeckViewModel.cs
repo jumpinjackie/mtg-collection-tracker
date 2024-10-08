@@ -125,12 +125,17 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
             if (this.SelectedContainer != null)
             {
                 var affectedSkus = res.ChangedContainer().Where(s => s.NewContainerId == this.SelectedContainer.Id).Select(s => s.Id).ToList();
-                Messenger.Send(new CardsSentToContainerMessage(this.SelectedContainer.Id, affectedSkus.Count, this.SelectedContainer.Name, affectedSkus));
+                Messenger.Send(new CardsSentToContainerMessage(this.SelectedContainer.Id, this.SelectedContainer.Name, affectedSkus));
             }
             if (this.SelectedDeck != null)
             {
                 var affectedSkus = res.ChangedDecks().Where(s => s.NewDeckId == this.SelectedDeck.DeckId).Select(s => s.Id).ToList();
-                Messenger.Send(new CardsSentToDeckMessage(this.SelectedDeck.DeckId, affectedSkus.Count, this.SelectedDeck.Name, affectedSkus));
+                Messenger.Send(new CardsSentToDeckMessage(this.SelectedDeck.DeckId, this.SelectedDeck.Name, affectedSkus));
+            }
+            if (this.UnSetContainer)
+            {
+                var affectedSkus = res.Skus.Select(s => s.Id).ToList();
+                Messenger.Send(new CardsOrphanedMessage(affectedSkus));
             }
 
             Messenger.HandleSkuUpdate(res);

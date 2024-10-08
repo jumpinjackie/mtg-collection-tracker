@@ -272,6 +272,8 @@ public partial class EditCardSkuViewModel : DialogContentViewModel
             }
         }
 
+        
+
         Messenger.Send(new CloseDialogMessage());
     }
 
