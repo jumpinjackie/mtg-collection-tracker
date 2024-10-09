@@ -47,5 +47,7 @@ public interface IViewModelFactory
 
     NewDeckOrContainerViewModel NewDeckOrContainer(DeckOrContainer type);
 
+    EditDeckOrContainerViewModel EditDeckOrContainer(DeckOrContainer type);
+
     ManageVendorsViewModel ManageVendors();
 }

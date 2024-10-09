@@ -254,4 +254,14 @@ public class StubCollectionTrackingService : ICollectionTrackingService
     {
         throw new System.NotImplementedException();
     }
+
+    public ValueTask<ContainerSummaryModel> UpdateContainerAsync(int id, string name, string? description)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public ValueTask<DeckSummaryModel> UpdateDeckAsync(int id, string name, string? format, int? containerId)
+    {
+        throw new System.NotImplementedException();
+    }
 }

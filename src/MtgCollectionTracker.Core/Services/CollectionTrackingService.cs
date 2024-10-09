@@ -125,6 +125,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             {
                 Id = c.Id,
                 Name = c.Name,
+                Description = c.Description,
                 Total = c.Cards.Sum(c => c.Quantity)
             })
             .ToList();
@@ -699,6 +700,34 @@ public class CollectionTrackingService : ICollectionTrackingService
         {
             Id = c.Id,
             Name = c.Name,
+            Description = c.Description,
+            Total = c.Cards.Sum(c => c.Quantity)
+        };
+    }
+
+    public async ValueTask<ContainerSummaryModel> UpdateContainerAsync(int id, string name, string? description)
+    {
+        using var db = _db.Invoke();
+        if (await db.Value.Containers.AnyAsync(c => c.Name == name))
+        {
+            throw new Exception($"A container with the name ({name}) already exists");
+        }
+
+        var c = await db.Value.Containers.FindAsync(id);
+        if (c == null)
+            throw new Exception("Container not found");
+
+        c.Name = name;
+        c.Description = description;
+
+        await db.Value.SaveChangesAsync();
+        await db.Value.Entry(c).Collection(nameof(c.Cards)).LoadAsync();
+
+        return new ContainerSummaryModel
+        {
+            Id = c.Id,
+            Name = c.Name,
+            Description = c.Description,
             Total = c.Cards.Sum(c => c.Quantity)
         };
     }
@@ -715,13 +744,50 @@ public class CollectionTrackingService : ICollectionTrackingService
         }
         if (await db.Value.Decks.AnyAsync(d => d.Name == name))
         {
-            throw new Exception($"A deck with the name ({name}) already exists");
+            throw new Exception($"Another deck with the name ({name}) already exists");
         }
 
         var d = new Deck { Name = name, Format = format, Container = cnt };
         await db.Value.Decks.AddAsync(d);
         await db.Value.SaveChangesAsync();
 
+        await db.Value.Entry(d).Collection(nameof(d.Cards)).LoadAsync();
+
+        return new DeckSummaryModel
+        {
+            Id = d.Id,
+            Name = d.Name,
+            ContainerName = d.Container?.Name,
+            Format = d.Format,
+            MaindeckTotal = d.Cards.Where(c => !c.IsSideboard).Sum(c => c.Quantity),
+            SideboardTotal = d.Cards.Where(c => c.IsSideboard).Sum(c => c.Quantity)
+        };
+    }
+
+    public async ValueTask<DeckSummaryModel> UpdateDeckAsync(int id, string name, string? format, int? containerId)
+    {
+        Container? cnt = null;
+        using var db = _db.Invoke();
+        if (containerId.HasValue)
+        {
+            cnt = await db.Value.Containers.FindAsync(containerId);
+            if (cnt == null)
+                throw new Exception("No such container");
+        }
+        if (await db.Value.Decks.AnyAsync(d => d.Id != id && d.Name == name))
+        {
+            throw new Exception($"Another deck with the name ({name}) already exists");
+        }
+
+        var d = await db.Value.Decks.FindAsync(id);
+        if (d == null)
+            throw new Exception("Deck not found");
+
+        d.Name = name;
+        d.Format = format;
+        d.Container = cnt;
+
+        await db.Value.SaveChangesAsync();
         await db.Value.Entry(d).Collection(nameof(d.Cards)).LoadAsync();
 
         return new DeckSummaryModel

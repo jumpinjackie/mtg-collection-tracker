@@ -28,6 +28,7 @@ public class ViewModelFactory : IViewModelFactory
     readonly Func<EditCardSkuViewModel> _editCardSku;
     readonly Func<SplitCardSkuViewModel> _splitCardSku;
     readonly Func<NewDeckOrContainerViewModel> _newDeck;
+    readonly Func<EditDeckOrContainerViewModel> _editDeck;
     readonly Func<SendCardsToContainerOrDeckViewModel> _sendCardsToContainer;
     readonly Func<ManageVendorsViewModel> _manageVendors;
     readonly Func<EditWishlistItemViewModel> _editWishlistItem;
@@ -51,6 +52,7 @@ public class ViewModelFactory : IViewModelFactory
                             Func<EditCardSkuViewModel> editCardSku,
                             Func<SplitCardSkuViewModel> splitCardSku,
                             Func<NewDeckOrContainerViewModel> newDeck,
+                            Func<EditDeckOrContainerViewModel> editDeck,
                             Func<SendCardsToContainerOrDeckViewModel> sendCardsToContainer,
                             Func<ManageVendorsViewModel> manageVendors,
                             Func<EditWishlistItemViewModel> editWishlistItem)
@@ -74,6 +76,7 @@ public class ViewModelFactory : IViewModelFactory
         _editCardSku = editCardSku;
         _splitCardSku = splitCardSku;
         _newDeck = newDeck;
+        _editDeck = editDeck;
         _sendCardsToContainer = sendCardsToContainer;
         _manageVendors = manageVendors;
         _editWishlistItem = editWishlistItem;
@@ -120,6 +123,13 @@ public class ViewModelFactory : IViewModelFactory
     public NewDeckOrContainerViewModel NewDeckOrContainer(DeckOrContainer type)
     {
         var vm = _newDeck();
+        vm.Type = type;
+        return vm;
+    }
+
+    public EditDeckOrContainerViewModel EditDeckOrContainer(DeckOrContainer type)
+    {
+        var vm = _editDeck();
         vm.Type = type;
         return vm;
     }

@@ -11,7 +11,7 @@ using System.Linq;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<ContainerCreatedMessage>, IRecipient<ContainerDeletedMessage>
+public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<ContainerCreatedMessage>, IRecipient<ContainerDeletedMessage>, IRecipient<ContainerUpdatedMessage>
 {
     readonly IViewModelFactory _vmFactory;
     readonly ICollectionTrackingService _service;
@@ -60,6 +60,19 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
             DrawerWidth = 400,
             ViewModel = _vmFactory.Drawer().WithContent("New Container", _vmFactory.NewDeckOrContainer(DeckOrContainer.Container))
         });
+    }
+
+    [RelayCommand]
+    private void EditContainer()
+    {
+        if (this.SelectedContainer != null)
+        {
+            Messenger.Send(new OpenDialogMessage
+            {
+                DrawerWidth = 400,
+                ViewModel = _vmFactory.Drawer().WithContent("Edit Container", _vmFactory.EditDeckOrContainer(DeckOrContainer.Container).WithContainer(this.SelectedContainer.Id, this.SelectedContainer.Name, this.SelectedContainer.Description))
+            });
+        }
     }
 
     [RelayCommand]
@@ -118,6 +131,15 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
         if (item != null)
         {
             this.Containers.Remove(item);
+        }
+    }
+
+    void IRecipient<ContainerUpdatedMessage>.Receive(ContainerUpdatedMessage message)
+    {
+        var item = this.Containers.FirstOrDefault(c => c.Id == message.Container.Id);
+        if (item != null)
+        {
+            item.WithData(message.Container);
         }
     }
 }

@@ -9,24 +9,18 @@ using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public enum DeckOrContainer
-{
-    Deck,
-    Container
-}
-
-public partial class NewDeckOrContainerViewModel : DialogContentViewModel
+public partial class EditDeckOrContainerViewModel : DialogContentViewModel
 {
     readonly ICollectionTrackingService _service;
 
-    public NewDeckOrContainerViewModel(IMessenger messenger, ICollectionTrackingService service)
+    public EditDeckOrContainerViewModel(IMessenger messenger, ICollectionTrackingService service)
         : base(messenger)
     {
         this.Name = string.Empty;
         _service = service;
     }
 
-    public NewDeckOrContainerViewModel() : base()
+    public EditDeckOrContainerViewModel() : base()
     {
         this.ThrowIfNotDesignMode();
         this.Name = string.Empty;
@@ -51,21 +45,41 @@ public partial class NewDeckOrContainerViewModel : DialogContentViewModel
 
     private bool CanSave() => !string.IsNullOrWhiteSpace(this.Name);
 
+    private int _deckOrContainerId;
+
+    public EditDeckOrContainerViewModel WithDeck(int id, string name, string format)
+    {
+        _deckOrContainerId = id;
+        this.Type = DeckOrContainer.Deck;
+        this.Name = name;
+        this.DeckFormat = format;
+        return this;
+    }
+
+    public EditDeckOrContainerViewModel WithContainer(int id, string name, string? description)
+    {
+        _deckOrContainerId = id;
+        this.Type = DeckOrContainer.Container;
+        this.Name = name;
+        this.ContainerDescription = description;
+        return this;
+    }
+
     [RelayCommand(CanExecute = nameof(CanSave))]
-    private async Task Save() 
+    private async Task Save()
     {
         switch (this.Type)
         {
             case DeckOrContainer.Deck:
-                var di = await _service.CreateDeckAsync(this.Name, this.DeckFormat, null);
-                this.Messenger.Send(new DeckCreatedMessage(di));
-                this.Messenger.ToastNotify($"Deck created ({this.Name})");
+                var di = await _service.UpdateDeckAsync(_deckOrContainerId, this.Name, this.DeckFormat, null);
+                this.Messenger.Send(new DeckUpdatedMessage(di));
+                this.Messenger.ToastNotify($"Deck updated ({this.Name})");
                 this.Messenger.Send(new CloseDialogMessage());
                 break;
             case DeckOrContainer.Container:
-                var ci = await _service.CreateContainerAsync(this.Name, this.ContainerDescription);
-                this.Messenger.Send(new ContainerCreatedMessage(ci));
-                this.Messenger.ToastNotify($"Container created ({this.Name})");
+                var ci = await _service.UpdateContainerAsync(_deckOrContainerId, this.Name, this.ContainerDescription);
+                this.Messenger.Send(new ContainerUpdatedMessage(ci));
+                this.Messenger.ToastNotify($"Container updated ({this.Name})");
                 this.Messenger.Send(new CloseDialogMessage());
                 break;
         }

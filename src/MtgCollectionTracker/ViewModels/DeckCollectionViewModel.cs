@@ -16,7 +16,7 @@ using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewModelWithBusyState, IRecipient<DeckCreatedMessage>, IRecipient<DeckDismantledMessage>, IRecipient<CardsSentToDeckMessage>, IRecipient<CardsRemovedFromDeckMessage>, IRecipient<DeckTotalsChangedMessage>
+public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewModelWithBusyState, IRecipient<DeckCreatedMessage>, IRecipient<DeckDismantledMessage>, IRecipient<CardsSentToDeckMessage>, IRecipient<CardsRemovedFromDeckMessage>, IRecipient<DeckTotalsChangedMessage>, IRecipient<DeckUpdatedMessage>
 {
     readonly IViewModelFactory _vmFactory;
     readonly ICollectionTrackingService _service;
@@ -102,6 +102,19 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
             DrawerWidth = 400,
             ViewModel = _vmFactory.Drawer().WithContent("New Deck", _vmFactory.NewDeckOrContainer(DeckOrContainer.Deck))
         });
+    }
+
+    [RelayCommand]
+    private void EditDeck()
+    {
+        if (this.SelectedDeck != null)
+        {
+            Messenger.Send(new OpenDialogMessage
+            {
+                DrawerWidth = 800,
+                ViewModel = _vmFactory.Drawer().WithContent("Edit Deck", _vmFactory.EditDeckOrContainer(DeckOrContainer.Deck).WithDeck(this.SelectedDeck.DeckId, this.SelectedDeck.Name, this.SelectedDeck.Format))
+            });
+        }
     }
 
     [RelayCommand]
@@ -226,5 +239,14 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
     void IRecipient<DeckTotalsChangedMessage>.Receive(DeckTotalsChangedMessage message)
     {
         UpdateDeckTotals(message.DeckIds);
+    }
+
+    void IRecipient<DeckUpdatedMessage>.Receive(DeckUpdatedMessage message)
+    {
+        var item = this.Decks.FirstOrDefault(d => d.DeckId == message.Deck.Id);
+        if (item != null)
+        {
+            item.WithData(message.Deck);
+        }
     }
 }
