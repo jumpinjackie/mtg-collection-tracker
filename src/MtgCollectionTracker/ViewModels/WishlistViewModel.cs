@@ -27,6 +27,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
         _vmFactory = new StubViewModelFactory();
         _service = new StubCollectionTrackingService();
         this.Tags = ["Foo", "Bar", "Baz"];
+        this.Cards.CollectionChanged += Cards_CollectionChanged;
         this.SelectedTags.CollectionChanged += Tags_CollectionChanged;
         this.Behavior = new(this);
         this.IsActive = true;
@@ -42,6 +43,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
         {
             this.Tags.Add(t);
         }
+        this.Cards.CollectionChanged += Cards_CollectionChanged;
         this.SelectedTags.CollectionChanged += Tags_CollectionChanged;
         this.Behavior = new(this);
         this.IsActive = true;
@@ -52,6 +54,11 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
     private void Tags_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
         this.LoadWishlist();
+    }
+
+    private void Cards_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        OnPropertyChanged(nameof(IsEmptyCollection));
     }
 
     protected override void OnActivated()
