@@ -60,7 +60,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             .Include(c => c.Container)
             .Where(s => s.CardName.ToLower() == searchName.ToLower() || s.NormalizedCardName == searchName.ToLower());
         if (noProxies)
-            skus = skus.Where(s => !DeckPrinter.IsProxyEdition(s.Edition));
+            skus = skus.Where(s => !CardListPrinter.IsProxyEdition(s.Edition));
         if (sparesOnly) // A spare is any sku not belonging to an existing deck
             skus = skus.Where(s => s.DeckId == null);
 
@@ -204,7 +204,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             queryable = queryable.Where(c => c.ScryfallId == null);
 
         if (query.NoProxies)
-            queryable = queryable.Where(DeckPrinter.IsNotProxyEditionExpr);
+            queryable = queryable.Where(CardListPrinter.IsNotProxyEditionExpr);
 
         if (query.NotInDecks)
             queryable = queryable.Where(c => c.DeckId == null);
@@ -438,7 +438,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             .Where(c => c.IsSideboard)
             .Sum(c => c.Quantity);
 
-        if (model.IsSideboard && sbTotal + model.Quantity > DeckPrinter.SIDEBOARD_LIMIT)
+        if (model.IsSideboard && sbTotal + model.Quantity > CardListPrinter.SIDEBOARD_LIMIT)
             throw new InvalidOperationException($"This operation would go over the sideboard limit");
 
         var newSku = sku.RemoveQuantity(model.Quantity);
@@ -811,7 +811,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         var cards = deck.Cards.ToList();
         var text = new StringBuilder();
 
-        DeckPrinter.Print(deck.Name, deck.Format, deck.Cards, s => text.AppendLine(s), reportProxyUsage);
+        CardListPrinter.PrintDeck(deck.Name, deck.Format, deck.Cards, s => text.AppendLine(s), reportProxyUsage);
 
         return text.ToString();
     }
@@ -1629,5 +1629,20 @@ public class CollectionTrackingService : ICollectionTrackingService
             processed += batch.Length;
             callback.OnProgress?.Invoke(processed, total);
         }
+    }
+
+    public string PrintContainer(int containerId, bool reportProxyUsage)
+    {
+        using var db = _db.Invoke();
+        var container = db.Value.Containers.Include(d => d.Cards).FirstOrDefault(d => d.Id == containerId);
+        if (container == null)
+            throw new Exception("Container not found");
+
+        var cards = container.Cards.ToList();
+        var text = new StringBuilder();
+
+        CardListPrinter.PrintContainer(container.Name, container.Description, container.Cards.OrderBy(c => c.CardName), s => text.AppendLine(s), reportProxyUsage);
+
+        return text.ToString();
     }
 }

@@ -34,6 +34,7 @@ namespace MtgCollectionTracker;
 [Register(typeof(EditCardSkuViewModel), Scope.InstancePerResolution)]
 [Register(typeof(SplitCardSkuViewModel), Scope.InstancePerResolution)]
 [Register(typeof(ContainerViewModel), Scope.InstancePerResolution)]
+[Register(typeof(ContainerTextViewModel), Scope.InstancePerResolution)]
 [Register(typeof(DialogViewModel), Scope.InstancePerResolution)]
 [Register(typeof(AddCardsViewModel), Scope.InstancePerResolution)]
 [Register(typeof(AddCardsToWishlistViewModel), Scope.InstancePerResolution)]

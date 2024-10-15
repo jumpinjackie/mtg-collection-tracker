@@ -10,6 +10,7 @@
 		<StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
 			<Button IsEnabled="{Binding !IsBusy}" Command="{Binding AddContainerCommand}" Content="Add New" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding CanRunAgainstSelectedContainer}" Command="{Binding ViewContainerCommand}" Content="View Container" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding CanRunAgainstSelectedContainer}" Command="{Binding ViewContainerTextCommand}" Content="View Container (as text)" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding CanRunAgainstSelectedContainer}" Command="{Binding EditContainerCommand}" Content="Edit" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding CanRunAgainstSelectedContainer}" Command="{Binding DeleteContainerCommand}" Content="Delete" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding !IsBusy}" Command="{Binding RefreshListCommand}" Content="Refresh" HorizontalAlignment="Center" />

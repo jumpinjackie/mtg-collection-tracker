@@ -1,14 +1,9 @@
 ﻿using MtgCollectionTracker.Data;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.Core.Services;
 
-public static class DeckPrinter
+public static class CardListPrinter
 {
     static HashSet<string> proxySets = [
         "PROXY",
@@ -37,7 +32,32 @@ public static class DeckPrinter
 
     internal const int SIDEBOARD_LIMIT = 15;
 
-    public static void Print<T>(string deckName, string? deckFormat, IEnumerable<T> cards, Action<string> writeLine, bool reportProxyUsage) where T : IDeckPrintableSlot
+    public static void PrintContainer<T>(string name, string? description, IEnumerable<T> cards, Action<string> writeLine, bool reportProxyUsage) where T : IDeckPrintableSlot
+    {
+        var containerTotal = cards.Sum(c => c.Quantity);
+        var proxyTotal = cards.Where(c => IsProxyEdition(c.Edition)).Sum(c => c.Quantity);
+
+        var slots = cards
+            .GroupBy(c => new { c.CardName })
+            .Select(grp => new { Name = grp.Key.CardName, Count = grp.Sum(c => c.Quantity), ProxyCount = grp.Where(c => IsProxyEdition(c.Edition)).Sum(c => c.Quantity) });
+
+        writeLine($"Name: {name}");
+        if (!string.IsNullOrEmpty(description))
+            writeLine($"Description: {description}");
+        writeLine($"Total: {containerTotal}");
+        if (proxyTotal > 0)
+            writeLine($"Proxy Total: {proxyTotal}");
+
+        foreach (var item in slots)
+        {
+            if (item.ProxyCount > 0 && reportProxyUsage)
+                writeLine($"{item.Count} {item.Name} [{item.ProxyCount} proxies]");
+            else
+                writeLine($"{item.Count} {item.Name}");
+        }
+    }
+
+    public static void PrintDeck<T>(string deckName, string? deckFormat, IEnumerable<T> cards, Action<string> writeLine, bool reportProxyUsage) where T : IDeckPrintableSlot
     {
         var deckTotal = cards.Sum(c => c.Quantity);
         var proxyTotal = cards.Where(c => IsProxyEdition(c.Edition)).Sum(c => c.Quantity);

@@ -51,4 +51,6 @@ public class StubViewModelFactory : IViewModelFactory
     public ManageVendorsViewModel ManageVendors() => new ManageVendorsViewModel();
 
     public EditWishlistItemViewModel EditWishlistItem() => new EditWishlistItemViewModel();
+
+    public ContainerTextViewModel ContainerText() => new ContainerTextViewModel();
 }

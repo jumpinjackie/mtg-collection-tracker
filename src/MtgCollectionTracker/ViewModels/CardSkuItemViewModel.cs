@@ -181,7 +181,7 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
 
     public string[] TagList { get; set; }
 
-    int ISendableCardItem.Quantity => DeckPrinter.IsProxyEdition(this.Edition) ? this.ProxyQty : this.RealQty;
+    int ISendableCardItem.Quantity => CardListPrinter.IsProxyEdition(this.Edition) ? this.ProxyQty : this.RealQty;
 
     private async Task<Bitmap?> GetLargeFrontFaceImageAsync()
     {

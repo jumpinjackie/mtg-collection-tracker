@@ -110,6 +110,20 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
     }
 
     [RelayCommand]
+    private void ViewContainerText()
+    {
+        if (this.SelectedContainer != null)
+        {
+            var text = _service.PrintContainer(this.SelectedContainer.Id, true);
+            Messenger.Send(new OpenDialogMessage
+            {
+                DrawerWidth = 1000,
+                ViewModel = _vmFactory.Drawer().WithContent(this.SelectedContainer.Name, _vmFactory.ContainerText().WithText(text))
+            });
+        }
+    }
+
+    [RelayCommand]
     private void RefreshList()
     {
         this.Containers.Clear();

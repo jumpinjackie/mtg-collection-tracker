@@ -20,6 +20,7 @@ public class ViewModelFactory : IViewModelFactory
     readonly Func<SettingsViewModel> _settings;
     readonly Func<NotesViewModel> _notes;
     readonly Func<ContainerViewModel> _container;
+    readonly Func<ContainerTextViewModel> _containerText;
     readonly Func<DialogViewModel> _drawer;
     readonly Func<AddCardsViewModel> _addCards;
     readonly Func<AddCardsToWishlistViewModel> _addCardsToWishlist;
@@ -44,6 +45,7 @@ public class ViewModelFactory : IViewModelFactory
                             Func<SettingsViewModel> settings,
                             Func<NotesViewModel> notes,
                             Func<ContainerViewModel> container,
+                            Func<ContainerTextViewModel> containerText,
                             Func<DialogViewModel> drawer,
                             Func<AddCardsViewModel> addCards,
                             Func<AddCardsToWishlistViewModel> addCardsToWishlist,
@@ -68,6 +70,7 @@ public class ViewModelFactory : IViewModelFactory
         _settings = settings;
         _notes = notes;
         _container = container;
+        _containerText = containerText;
         _drawer = drawer;
         _addCards = addCards;
         _addCardsToWishlist = addCardsToWishlist;
@@ -103,6 +106,8 @@ public class ViewModelFactory : IViewModelFactory
     public SettingsViewModel Settings() => _settings();
 
     public ContainerViewModel Container() => _container();
+
+    public ContainerTextViewModel ContainerText() => _containerText();
 
     public DialogViewModel Drawer() => _drawer();
 

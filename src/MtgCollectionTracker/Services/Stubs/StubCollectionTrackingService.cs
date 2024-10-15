@@ -264,4 +264,9 @@ public class StubCollectionTrackingService : ICollectionTrackingService
     {
         throw new System.NotImplementedException();
     }
+
+    public string PrintContainer(int containerId, bool reportProxyUsage)
+    {
+        throw new System.NotImplementedException();
+    }
 }

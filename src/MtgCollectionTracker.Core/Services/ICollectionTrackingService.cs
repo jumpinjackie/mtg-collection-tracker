@@ -52,6 +52,7 @@ namespace MtgCollectionTracker.Core.Services
         IEnumerable<DeckSummaryModel> GetDecks(DeckFilterModel? filter);
         bool IsBasicLand(string cardName);
         string PrintDeck(int deckId, bool reportProxyUsage);
+        string PrintContainer(int containerId, bool reportProxyUsage);
         ValueTask<(CardSkuModel sku, bool wasMerged)> RemoveFromDeckAsync(RemoveFromDeckInputModel model);
         Task<CardSkuModel> SplitCardSkuAsync(SplitCardSkuInputModel model);
         ValueTask<UpdateCardSkuResult> UpdateCardSkuAsync(UpdateCardSkuInputModel model, IScryfallApiClient? scryfallApiClient, CancellationToken cancel);

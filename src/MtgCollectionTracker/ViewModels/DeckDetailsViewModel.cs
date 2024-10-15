@@ -193,7 +193,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
                     CardName = card.CardName,
                     Type = card.Type,
                     IsLand = card.IsLand,
-                    IsProxy = DeckPrinter.IsProxyEdition(card.Edition),
+                    IsProxy = CardListPrinter.IsProxyEdition(card.Edition),
                     Edition = card.Edition,
                 }.ApplyQuantities().ApplyScryfallMetadata(card);
                 cm.SwitchToFront();
@@ -220,7 +220,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
                     CardName = card.CardName,
                     Type = card.Type,
                     IsLand = card.IsLand,
-                    IsProxy = DeckPrinter.IsProxyEdition(card.Edition),
+                    IsProxy = CardListPrinter.IsProxyEdition(card.Edition),
                     Edition = card.Edition,
                     IsSideboard = true
                 }.ApplyQuantities().ApplyScryfallMetadata(card);
