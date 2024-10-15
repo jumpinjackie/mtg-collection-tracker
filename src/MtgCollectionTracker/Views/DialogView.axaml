@@ -9,7 +9,7 @@
 	<DockPanel>
 		<Grid ColumnDefinitions="*, 30" DockPanel.Dock="Top">
 			<TextBlock Margin="6" FontSize="24" Text="{Binding Title}" Grid.Column="0" />
-			<Button Command="{Binding CloseCommand}" Grid.Column="1">
+			<Button IsEnabled="{Binding !IsBusy}" Command="{Binding CloseCommand}" Grid.Column="1">
 				<PathIcon Data="{StaticResource dismiss_regular}" />
 			</Button>
 		</Grid>

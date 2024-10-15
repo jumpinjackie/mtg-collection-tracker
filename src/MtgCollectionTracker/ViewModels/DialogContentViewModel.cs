@@ -14,7 +14,7 @@ public abstract partial class DialogContentViewModel : RecipientViewModelBase
     protected DialogContentViewModel(IMessenger messenger) : base(messenger) { }
 }
 
-public partial class DialogViewModel : ViewModelBase
+public partial class DialogViewModel : ViewModelBase, IRecipient<GlobalBusyMessage>
 {
     readonly IMessenger _messenger;
 
@@ -31,6 +31,9 @@ public partial class DialogViewModel : ViewModelBase
 
     [ObservableProperty]
     private DialogContentViewModel? _contentDataContext;
+
+    [ObservableProperty]
+    private bool _isBusy;
 
     public DialogViewModel WithConfirmation(
         string title,
@@ -58,5 +61,10 @@ public partial class DialogViewModel : ViewModelBase
     private void Close()
     {
         _messenger.Send(new CloseDialogMessage());
+    }
+
+    void IRecipient<GlobalBusyMessage>.Receive(GlobalBusyMessage message)
+    {
+        this.IsBusy = message.IsBusy;
     }
 }
