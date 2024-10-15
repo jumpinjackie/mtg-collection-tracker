@@ -286,7 +286,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 300,
-                ViewModel = _vmFactory.Drawer().WithContent("Split Card SKU", vm)
+                ViewModel = _vmFactory.Dialog().WithContent("Split Card SKU", vm)
             });
         }
     }
@@ -311,7 +311,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 800,
-                ViewModel = _vmFactory.Drawer().WithContent("Send Cards To Deck or Container", _vmFactory.SendCardsToContainer().WithCards(Behavior.SelectedItems.ToList()))
+                ViewModel = _vmFactory.Dialog().WithContent("Send Cards To Deck or Container", _vmFactory.SendCardsToContainer().WithCards(Behavior.SelectedItems.ToList()))
             });
         }
     }

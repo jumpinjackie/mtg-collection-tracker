@@ -100,7 +100,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 400,
-            ViewModel = _vmFactory.Drawer().WithContent("New Deck", _vmFactory.NewDeckOrContainer(DeckOrContainer.Deck))
+            ViewModel = _vmFactory.Dialog().WithContent("New Deck", _vmFactory.NewDeckOrContainer(DeckOrContainer.Deck))
         });
     }
 
@@ -112,7 +112,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 800,
-                ViewModel = _vmFactory.Drawer().WithContent("Edit Deck", _vmFactory.EditDeckOrContainer(DeckOrContainer.Deck).WithDeck(this.SelectedDeck.DeckId, this.SelectedDeck.Name, this.SelectedDeck.Format))
+                ViewModel = _vmFactory.Dialog().WithContent("Edit Deck", _vmFactory.EditDeckOrContainer(DeckOrContainer.Deck).WithDeck(this.SelectedDeck.DeckId, this.SelectedDeck.Name, this.SelectedDeck.Format))
             });
         }
     }
@@ -125,7 +125,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 800,
-                ViewModel = _vmFactory.Drawer().WithConfirmation(
+                ViewModel = _vmFactory.Dialog().WithConfirmation(
                     "Dismantle Deck",
                     $"Are you sure you want to dismantle ({this.SelectedDeck.Name})?", 
                     async () =>
@@ -162,7 +162,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 1280,
-                ViewModel = _vmFactory.Drawer().WithContent("Deck: " + deck.Name, _vmFactory.DeckDetails().WithDeck(deck))
+                ViewModel = _vmFactory.Dialog().WithContent("Deck: " + deck.Name, _vmFactory.DeckDetails().WithDeck(deck))
             });
         }
     }

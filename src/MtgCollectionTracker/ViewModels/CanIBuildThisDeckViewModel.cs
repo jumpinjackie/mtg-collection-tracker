@@ -119,7 +119,7 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 800,
-                ViewModel = _vmFactory.Drawer().WithContent("Add Cards to Wishlist", _vmFactory
+                ViewModel = _vmFactory.Dialog().WithContent("Add Cards to Wishlist", _vmFactory
                     .AddCardsToWishlist()
                     .WithCards(wishlistItems))
             });

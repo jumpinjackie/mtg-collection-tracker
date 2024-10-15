@@ -58,7 +58,7 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 400,
-            ViewModel = _vmFactory.Drawer().WithContent("New Container", _vmFactory.NewDeckOrContainer(DeckOrContainer.Container))
+            ViewModel = _vmFactory.Dialog().WithContent("New Container", _vmFactory.NewDeckOrContainer(DeckOrContainer.Container))
         });
     }
 
@@ -70,7 +70,7 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 400,
-                ViewModel = _vmFactory.Drawer().WithContent("Edit Container", _vmFactory.EditDeckOrContainer(DeckOrContainer.Container).WithContainer(this.SelectedContainer.Id, this.SelectedContainer.Name, this.SelectedContainer.Description))
+                ViewModel = _vmFactory.Dialog().WithContent("Edit Container", _vmFactory.EditDeckOrContainer(DeckOrContainer.Container).WithContainer(this.SelectedContainer.Id, this.SelectedContainer.Name, this.SelectedContainer.Description))
             });
         }
     }
@@ -83,7 +83,7 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 800,
-                ViewModel = _vmFactory.Drawer().WithConfirmation(
+                ViewModel = _vmFactory.Dialog().WithConfirmation(
                     "Delete Container?",
                     $"Are you sure you want to delete ({this.SelectedContainer.Name})? All SKUs in this container will be un-assigned",
                     async () =>
@@ -104,7 +104,7 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 1000,
-                ViewModel = _vmFactory.Drawer().WithContent(this.SelectedContainer.Name, _vmFactory.BrowseContainer().WithContainerId(this.SelectedContainer.Id))
+                ViewModel = _vmFactory.Dialog().WithContent(this.SelectedContainer.Name, _vmFactory.BrowseContainer().WithContainerId(this.SelectedContainer.Id))
             });
         }
     }
@@ -118,7 +118,7 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 1000,
-                ViewModel = _vmFactory.Drawer().WithContent(this.SelectedContainer.Name, _vmFactory.ContainerText().WithText(text))
+                ViewModel = _vmFactory.Dialog().WithContent(this.SelectedContainer.Name, _vmFactory.ContainerText().WithText(text))
             });
         }
     }

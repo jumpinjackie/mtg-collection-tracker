@@ -178,7 +178,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 800,
-            ViewModel = _vmFactory.Drawer().WithContent("Add Cards", _vmFactory.AddCards())
+            ViewModel = _vmFactory.Dialog().WithContent("Add Cards", _vmFactory.AddCards())
         });
     }
 
@@ -240,7 +240,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 600,
-                ViewModel = _vmFactory.Drawer().WithContent("Edit Sku", _vmFactory.EditCardSku().WithSku(Behavior.SelectedItems[0]))
+                ViewModel = _vmFactory.Dialog().WithContent("Edit Sku", _vmFactory.EditCardSku().WithSku(Behavior.SelectedItems[0]))
             });
         }
         else if (Behavior.SelectedItems.Count > 1)
@@ -248,7 +248,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 600,
-                ViewModel = _vmFactory.Drawer().WithContent("Edit Skus", _vmFactory.EditCardSku().WithSkus(Behavior.SelectedItems))
+                ViewModel = _vmFactory.Dialog().WithContent("Edit Skus", _vmFactory.EditCardSku().WithSkus(Behavior.SelectedItems))
             });
         }
     }
@@ -276,7 +276,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 300,
-                ViewModel = _vmFactory.Drawer().WithContent("Split Card SKU", vm)
+                ViewModel = _vmFactory.Dialog().WithContent("Split Card SKU", vm)
             });
         }
     }
@@ -289,7 +289,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 800,
-                ViewModel = _vmFactory.Drawer().WithContent("Send Cards To Deck or Container", _vmFactory.SendCardsToContainer().WithCards(Behavior.SelectedItems))
+                ViewModel = _vmFactory.Dialog().WithContent("Send Cards To Deck or Container", _vmFactory.SendCardsToContainer().WithCards(Behavior.SelectedItems))
             });
         }
     }
@@ -339,7 +339,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 400,
-                ViewModel = _vmFactory.Drawer().WithConfirmation(
+                ViewModel = _vmFactory.Dialog().WithConfirmation(
                     "Delete Card SKU",
                     $"Are you sure you want to delete this SKU ({sku.Quantity}x {sku.CardName}, {sku.Edition}, {sku.Language ?? "en"})?",
                     async () =>

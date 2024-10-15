@@ -123,7 +123,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 600,
-                ViewModel = _vmFactory.Drawer().WithContent("Edit Sku", _vmFactory.EditCardSku().WithSku(Behavior.SelectedItems[0]))
+                ViewModel = _vmFactory.Dialog().WithContent("Edit Sku", _vmFactory.EditCardSku().WithSku(Behavior.SelectedItems[0]))
             });
         }
         else if (Behavior.SelectedItems.Count > 1)
@@ -131,7 +131,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 600,
-                ViewModel = _vmFactory.Drawer().WithContent("Edit Skus", _vmFactory.EditCardSku().WithSkus(Behavior.SelectedItems))
+                ViewModel = _vmFactory.Dialog().WithContent("Edit Skus", _vmFactory.EditCardSku().WithSkus(Behavior.SelectedItems))
             });
         }
     }
@@ -172,7 +172,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 800,
-            ViewModel = _vmFactory.Drawer().WithContent("Add Cards", vm)
+            ViewModel = _vmFactory.Dialog().WithContent("Add Cards", vm)
         });
     }
 
@@ -190,7 +190,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 800,
-                ViewModel = _vmFactory.Drawer().WithContent("Send Cards To Deck or Container", _vmFactory.SendCardsToContainer().WithCards(Behavior.SelectedItems))
+                ViewModel = _vmFactory.Dialog().WithContent("Send Cards To Deck or Container", _vmFactory.SendCardsToContainer().WithCards(Behavior.SelectedItems))
             });
         }
     }
@@ -254,7 +254,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 300,
-                ViewModel = _vmFactory.Drawer().WithContent("Split Card SKU", vm)
+                ViewModel = _vmFactory.Dialog().WithContent("Split Card SKU", vm)
             });
         }
     }

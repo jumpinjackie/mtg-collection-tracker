@@ -109,7 +109,7 @@ public class ViewModelFactory : IViewModelFactory
 
     public ContainerTextViewModel ContainerText() => _containerText();
 
-    public DialogViewModel Drawer() => _drawer();
+    public DialogViewModel Dialog() => _drawer();
 
     public AddCardsViewModel AddCards() => _addCards();
 

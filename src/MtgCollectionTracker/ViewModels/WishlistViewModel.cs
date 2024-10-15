@@ -107,7 +107,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 800,
-            ViewModel = _vmFactory.Drawer().WithContent("Add Cards to Wishlist", _vmFactory.AddCardsToWishlist())
+            ViewModel = _vmFactory.Dialog().WithContent("Add Cards to Wishlist", _vmFactory.AddCardsToWishlist())
         });
     }
 
@@ -120,7 +120,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 400,
-                ViewModel = _vmFactory.Drawer().WithConfirmation(
+                ViewModel = _vmFactory.Dialog().WithConfirmation(
                     "Delete Wishlist Item",
                     $"Are you sure you want to delete this wishlist item ({item.QuantityNum}x {item.CardName}, {item.Edition}, {item.Language ?? "en"})?",
                     async () =>
@@ -142,7 +142,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 800,
-            ViewModel = _vmFactory.Drawer().WithContent("Manage Vendors", _vmFactory.ManageVendors().WithData(vendors))
+            ViewModel = _vmFactory.Dialog().WithContent("Manage Vendors", _vmFactory.ManageVendors().WithData(vendors))
         });
     }
 
@@ -158,7 +158,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 400,
-                ViewModel = _vmFactory.Drawer().WithConfirmation(
+                ViewModel = _vmFactory.Dialog().WithConfirmation(
                     "Move to Collection",
                     $"Are you sure you want move these wishlist items to your collection?",
                     async () =>
@@ -184,7 +184,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 600,
-            ViewModel = _vmFactory.Drawer().WithContent("Edit Wishlist Item", _vmFactory.EditWishlistItem().WithData(Behavior.SelectedItems[0]))
+            ViewModel = _vmFactory.Dialog().WithContent("Edit Wishlist Item", _vmFactory.EditWishlistItem().WithData(Behavior.SelectedItems[0]))
         });
     }
 
@@ -195,7 +195,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 600,
-            ViewModel = _vmFactory.Drawer().WithContent("Buying List", new BuyingListViewModel().WithText(buylist))
+            ViewModel = _vmFactory.Dialog().WithContent("Buying List", new BuyingListViewModel().WithText(buylist))
         });
     }
 

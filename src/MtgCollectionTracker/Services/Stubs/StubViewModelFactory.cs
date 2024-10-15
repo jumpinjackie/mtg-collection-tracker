@@ -28,7 +28,7 @@ public class StubViewModelFactory : IViewModelFactory
 
     public SettingsViewModel Settings() => new SettingsViewModel();
 
-    public DialogViewModel Drawer() => new DialogViewModel();
+    public DialogViewModel Dialog() => new DialogViewModel();
 
     public AddCardsViewModel AddCards() => new AddCardsViewModel();
 

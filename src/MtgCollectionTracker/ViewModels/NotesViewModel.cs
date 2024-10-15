@@ -58,7 +58,7 @@ public partial class NotesViewModel : RecipientViewModelBase
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 400,
-                ViewModel = _vmFactory.Drawer().WithConfirmation(
+                ViewModel = _vmFactory.Dialog().WithConfirmation(
                     "Delete Note",
                     $"Are you sure you want to delete this note?",
                     async () =>
