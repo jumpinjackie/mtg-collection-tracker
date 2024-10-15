@@ -43,6 +43,7 @@ namespace MtgCollectionTracker;
 [Register(typeof(EditDeckOrContainerViewModel), Scope.InstancePerResolution)]
 [Register(typeof(ManageVendorsViewModel), Scope.InstancePerResolution)]
 [Register(typeof(EditWishlistItemViewModel), Scope.InstancePerResolution)]
+[Register(typeof(MoveWishlistItemsToCollectionViewModel), Scope.InstancePerResolution)]
 [Register(typeof(CardsDbContext), Scope.InstancePerResolution)]
 [Register(typeof(CollectionTrackingService), Scope.InstancePerResolution, typeof(ICollectionTrackingService))]
 [Register(typeof(ViewModelFactory), Scope.SingleInstance, typeof(IViewModelFactory))]

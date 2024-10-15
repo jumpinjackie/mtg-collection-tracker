@@ -22,3 +22,5 @@ internal record DeckUpdatedMessage(DeckSummaryModel Deck);
 internal record ContainerCreatedMessage(ContainerSummaryModel Container);
 
 internal record ContainerUpdatedMessage(ContainerSummaryModel Container);
+
+internal record WishlistItemsAddedToCollectionMessage(MoveWishlistItemsToCollectionResult Result);

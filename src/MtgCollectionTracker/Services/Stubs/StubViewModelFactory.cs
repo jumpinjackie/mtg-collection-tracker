@@ -53,4 +53,6 @@ public class StubViewModelFactory : IViewModelFactory
     public EditWishlistItemViewModel EditWishlistItem() => new EditWishlistItemViewModel();
 
     public ContainerTextViewModel ContainerText() => new ContainerTextViewModel();
+
+    public MoveWishlistItemsToCollectionViewModel MoveWishlistItemsToCollection() => new();
 }

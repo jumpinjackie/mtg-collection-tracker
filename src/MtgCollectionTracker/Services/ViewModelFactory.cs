@@ -1,9 +1,6 @@
-﻿using MtgCollectionTracker.Core.Services;
-using MtgCollectionTracker.Services.Contracts;
+﻿using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.ViewModels;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 
 namespace MtgCollectionTracker.Services;
 
@@ -33,6 +30,7 @@ public class ViewModelFactory : IViewModelFactory
     readonly Func<SendCardsToContainerOrDeckViewModel> _sendCardsToContainer;
     readonly Func<ManageVendorsViewModel> _manageVendors;
     readonly Func<EditWishlistItemViewModel> _editWishlistItem;
+    readonly Func<MoveWishlistItemsToCollectionViewModel> _moveToCollection;
 
     public ViewModelFactory(Func<CardsViewModel> cards,
                             Func<CardSkuItemViewModel> cardSku,
@@ -57,7 +55,8 @@ public class ViewModelFactory : IViewModelFactory
                             Func<EditDeckOrContainerViewModel> editDeck,
                             Func<SendCardsToContainerOrDeckViewModel> sendCardsToContainer,
                             Func<ManageVendorsViewModel> manageVendors,
-                            Func<EditWishlistItemViewModel> editWishlistItem)
+                            Func<EditWishlistItemViewModel> editWishlistItem,
+                            Func<MoveWishlistItemsToCollectionViewModel> moveToCollection)
     {
         _cards = cards;
         _cardSku = cardSku;
@@ -83,6 +82,7 @@ public class ViewModelFactory : IViewModelFactory
         _sendCardsToContainer = sendCardsToContainer;
         _manageVendors = manageVendors;
         _editWishlistItem = editWishlistItem;
+        _moveToCollection = moveToCollection;
     }
 
     public CardsViewModel Cards() => _cards();
@@ -142,4 +142,6 @@ public class ViewModelFactory : IViewModelFactory
     public ManageVendorsViewModel ManageVendors() => _manageVendors();
 
     public EditWishlistItemViewModel EditWishlistItem() => _editWishlistItem();
+
+    public MoveWishlistItemsToCollectionViewModel MoveWishlistItemsToCollection() => _moveToCollection();
 }

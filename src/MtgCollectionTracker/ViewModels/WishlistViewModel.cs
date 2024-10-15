@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithBusyState, IRecipient<CardsAddedToWishlistMessage>, IRecipient<WishlistItemUpdatedMessage>, IMultiModeCardListBehaviorHost, IRecipient<TagsAppliedMessage>
+public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithBusyState, IRecipient<CardsAddedToWishlistMessage>, IRecipient<WishlistItemUpdatedMessage>, IMultiModeCardListBehaviorHost, IRecipient<TagsAppliedMessage>, IRecipient<WishlistItemsAddedToCollectionMessage>
 {
     readonly IViewModelFactory _vmFactory;
     readonly ICollectionTrackingService _service;
@@ -147,33 +147,17 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
     }
 
     [RelayCommand]
-    private async Task MoveToCollection()
+    private void MoveToCollection()
     {
         if (Behavior.SelectedItems.Count > 0)
         {
-            var arg = new MoveWishlistItemsToCollectionInputModel
-            {
-                WishlistItemIds = Behavior.SelectedItems.Select(w => w.Id).ToArray()
-            };
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 400,
-                ViewModel = _vmFactory.Dialog().WithConfirmation(
+                ViewModel = _vmFactory.Dialog().WithContent(
                     "Move to Collection",
-                    $"Are you sure you want move these wishlist items to your collection?",
-                    async () =>
-                    {
-                        var result = await _service.MoveWishlistItemsToCollectionAsync(arg);
-                        var removedIds = result.CreatedSkus.Select(tuple => tuple.WishlistItemId);
-                        var toRemove = Behavior.SelectedItems.Where(i => removedIds.Contains(i.Id)).ToList();
-                        foreach (var item in toRemove)
-                        {
-                            Behavior.SelectedItems.Remove(item);
-                            this.Cards.Remove(item);
-                        }
-                        this.ApplySummary();
-                        Messenger.ToastNotify($"{result.CreatedSkus.Length} wishlist items moved to your collection");
-                    })
+                    _vmFactory.MoveWishlistItemsToCollection()
+                        .WithData(Behavior.SelectedItems.Select(w => w.Id).ToArray()))
             });
         }
     }
@@ -274,5 +258,19 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
         {
             this.SelectedTags.Remove(st);
         }
+    }
+
+    void IRecipient<WishlistItemsAddedToCollectionMessage>.Receive(WishlistItemsAddedToCollectionMessage message)
+    {
+        var result = message.Result;
+        var removedIds = result.CreatedSkus.Select(tuple => tuple.WishlistItemId);
+        var toRemove = Behavior.SelectedItems.Where(i => removedIds.Contains(i.Id)).ToList();
+        foreach (var item in toRemove)
+        {
+            Behavior.SelectedItems.Remove(item);
+            this.Cards.Remove(item);
+        }
+        this.ApplySummary();
+        Messenger.ToastNotify($"{result.CreatedSkus.Length} wishlist items moved to your collection");
     }
 }

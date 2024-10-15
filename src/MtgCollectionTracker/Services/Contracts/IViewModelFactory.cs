@@ -51,4 +51,6 @@ public interface IViewModelFactory
     EditDeckOrContainerViewModel EditDeckOrContainer(DeckOrContainer type);
 
     ManageVendorsViewModel ManageVendors();
+
+    MoveWishlistItemsToCollectionViewModel MoveWishlistItemsToCollection();
 }

@@ -1,0 +1,33 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="MtgCollectionTracker.Views.MoveWishlistItemsToCollectionView"
+			 x:DataType="vm:MoveWishlistItemsToCollectionViewModel">
+	<Design.DataContext>
+		<!-- This only sets the DataContext for the previewer in an IDE,
+         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+		<vm:MoveWishlistItemsToCollectionViewModel />
+	</Design.DataContext>
+	<DockPanel>
+		<StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom">
+			<Button Command="{Binding MoveCommand}">Move</Button>
+			<Button Command="{Binding CancelCommand}">Cancel</Button>
+		</StackPanel>
+		<StackPanel>
+			<TextBlock Margin="6">Are you sure you want move these wishlist items to your collection?</TextBlock>
+			<StackPanel>
+				<TextBlock Margin="6">Move these cards to container (cards will be un-parented if no container selected)</TextBlock>
+				<ComboBox Margin="6" SelectedItem="{Binding SelectedContainer}" ItemsSource="{Binding AvailableContainers}">
+					<ComboBox.ItemTemplate>
+						<DataTemplate x:DataType="vm:ContainerViewModel">
+							<TextBlock Text="{Binding Name}" />
+						</DataTemplate>
+					</ComboBox.ItemTemplate>
+				</ComboBox>
+			</StackPanel>
+		</StackPanel>
+	</DockPanel>
+</UserControl>
