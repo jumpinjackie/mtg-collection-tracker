@@ -3,11 +3,13 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
+using MtgCollectionTracker.Data;
 using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using ScryfallApi.Client;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
@@ -26,29 +28,54 @@ public partial class TagSelectionViewModel : ObservableObject
 
 public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAddedMessage>, IViewModelWithBusyState, IMultiModeCardListBehaviorHost, IRecipient<TagsAppliedMessage>, IRecipient<CardsSentToContainerMessage>, IRecipient<CardsSentToDeckMessage>, IRecipient<CardSkuSplitMessage>
 {
-    readonly IViewModelFactory _vmFactory;
     readonly ICollectionTrackingService _service;
-    readonly IScryfallApiClient _scryfallApiClient;
+    readonly IScryfallApiClient? _scryfallApiClient;
+    
+    readonly Func<CardSkuItemViewModel> _cardSku;
+    readonly Func<DialogViewModel> _dialog;
+    readonly Func<AddCardsViewModel> _addCards;
+    readonly Func<EditCardSkuViewModel> _editCardSku;
+    readonly Func<SplitCardSkuViewModel> _splitCardSku;
+    readonly Func<SendCardsToContainerOrDeckViewModel> _sendToContainer;
 
     public CardsViewModel()
     {
         base.ThrowIfNotDesignMode();
-        _vmFactory = new StubViewModelFactory();
         _service = new StubCollectionTrackingService();
+
+        _cardSku = () => new();
+        _dialog = () => new();
+        _addCards = () => new();
+        _editCardSku = () => new();
+        _splitCardSku = () => new();
+        _sendToContainer = () => new();
+
         this.Behavior = new(this);
         this.SelectedTags.CollectionChanged += Tags_CollectionChanged;
         this.IsActive = true;
     }
 
     public CardsViewModel(IMessenger messenger,
-                          IViewModelFactory vmFactory,
                           ICollectionTrackingService service,
+                          Func<CardSkuItemViewModel> cardSku,
+                          Func<DialogViewModel> dialog,
+                          Func<AddCardsViewModel> addCards,
+                          Func<EditCardSkuViewModel> editCardSku,
+                          Func<SplitCardSkuViewModel> splitCardSku,
+                          Func<SendCardsToContainerOrDeckViewModel> sendToContainer,
                           IScryfallApiClient scryfallApiClient)
         : base(messenger)
     {
-        _vmFactory = vmFactory;
         _service = service;
         _scryfallApiClient = scryfallApiClient;
+
+        _cardSku = cardSku;
+        _dialog = dialog;
+        _addCards = addCards;
+        _editCardSku = editCardSku;
+        _splitCardSku = splitCardSku;
+        _sendToContainer = sendToContainer;
+
         this.Behavior = new(this);
         this.SelectedTags.CollectionChanged += Tags_CollectionChanged;
         this.IsActive = true;
@@ -166,7 +193,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
             this.SearchResults.Clear();
             foreach (var sku in cards)
             {
-                this.SearchResults.Add(_vmFactory.CardSku().WithData(sku));
+                this.SearchResults.Add(_cardSku().WithData(sku));
             }
             this.HasNoResults = !this.ShowFirstTimeMessage && this.SearchResults.Count == 0;
         }
@@ -178,7 +205,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 800,
-            ViewModel = _vmFactory.Dialog().WithContent("Add Cards", _vmFactory.AddCards())
+            ViewModel = _dialog().WithContent("Add Cards", _addCards())
         });
     }
 
@@ -240,7 +267,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 600,
-                ViewModel = _vmFactory.Dialog().WithContent("Edit Sku", _vmFactory.EditCardSku().WithSku(Behavior.SelectedItems[0]))
+                ViewModel = _dialog().WithContent("Edit Sku", _editCardSku().WithSku(Behavior.SelectedItems[0]))
             });
         }
         else if (Behavior.SelectedItems.Count > 1)
@@ -248,7 +275,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 600,
-                ViewModel = _vmFactory.Dialog().WithContent("Edit Skus", _vmFactory.EditCardSku().WithSkus(Behavior.SelectedItems))
+                ViewModel = _dialog().WithContent("Edit Skus", _editCardSku().WithSkus(Behavior.SelectedItems))
             });
         }
     }
@@ -259,7 +286,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
         if (Behavior.IsItemSplittable)
         {
             var selected = Behavior.SelectedItems[0];
-            var vm = _vmFactory.SplitCardSku();
+            var vm = _splitCardSku();
             vm.CardSkuId = selected.Id;
             if (selected.ProxyQty > 1)
             {
@@ -276,7 +303,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 300,
-                ViewModel = _vmFactory.Dialog().WithContent("Split Card SKU", vm)
+                ViewModel = _dialog().WithContent("Split Card SKU", vm)
             });
         }
     }
@@ -289,7 +316,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 800,
-                ViewModel = _vmFactory.Dialog().WithContent("Send Cards To Deck or Container", _vmFactory.SendCardsToContainer().WithCards(Behavior.SelectedItems))
+                ViewModel = _dialog().WithContent("Send Cards To Deck or Container", _sendToContainer().WithCards(Behavior.SelectedItems))
             });
         }
     }
@@ -339,7 +366,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 400,
-                ViewModel = _vmFactory.Dialog().WithConfirmation(
+                ViewModel = _dialog().WithConfirmation(
                     "Delete Card SKU",
                     $"Are you sure you want to delete this SKU ({sku.Quantity}x {sku.CardName}, {sku.Edition}, {sku.Language ?? "en"})?",
                     async () =>
@@ -455,7 +482,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
                 var newSku = _service.GetCards(new() { CardSkuIds = [message.NewSkuId] }).ToList();
                 if (newSku.Count == 1)
                 {
-                    this.SearchResults.Insert(idx, _vmFactory.CardSku().WithData(newSku[0]));
+                    this.SearchResults.Insert(idx, _cardSku().WithData(newSku[0]));
                 }
             }
         }

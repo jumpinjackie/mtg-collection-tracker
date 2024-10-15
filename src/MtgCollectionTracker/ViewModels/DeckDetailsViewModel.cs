@@ -12,6 +12,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -46,8 +47,11 @@ public enum DeckViewMode
 public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCardListBehaviorHost, IViewModelWithBusyState, IRecipient<CardSkuSplitMessage>, IRecipient<CardsRemovedFromDeckMessage>
 {
     readonly ICollectionTrackingService _service;
-    readonly IViewModelFactory _vmFactory;
     readonly IScryfallApiClient? _scryfallApiClient;
+
+    readonly Func<DialogViewModel> _dialog;
+    readonly Func<SplitCardSkuViewModel> _splitCardSku;
+    readonly Func<SendCardsToContainerOrDeckViewModel> _sendToContainer;
 
     [ObservableProperty]
     private string _name;
@@ -57,21 +61,27 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
     {
         base.ThrowIfNotDesignMode();
         _service = new StubCollectionTrackingService();
-        _vmFactory = new StubViewModelFactory();
+        _dialog = () => new();
+        _splitCardSku = () => new();
+        _sendToContainer = () => new();
         this.Behavior = new(this);
         this.IsActive = true;
         this.Name = "Test Deck";
     }
 
     public DeckDetailsViewModel(ICollectionTrackingService service,
-                                IViewModelFactory vmFactory,
+                                Func<DialogViewModel> dialog,
+                                Func<SplitCardSkuViewModel> splitCardSku,
+                                Func<SendCardsToContainerOrDeckViewModel> sendToContainer,
                                 IScryfallApiClient scryfallApiClient,
                                 IMessenger messenger)
         : base(messenger)
     {
         _service = service;
-        _vmFactory = vmFactory;
         _scryfallApiClient = scryfallApiClient;
+        _dialog = dialog;
+        _splitCardSku = splitCardSku;
+        _sendToContainer = sendToContainer;
         this.Behavior = new(this);
         this.IsActive = true;
     }
@@ -156,8 +166,8 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
 
     static void UpdateTable<T>(ICollectionTrackingService service,
                                DeckModel deck,
-                               ref List<CardVisualViewModel> maindeckBackingList,
-                               ref List<CardVisualViewModel> sideboardBackingList,
+                               ref List<CardVisualViewModel>? maindeckBackingList,
+                               ref List<CardVisualViewModel>? sideboardBackingList,
                                ObservableCollection<CardVisualViewModel> table,
                                Func<DeckCardModel, T> grouping)
     {
@@ -171,8 +181,8 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
 
     static void InitBackingLists<T>(ICollectionTrackingService service,
                                     DeckModel deck,
-                                    ref List<CardVisualViewModel> maindeckBackingList,
-                                    ref List<CardVisualViewModel> sideboardBackingList,
+                                    [NotNull] ref List<CardVisualViewModel>? maindeckBackingList,
+                                    [NotNull] ref List<CardVisualViewModel>? sideboardBackingList,
                                     Func<DeckCardModel, T> grouping)
     {
         // Init the backing list only once
@@ -232,9 +242,9 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
 
     static void UpdateVisual<T>(ICollectionTrackingService service,
                                 DeckModel deck,
-                                ref List<CardVisualViewModel> maindeckBackingList,
+                                ref List<CardVisualViewModel>? maindeckBackingList,
                                 ObservableCollection<CardVisualViewModel> maindeck,
-                                ref List<CardVisualViewModel> sideboardBackingList,
+                                ref List<CardVisualViewModel>? sideboardBackingList,
                                 ObservableCollection<CardVisualViewModel> sideboard,
                                 Func<DeckCardModel, T> grouping)
     {
@@ -269,7 +279,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
         if (Behavior.IsItemSplittable)
         {
             var selected = Behavior.SelectedItems[0];
-            var vm = _vmFactory.SplitCardSku();
+            var vm = _splitCardSku();
             vm.CardSkuId = selected.Id;
             if (selected.ProxyQty > 1)
             {
@@ -286,7 +296,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 300,
-                ViewModel = _vmFactory.Dialog().WithContent("Split Card SKU", vm)
+                ViewModel = _dialog().WithContent("Split Card SKU", vm)
             });
         }
     }
@@ -311,7 +321,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 800,
-                ViewModel = _vmFactory.Dialog().WithContent("Send Cards To Deck or Container", _vmFactory.SendCardsToContainer().WithCards(Behavior.SelectedItems.ToList()))
+                ViewModel = _dialog().WithContent("Send Cards To Deck or Container", _sendToContainer().WithCards(Behavior.SelectedItems.ToList()))
             });
         }
     }
@@ -319,7 +329,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
     [RelayCommand]
     private async Task UpdateSkuMetadata()
     {
-        if (Behavior.SelectedItems.Count > 0)
+        if (Behavior.SelectedItems.Count > 0 && _scryfallApiClient != null)
         {
             using (((IViewModelWithBusyState)this).StartBusyState())
             {

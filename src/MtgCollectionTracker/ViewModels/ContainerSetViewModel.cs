@@ -3,9 +3,9 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services;
-using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 
@@ -13,21 +13,42 @@ namespace MtgCollectionTracker.ViewModels;
 
 public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<ContainerCreatedMessage>, IRecipient<ContainerDeletedMessage>, IRecipient<ContainerUpdatedMessage>
 {
-    readonly IViewModelFactory _vmFactory;
     readonly ICollectionTrackingService _service;
+    readonly Func<DialogViewModel> _dialog;
+    readonly Func<NewDeckOrContainerViewModel> _newDeckOrContainer;
+    readonly Func<EditDeckOrContainerViewModel> _editDeckOrContainer;
+    readonly Func<ContainerBrowseViewModel> _browseContainer;
+    readonly Func<ContainerTextViewModel> _containerText;
+    readonly Func<ContainerViewModel> _container;
 
     public ContainerSetViewModel()
     {
         base.ThrowIfNotDesignMode();
-        _vmFactory = new StubViewModelFactory();
         _service = new StubCollectionTrackingService();
+        _dialog = () => new();
+        _editDeckOrContainer = () => new();
+        _newDeckOrContainer = () => new();
+        _browseContainer = () => new();
+        _containerText = () => new();
+        _container = () => new();
         this.IsActive = true;
     }
 
-    public ContainerSetViewModel(IViewModelFactory vmFactory, ICollectionTrackingService service)
+    public ContainerSetViewModel(Func<DialogViewModel> dialog,
+                                 Func<NewDeckOrContainerViewModel> newDeckOrContainer,
+                                 Func<EditDeckOrContainerViewModel> editDeckOrContainer,
+                                 Func<ContainerBrowseViewModel> browseContainer,
+                                 Func<ContainerTextViewModel> containerText,
+                                 Func<ContainerViewModel> container,
+                                 ICollectionTrackingService service)
     {
-        _vmFactory = vmFactory;
         _service = service;
+        _dialog = dialog;
+        _editDeckOrContainer = editDeckOrContainer;
+        _newDeckOrContainer = newDeckOrContainer;
+        _browseContainer = browseContainer;
+        _containerText = containerText;
+        _container = container;
         this.IsActive = true;
     }
 
@@ -58,7 +79,7 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 400,
-            ViewModel = _vmFactory.Dialog().WithContent("New Container", _vmFactory.NewDeckOrContainer(DeckOrContainer.Container))
+            ViewModel = _dialog().WithContent("New Container", _newDeckOrContainer().WithType(DeckOrContainer.Container))
         });
     }
 
@@ -70,7 +91,7 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 400,
-                ViewModel = _vmFactory.Dialog().WithContent("Edit Container", _vmFactory.EditDeckOrContainer(DeckOrContainer.Container).WithContainer(this.SelectedContainer.Id, this.SelectedContainer.Name, this.SelectedContainer.Description))
+                ViewModel = _dialog().WithContent("Edit Container", _editDeckOrContainer().WithType(DeckOrContainer.Container).WithContainer(this.SelectedContainer.Id, this.SelectedContainer.Name, this.SelectedContainer.Description))
             });
         }
     }
@@ -83,7 +104,7 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 800,
-                ViewModel = _vmFactory.Dialog().WithConfirmation(
+                ViewModel = _dialog().WithConfirmation(
                     "Delete Container?",
                     $"Are you sure you want to delete ({this.SelectedContainer.Name})? All SKUs in this container will be un-assigned",
                     async () =>
@@ -104,7 +125,7 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 1000,
-                ViewModel = _vmFactory.Dialog().WithContent(this.SelectedContainer.Name, _vmFactory.BrowseContainer().WithContainerId(this.SelectedContainer.Id))
+                ViewModel = _dialog().WithContent(this.SelectedContainer.Name, _browseContainer().WithContainerId(this.SelectedContainer.Id))
             });
         }
     }
@@ -118,7 +139,7 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 1000,
-                ViewModel = _vmFactory.Dialog().WithContent(this.SelectedContainer.Name, _vmFactory.ContainerText().WithText(text))
+                ViewModel = _dialog().WithContent(this.SelectedContainer.Name, _containerText().WithText(text))
             });
         }
     }
@@ -130,13 +151,13 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
         var containers = _service.GetContainers();
         foreach (var cont in containers)
         {
-            this.Containers.Add(_vmFactory.Container().WithData(cont));
+            this.Containers.Add(_container().WithData(cont));
         }
     }
 
     void IRecipient<ContainerCreatedMessage>.Receive(ContainerCreatedMessage message)
     {
-        this.Containers.Add(_vmFactory.Container().WithData(message.Container));
+        this.Containers.Add(_container().WithData(message.Container));
     }
 
     void IRecipient<ContainerDeletedMessage>.Receive(ContainerDeletedMessage message)

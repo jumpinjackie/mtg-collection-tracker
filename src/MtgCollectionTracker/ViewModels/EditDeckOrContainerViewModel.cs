@@ -43,6 +43,12 @@ public partial class EditDeckOrContainerViewModel : DialogContentViewModel
 
     public DeckOrContainer Type { get; set; }
 
+    public EditDeckOrContainerViewModel WithType(DeckOrContainer type)
+    {
+        this.Type = type;
+        return this;
+    }
+
     private bool CanSave() => !string.IsNullOrWhiteSpace(this.Name);
 
     private int _deckOrContainerId;

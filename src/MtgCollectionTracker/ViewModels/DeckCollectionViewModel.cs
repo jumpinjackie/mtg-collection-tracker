@@ -1,13 +1,16 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using Avalonia.Controls;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
+using MtgCollectionTracker.Data;
 using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using ScryfallApi.Client;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -18,25 +21,45 @@ namespace MtgCollectionTracker.ViewModels;
 
 public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewModelWithBusyState, IRecipient<DeckCreatedMessage>, IRecipient<DeckDismantledMessage>, IRecipient<CardsSentToDeckMessage>, IRecipient<CardsRemovedFromDeckMessage>, IRecipient<DeckTotalsChangedMessage>, IRecipient<DeckUpdatedMessage>
 {
-    readonly IViewModelFactory _vmFactory;
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
+
+    readonly Func<DialogViewModel> _dialog;
+    readonly Func<DeckViewModel> _deck;
+    readonly Func<DeckDetailsViewModel> _deckDetails;
+    readonly Func<EditDeckOrContainerViewModel> _editDeckOrContainer;
+    readonly Func<NewDeckOrContainerViewModel> _newDeckOrContainer;
 
     public DeckCollectionViewModel()
     {
         base.ThrowIfNotDesignMode();
-        _vmFactory = new StubViewModelFactory();
         _service = new StubCollectionTrackingService();
+        _dialog = () => new();
+        _deck = () => new();
+        _deckDetails = () => new();
+        _editDeckOrContainer = () => new();
+        _newDeckOrContainer = () => new();
         this.SelectedFormats.CollectionChanged += SelectedFormats_CollectionChanged;
         this.IsActive = true;
     }
 
-    public DeckCollectionViewModel(IViewModelFactory vmFactory, ICollectionTrackingService service, IMessenger messenger, IScryfallApiClient scryfallApiClient)
+    public DeckCollectionViewModel(ICollectionTrackingService service,
+                                   Func<DialogViewModel> dialog,
+                                   Func<DeckViewModel> deck,
+                                   Func<DeckDetailsViewModel> deckDetails,
+                                   Func<EditDeckOrContainerViewModel> editDeckOrContainer,
+                                   Func<NewDeckOrContainerViewModel> newDeckOrContainer,
+                                   IMessenger messenger,
+                                   IScryfallApiClient scryfallApiClient)
         : base(messenger)
     {
-        _vmFactory = vmFactory;
         _service = service;
         _scryfallApiClient = scryfallApiClient;
+        _dialog = dialog;
+        _deck = deck;
+        _deckDetails = deckDetails;
+        _editDeckOrContainer = editDeckOrContainer;
+        _newDeckOrContainer = newDeckOrContainer;
         this.SelectedFormats.CollectionChanged += SelectedFormats_CollectionChanged;
         this.IsActive = true;
     }
@@ -100,7 +123,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 400,
-            ViewModel = _vmFactory.Dialog().WithContent("New Deck", _vmFactory.NewDeckOrContainer(DeckOrContainer.Deck))
+            ViewModel = _dialog().WithContent("New Deck", _newDeckOrContainer().WithType(DeckOrContainer.Deck))
         });
     }
 
@@ -112,7 +135,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 800,
-                ViewModel = _vmFactory.Dialog().WithContent("Edit Deck", _vmFactory.EditDeckOrContainer(DeckOrContainer.Deck).WithDeck(this.SelectedDeck.DeckId, this.SelectedDeck.Name, this.SelectedDeck.Format))
+                ViewModel = _dialog().WithContent("Edit Deck", _editDeckOrContainer().WithType(DeckOrContainer.Deck).WithDeck(this.SelectedDeck.DeckId, this.SelectedDeck.Name, this.SelectedDeck.Format))
             });
         }
     }
@@ -125,7 +148,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 800,
-                ViewModel = _vmFactory.Dialog().WithConfirmation(
+                ViewModel = _dialog().WithConfirmation(
                     "Dismantle Deck",
                     $"Are you sure you want to dismantle ({this.SelectedDeck.Name})?", 
                     async () =>
@@ -145,7 +168,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
         var decks = _service.GetDecks(new DeckFilterModel { Formats = this.SelectedFormats });
         foreach (var deck in decks)
         {
-            this.Decks.Add(_vmFactory.Deck().WithData(deck));
+            this.Decks.Add(_deck().WithData(deck));
         }
     }
 
@@ -162,7 +185,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 1280,
-                ViewModel = _vmFactory.Dialog().WithContent("Deck: " + deck.Name, _vmFactory.DeckDetails().WithDeck(deck))
+                ViewModel = _dialog().WithContent("Deck: " + deck.Name, _deckDetails().WithDeck(deck))
             });
         }
     }
@@ -175,7 +198,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
 
     void IRecipient<DeckCreatedMessage>.Receive(DeckCreatedMessage message)
     {
-        this.Decks.Add(_vmFactory.Deck().WithData(message.Deck));
+        this.Decks.Add(_deck().WithData(message.Deck));
 
         if (!string.IsNullOrEmpty(message.Deck.Format) && !this.Formats.Contains(message.Deck.Format))
         {

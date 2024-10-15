@@ -5,7 +5,6 @@ using MtgCollectionTracker.Core;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services;
-using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using ScryfallApi.Client;
@@ -54,7 +53,8 @@ public partial class EditWishlistItemViewModel : DialogContentViewModel
         ];
     }
 
-    public EditWishlistItemViewModel(ICollectionTrackingService service, IViewModelFactory vmFactory, IScryfallApiClient scryfallApiClient)
+    public EditWishlistItemViewModel(ICollectionTrackingService service,
+                                     IScryfallApiClient scryfallApiClient)
     {
         _service = service;
         _scryfallApiClient = scryfallApiClient;

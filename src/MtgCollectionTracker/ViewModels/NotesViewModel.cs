@@ -3,22 +3,21 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services;
-using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Threading.Tasks;
-using System.Web;
 
 namespace MtgCollectionTracker.ViewModels;
 
 public partial class NotesViewModel : RecipientViewModelBase
 {
-    readonly IViewModelFactory _vmFactory;
     readonly ICollectionTrackingService _service;
     readonly IMessenger _messenger;
+
+    readonly Func<DialogViewModel> _dialog;
 
     public ObservableCollection<NotesItemViewModel> Notes { get; } = new();
 
@@ -58,7 +57,7 @@ public partial class NotesViewModel : RecipientViewModelBase
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 400,
-                ViewModel = _vmFactory.Dialog().WithConfirmation(
+                ViewModel = _dialog().WithConfirmation(
                     "Delete Note",
                     $"Are you sure you want to delete this note?",
                     async () =>
@@ -77,10 +76,12 @@ public partial class NotesViewModel : RecipientViewModelBase
         }
     }
 
-    public NotesViewModel(ICollectionTrackingService service, IViewModelFactory vmFactory, IMessenger messenger)
+    public NotesViewModel(ICollectionTrackingService service,
+                          Func<DialogViewModel> dialog,
+                          IMessenger messenger)
     {
         _service = service;
-        _vmFactory = vmFactory;
+        _dialog = dialog;
         _messenger = messenger;
         this.IsActive = true;
     }
@@ -89,7 +90,7 @@ public partial class NotesViewModel : RecipientViewModelBase
     {
         base.ThrowIfNotDesignMode();
         _service = new StubCollectionTrackingService();
-        _vmFactory = new StubViewModelFactory();
+        _dialog = () => new();
         _messenger = WeakReferenceMessenger.Default;
         this.IsActive = true;
     }

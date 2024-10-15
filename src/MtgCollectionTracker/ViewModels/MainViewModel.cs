@@ -6,6 +6,7 @@ using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -16,26 +17,31 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
     public MainViewModel()
     {
         base.ThrowIfNotDesignMode();
-        var vmFactory = new StubViewModelFactory();
-        this.Cards = vmFactory.Cards();
-        this.Decks = vmFactory.Decks();
-        this.Containers = vmFactory.Containers();
-        this.Wishlist = vmFactory.Wishlist();
-        this.Notes = vmFactory.Notes();
-        this.CanIBuild = vmFactory.CanIBuild();
-        this.Settings = vmFactory.Settings();
+        this.Cards = new();
+        this.Decks = new();
+        this.Containers = new();
+        this.Wishlist = new();
+        this.Notes = new();
+        this.CanIBuild = new();
+        this.Settings = new();
         this.IsActive = true;
     }
 
-    public MainViewModel(IViewModelFactory vmFactory)
+    public MainViewModel(Func<CardsViewModel> cards,
+                         Func<DeckCollectionViewModel> decks,
+                         Func<ContainerSetViewModel> containers,
+                         Func<WishlistViewModel> wishlist,
+                         Func<NotesViewModel> notes,
+                         Func<CanIBuildThisDeckViewModel> canIBuild,
+                         Func<SettingsViewModel> settings)
     {
-        this.Cards = vmFactory.Cards();
-        this.Decks = vmFactory.Decks();
-        this.Containers = vmFactory.Containers();
-        this.Wishlist = vmFactory.Wishlist();
-        this.Notes = vmFactory.Notes();
-        this.CanIBuild = vmFactory.CanIBuild();
-        this.Settings = vmFactory.Settings();
+        this.Cards = cards();
+        this.Decks = decks();
+        this.Containers = containers();
+        this.Wishlist = wishlist();
+        this.Notes = notes();
+        this.CanIBuild = canIBuild();
+        this.Settings = settings();
         this.IsActive = true;
     }
 

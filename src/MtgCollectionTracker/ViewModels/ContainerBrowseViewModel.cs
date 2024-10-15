@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Core.Services;
+using MtgCollectionTracker.Data;
 using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
@@ -19,27 +20,47 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
 {
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
-    readonly IViewModelFactory _vmFactory;
+
+    readonly Func<CardSkuItemViewModel> _cardSku;
+    readonly Func<DialogViewModel> _dialog;
+    readonly Func<EditCardSkuViewModel> _editCardSku;
+    readonly Func<AddCardsViewModel> _addCards;
+    readonly Func<SendCardsToContainerOrDeckViewModel> _sendToContainer;
+    readonly Func<SplitCardSkuViewModel> _splitCardSku;
 
     public ContainerBrowseViewModel()
     {
         this.ThrowIfNotDesignMode();
         _service = new StubCollectionTrackingService();
-        _vmFactory = new StubViewModelFactory();
+        _addCards = () => new();
+        _cardSku = () => new();
+        _dialog = () => new();
+        _editCardSku = () => new();
+        _sendToContainer = () => new();
+        _splitCardSku = () => new();
         this.Behavior = new(this);
         this.IsActive = true;
     }
 
-    public ContainerBrowseViewModel(
-        ICollectionTrackingService service,
-        IScryfallApiClient scryfallApiClient,
-        IViewModelFactory vmFactory,
-        IMessenger messenger)
+    public ContainerBrowseViewModel(ICollectionTrackingService service,
+                                    Func<CardSkuItemViewModel> cardSku,
+                                    Func<DialogViewModel> dialog,
+                                    Func<EditCardSkuViewModel> editCardSku,
+                                    Func<AddCardsViewModel> addCards,
+                                    Func<SendCardsToContainerOrDeckViewModel> sendToContainer,
+                                    Func<SplitCardSkuViewModel> splitCardSku,
+                                    IScryfallApiClient scryfallApiClient,
+                                    IMessenger messenger)
         : base(messenger)
     {
         _service = service;
         _scryfallApiClient = scryfallApiClient;
-        _vmFactory = vmFactory;
+        _addCards = addCards;
+        _cardSku = cardSku;
+        _dialog = dialog;
+        _editCardSku = editCardSku;
+        _sendToContainer = sendToContainer;
+        _splitCardSku = splitCardSku;
         this.Behavior = new(this);
         this.IsActive = true;
     }
@@ -84,7 +105,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
             this.CurrentPage.Clear();
             foreach (var sku in page.Items)
             {
-                this.CurrentPage.Add(_vmFactory.CardSku().WithData(sku));
+                this.CurrentPage.Add(_cardSku().WithData(sku));
             }
             this.HasNoResults = this.CurrentPage.Count == 0;
             var from = Math.Max(page.PageNumber, 0) * page.PageSize;
@@ -123,7 +144,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 600,
-                ViewModel = _vmFactory.Dialog().WithContent("Edit Sku", _vmFactory.EditCardSku().WithSku(Behavior.SelectedItems[0]))
+                ViewModel = _dialog().WithContent("Edit Sku", _editCardSku().WithSku(Behavior.SelectedItems[0]))
             });
         }
         else if (Behavior.SelectedItems.Count > 1)
@@ -131,7 +152,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 600,
-                ViewModel = _vmFactory.Dialog().WithContent("Edit Skus", _vmFactory.EditCardSku().WithSkus(Behavior.SelectedItems))
+                ViewModel = _dialog().WithContent("Edit Skus", _editCardSku().WithSkus(Behavior.SelectedItems))
             });
         }
     }
@@ -165,14 +186,14 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
     [RelayCommand]
     private void AddSkus()
     {
-        var vm = _vmFactory.AddCards();
+        var vm = _addCards();
         if (_containerId.HasValue)
             vm = vm.WithTargetContainer(_containerId.Value);
 
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 800,
-            ViewModel = _vmFactory.Dialog().WithContent("Add Cards", vm)
+            ViewModel = _dialog().WithContent("Add Cards", vm)
         });
     }
 
@@ -190,7 +211,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 800,
-                ViewModel = _vmFactory.Dialog().WithContent("Send Cards To Deck or Container", _vmFactory.SendCardsToContainer().WithCards(Behavior.SelectedItems))
+                ViewModel = _dialog().WithContent("Send Cards To Deck or Container", _sendToContainer().WithCards(Behavior.SelectedItems))
             });
         }
     }
@@ -237,7 +258,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
         if (Behavior.IsItemSplittable)
         {
             var selected = Behavior.SelectedItems[0];
-            var vm = _vmFactory.SplitCardSku();
+            var vm = _splitCardSku();
             vm.CardSkuId = selected.Id;
             if (selected.ProxyQty > 1)
             {
@@ -254,7 +275,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 300,
-                ViewModel = _vmFactory.Dialog().WithContent("Split Card SKU", vm)
+                ViewModel = _dialog().WithContent("Split Card SKU", vm)
             });
         }
     }
@@ -298,7 +319,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
                 var newSku = _service.GetCards(new() { CardSkuIds = [message.NewSkuId] }).ToList();
                 if (newSku.Count == 1)
                 {
-                    this.CurrentPage.Insert(idx, _vmFactory.CardSku().WithData(newSku[0]));
+                    this.CurrentPage.Insert(idx, _cardSku().WithData(newSku[0]));
                 }
             }
         }

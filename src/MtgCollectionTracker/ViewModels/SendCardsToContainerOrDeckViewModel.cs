@@ -7,6 +7,7 @@ using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using ScryfallApi.Client;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -28,25 +29,33 @@ public interface ISendableCardItem
 
 public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewModel
 {
-    readonly IViewModelFactory _vmFactory;
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
 
+    readonly Func<ContainerViewModel> _container;
+    readonly Func<DeckViewModel> _deck;
+
     record MockSendableCard(int Id, int Quantity, string CardName, string Edition) : ISendableCardItem;
 
-    public SendCardsToContainerOrDeckViewModel(IMessenger messenger, IViewModelFactory vmFactory, ICollectionTrackingService service, IScryfallApiClient scryfallApiClient)
+    public SendCardsToContainerOrDeckViewModel(IMessenger messenger,
+                                               Func<ContainerViewModel> container,
+                                               Func<DeckViewModel> deck,
+                                               ICollectionTrackingService service,
+                                               IScryfallApiClient scryfallApiClient)
         : base(messenger)
     {
-        _vmFactory = vmFactory;
         _service = service;
         _scryfallApiClient = scryfallApiClient;
+        _container = container;
+        _deck = deck;
     }
 
     public SendCardsToContainerOrDeckViewModel()
     {
         this.ThrowIfNotDesignMode();
-        _vmFactory = new StubViewModelFactory();
         _service = new StubCollectionTrackingService();
+        _container = () => new();
+        _deck = () => new();
         this.AvailableContainers = [
             new ContainerViewModel().WithData(new() { Id = 1, Name = "Main Binder" }),
             new ContainerViewModel().WithData(new() { Id = 2, Name = "Secondary Binder" }),
@@ -101,8 +110,8 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
     public SendCardsToContainerOrDeckViewModel WithCards(IEnumerable<ISendableCardItem> cards)
     {
         this.Cards = cards;
-        this.AvailableContainers = _service.GetContainers().Select(c => _vmFactory.Container().WithData(c)).ToList();
-        this.AvailableDecks = _service.GetDecks(null).Select(d => _vmFactory.Deck().WithData(d)).ToList();
+        this.AvailableContainers = _service.GetContainers().Select(c => _container().WithData(c)).ToList();
+        this.AvailableDecks = _service.GetDecks(null).Select(d => _deck().WithData(d)).ToList();
         return this;
     }
 

@@ -1,13 +1,13 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using ScryfallApi.Client;
+using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
@@ -17,15 +17,26 @@ namespace MtgCollectionTracker.ViewModels;
 
 public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithBusyState, IRecipient<CardsAddedToWishlistMessage>, IRecipient<WishlistItemUpdatedMessage>, IMultiModeCardListBehaviorHost, IRecipient<TagsAppliedMessage>, IRecipient<WishlistItemsAddedToCollectionMessage>
 {
-    readonly IViewModelFactory _vmFactory;
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
+
+    readonly Func<DialogViewModel> _dialog;
+    readonly Func<EditWishlistItemViewModel> _editWishlistItem;
+    readonly Func<AddCardsToWishlistViewModel> _addCardsToWishlist;
+    readonly Func<WishlistItemViewModel> _wishlistItem;
+    readonly Func<MoveWishlistItemsToCollectionViewModel> _moveToCollection;
+    readonly Func<ManageVendorsViewModel> _manageVendors;
 
     public WishlistViewModel()
     {
         this.ThrowIfNotDesignMode();
-        _vmFactory = new StubViewModelFactory();
         _service = new StubCollectionTrackingService();
+        _dialog = () => new();
+        _editWishlistItem = () => new();
+        _addCardsToWishlist = () => new();
+        _wishlistItem = () => new();
+        _moveToCollection = () => new();
+        _manageVendors = () => new();
         this.Tags = ["Foo", "Bar", "Baz"];
         this.Cards.CollectionChanged += Cards_CollectionChanged;
         this.SelectedTags.CollectionChanged += Tags_CollectionChanged;
@@ -33,11 +44,24 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
         this.IsActive = true;
     }
 
-    public WishlistViewModel(IViewModelFactory vmFactory, ICollectionTrackingService service, IScryfallApiClient scryfallApiClient)
+    public WishlistViewModel(ICollectionTrackingService service,
+        Func<DialogViewModel> dialog,
+        Func<EditWishlistItemViewModel> editWishlistItem,
+        Func<AddCardsToWishlistViewModel> addCardsToWishlist,
+        Func<WishlistItemViewModel> wishlistItem,
+        Func<MoveWishlistItemsToCollectionViewModel> moveToCollection,
+        Func<ManageVendorsViewModel> manageVendors,
+
+    IScryfallApiClient scryfallApiClient)
     {
-        _vmFactory = vmFactory;
         _service = service;
         _scryfallApiClient = scryfallApiClient;
+        _dialog = dialog;
+        _editWishlistItem = editWishlistItem;
+        _addCardsToWishlist = addCardsToWishlist;
+        _wishlistItem = wishlistItem;
+        _moveToCollection = moveToCollection;
+        _manageVendors = manageVendors;
         var tags = service.GetTags();
         foreach (var t in tags)
         {
@@ -77,7 +101,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
         var items = _service.GetWishlistItems(filter);
         foreach (var item in items)
         {
-            this.Cards.Add(_vmFactory.WishListItem().WithData(item));
+            this.Cards.Add(_wishlistItem().WithData(item));
         }
         this.ApplySummary();
     }
@@ -107,7 +131,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 800,
-            ViewModel = _vmFactory.Dialog().WithContent("Add Cards to Wishlist", _vmFactory.AddCardsToWishlist())
+            ViewModel = _dialog().WithContent("Add Cards to Wishlist", _addCardsToWishlist())
         });
     }
 
@@ -120,7 +144,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 400,
-                ViewModel = _vmFactory.Dialog().WithConfirmation(
+                ViewModel = _dialog().WithConfirmation(
                     "Delete Wishlist Item",
                     $"Are you sure you want to delete this wishlist item ({item.QuantityNum}x {item.CardName}, {item.Edition}, {item.Language ?? "en"})?",
                     async () =>
@@ -142,7 +166,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 800,
-            ViewModel = _vmFactory.Dialog().WithContent("Manage Vendors", _vmFactory.ManageVendors().WithData(vendors))
+            ViewModel = _dialog().WithContent("Manage Vendors", _manageVendors().WithData(vendors))
         });
     }
 
@@ -154,9 +178,9 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 400,
-                ViewModel = _vmFactory.Dialog().WithContent(
+                ViewModel = _dialog().WithContent(
                     "Move to Collection",
-                    _vmFactory.MoveWishlistItemsToCollection()
+                    _moveToCollection()
                         .WithData(Behavior.SelectedItems.Select(w => w.Id).ToArray()))
             });
         }
@@ -168,7 +192,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 600,
-            ViewModel = _vmFactory.Dialog().WithContent("Edit Wishlist Item", _vmFactory.EditWishlistItem().WithData(Behavior.SelectedItems[0]))
+            ViewModel = _dialog().WithContent("Edit Wishlist Item", _editWishlistItem().WithData(Behavior.SelectedItems[0]))
         });
     }
 
@@ -179,7 +203,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 600,
-            ViewModel = _vmFactory.Dialog().WithContent("Buying List", new BuyingListViewModel().WithText(buylist))
+            ViewModel = _dialog().WithContent("Buying List", new BuyingListViewModel().WithText(buylist))
         });
     }
 
@@ -223,7 +247,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
     {
         foreach (var item in message.Added)
         {
-            this.Cards.Add(_vmFactory.WishListItem().WithData(item));
+            this.Cards.Add(_wishlistItem().WithData(item));
         }
     }
 

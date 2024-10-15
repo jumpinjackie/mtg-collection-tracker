@@ -37,15 +37,21 @@ public record DeckListCardItem(string CardName, int Requested, int Short, HashSe
 public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
 {
     readonly ICollectionTrackingService _service;
-    readonly IViewModelFactory _vmFactory;
     readonly IScryfallApiClient? _client;
+    readonly Func<DialogViewModel> _dialog;
+    readonly Func<AddCardsToWishlistViewModel> _addToWishlist;
 
-    public CanIBuildThisDeckViewModel(ICollectionTrackingService service, IViewModelFactory vmFactory, IMessenger messenger, IScryfallApiClient client)
+    public CanIBuildThisDeckViewModel(ICollectionTrackingService service,
+                                      Func<DialogViewModel> dialog,
+                                      Func<AddCardsToWishlistViewModel> addToWishlist,
+                                      IMessenger messenger,
+                                      IScryfallApiClient client)
         : base(messenger)
     {
         _service = service;
-        _vmFactory = vmFactory;
         _client = client;
+        _dialog = dialog;
+        _addToWishlist = addToWishlist;
     }
 
     public CanIBuildThisDeckViewModel()
@@ -53,7 +59,8 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
     {
         this.ThrowIfNotDesignMode();
         _service = new StubCollectionTrackingService();
-        _vmFactory = new StubViewModelFactory();
+        _dialog = () => new();
+        _addToWishlist = () => new();
     }
 
     [ObservableProperty]
@@ -119,9 +126,9 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 800,
-                ViewModel = _vmFactory.Dialog().WithContent("Add Cards to Wishlist", _vmFactory
-                    .AddCardsToWishlist()
-                    .WithCards(wishlistItems))
+                ViewModel = _dialog().WithContent("Add Cards to Wishlist", 
+                    _addToWishlist()
+                        .WithCards(wishlistItems))
             });
         }
     }

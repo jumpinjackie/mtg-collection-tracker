@@ -49,6 +49,12 @@ public partial class NewDeckOrContainerViewModel : DialogContentViewModel
 
     public DeckOrContainer Type { get; set; }
 
+    public NewDeckOrContainerViewModel WithType(DeckOrContainer type)
+    {
+        this.Type = type;
+        return this;
+    }
+
     private bool CanSave() => !string.IsNullOrWhiteSpace(this.Name);
 
     [RelayCommand(CanExecute = nameof(CanSave))]

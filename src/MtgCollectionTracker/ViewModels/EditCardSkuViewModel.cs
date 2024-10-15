@@ -4,10 +4,10 @@ using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Core;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services;
-using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using ScryfallApi.Client;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -44,13 +44,15 @@ public partial class EditCardSkuViewModel : DialogContentViewModel
         this.AllTags = ["Foo", "Bar", "Baz"];
     }
 
-    public EditCardSkuViewModel(ICollectionTrackingService service, IViewModelFactory vmFactory, IScryfallApiClient scryfallApiClient)
+    public EditCardSkuViewModel(ICollectionTrackingService service,
+                                Func<DeckViewModel> deckItem,
+                                IScryfallApiClient scryfallApiClient)
     {
         _service = service;
         _scryfallApiClient = scryfallApiClient;
         this.AllTags = service.GetTags().ToList();
         this.Languages = service.GetLanguages().Select(lang => new LanguageViewModel(lang.Code, lang.PrintedCode, lang.Name)).ToArray();
-        this.AvailableDecks = service.GetDecks(null).Select(deck => vmFactory.Deck().WithData(deck));
+        this.AvailableDecks = service.GetDecks(null).Select(deck => deckItem().WithData(deck));
         this.AvailableContainers = service.GetContainers().Select(cnt => new ContainerViewModel().WithData(cnt)).ToList();
     }
 
