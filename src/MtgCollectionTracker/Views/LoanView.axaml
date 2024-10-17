@@ -11,73 +11,80 @@
          to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
 		<vm:LoanViewModel />
 	</Design.DataContext>
-	<StackPanel>
-		<TextBlock>Name</TextBlock>
-		<TextBox Text="{Binding Name}" />
-		<Grid ColumnDefinitions="50*, 50*" RowDefinitions="50*, 50*">
-			<StackPanel Margin="8" Grid.Column="0" Grid.Row="0">
-				<TextBlock>Find Cards</TextBlock>
-				<Grid ColumnDefinitions="*, 80">
-					<TextBox Grid.Column="0" IsEnabled="{Binding !IsBusy}" Text="{Binding SearchText}" />
-					<Button Grid.Column="1" IsEnabled="{Binding !IsBusy}" Command="{Binding SearchCommand}" Content="Search" />
-				</Grid>
-				<DataGrid IsReadOnly="True" ItemsSource="{Binding SearchResults}" SelectedItem="{Binding SelectedSearchResult}">
-					<DataGrid.Columns>
-						<DataGridTextColumn Header="Qty" Binding="{Binding Quantity}" />
-						<DataGridTextColumn Header="Name" Binding="{Binding CardName}" />
-						<DataGridTextColumn Header="Deck/Container" Binding="{Binding DeckOrContainer}" />
-					</DataGrid.Columns>
-				</DataGrid>
-				<StackPanel Orientation="Horizontal">
-					<Button Command="{Binding LoanCardsCommand}">Loan Out Card(s)</Button>
+	<DockPanel>
+		<StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal">
+			<Button Command="{Binding ApplyChangesCommand}">Apply Changes</Button>
+			<Button Command="{Binding CancelCommand}">Cancel</Button>
+		</StackPanel>
+		<StackPanel>
+			<TextBlock>Name</TextBlock>
+			<TextBox Text="{Binding Name}" />
+			<Grid ColumnDefinitions="50*, 50*" RowDefinitions="50*, 50*">
+				<StackPanel Margin="8" Grid.Column="0" Grid.Row="0">
+					<TextBlock>Find Cards</TextBlock>
+					<Grid ColumnDefinitions="*, 80">
+						<TextBox Grid.Column="0" IsEnabled="{Binding !IsBusy}" Text="{Binding SearchText}" />
+						<Button Grid.Column="1" IsEnabled="{Binding !IsBusy}" Command="{Binding SearchCommand}" Content="Search" />
+					</Grid>
+					<DataGrid IsReadOnly="True" ItemsSource="{Binding SearchResults}" SelectedItem="{Binding SelectedSearchResult}">
+						<DataGrid.Columns>
+							<DataGridTextColumn Header="Qty" Binding="{Binding Quantity}" />
+							<DataGridTextColumn Header="Name" Binding="{Binding CardName}" />
+							<DataGridTextColumn Header="Deck/Container" Binding="{Binding DeckOrContainer}" />
+						</DataGrid.Columns>
+					</DataGrid>
+					<StackPanel Orientation="Horizontal">
+						<Button Command="{Binding LoanCardsCommand}">Loan Out Card(s)</Button>
+					</StackPanel>
 				</StackPanel>
-			</StackPanel>
-			<StackPanel Margin="8" Grid.Column="1" Grid.Row="0">
-				<TextBlock>
-					Cards in deck (<Run Text="{Binding ToDeck}" />)
-				</TextBlock>
-				<DataGrid IsReadOnly="True" MaxHeight="400" ItemsSource="{Binding DeckCards}" SelectedItem="{Binding SelectedDeckCard}">
-					<DataGrid.Columns>
-						<DataGridTextColumn Header="Qty" Binding="{Binding Quantity}" />
-						<DataGridTextColumn Header="Name" Binding="{Binding CardName}" />
-					</DataGrid.Columns>
-				</DataGrid>
-				<StackPanel Orientation="Horizontal">
-					<Button Command="{Binding TakeCardFromDeckCommand}">Take Out Card(s)</Button>
+				<StackPanel Margin="8" Grid.Column="1" Grid.Row="0">
+					<TextBlock>
+						Cards in deck (<Run Text="{Binding ToDeck}" />)
+					</TextBlock>
+					<DataGrid IsReadOnly="True" MaxHeight="400" ItemsSource="{Binding DeckCards}" SelectedItem="{Binding SelectedDeckCard}">
+						<DataGrid.Columns>
+							<DataGridTextColumn Header="Qty" Binding="{Binding Quantity}" />
+							<DataGridTextColumn Header="Name" Binding="{Binding CardName}" />
+							<DataGridTextColumn Header="Slot" Binding="{Binding MainDeckOrSideboard}" />
+						</DataGrid.Columns>
+					</DataGrid>
+					<StackPanel Orientation="Horizontal">
+						<Button Command="{Binding TakeCardFromDeckCommand}">Take Out Card(s)</Button>
+					</StackPanel>
 				</StackPanel>
-			</StackPanel>
-			<StackPanel Margin="8" Grid.Column="0" Grid.Row="1">
-				<TextBlock>Cards on Loan</TextBlock>
-				<ListBox MinHeight="100" MaxHeight="400" ItemsSource="{Binding LoanedOutCards}" SelectedItem="{Binding SelectedLoanedCard}">
-					<ListBox.ItemTemplate>
-						<DataTemplate x:DataType="vm:CardSkuItemViewModel">
-							<TextBlock>
-								<Run Text="{Binding Quantity}" />x <Run Text="{Binding CardName}" />
-								(from: <Run Text="{Binding DeckOrContainer}" />)
-							</TextBlock>
-						</DataTemplate>
-					</ListBox.ItemTemplate>
-				</ListBox>
-				<StackPanel Orientation="Horizontal">
-					<Button Command="{Binding ReturnLoanedCardCommand}">Return Card(s)</Button>
+				<StackPanel Margin="8" Grid.Column="0" Grid.Row="1">
+					<TextBlock>Cards on Loan</TextBlock>
+					<ListBox MinHeight="100" MaxHeight="400" ItemsSource="{Binding LoanedOutCards}" SelectedItem="{Binding SelectedLoanedCard}">
+						<ListBox.ItemTemplate>
+							<DataTemplate x:DataType="vm:CardSkuItemViewModel">
+								<TextBlock>
+									<Run Text="{Binding Quantity}" />x <Run Text="{Binding CardName}" /> [<Run Text="{Binding Edition}" />]
+									(from: <Run Text="{Binding DeckOrContainer}" />)
+								</TextBlock>
+							</DataTemplate>
+						</ListBox.ItemTemplate>
+					</ListBox>
+					<StackPanel Orientation="Horizontal">
+						<Button Command="{Binding ReturnLoanedCardCommand}">Return Card(s)</Button>
+					</StackPanel>
 				</StackPanel>
-			</StackPanel>
-			<StackPanel Margin="8" Grid.Column="1" Grid.Row="1">
-				<TextBlock>Cards replaced</TextBlock>
-				<ListBox MinHeight="100" MaxHeight="400" ItemsSource="{Binding CardsReplaced}" SelectedItem="{Binding SelectedReplaceCard}">
-					<ListBox.ItemTemplate>
-						<DataTemplate x:DataType="vm:CardSkuItemViewModel">
-							<TextBlock>
-								<Run Text="{Binding Quantity}" />x <Run Text="{Binding CardName}" />
-								(from: <Run Text="{Binding MainDeckOrSideboard}" />)
-							</TextBlock>
-						</DataTemplate>
-					</ListBox.ItemTemplate>
-				</ListBox>
-				<StackPanel Orientation="Horizontal">
-					<Button Command="{Binding ReturnCardToDeckCommand}">Return to Deck</Button>
+				<StackPanel Margin="8" Grid.Column="1" Grid.Row="1">
+					<TextBlock>Cards taken out</TextBlock>
+					<ListBox MinHeight="100" MaxHeight="400" ItemsSource="{Binding CardsReplaced}" SelectedItem="{Binding SelectedReplaceCard}">
+						<ListBox.ItemTemplate>
+							<DataTemplate x:DataType="vm:CardSkuItemViewModel">
+								<TextBlock>
+									<Run Text="{Binding Quantity}" />x <Run Text="{Binding CardName}" />
+									(from: <Run Text="{Binding MainDeckOrSideboard}" />)
+								</TextBlock>
+							</DataTemplate>
+						</ListBox.ItemTemplate>
+					</ListBox>
+					<StackPanel Orientation="Horizontal">
+						<Button Command="{Binding ReturnCardToDeckCommand}">Return to Deck</Button>
+					</StackPanel>
 				</StackPanel>
-			</StackPanel>
-		</Grid>
-	</StackPanel>
+			</Grid>
+		</StackPanel>
+	</DockPanel>
 </UserControl>

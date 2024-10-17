@@ -27,4 +27,6 @@ internal record WishlistItemsAddedToCollectionMessage(MoveWishlistItemsToCollect
 
 internal record LoanCreatedMessage(LoanModel Loan);
 
+internal record LoanUpdatedMessage(LoanModel Loan);
+
 internal record LoanDeletedMessage(LoanModel Loan);

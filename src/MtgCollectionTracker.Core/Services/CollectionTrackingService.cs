@@ -1704,7 +1704,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         await ent.Collection(e => e.Cards).LoadAsync(cancel);
         await ent.Collection(e => e.DeckCards).LoadAsync(cancel);
         await ent.Reference(e => e.ToDeck).LoadAsync(cancel);
-        var dck = db.Value.Entry(loan.ToDeck);
+        var dck = db.Value.Entry(loan.ToDeck!);
         await dck.Collection(d => d.Cards).LoadAsync(cancel);
 
         var res = LoanToModel(db.Value, loan);
@@ -1744,6 +1744,65 @@ public class CollectionTrackingService : ICollectionTrackingService
             throw new Exception("Loan not found");
 
         // Apply updates
+        var loanToAdd = new List<CardSku>();
+        var loanToRemove = new List<CardSku>();
+        var replToAdd = new List<ExchangedDeckCard>();
+        var replToRemove = new List<ExchangedDeckCard>();
+
+        foreach (var inC in model.LoanOutSkus)
+        {
+            if (!loan.Cards.Any(c => c.Id == inC))
+            {
+                var sku = await db.Value.Cards.FirstOrDefaultAsync(c => c.Id == inC, cancel);
+                if (sku != null)
+                    loanToAdd.Add(sku);
+            }
+        }
+        foreach (var curC in loan.Cards)
+        {
+            if (!model.LoanOutSkus.Any(c => c == curC.Id))
+            {
+                loanToRemove.Add(curC);
+            }
+        }
+        foreach (var inR in model.TakeOutSkus)
+        {
+            if (!loan.DeckCards.Any(c => c.CardId == inR))
+            {
+                var sku = await db.Value.Cards.FirstOrDefaultAsync(c => c.Id == inR, cancel);
+                if (sku != null)
+                {
+                    replToAdd.Add(new ExchangedDeckCard
+                    {
+                        Card = sku
+                    });
+                }
+            }
+        }
+        foreach (var curR in loan.DeckCards)
+        {
+            if (!model.TakeOutSkus.Any(c => c == curR.CardId))
+            {
+                replToRemove.Add(curR);
+            }
+        }
+
+        foreach (var c in loanToRemove)
+        {
+            loan.Cards.Remove(c);
+        }
+        foreach (var c in loanToAdd)
+        {
+            loan.Cards.Add(c);
+        }
+        foreach (var c in replToRemove)
+        {
+            loan.DeckCards.Remove(c);
+        }
+        foreach (var c in replToAdd)
+        {
+            loan.DeckCards.Add(c);
+        }
 
         await db.Value.SaveChangesAsync(cancel);
 
@@ -1751,7 +1810,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         await ent.Collection(e => e.Cards).LoadAsync(cancel);
         await ent.Collection(e => e.DeckCards).LoadAsync(cancel);
         await ent.Reference(e => e.ToDeck).LoadAsync(cancel);
-        var dck = db.Value.Entry(loan.ToDeck);
+        var dck = db.Value.Entry(loan.ToDeck!);
         await dck.Collection(d => d.Cards).LoadAsync(cancel);
 
         var res = LoanToModel(db.Value, loan);

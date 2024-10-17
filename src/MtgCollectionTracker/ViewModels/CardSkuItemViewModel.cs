@@ -92,9 +92,9 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
     [ObservableProperty]
     private string? _deckName;
 
-    public string? DeckOrContainer => this.ContainerName ?? this.DeckName ?? "<un-assigned>";
+    public string DeckOrContainer => this.ContainerName ?? this.DeckName ?? "<un-assigned>";
 
-    public string? MainDeckOrSideboard => this.IsSideboard ? "Sideboard" : "Main Deck";
+    public string MainDeckOrSideboard => this.IsSideboard ? "Sideboard" : "Main Deck";
 
     [ObservableProperty]
     private bool _isFrontFace;

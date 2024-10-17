@@ -3,10 +3,14 @@ using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
+using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Contracts;
+using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -22,6 +26,7 @@ public partial class LoanViewModel : DialogContentViewModel, IViewModelWithBusyS
     {
         _service = service;
         _cardSku = cardSku;
+        this.LoanedOutCards.CollectionChanged += LoanedOutCards_CollectionChanged;
     }
 
     public LoanViewModel()
@@ -30,6 +35,20 @@ public partial class LoanViewModel : DialogContentViewModel, IViewModelWithBusyS
         this.ThrowIfNotDesignMode();
         _service = new StubCollectionTrackingService();
         _cardSku = () => new();
+        this.LoanedOutCards.CollectionChanged += LoanedOutCards_CollectionChanged;
+    }
+
+    private void LoanedOutCards_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+    {
+        var names = new HashSet<string>();
+        foreach (var c in this.LoanedOutCards)
+        {
+            names.Add(c.DeckOrContainer);
+        }
+        if (names.Count > 0)
+            this.FromDecksOrContainers = string.Join(", ", names);
+        else
+            this.FromDecksOrContainers = "<none>";
     }
 
     public int Id { get; set; }
@@ -157,6 +176,27 @@ public partial class LoanViewModel : DialogContentViewModel, IViewModelWithBusyS
             this.SelectedLoanedCard = null;
         }
     }
+
+    [RelayCommand]
+    private async Task ApplyChanges(CancellationToken cancel)
+    {
+        using (((IViewModelWithBusyState)this).StartBusyState())
+        {
+            var update = new UpdateLoanModel
+            {
+                Id = this.Id,
+                LoanOutSkus = this.LoanedOutCards.Select(c => c.Id).ToArray(),
+                TakeOutSkus = this.CardsReplaced.Select(c => c.Id).ToArray()
+            };
+            var loan = await _service.UpdateLoanAsync(update, cancel);
+            Messenger.Send(new LoanUpdatedMessage(loan));
+            Messenger.ToastNotify($"Loan updated ({this.Name})");
+            Messenger.Send(new CloseDialogMessage());
+        }
+    }
+
+    [RelayCommand]
+    private void Cancel() => Messenger.Send(new CloseDialogMessage());
 
     public LoanViewModel WithData(LoanModel loan)
     {
