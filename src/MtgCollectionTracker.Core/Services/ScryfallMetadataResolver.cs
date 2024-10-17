@@ -28,6 +28,8 @@ internal class ScryfallMetadataResolver
     public int ScryfallApiCalls { get; private set; } = 0;
 
     public int ScryfallSmallImageFetches { get; private set; } = 0;
+    
+    public bool HasClient => _scryfallApiClient != null;
 
     static string? NullIf(string? s) => string.IsNullOrWhiteSpace(s) ? null : s;
 

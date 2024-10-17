@@ -84,7 +84,7 @@ namespace MtgCollectionTracker.Core.Services
         ValueTask RebuildAllMetadataAsync(UpdateCardMetadataProgressCallback callback, IScryfallApiClient scryfallApiClient, CancellationToken cancel);
         ValueTask NormalizeCardNamesAsync(UpdateCardMetadataProgressCallback callback, CancellationToken cancel);
         ValueTask<LoanModel> CreateLoanAsync(string name, int toDeckId, CancellationToken cancel);
-        IEnumerable<LoanModel> GetLoans();
+        ValueTask<IEnumerable<LoanModel>> GetLoansAsync(CancellationToken cancel);
         ValueTask<LoanModel> UpdateLoanAsync(UpdateLoanModel model, CancellationToken cancel);
         ValueTask<LoanModel> DeleteLoanAsync(int id, CancellationToken cancel);
     }

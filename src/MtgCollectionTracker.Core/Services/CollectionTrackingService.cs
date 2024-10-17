@@ -6,6 +6,7 @@ using StrongInject;
 using System.Data;
 using System.Linq.Expressions;
 using System.Text;
+using System.Threading.Channels;
 using System.Xml.Linq;
 
 namespace MtgCollectionTracker.Core.Services;
@@ -211,6 +212,12 @@ public class CollectionTrackingService : ICollectionTrackingService
             queryable = queryable.Where(c => c.DeckId == null);
         else if (query.DeckIds?.Length > 0)
             queryable = queryable.Where(c => c.DeckId != null && query.DeckIds.Contains((int)c.DeckId));
+
+        if (query.NotInDeckIds?.Length > 0)
+            queryable = queryable.Where(c => !query.NotInDeckIds.Contains((int)c.DeckId));
+
+        if (query.NotLoanedOut == true)
+            queryable = queryable.Where(c => c.ExchangeId == null);
 
         var bq = queryable;
         if (query.IncludeScryfallMetadata)
@@ -1261,15 +1268,25 @@ public class CollectionTrackingService : ICollectionTrackingService
         if (deck == null)
             throw new Exception("Deck not found");
 
+        var (mainDeck, sideboard, bSaveChanges) = await ConvertDeckComponents(db.Value, deck, scryfallApiClient, cancel);
+        if (bSaveChanges)
+        {
+            await db.Value.SaveChangesAsync(cancel);
+        }
+
+        return DeckToModel(deck, mainDeck, sideboard);
+    }
+
+    private async Task<(List<DeckCardModel> mainDeck, List<DeckCardModel> sideboard, bool bSaveChanges)> ConvertDeckComponents(CardsDbContext db, Deck deck, IScryfallApiClient? scryfallApiClient, CancellationToken cancel)
+    {
+        var resolver = new ScryfallMetadataResolver(db, scryfallApiClient);
         var mainDeck = new List<DeckCardModel>();
         var sideboard = new List<DeckCardModel>();
-
-        var resolver = new ScryfallMetadataResolver(db.Value, scryfallApiClient);
         bool bSaveChanges = false;
 
         foreach (var sku in deck.Cards)
         {
-            if (IsIncompleteForDeckDisplay(sku))
+            if (IsIncompleteForDeckDisplay(sku) && resolver.HasClient)
             {
                 await sku.ApplyScryfallMetadataAsync(resolver, true, cancel);
                 bSaveChanges = true;
@@ -1277,25 +1294,7 @@ public class CollectionTrackingService : ICollectionTrackingService
 
             for (int i = 0; i < sku.Quantity; i++)
             {
-                var card = new DeckCardModel
-                {
-                    SkuId = sku.Id,
-                    ScryfallId = sku.ScryfallId,
-                    CardName = sku.CardName,
-                    Type = sku.Scryfall?.Type,
-                    ManaValue = sku.Scryfall?.ManaValue ?? -1,
-                    CardType = sku.Scryfall != null ? sku.Scryfall.CardType : null,
-                    Power = sku.Scryfall != null ? sku.Scryfall.Power : null,
-                    Toughness = sku.Scryfall != null ? sku.Scryfall.Toughness : null,
-                    CastingCost = sku.Scryfall != null ? sku.Scryfall.CastingCost : null,
-                    OracleText = sku.Scryfall != null ? sku.Scryfall.OracleText : null,
-                    Colors = sku.Scryfall != null ? sku.Scryfall.Colors : null,
-                    ColorIdentity = sku.Scryfall != null ? sku.Scryfall.ColorIdentity : null,
-                    // A double-faced card has back-face image
-                    IsDoubleFaced = sku.Scryfall?.BackImageSmall != null,
-                    IsLand = sku.IsLand,
-                    Edition = sku.Edition
-                };
+                var card = CardSkuToDeckCardModel(sku);
                 if (sku.IsSideboard)
                     sideboard.Add(card);
                 else
@@ -1303,11 +1302,34 @@ public class CollectionTrackingService : ICollectionTrackingService
             }
         }
 
-        if (bSaveChanges)
-        {
-            await db.Value.SaveChangesAsync(cancel);
-        }
+        return (mainDeck, sideboard, bSaveChanges);
+    }
 
+    static DeckCardModel CardSkuToDeckCardModel(CardSku sku)
+    {
+        return new DeckCardModel
+        {
+            SkuId = sku.Id,
+            ScryfallId = sku.ScryfallId,
+            CardName = sku.CardName,
+            Type = sku.Scryfall?.Type,
+            ManaValue = sku.Scryfall?.ManaValue ?? -1,
+            CardType = sku.Scryfall != null ? sku.Scryfall.CardType : null,
+            Power = sku.Scryfall != null ? sku.Scryfall.Power : null,
+            Toughness = sku.Scryfall != null ? sku.Scryfall.Toughness : null,
+            CastingCost = sku.Scryfall != null ? sku.Scryfall.CastingCost : null,
+            OracleText = sku.Scryfall != null ? sku.Scryfall.OracleText : null,
+            Colors = sku.Scryfall != null ? sku.Scryfall.Colors : null,
+            ColorIdentity = sku.Scryfall != null ? sku.Scryfall.ColorIdentity : null,
+            // A double-faced card has back-face image
+            IsDoubleFaced = sku.Scryfall?.BackImageSmall != null,
+            IsLand = sku.IsLand,
+            Edition = sku.Edition
+        };
+    }
+
+    static DeckModel DeckToModel(Deck deck, List<DeckCardModel> mainDeck, List<DeckCardModel> sideboard)
+    {
         return new DeckModel { Name = deck.Name, Id = deck.Id, MainDeck = mainDeck, Sideboard = sideboard };
     }
 
@@ -1647,14 +1669,26 @@ public class CollectionTrackingService : ICollectionTrackingService
         return text.ToString();
     }
 
-    private LoanModel LoanToModel(TemporaryExchange exc)
+    private LoanModel LoanToModel(CardsDbContext db, TemporaryExchange exc)
     {
+        var cardSkuIds = exc.DeckCards.Select(c => c.Id).ToList();
+        var replacedSkus = db.Cards
+            .Include(c => c.Container)
+            .Include(c => c.Deck)
+            .Include(c => c.Scryfall)
+            .Where(c => cardSkuIds.Contains(c.Id))
+            .Select(CardSkuToModel)
+            .ToList();
+
         return new LoanModel
         {
             Id = exc.Id,
             Name = exc.Name,
             CardsOnLoan = exc.Cards.Select(CardSkuToModel).ToList(),
-            ToDeckId = exc.ToDeckId
+            DeckCards = exc.ToDeck.Cards.Select(CardSkuToModel).ToList(),
+            ToDeckId = exc.ToDeckId,
+            ToDeckName = exc.ToDeck.Name,
+            ReplacedCardsInDeck = replacedSkus
         };
     }
 
@@ -1671,26 +1705,29 @@ public class CollectionTrackingService : ICollectionTrackingService
         await ent.Collection(e => e.DeckCards).LoadAsync(cancel);
         await ent.Reference(e => e.ToDeck).LoadAsync(cancel);
 
-        return LoanToModel(loan);
+        var res = LoanToModel(db.Value, loan);
+        return res;
     }
 
-    public IEnumerable<LoanModel> GetLoans()
+    public async ValueTask<IEnumerable<LoanModel>> GetLoansAsync(CancellationToken cancel)
     {
         using var db = _db.Invoke();
 
-        return db.Value.TemporaryExchanges
+        var result = new List<LoanModel>();
+        var loans = db.Value.TemporaryExchanges
             .Include(e => e.Cards)
+            .Include(e => e.ToDeck)
+                .ThenInclude(d => d.Cards)
             .Include(e => e.DeckCards)
             .AsNoTracking()
-            .AsEnumerable()
-            .Select(exc => new LoanModel
-            {
-                Id = exc.Id,
-                Name = exc.Name,
-                ToDeckId = exc.ToDeckId,
-                CardsOnLoan = exc.Cards.Select(CardSkuToModel).ToList()
-            })
-            .ToList();
+            .AsEnumerable();
+
+        foreach (var exc in loans)
+        {
+            result.Add(LoanToModel(db.Value, exc));
+        }
+
+        return result;
     }
 
     public async ValueTask<LoanModel> UpdateLoanAsync(UpdateLoanModel model, CancellationToken cancel)
@@ -1713,7 +1750,8 @@ public class CollectionTrackingService : ICollectionTrackingService
         await ent.Collection(e => e.DeckCards).LoadAsync(cancel);
         await ent.Reference(e => e.ToDeck).LoadAsync(cancel);
 
-        return LoanToModel(loan);
+        var res = LoanToModel(db.Value, loan);
+        return res;
     }
 
     public async ValueTask<LoanModel> DeleteLoanAsync(int id, CancellationToken cancel)
@@ -1729,7 +1767,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         if (loan == null)
             throw new Exception("Loan not found");
 
-        var res = LoanToModel(loan);
+        var res = LoanToModel(db.Value, loan);
 
         db.Value.TemporaryExchanges.Remove(loan);
         await db.Value.SaveChangesAsync(cancel);

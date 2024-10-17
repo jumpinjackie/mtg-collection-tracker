@@ -10,6 +10,10 @@ public class CardQueryModel
 
     public int[]? ContainerIds { get; set; }
 
+    public int[]? NotInDeckIds { get; set; }
+
+    public bool? NotLoanedOut { get; set; }
+
     public IEnumerable<string>? Tags { get; set; }
 
     public bool NotInDecks { get; set; }

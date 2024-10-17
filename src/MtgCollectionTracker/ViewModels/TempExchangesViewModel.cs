@@ -9,6 +9,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
@@ -17,23 +18,27 @@ public partial class TempExchangesViewModel : RecipientViewModelBase, IRecipient
     readonly ICollectionTrackingService _service;
     readonly Func<DialogViewModel> _dialog;
     readonly Func<CreateLoanViewModel> _create;
+    readonly Func<LoanViewModel> _loan;
 
     public TempExchangesViewModel()
     {
         _service = new StubCollectionTrackingService();
         _dialog = () => new();
         _create = () => new();
+        _loan = () => new();
         this.IsActive = true;
         this.Exchanges.CollectionChanged += Exchanges_CollectionChanged;
     }
 
     public TempExchangesViewModel(ICollectionTrackingService service,
                                   Func<DialogViewModel> dialog,
-                                  Func<CreateLoanViewModel> create)
+                                  Func<CreateLoanViewModel> create,
+                                  Func<LoanViewModel> loan)
     {
         _service = service;
         _dialog = dialog;
         _create = create;
+        _loan = loan;
         this.IsActive = true;
         this.Exchanges.CollectionChanged += Exchanges_CollectionChanged;
     }
@@ -52,14 +57,14 @@ public partial class TempExchangesViewModel : RecipientViewModelBase, IRecipient
         base.OnActivated();
     }
 
-    public ObservableCollection<TempExchangeViewModel> Exchanges { get; } = new();
+    public ObservableCollection<LoanViewModel> Exchanges { get; } = new();
 
     public bool IsEmptyCollection => Exchanges.Count == 0;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(DeleteCommand))]
     [NotifyCanExecuteChangedFor(nameof(EditCommand))]
-    private TempExchangeViewModel? _selectedExchange;
+    private LoanViewModel? _selectedExchange;
 
     [RelayCommand]
     private void Create()
@@ -76,7 +81,11 @@ public partial class TempExchangesViewModel : RecipientViewModelBase, IRecipient
     {
         if (this.SelectedExchange != null)
         {
-            
+            Messenger.Send(new OpenDialogMessage
+            {
+                DrawerWidth = 800,
+                ViewModel = _dialog().WithContent("Loan Details", this.SelectedExchange)
+            });
         }
     }
 
@@ -101,19 +110,19 @@ public partial class TempExchangesViewModel : RecipientViewModelBase, IRecipient
     }
 
     [RelayCommand]
-    private void RefreshList()
+    private async Task RefreshList(CancellationToken cancel)
     {
         this.Exchanges.Clear();
-        var loans = _service.GetLoans();
+        var loans = await _service.GetLoansAsync(cancel);
         foreach (var loan in loans)
         {
-            this.Exchanges.Add(new TempExchangeViewModel().WithData(loan));
+            this.Exchanges.Add(_loan().WithData(loan));
         }
     }
 
     void IRecipient<LoanCreatedMessage>.Receive(LoanCreatedMessage message)
     {
-        var vm = new TempExchangeViewModel().WithData(message.Loan);
+        var vm = _loan().WithData(message.Loan);
         this.Exchanges.Add(vm);
     }
 

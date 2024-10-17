@@ -275,7 +275,7 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
-    public IEnumerable<LoanModel> GetLoans()
+    public ValueTask<IEnumerable<LoanModel>> GetLoansAsync(CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }

@@ -14,34 +14,14 @@
 	<DockPanel>
 		<StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom">
 			<Button Command="{Binding CreateCommand}">Create Loan</Button>
-			<Button>View/Edit Loan</Button>
+			<Button Command="{Binding EditCommand}">View/Edit Loan</Button>
 			<Button Command="{Binding DeleteCommand}">Delete Loan</Button>
 			<Button Command="{Binding RefreshListCommand}">Refresh</Button>
 		</StackPanel>
 		<Grid>
-			<!--
-			<DataGrid IsVisible="{Binding !IsEmptyCollection}"
-					  ItemsSource="{Binding Exchanges}"
-					  SelectedItem="{Binding SelectedExchange}"
-					  IsReadOnly="True"
-					  CanUserReorderColumns="True"
-					  CanUserResizeColumns="True"
-					  CanUserSortColumns="False"
-					  GridLinesVisibility="All"
-					  BorderThickness="1"
-					  MinHeight="300"
-					  MaxHeight="600"
-					  BorderBrush="Gray">
-				<DataGrid.Columns>
-					<DataGridTextColumn Header="Name" Binding="{Binding Name}" />
-					<DataGridTextColumn Header="From" Binding="{Binding FromDecksOrContainers}" />
-					<DataGridTextColumn Header="To" Binding="{Binding ToDeck}" />
-				</DataGrid.Columns>				
-			</DataGrid>
-			-->
 			<ListBox IsVisible="{Binding !IsEmptyCollection}" ItemsSource="{Binding Exchanges}" SelectedItem="{Binding SelectedExchange}">
 				<ListBox.ItemTemplate>
-					<DataTemplate x:DataType="vm:TempExchangeViewModel">
+					<DataTemplate x:DataType="vm:LoanViewModel">
 						<StackPanel>
 							<TextBlock FontSize="16" Text="{Binding Name}"/>
 							<TextBlock Margin="4">

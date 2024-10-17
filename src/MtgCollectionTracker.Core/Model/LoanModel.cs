@@ -9,4 +9,10 @@ public class LoanModel
     public required ICollection<CardSkuModel> CardsOnLoan { get; set; }
 
     public int ToDeckId { get; set; }
+
+    public required string ToDeckName { get; set; }
+
+    public required ICollection<CardSkuModel> DeckCards { get; set; }
+
+    public required ICollection<CardSkuModel> ReplacedCardsInDeck { get; set; }
 }
