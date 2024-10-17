@@ -6,6 +6,7 @@ using StrongInject;
 using System.Data;
 using System.Linq.Expressions;
 using System.Text;
+using System.Xml.Linq;
 
 namespace MtgCollectionTracker.Core.Services;
 
@@ -1644,5 +1645,95 @@ public class CollectionTrackingService : ICollectionTrackingService
         CardListPrinter.PrintContainer(container.Name, container.Description, container.Cards.OrderBy(c => c.CardName), s => text.AppendLine(s), reportProxyUsage);
 
         return text.ToString();
+    }
+
+    private LoanModel LoanToModel(TemporaryExchange exc)
+    {
+        return new LoanModel
+        {
+            Id = exc.Id,
+            Name = exc.Name,
+            CardsOnLoan = exc.Cards.Select(CardSkuToModel).ToList(),
+            ToDeckId = exc.ToDeckId
+        };
+    }
+
+    public async ValueTask<LoanModel> CreateLoanAsync(string name, int toDeckId, CancellationToken cancel)
+    {
+        using var db = _db.Invoke();
+
+        var loan = new TemporaryExchange { Name = name, ToDeckId = toDeckId };
+        db.Value.TemporaryExchanges.Add(loan);
+        await db.Value.SaveChangesAsync(cancel);
+
+        var ent = db.Value.Entry(loan);
+        await ent.Collection(e => e.Cards).LoadAsync(cancel);
+        await ent.Collection(e => e.DeckCards).LoadAsync(cancel);
+        await ent.Reference(e => e.ToDeck).LoadAsync(cancel);
+
+        return LoanToModel(loan);
+    }
+
+    public IEnumerable<LoanModel> GetLoans()
+    {
+        using var db = _db.Invoke();
+
+        return db.Value.TemporaryExchanges
+            .Include(e => e.Cards)
+            .Include(e => e.DeckCards)
+            .AsNoTracking()
+            .AsEnumerable()
+            .Select(exc => new LoanModel
+            {
+                Id = exc.Id,
+                Name = exc.Name,
+                ToDeckId = exc.ToDeckId,
+                CardsOnLoan = exc.Cards.Select(CardSkuToModel).ToList()
+            })
+            .ToList();
+    }
+
+    public async ValueTask<LoanModel> UpdateLoanAsync(UpdateLoanModel model, CancellationToken cancel)
+    {
+        using var db = _db.Invoke();
+
+        var loan = await db.Value.TemporaryExchanges
+            .Include(e => e.Cards)
+            .Include(e => e.DeckCards)
+            .FirstOrDefaultAsync(e => e.Id == model.Id, cancel);
+        if (loan == null)
+            throw new Exception("Loan not found");
+
+        // Apply updates
+
+        await db.Value.SaveChangesAsync(cancel);
+
+        var ent = db.Value.Entry(loan);
+        await ent.Collection(e => e.Cards).LoadAsync(cancel);
+        await ent.Collection(e => e.DeckCards).LoadAsync(cancel);
+        await ent.Reference(e => e.ToDeck).LoadAsync(cancel);
+
+        return LoanToModel(loan);
+    }
+
+    public async ValueTask<LoanModel> DeleteLoanAsync(int id, CancellationToken cancel)
+    {
+        using var db = _db.Invoke();
+
+        var loan = await db.Value.TemporaryExchanges
+            .Include(e => e.Cards)
+            .Include(e => e.DeckCards)
+            .Include(e => e.ToDeck)
+            .FirstOrDefaultAsync(e => e.Id == id, cancel);
+
+        if (loan == null)
+            throw new Exception("Loan not found");
+
+        var res = LoanToModel(loan);
+
+        db.Value.TemporaryExchanges.Remove(loan);
+        await db.Value.SaveChangesAsync(cancel);
+
+        return res;
     }
 }

@@ -24,3 +24,7 @@ internal record ContainerCreatedMessage(ContainerSummaryModel Container);
 internal record ContainerUpdatedMessage(ContainerSummaryModel Container);
 
 internal record WishlistItemsAddedToCollectionMessage(MoveWishlistItemsToCollectionResult Result);
+
+internal record LoanCreatedMessage(LoanModel Loan);
+
+internal record LoanDeletedMessage(LoanModel Loan);

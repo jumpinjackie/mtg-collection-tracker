@@ -23,6 +23,7 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
         this.Wishlist = new();
         this.Notes = new();
         this.CanIBuild = new();
+        this.Loans = new();
         this.Settings = new();
         this.IsActive = true;
     }
@@ -33,6 +34,7 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
                          Func<WishlistViewModel> wishlist,
                          Func<NotesViewModel> notes,
                          Func<CanIBuildThisDeckViewModel> canIBuild,
+                         Func<TempExchangesViewModel> tempExchanges,
                          Func<SettingsViewModel> settings)
     {
         this.Cards = cards();
@@ -41,6 +43,7 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
         this.Wishlist = wishlist();
         this.Notes = notes();
         this.CanIBuild = canIBuild();
+        this.Loans = tempExchanges();
         this.Settings = settings();
         this.IsActive = true;
     }
@@ -56,6 +59,8 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
     public WishlistViewModel Wishlist { get; }
 
     public CanIBuildThisDeckViewModel CanIBuild { get; }
+
+    public TempExchangesViewModel Loans { get; }
 
     public NotesViewModel Notes { get; }
 

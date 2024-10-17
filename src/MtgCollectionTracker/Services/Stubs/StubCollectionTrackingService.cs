@@ -269,4 +269,24 @@ public class StubCollectionTrackingService : ICollectionTrackingService
     {
         throw new System.NotImplementedException();
     }
+
+    public ValueTask<LoanModel> CreateLoanAsync(string name, int toDeckId, CancellationToken cancel)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public IEnumerable<LoanModel> GetLoans()
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public ValueTask<LoanModel> UpdateLoanAsync(UpdateLoanModel model, CancellationToken cancel)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public ValueTask<LoanModel> DeleteLoanAsync(int id, CancellationToken cancel)
+    {
+        throw new System.NotImplementedException();
+    }
 }

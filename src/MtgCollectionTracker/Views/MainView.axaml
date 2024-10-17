@@ -30,6 +30,9 @@
 			<TabItem Header="Can I Build?">
 				<views:CanIBuildThisDeckView DataContext="{Binding CanIBuild}" />
 			</TabItem>
+			<TabItem Header="Loans">
+				<views:TempExchangesView DataContext="{Binding Loans}" />
+			</TabItem>
 			<TabItem Header="Notes">
 				<views:NotesView DataContext="{Binding Notes}" />
 			</TabItem>

@@ -1,0 +1,68 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+			 xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
+             x:Class="MtgCollectionTracker.Views.TempExchangesView"
+			 x:DataType="vm:TempExchangesViewModel">
+	<Design.DataContext>
+		<!-- This only sets the DataContext for the previewer in an IDE,
+         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
+		<vm:TempExchangesViewModel />
+	</Design.DataContext>
+	<DockPanel>
+		<StackPanel Orientation="Horizontal" DockPanel.Dock="Bottom">
+			<Button Command="{Binding CreateCommand}">Create Loan</Button>
+			<Button>View/Edit Loan</Button>
+			<Button Command="{Binding DeleteCommand}">Delete Loan</Button>
+			<Button Command="{Binding RefreshListCommand}">Refresh</Button>
+		</StackPanel>
+		<Grid>
+			<!--
+			<DataGrid IsVisible="{Binding !IsEmptyCollection}"
+					  ItemsSource="{Binding Exchanges}"
+					  SelectedItem="{Binding SelectedExchange}"
+					  IsReadOnly="True"
+					  CanUserReorderColumns="True"
+					  CanUserResizeColumns="True"
+					  CanUserSortColumns="False"
+					  GridLinesVisibility="All"
+					  BorderThickness="1"
+					  MinHeight="300"
+					  MaxHeight="600"
+					  BorderBrush="Gray">
+				<DataGrid.Columns>
+					<DataGridTextColumn Header="Name" Binding="{Binding Name}" />
+					<DataGridTextColumn Header="From" Binding="{Binding FromDecksOrContainers}" />
+					<DataGridTextColumn Header="To" Binding="{Binding ToDeck}" />
+				</DataGrid.Columns>				
+			</DataGrid>
+			-->
+			<ListBox IsVisible="{Binding !IsEmptyCollection}" ItemsSource="{Binding Exchanges}" SelectedItem="{Binding SelectedExchange}">
+				<ListBox.ItemTemplate>
+					<DataTemplate x:DataType="vm:TempExchangeViewModel">
+						<StackPanel>
+							<TextBlock FontSize="16" Text="{Binding Name}"/>
+							<TextBlock Margin="4">
+								From: <Run Text="{Binding FromDecksOrContainers}" />
+							</TextBlock>
+							<TextBlock Margin="4">
+								To: <Run Text="{Binding ToDeck}" />
+							</TextBlock>
+						</StackPanel>
+					</DataTemplate>
+				</ListBox.ItemTemplate>
+			</ListBox>
+			<TextBlock IsVisible="{Binding IsEmptyCollection}" VerticalAlignment="Center" TextAlignment="Center" HorizontalAlignment="Center" TextWrapping="WrapWithOverflow">
+				You currently have no tracked loans. Add loans by clicking Create Loan below.<LineBreak />
+				A loan represents a temporary exchange of cards from a container/deck to a given deck<LineBreak />
+				<LineBreak />
+				Example use cases of tracked loans include:<LineBreak />
+				<LineBreak />
+				1. Temporarily replacing proxies in a deck with real copies from another deck or container (eg. you want to play this deck in a sanctioned tournament that forbids proxies)<LineBreak />
+				2. Lending cards out to other players. You can use a deck to represent the other player you are lending cards out to
+			</TextBlock>
+		</Grid>
+	</DockPanel>
+</UserControl>
