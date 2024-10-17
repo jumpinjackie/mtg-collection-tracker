@@ -1704,6 +1704,8 @@ public class CollectionTrackingService : ICollectionTrackingService
         await ent.Collection(e => e.Cards).LoadAsync(cancel);
         await ent.Collection(e => e.DeckCards).LoadAsync(cancel);
         await ent.Reference(e => e.ToDeck).LoadAsync(cancel);
+        var dck = db.Value.Entry(loan.ToDeck);
+        await dck.Collection(d => d.Cards).LoadAsync(cancel);
 
         var res = LoanToModel(db.Value, loan);
         return res;
@@ -1749,6 +1751,8 @@ public class CollectionTrackingService : ICollectionTrackingService
         await ent.Collection(e => e.Cards).LoadAsync(cancel);
         await ent.Collection(e => e.DeckCards).LoadAsync(cancel);
         await ent.Reference(e => e.ToDeck).LoadAsync(cancel);
+        var dck = db.Value.Entry(loan.ToDeck);
+        await dck.Collection(d => d.Cards).LoadAsync(cancel);
 
         var res = LoanToModel(db.Value, loan);
         return res;
@@ -1762,6 +1766,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             .Include(e => e.Cards)
             .Include(e => e.DeckCards)
             .Include(e => e.ToDeck)
+                .ThenInclude(d => d.Cards)
             .FirstOrDefaultAsync(e => e.Id == id, cancel);
 
         if (loan == null)
