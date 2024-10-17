@@ -11,7 +11,7 @@ using MtgCollectionTracker.Data;
 namespace MtgCollectionTracker.Data.Migrations
 {
     [DbContext(typeof(CardsDbContext))]
-    [Migration("20241017081159_TemporaryExchange")]
+    [Migration("20241017123013_TemporaryExchange")]
     partial class TemporaryExchange
     {
         /// <inheritdoc />
@@ -275,9 +275,6 @@ namespace MtgCollectionTracker.Data.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("ExchangeId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("Quantity")
                         .HasColumnType("INTEGER");
 
                     b.HasKey("Id");

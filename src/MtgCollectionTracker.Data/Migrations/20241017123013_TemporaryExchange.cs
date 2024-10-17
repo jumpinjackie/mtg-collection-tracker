@@ -42,7 +42,6 @@ namespace MtgCollectionTracker.Data.Migrations
                 {
                     Id = table.Column<int>(type: "INTEGER", nullable: false)
                         .Annotation("Sqlite:Autoincrement", true),
-                    Quantity = table.Column<int>(type: "INTEGER", nullable: false),
                     CardId = table.Column<int>(type: "INTEGER", nullable: false),
                     ExchangeId = table.Column<int>(type: "INTEGER", nullable: false)
                 },

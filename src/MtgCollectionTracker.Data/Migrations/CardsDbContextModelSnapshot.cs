@@ -274,9 +274,6 @@ namespace MtgCollectionTracker.Data.Migrations
                     b.Property<int>("ExchangeId")
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("Quantity")
-                        .HasColumnType("INTEGER");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CardId");

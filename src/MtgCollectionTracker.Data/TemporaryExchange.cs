@@ -37,11 +37,6 @@ public class ExchangedDeckCard
 {
     public int Id { get; set; }
 
-    /// <summary>
-    /// The quantity of the given <see cref="Card"/> being exchanged
-    /// </summary>
-    public int Quantity { get; set; }
-
     public int CardId { get; set; }
 
     public virtual CardSku? Card { get; set; }
