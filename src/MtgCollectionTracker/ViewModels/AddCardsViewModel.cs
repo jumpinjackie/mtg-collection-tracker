@@ -110,9 +110,13 @@ public partial class AddCardsViewModel : DialogContentViewModel
                 if (csvPath != null)
                 {
                     var csvConf = new CsvConfiguration(CultureInfo.InvariantCulture);
+                    //csvConf.HeaderValidated = args => { };
+                    csvConf.MissingFieldFound = null;
                     using var sr = new StreamReader(csvPath);
                     using var csvr = new CsvReader(sr, csvConf);
-
+                    csvr.Read();
+                    csvr.ReadHeader();
+                    /*
                     var input = csvr.GetRecords<CsvImportRecord>()
                         .Select(c => new AddCardSkuViewModel
                         {
@@ -130,7 +134,25 @@ public partial class AddCardsViewModel : DialogContentViewModel
                         });
 
                     foreach (var inr in input)
+                    */
+                    while (csvr.Read())
                     {
+                        var lang = csvr.GetField(nameof(CsvImportRecord.Language));
+                        var inr = new AddCardSkuViewModel
+                        {
+                            AddCardsCommand = this.AddCardsCommand,
+                            Languages = _languages,
+                            Qty = csvr.GetField<int>(nameof(CsvImportRecord.Qty)),
+                            CardName = csvr.GetField(nameof(CsvImportRecord.CardName)),
+                            Edition = csvr.GetField(nameof(CsvImportRecord.Edition)),
+                            Language = lang != null ? _languages.FirstOrDefault(l => l.Code == lang || l.PrintedCode == lang) : null,
+                            //IsSideboard = c.IsSideboard ?? false,
+                            IsFoil = bool.TryParse(csvr.GetField(nameof(CsvImportRecord.IsFoil)), out var b) ? b : false,
+                            //IsLand = c.IsLand ?? false,
+                            Condition = TryParseCondition(csvr.GetField(nameof(CsvImportRecord.Condition))),
+                            Comments = csvr.GetField(nameof(CsvImportRecord.Comments))
+                        };
+
                         Cards.Add(inr);
                     }
                 }
@@ -230,7 +252,7 @@ public partial class AddCardsViewModel : DialogContentViewModel
                     cardsFixed++;
                 }
                 // Only apply correct edition if not proxy
-                if (correctEdition != null && sku.Edition.ToLower() != "proxy" && sku.Edition.ToLower() != correctEdition.ToLower())
+                if (correctEdition != null && sku.Edition?.ToLower() != "proxy" && sku.Edition?.ToLower() != correctEdition.ToLower())
                 {
                     sku.Edition = correctEdition.ToUpper();
                     editionsFixed++;
