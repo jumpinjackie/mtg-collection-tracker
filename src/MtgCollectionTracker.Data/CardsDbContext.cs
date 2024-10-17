@@ -20,6 +20,8 @@ public class CardsDbContext : DbContext
 
     public DbSet<Notes> Notes { get; set; }
 
+    public DbSet<TemporaryExchange> TemporaryExchanges { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<CardSku>().HasIndex(nameof(CardSku.CardName));

@@ -73,6 +73,15 @@ public class CardSku : IScryfallMetaLinkable, IDeckPrintableSlot
     /// </summary>
     public virtual Container? Container { get; set; }
 
+    public int? ExchangeId { get; set; }
+
+    /// <summary>
+    /// The <see cref="TemporaryExchange"/> this card is part of. If set, it means
+    /// this is not currently in the assigned <see cref="Deck"/> or <see cref="Container"/>
+    /// but rather it is "on loan" to the deck indicated in the <see cref="Exchange"/>
+    /// </summary>
+    public virtual TemporaryExchange? Exchange { get; set; }
+
     /// <summary>
     /// Comments about this quantity of cards. Use this for things like describing conditions
     /// of cards, whether it is signed, or any other relveant notes.
