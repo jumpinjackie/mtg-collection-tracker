@@ -53,7 +53,7 @@
 					</StackPanel>
 				</StackPanel>
 				<StackPanel Margin="8" Grid.Column="0" Grid.Row="1">
-					<TextBlock>Cards on Loan</TextBlock>
+					<TextBlock>Cards on loan to this deck</TextBlock>
 					<ListBox MinHeight="100" MaxHeight="400" ItemsSource="{Binding LoanedOutCards}" SelectedItem="{Binding SelectedLoanedCard}">
 						<ListBox.ItemTemplate>
 							<DataTemplate x:DataType="vm:CardSkuItemViewModel">
@@ -69,7 +69,7 @@
 					</StackPanel>
 				</StackPanel>
 				<StackPanel Margin="8" Grid.Column="1" Grid.Row="1">
-					<TextBlock>Cards taken out</TextBlock>
+					<TextBlock>Cards taken out of this deck</TextBlock>
 					<ListBox MinHeight="100" MaxHeight="400" ItemsSource="{Binding CardsReplaced}" SelectedItem="{Binding SelectedReplaceCard}">
 						<ListBox.ItemTemplate>
 							<DataTemplate x:DataType="vm:CardSkuItemViewModel">
