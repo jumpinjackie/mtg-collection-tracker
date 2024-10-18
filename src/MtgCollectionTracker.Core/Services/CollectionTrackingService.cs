@@ -1671,7 +1671,7 @@ public class CollectionTrackingService : ICollectionTrackingService
 
     private LoanModel LoanToModel(CardsDbContext db, TemporaryExchange exc)
     {
-        var cardSkuIds = exc.DeckCards.Select(c => c.Id).ToList();
+        var cardSkuIds = exc.DeckCards.Select(c => c.CardId).ToList();
         var replacedSkus = db.Cards
             .Include(c => c.Container)
             .Include(c => c.Deck)
