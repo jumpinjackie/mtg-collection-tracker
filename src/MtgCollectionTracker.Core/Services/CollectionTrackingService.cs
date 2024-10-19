@@ -846,10 +846,14 @@ public class CollectionTrackingService : ICollectionTrackingService
         deck = await db.Value
             .Decks
             .Include(d => d.Cards)
+            .Include(d => d.Exchanges)
             .FirstOrDefaultAsync(d => d.Id == model.DeckId);
 
         if (deck == null)
             throw new Exception("No such deck with given id");
+
+        if (deck.Exchanges.Any())
+            throw new Exception($"This deck cannot be dismantled as it is involved with {deck.Exchanges.Count} temporary loans");
 
         if (model.ContainerId.HasValue)
         {
@@ -894,6 +898,9 @@ public class CollectionTrackingService : ICollectionTrackingService
 
         if (container == null)
             throw new Exception("No such container with given id");
+
+        if (container.Cards.Any(c => c.ExchangeId != null))
+            throw new Exception("Cannot delete this container as it contains cards currently involved in one or more temporary loans");
 
         int unassigned = 0;
         foreach (var sku in container.Cards)
