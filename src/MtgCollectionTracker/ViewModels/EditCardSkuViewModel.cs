@@ -258,7 +258,7 @@ public partial class EditCardSkuViewModel : DialogContentViewModel
 
         var res = await _service.UpdateCardSkuAsync(m, _scryfallApiClient, cancel);
         Messenger.HandleSkuUpdate(res);
-        Messenger.ToastNotify("Card Sku(s) updated");
+        Messenger.ToastNotify("Card Sku(s) updated", Avalonia.Controls.Notifications.NotificationType.Success);
 
         if (_origItem != null)
         {
@@ -297,7 +297,7 @@ public partial class EditCardSkuViewModel : DialogContentViewModel
             {
                 this.CardName = res;
                 this.ApplyCardName = true;
-                Messenger.ToastNotify("Card name fixed up");
+                Messenger.ToastNotify("Card name fixed up", Avalonia.Controls.Notifications.NotificationType.Success);
                 bFixedCardName = true;
             }
             // Only apply correct edition if not proxy
@@ -305,13 +305,13 @@ public partial class EditCardSkuViewModel : DialogContentViewModel
             {
                 this.Edition = correctEdition.ToUpper();
                 this.ApplyEdition = true;
-                Messenger.ToastNotify("Card edition fixed up");
+                Messenger.ToastNotify("Card edition fixed up", Avalonia.Controls.Notifications.NotificationType.Success);
                 bFixedEdition = true;
             }
 
             if (!bFixedCardName && !bFixedEdition)
             {
-                Messenger.ToastNotify("Card name/edition is correct. No actions taken");
+                Messenger.ToastNotify("Card name/edition is correct. No actions taken", Avalonia.Controls.Notifications.NotificationType.Success);
             }
         }
     }

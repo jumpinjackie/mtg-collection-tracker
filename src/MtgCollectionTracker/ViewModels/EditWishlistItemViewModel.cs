@@ -240,7 +240,7 @@ public partial class EditWishlistItemViewModel : DialogContentViewModel
             {
                 this.CardName = res;
                 this.ApplyCardName = true;
-                Messenger.ToastNotify("Card name fixed up");
+                Messenger.ToastNotify("Card name fixed up", Avalonia.Controls.Notifications.NotificationType.Success);
                 bFixedCardName = true;
             }
             // Only apply correct edition if not proxy
@@ -248,13 +248,13 @@ public partial class EditWishlistItemViewModel : DialogContentViewModel
             {
                 this.Edition = correctEdition.ToUpper();
                 this.ApplyEdition = true;
-                Messenger.ToastNotify("Card edition fixed up");
+                Messenger.ToastNotify("Card edition fixed up", Avalonia.Controls.Notifications.NotificationType.Success);
                 bFixedEdition = true;
             }
 
             if (!bFixedCardName && !bFixedEdition)
             {
-                Messenger.ToastNotify("Card name/edition is correct. No actions taken");
+                Messenger.ToastNotify("Card name/edition is correct. No actions taken", Avalonia.Controls.Notifications.NotificationType.Information);
             }
         }
     }

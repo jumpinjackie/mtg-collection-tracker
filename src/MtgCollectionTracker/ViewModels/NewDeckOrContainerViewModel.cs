@@ -65,13 +65,13 @@ public partial class NewDeckOrContainerViewModel : DialogContentViewModel
             case DeckOrContainer.Deck:
                 var di = await _service.CreateDeckAsync(this.Name, this.DeckFormat, null);
                 this.Messenger.Send(new DeckCreatedMessage(di));
-                this.Messenger.ToastNotify($"Deck created ({this.Name})");
+                this.Messenger.ToastNotify($"Deck created ({this.Name})", Avalonia.Controls.Notifications.NotificationType.Success);
                 this.Messenger.Send(new CloseDialogMessage());
                 break;
             case DeckOrContainer.Container:
                 var ci = await _service.CreateContainerAsync(this.Name, this.ContainerDescription);
                 this.Messenger.Send(new ContainerCreatedMessage(ci));
-                this.Messenger.ToastNotify($"Container created ({this.Name})");
+                this.Messenger.ToastNotify($"Container created ({this.Name})", Avalonia.Controls.Notifications.NotificationType.Success);
                 this.Messenger.Send(new CloseDialogMessage());
                 break;
         }

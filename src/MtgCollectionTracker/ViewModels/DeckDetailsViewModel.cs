@@ -338,7 +338,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
                 {
                     OnProgress = (processed, total) =>
                     {
-                        Messenger.ToastNotify($"Updated metadata for {processed} of {total} sku(s)");
+                        Messenger.ToastNotify($"Updated metadata for {processed} of {total} sku(s)", Avalonia.Controls.Notifications.NotificationType.Success);
                     }
                 };
                 // FIXME: With multiple selections, it seems in general one needs to invoke this twice for the new
@@ -360,7 +360,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
                     Messenger.ToastNotify($"Metadata updated for {updated} sku(s)");
                 }
                 */
-                Messenger.ToastNotify("Metadata updated");
+                Messenger.ToastNotify("Metadata updated", Avalonia.Controls.Notifications.NotificationType.Success);
             }
         }
     }

@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.Messaging;
+﻿using Avalonia.Controls.Notifications;
+using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services.Messaging;
 using System.Linq;
@@ -7,9 +8,9 @@ namespace MtgCollectionTracker.Services;
 
 internal static class MessengerExtensions
 {
-    public static void ToastNotify(this IMessenger messenger, string message)
+    public static void ToastNotify(this IMessenger messenger, string message, NotificationType type)
     {
-        messenger.Send(new NotificationMessage { Content = message });
+        messenger.Send(new NotificationMessage { Content = message, Type = type });
     }
 
     public static void HandleSkuUpdate(this IMessenger messenger, UpdateCardSkuResult res)

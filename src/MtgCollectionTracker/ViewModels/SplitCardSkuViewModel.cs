@@ -2,6 +2,7 @@
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Core.Services;
+using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using System.Threading.Tasks;
@@ -49,7 +50,7 @@ public partial class SplitCardSkuViewModel : DialogContentViewModel
                 Quantity = this.SplitQuantity
             });
             Messenger.Send(new CardSkuSplitMessage { Quantity = this.SplitQuantity, NewSkuId = res.Id, SplitSkuId = this.CardSkuId, ContainerId = res.ContainerId, DeckId = res.DeckId });
-            Messenger.Send(new NotificationMessage { Content = "Card SKU split" });
+            Messenger.ToastNotify("Card SKU split", Avalonia.Controls.Notifications.NotificationType.Success);
             Messenger.Send(new CloseDialogMessage());
         }
     }

@@ -78,7 +78,7 @@ public partial class SettingsViewModel : RecipientViewModelBase, IRecipient<Glob
         var tags = this.Tags.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
         var res = await _service.ApplyTagsAsync(tags, cancel);
 
-        Messenger.ToastNotify($"Tags applied ({res.Added} added, {res.Deleted} deleted, {res.Detached} detached)");
+        Messenger.ToastNotify($"Tags applied ({res.Added} added, {res.Deleted} deleted, {res.Detached} detached)", Avalonia.Controls.Notifications.NotificationType.Success);
         Messenger.Send(new TagsAppliedMessage { CurrentTags = res.CurrentTags });
 
         var t = string.Join(Environment.NewLine, tags);

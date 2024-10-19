@@ -153,9 +153,16 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
                     $"Are you sure you want to dismantle ({this.SelectedDeck.Name})?", 
                     async () =>
                     {
-                        await _service.DismantleDeckAsync(new() { DeckId = this.SelectedDeck.DeckId });
-                        this.Messenger.ToastNotify("Deck dismantled");
-                        this.Messenger.Send(new DeckDismantledMessage { Id = this.SelectedDeck.DeckId, Format = this.SelectedDeck.Format });
+                        try
+                        {
+                            await _service.DismantleDeckAsync(new() { DeckId = this.SelectedDeck.DeckId });
+                            this.Messenger.ToastNotify("Deck dismantled", Avalonia.Controls.Notifications.NotificationType.Success);
+                            this.Messenger.Send(new DeckDismantledMessage { Id = this.SelectedDeck.DeckId, Format = this.SelectedDeck.Format });
+                        }
+                        catch (Exception ex)
+                        {
+                            this.Messenger.ToastNotify($"Error dismantling deck: {ex.Message}", Avalonia.Controls.Notifications.NotificationType.Error);
+                        }
                     })
             });
         }
@@ -193,7 +200,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
     [RelayCommand]
     private void CheckDeckLegality()
     {
-        Messenger.ToastNotify("Feature not implemented yet");
+        Messenger.ToastNotify("Feature not implemented yet", Avalonia.Controls.Notifications.NotificationType.Error);
     }
 
     void IRecipient<DeckCreatedMessage>.Receive(DeckCreatedMessage message)

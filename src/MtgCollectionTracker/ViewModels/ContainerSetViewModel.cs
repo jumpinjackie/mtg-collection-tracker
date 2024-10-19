@@ -109,9 +109,16 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
                     $"Are you sure you want to delete ({this.SelectedContainer.Name})? All SKUs in this container will be un-assigned",
                     async () =>
                     {
-                        var res = await _service.DeleteContainerAsync(new() { ContainerId = this.SelectedContainer.Id });
-                        this.Messenger.ToastNotify($"Container Deleted. {res.UnassignedSkuTotal} SKU(s) un-assigned");
-                        this.Messenger.Send(new ContainerDeletedMessage { Id = this.SelectedContainer.Id });
+                        try
+                        {
+                            var res = await _service.DeleteContainerAsync(new() { ContainerId = this.SelectedContainer.Id });
+                            this.Messenger.ToastNotify($"Container Deleted. {res.UnassignedSkuTotal} SKU(s) un-assigned", Avalonia.Controls.Notifications.NotificationType.Success);
+                            this.Messenger.Send(new ContainerDeletedMessage { Id = this.SelectedContainer.Id });
+                        }
+                        catch (Exception ex)
+                        {
+                            this.Messenger.ToastNotify($"Error deleting container: {ex.Message}", Avalonia.Controls.Notifications.NotificationType.Error);
+                        }
                     })
             });
         }

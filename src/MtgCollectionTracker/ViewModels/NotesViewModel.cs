@@ -15,7 +15,6 @@ namespace MtgCollectionTracker.ViewModels;
 public partial class NotesViewModel : RecipientViewModelBase
 {
     readonly ICollectionTrackingService _service;
-    readonly IMessenger _messenger;
 
     readonly Func<DialogViewModel> _dialog;
 
@@ -67,7 +66,7 @@ public partial class NotesViewModel : RecipientViewModelBase
                             await _service.DeleteNotesAsync(this.SelectedNote.Id.Value);
                         }
 //                        await _service.DeleteWishlistItemAsync(item.Id);
-                        Messenger.ToastNotify($"Note ({this.SelectedNote.TitleText}) deleted");
+                        Messenger.ToastNotify($"Note ({this.SelectedNote.TitleText}) deleted", Avalonia.Controls.Notifications.NotificationType.Success);
                         
                         this.Notes.Remove(this.SelectedNote);
                         this.SelectedNote = null;
@@ -79,19 +78,19 @@ public partial class NotesViewModel : RecipientViewModelBase
     public NotesViewModel(ICollectionTrackingService service,
                           Func<DialogViewModel> dialog,
                           IMessenger messenger)
+        : base(messenger)
     {
         _service = service;
         _dialog = dialog;
-        _messenger = messenger;
         this.IsActive = true;
     }
 
     public NotesViewModel()
+        : base(WeakReferenceMessenger.Default)
     {
         base.ThrowIfNotDesignMode();
         _service = new StubCollectionTrackingService();
         _dialog = () => new();
-        _messenger = WeakReferenceMessenger.Default;
         this.IsActive = true;
     }
 
@@ -119,7 +118,7 @@ public partial class NotesViewModel : RecipientViewModelBase
         {
             var updated = await _service.UpdateNotesAsync(this.SelectedNote.Id, this.SelectedNote.Title, this.SelectedNote.Notes);
             this.SelectedNote.From(updated);
-            _messenger.ToastNotify("Notes updated");
+            Messenger.ToastNotify("Notes updated", Avalonia.Controls.Notifications.NotificationType.Success);
         }
     }
 }
