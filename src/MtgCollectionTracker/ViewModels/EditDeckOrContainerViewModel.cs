@@ -79,13 +79,13 @@ public partial class EditDeckOrContainerViewModel : DialogContentViewModel
             case DeckOrContainer.Deck:
                 var di = await _service.UpdateDeckAsync(_deckOrContainerId, this.Name, this.DeckFormat, null);
                 this.Messenger.Send(new DeckUpdatedMessage(di));
-                this.Messenger.ToastNotify($"Deck updated ({this.Name})");
+                this.Messenger.ToastNotify($"Deck updated ({this.Name})", Avalonia.Controls.Notifications.NotificationType.Success);
                 this.Messenger.Send(new CloseDialogMessage());
                 break;
             case DeckOrContainer.Container:
                 var ci = await _service.UpdateContainerAsync(_deckOrContainerId, this.Name, this.ContainerDescription);
                 this.Messenger.Send(new ContainerUpdatedMessage(ci));
-                this.Messenger.ToastNotify($"Container updated ({this.Name})");
+                this.Messenger.ToastNotify($"Container updated ({this.Name})", Avalonia.Controls.Notifications.NotificationType.Success);
                 this.Messenger.Send(new CloseDialogMessage());
                 break;
         }

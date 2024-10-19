@@ -190,7 +190,7 @@ public partial class LoanViewModel : DialogContentViewModel, IViewModelWithBusyS
             };
             var loan = await _service.UpdateLoanAsync(update, cancel);
             Messenger.Send(new LoanUpdatedMessage(loan));
-            Messenger.ToastNotify($"Loan updated ({this.Name})");
+            Messenger.ToastNotify($"Loan updated ({this.Name})", Avalonia.Controls.Notifications.NotificationType.Success);
             Messenger.Send(new CloseDialogMessage());
         }
     }

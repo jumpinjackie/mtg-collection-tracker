@@ -200,7 +200,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
     [RelayCommand]
     private void ViewSelectedSku()
     {
-        Messenger.ToastNotify("Feature not implemented yet");
+        Messenger.ToastNotify("Feature not implemented yet", Avalonia.Controls.Notifications.NotificationType.Error);
     }
 
     [RelayCommand]
@@ -229,7 +229,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
                 {
                     OnProgress = (processed, total) =>
                     {
-                        Messenger.ToastNotify($"Updated metadata for {processed} of {total} sku(s)");
+                        Messenger.ToastNotify($"Updated metadata for {processed} of {total} sku(s)", Avalonia.Controls.Notifications.NotificationType.Success);
                     }
                 };
                 // FIXME: With multiple selections, it seems in general one needs to invoke this twice for the new
@@ -246,7 +246,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
                 }
                 if (updated > 0)
                 {
-                    Messenger.ToastNotify($"Metadata updated for {updated} sku(s)");
+                    Messenger.ToastNotify($"Metadata updated for {updated} sku(s)", Avalonia.Controls.Notifications.NotificationType.Success);
                 }
             }
         }

@@ -54,7 +54,7 @@ public partial class DatabaseMaintenanceViewModel : RecipientViewModelBase, IVie
 
         using (((IViewModelWithBusyState)this).StartBusyState())
         {
-            Messenger.ToastNotify("Adding missing metadata. Please wait ...");
+            Messenger.ToastNotify("Adding missing metadata. Please wait ...", Avalonia.Controls.Notifications.NotificationType.Information);
 
             var cb = new UpdateCardMetadataProgressCallback
             {
@@ -66,7 +66,7 @@ public partial class DatabaseMaintenanceViewModel : RecipientViewModelBase, IVie
             };
             await _service.AddMissingMetadataAsync(cb, _client, cancel);
 
-            Messenger.ToastNotify("Missing metadata processed");
+            Messenger.ToastNotify("Missing metadata processed", Avalonia.Controls.Notifications.NotificationType.Success);
         }
     }
 
@@ -84,7 +84,7 @@ public partial class DatabaseMaintenanceViewModel : RecipientViewModelBase, IVie
 
         using (((IViewModelWithBusyState)this).StartBusyState())
         {
-            Messenger.ToastNotify("Rebuilding all metadata. Please wait ...");
+            Messenger.ToastNotify("Rebuilding all metadata. Please wait ...", Avalonia.Controls.Notifications.NotificationType.Information);
 
             var cb = new UpdateCardMetadataProgressCallback
             {
@@ -96,7 +96,7 @@ public partial class DatabaseMaintenanceViewModel : RecipientViewModelBase, IVie
             };
             await _service.RebuildAllMetadataAsync(cb, _client, cancel);
 
-            Messenger.ToastNotify("All metadata rebuilt");
+            Messenger.ToastNotify("All metadata rebuilt", Avalonia.Controls.Notifications.NotificationType.Success);
         }
     }
 
@@ -105,7 +105,7 @@ public partial class DatabaseMaintenanceViewModel : RecipientViewModelBase, IVie
     {
         using (((IViewModelWithBusyState)this).StartBusyState())
         {
-            Messenger.ToastNotify("Normalizing card names. Please wait ...");
+            Messenger.ToastNotify("Normalizing card names. Please wait ...", Avalonia.Controls.Notifications.NotificationType.Information);
 
             var cb = new UpdateCardMetadataProgressCallback
             {
@@ -117,7 +117,7 @@ public partial class DatabaseMaintenanceViewModel : RecipientViewModelBase, IVie
             };
             await _service.NormalizeCardNamesAsync(cb, cancel);
 
-            Messenger.ToastNotify("All card names normalized");
+            Messenger.ToastNotify("All card names normalized", Avalonia.Controls.Notifications.NotificationType.Success);
         }
     }
 }

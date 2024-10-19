@@ -54,7 +54,7 @@ public partial class CreateLoanViewModel : DialogContentViewModel
         {
             var res = await _service.CreateLoanAsync(this.Name, this.Deck.DeckId, cancel);
             Messenger.Send(new LoanCreatedMessage(res));
-            Messenger.ToastNotify($"Loan created: {res.Name}");
+            Messenger.ToastNotify($"Loan created: {res.Name}", Avalonia.Controls.Notifications.NotificationType.Success);
             Messenger.Send(new CloseDialogMessage());
         }
     }

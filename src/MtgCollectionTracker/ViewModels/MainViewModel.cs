@@ -100,35 +100,35 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
 
     void IRecipient<NotificationMessage>.Receive(NotificationMessage message)
     {
-        this.NotificationManager?.Show(message.Content);
+        this.NotificationManager?.Show(message.Content, message.Type);
     }
 
     void IRecipient<CardsAddedMessage>.Receive(CardsAddedMessage message)
     {
         if (message.ProxyTotal > 0)
-            this.NotificationManager?.Show($"{message.CardsTotal} card(s) ({message.ProxyTotal} proxies) added to collection");
+            this.NotificationManager?.Show($"{message.CardsTotal} card(s) ({message.ProxyTotal} proxies) added to collection", NotificationType.Success);
         else
-            this.NotificationManager?.Show($"{message.CardsTotal} card(s) added to collection");
+            this.NotificationManager?.Show($"{message.CardsTotal} card(s) added to collection", NotificationType.Success);
     }
 
     void IRecipient<CardsAddedToWishlistMessage>.Receive(CardsAddedToWishlistMessage message)
     {
-        this.NotificationManager?.Show($"{message.Added.Sum(s => s.Quantity)} card(s) added to wishlist");
+        this.NotificationManager?.Show($"{message.Added.Sum(s => s.Quantity)} card(s) added to wishlist", NotificationType.Success);
     }
 
     void IRecipient<CardsSentToContainerMessage>.Receive(CardsSentToContainerMessage message)
     {
-        this.NotificationManager?.Show($"{message.SkuIds.Count} SKU(s) moved to container ({message.ContainerName})");
+        this.NotificationManager?.Show($"{message.SkuIds.Count} SKU(s) moved to container ({message.ContainerName})", NotificationType.Success);
     }
 
     void IRecipient<CardsSentToDeckMessage>.Receive(CardsSentToDeckMessage message)
     {
-        this.NotificationManager?.Show($"{message.SkuIds.Count} SKU(s) moved to deck ({message.DeckName})");
+        this.NotificationManager?.Show($"{message.SkuIds.Count} SKU(s) moved to deck ({message.DeckName})", NotificationType.Success);
     }
 
     void IRecipient<WishlistItemUpdatedMessage>.Receive(WishlistItemUpdatedMessage message)
     {
-        this.NotificationManager?.Show("Wishlist item updated");
+        this.NotificationManager?.Show("Wishlist item updated", NotificationType.Success);
     }
 
     void IRecipient<GlobalBusyMessage>.Receive(GlobalBusyMessage message)

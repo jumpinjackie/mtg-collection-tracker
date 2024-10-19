@@ -223,7 +223,7 @@ public partial class AddCardsToWishlistViewModel : DialogContentViewModel
                     editionsFixed++;
                 }
             }
-            Messenger.ToastNotify($"{cardsFixed} card name(s) and {editionsFixed} edition(s) fixed up");
+            Messenger.ToastNotify($"{cardsFixed} card name(s) and {editionsFixed} edition(s) fixed up", Avalonia.Controls.Notifications.NotificationType.Success);
         }
     }
 }

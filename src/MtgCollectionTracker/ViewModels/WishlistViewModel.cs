@@ -150,7 +150,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
                     async () =>
                     {
                         await _service.DeleteWishlistItemAsync(item.Id);
-                        Messenger.ToastNotify($"Wishlist item ({item.QuantityNum}x {item.CardName}, {item.Edition}, {item.Language ?? "en"}) deleted");
+                        Messenger.ToastNotify($"Wishlist item ({item.QuantityNum}x {item.CardName}, {item.Edition}, {item.Language ?? "en"}) deleted", Avalonia.Controls.Notifications.NotificationType.Success);
                         Behavior.SelectedItems.Remove(item);
                         this.Cards.Remove(item);
                         this.ApplySummary();
@@ -220,7 +220,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
                 {
                     OnProgress = (processed, total) =>
                     {
-                        Messenger.ToastNotify($"Updated metadata for {processed} of {total} wishlist item(s)");
+                        Messenger.ToastNotify($"Updated metadata for {processed} of {total} wishlist item(s)", Avalonia.Controls.Notifications.NotificationType.Success);
                     }
                 };
                 // FIXME: With multiple selections, it seems in general one needs to invoke this twice for the new
@@ -237,7 +237,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
                 }
                 if (updated > 0)
                 {
-                    Messenger.ToastNotify($"Metadata updated for {updated} wishlist item(s)");
+                    Messenger.ToastNotify($"Metadata updated for {updated} wishlist item(s)", Avalonia.Controls.Notifications.NotificationType.Success);
                 }
             }
         }
@@ -295,6 +295,6 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
             this.Cards.Remove(item);
         }
         this.ApplySummary();
-        Messenger.ToastNotify($"{result.CreatedSkus.Length} wishlist items moved to your collection");
+        Messenger.ToastNotify($"{result.CreatedSkus.Length} wishlist items moved to your collection", Avalonia.Controls.Notifications.NotificationType.Success);
     }
 }

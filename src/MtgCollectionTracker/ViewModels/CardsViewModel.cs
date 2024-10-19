@@ -256,7 +256,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     [RelayCommand]
     private void ViewSelectedSku()
     {
-        Messenger.ToastNotify("Feature not implemented yet");
+        Messenger.ToastNotify("Feature not implemented yet", Avalonia.Controls.Notifications.NotificationType.Error);
     }
 
     [RelayCommand]
@@ -334,7 +334,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
                 {
                     OnProgress = (processed, total) =>
                     {
-                        Messenger.ToastNotify($"Updated metadata for {processed} of {total} sku(s)");
+                        Messenger.ToastNotify($"Updated metadata for {processed} of {total} sku(s)", Avalonia.Controls.Notifications.NotificationType.Success);
                     }
                 };
                 // FIXME: With multiple selections, it seems in general one needs to invoke this twice for the new
@@ -351,7 +351,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
                 }
                 if (updated > 0)
                 {
-                    Messenger.ToastNotify($"Metadata updated for {updated} sku(s)");
+                    Messenger.ToastNotify($"Metadata updated for {updated} sku(s)", Avalonia.Controls.Notifications.NotificationType.Success);
                 }
             }
         }
@@ -374,7 +374,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
                         using (((IViewModelWithBusyState)this).StartBusyState())
                         {
                             await _service.DeleteCardSkuAsync(sku.Id);
-                            Messenger.ToastNotify($"Card SKU ({sku.Quantity}x {sku.CardName}, {sku.Edition}, {sku.Language ?? "en"}) deleted");
+                            Messenger.ToastNotify($"Card SKU ({sku.Quantity}x {sku.CardName}, {sku.Edition}, {sku.Language ?? "en"}) deleted", Avalonia.Controls.Notifications.NotificationType.Success);
                             Behavior.SelectedItems.Remove(sku);
                             this.SearchResults.Remove(sku);
                             this.SkuTotal -= 1;

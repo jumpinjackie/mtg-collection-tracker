@@ -103,7 +103,7 @@ public partial class TempExchangesViewModel : RecipientViewModelBase, IRecipient
                 {
                     var res = await _service.DeleteLoanAsync(this.SelectedExchange.Id, CancellationToken.None);
                     Messenger.Send(new LoanDeletedMessage(res));
-                    Messenger.ToastNotify($"Loan deleted ({res.Name})");
+                    Messenger.ToastNotify($"Loan deleted ({res.Name})", Avalonia.Controls.Notifications.NotificationType.Success);
                 })
             });
         }
