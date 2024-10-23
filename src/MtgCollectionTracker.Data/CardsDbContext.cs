@@ -20,7 +20,7 @@ public class CardsDbContext : DbContext
 
     public DbSet<Notes> Notes { get; set; }
 
-    public DbSet<TemporaryExchange> TemporaryExchanges { get; set; }
+    public DbSet<Loan> Loans { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

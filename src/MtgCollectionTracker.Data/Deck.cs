@@ -33,10 +33,5 @@ public class Deck
     /// <summary>
     /// The cards in this deck
     /// </summary>
-    public virtual ICollection<CardSku> Cards { get; set; }
-
-    /// <summary>
-    /// The temporary loans this deck is involved in
-    /// </summary>
-    public virtual ICollection<TemporaryExchange> Exchanges { get; set; }
+    public virtual ICollection<CardSku> Cards { get; set; } = [];
 }
