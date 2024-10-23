@@ -142,7 +142,7 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
     {
         if (this.SelectedContainer != null)
         {
-            var text = _service.PrintContainer(this.SelectedContainer.Id, true);
+            var text = _service.PrintContainer(this.SelectedContainer.Id, new ContainerPrintOptions(true));
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 1000,
