@@ -15,7 +15,7 @@ namespace MtgCollectionTracker.Data.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "8.0.10");
+            modelBuilder.HasAnnotation("ProductVersion", "8.0.8");
 
             modelBuilder.Entity("MtgCollectionTracker.Data.CardLanguage", b =>
                 {
@@ -33,7 +33,7 @@ namespace MtgCollectionTracker.Data.Migrations
 
                     b.HasKey("Code");
 
-                    b.ToTable("CardLanguage");
+                    b.ToTable("CardLanguage", (string)null);
 
                     b.HasData(
                         new
@@ -168,9 +168,6 @@ namespace MtgCollectionTracker.Data.Migrations
                         .HasMaxLength(5)
                         .HasColumnType("TEXT");
 
-                    b.Property<int?>("ExchangeId")
-                        .HasColumnType("INTEGER");
-
                     b.Property<bool>("IsFoil")
                         .HasColumnType("INTEGER");
 
@@ -202,13 +199,11 @@ namespace MtgCollectionTracker.Data.Migrations
 
                     b.HasIndex("DeckId");
 
-                    b.HasIndex("ExchangeId");
-
                     b.HasIndex("LanguageId");
 
                     b.HasIndex("ScryfallId");
 
-                    b.ToTable("Cards");
+                    b.ToTable("Cards", (string)null);
                 });
 
             modelBuilder.Entity("MtgCollectionTracker.Data.Container", b =>
@@ -231,7 +226,7 @@ namespace MtgCollectionTracker.Data.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Containers");
+                    b.ToTable("Containers", (string)null);
                 });
 
             modelBuilder.Entity("MtgCollectionTracker.Data.Deck", b =>
@@ -259,28 +254,7 @@ namespace MtgCollectionTracker.Data.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Decks");
-                });
-
-            modelBuilder.Entity("MtgCollectionTracker.Data.ExchangedDeckCard", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("CardId")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<int>("ExchangeId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CardId");
-
-                    b.HasIndex("ExchangeId");
-
-                    b.ToTable("ExchangedDeckCard");
+                    b.ToTable("Decks", (string)null);
                 });
 
             modelBuilder.Entity("MtgCollectionTracker.Data.Notes", b =>
@@ -298,7 +272,7 @@ namespace MtgCollectionTracker.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Notes");
+                    b.ToTable("Notes", (string)null);
                 });
 
             modelBuilder.Entity("MtgCollectionTracker.Data.ScryfallCardMetadata", b =>
@@ -378,7 +352,7 @@ namespace MtgCollectionTracker.Data.Migrations
 
                     b.HasIndex("CardName", "Edition", "Language", "CollectorNumber");
 
-                    b.ToTable("ScryfallCardMetadata");
+                    b.ToTable("ScryfallCardMetadata", (string)null);
                 });
 
             modelBuilder.Entity("MtgCollectionTracker.Data.Tag", b =>
@@ -392,27 +366,7 @@ namespace MtgCollectionTracker.Data.Migrations
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Tag");
-                });
-
-            modelBuilder.Entity("MtgCollectionTracker.Data.TemporaryExchange", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("ToDeckId")
-                        .HasColumnType("INTEGER");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ToDeckId");
-
-                    b.ToTable("TemporaryExchanges");
+                    b.ToTable("Tag", (string)null);
                 });
 
             modelBuilder.Entity("MtgCollectionTracker.Data.Vendor", b =>
@@ -428,7 +382,7 @@ namespace MtgCollectionTracker.Data.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Vendors");
+                    b.ToTable("Vendors", (string)null);
                 });
 
             modelBuilder.Entity("MtgCollectionTracker.Data.VendorPrice", b =>
@@ -458,7 +412,7 @@ namespace MtgCollectionTracker.Data.Migrations
 
                     b.HasIndex("VendorId");
 
-                    b.ToTable("VendorPrice");
+                    b.ToTable("VendorPrice", (string)null);
                 });
 
             modelBuilder.Entity("MtgCollectionTracker.Data.WishlistItem", b =>
@@ -510,7 +464,7 @@ namespace MtgCollectionTracker.Data.Migrations
 
                     b.HasIndex("ScryfallId");
 
-                    b.ToTable("WishlistItems");
+                    b.ToTable("WishlistItems", (string)null);
                 });
 
             modelBuilder.Entity("MtgCollectionTracker.Data.CardSku", b =>
@@ -523,10 +477,6 @@ namespace MtgCollectionTracker.Data.Migrations
                         .WithMany("Cards")
                         .HasForeignKey("DeckId");
 
-                    b.HasOne("MtgCollectionTracker.Data.TemporaryExchange", "Exchange")
-                        .WithMany("Cards")
-                        .HasForeignKey("ExchangeId");
-
                     b.HasOne("MtgCollectionTracker.Data.CardLanguage", "Language")
                         .WithMany()
                         .HasForeignKey("LanguageId");
@@ -535,7 +485,7 @@ namespace MtgCollectionTracker.Data.Migrations
                         .WithMany()
                         .HasForeignKey("ScryfallId");
 
-                    b.OwnsMany("MtgCollectionTracker.Data.CardSkuTag", "Tags", b1 =>
+                    b.OwnsMany("MtgCollectionTracker.Data.CardSku.Tags#MtgCollectionTracker.Data.CardSkuTag", "Tags", b1 =>
                         {
                             b1.Property<int>("Id")
                                 .ValueGeneratedOnAdd()
@@ -555,7 +505,7 @@ namespace MtgCollectionTracker.Data.Migrations
 
                             b1.HasIndex("Name");
 
-                            b1.ToTable("CardSkuTag");
+                            b1.ToTable("CardSkuTag", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("CardSkuId");
@@ -564,8 +514,6 @@ namespace MtgCollectionTracker.Data.Migrations
                     b.Navigation("Container");
 
                     b.Navigation("Deck");
-
-                    b.Navigation("Exchange");
 
                     b.Navigation("Language");
 
@@ -581,36 +529,6 @@ namespace MtgCollectionTracker.Data.Migrations
                         .HasForeignKey("ContainerId");
 
                     b.Navigation("Container");
-                });
-
-            modelBuilder.Entity("MtgCollectionTracker.Data.ExchangedDeckCard", b =>
-                {
-                    b.HasOne("MtgCollectionTracker.Data.CardSku", "Card")
-                        .WithMany()
-                        .HasForeignKey("CardId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("MtgCollectionTracker.Data.TemporaryExchange", "Exchange")
-                        .WithMany("DeckCards")
-                        .HasForeignKey("ExchangeId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Card");
-
-                    b.Navigation("Exchange");
-                });
-
-            modelBuilder.Entity("MtgCollectionTracker.Data.TemporaryExchange", b =>
-                {
-                    b.HasOne("MtgCollectionTracker.Data.Deck", "ToDeck")
-                        .WithMany()
-                        .HasForeignKey("ToDeckId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ToDeck");
                 });
 
             modelBuilder.Entity("MtgCollectionTracker.Data.VendorPrice", b =>
@@ -642,7 +560,7 @@ namespace MtgCollectionTracker.Data.Migrations
                         .WithMany()
                         .HasForeignKey("ScryfallId");
 
-                    b.OwnsMany("MtgCollectionTracker.Data.WishlistItemTag", "Tags", b1 =>
+                    b.OwnsMany("MtgCollectionTracker.Data.WishlistItem.Tags#MtgCollectionTracker.Data.WishlistItemTag", "Tags", b1 =>
                         {
                             b1.Property<int>("Id")
                                 .ValueGeneratedOnAdd()
@@ -662,7 +580,7 @@ namespace MtgCollectionTracker.Data.Migrations
 
                             b1.HasIndex("WishlistItemId");
 
-                            b1.ToTable("WishlistItemTag");
+                            b1.ToTable("WishlistItemTag", (string)null);
 
                             b1.WithOwner()
                                 .HasForeignKey("WishlistItemId");
@@ -685,13 +603,6 @@ namespace MtgCollectionTracker.Data.Migrations
             modelBuilder.Entity("MtgCollectionTracker.Data.Deck", b =>
                 {
                     b.Navigation("Cards");
-                });
-
-            modelBuilder.Entity("MtgCollectionTracker.Data.TemporaryExchange", b =>
-                {
-                    b.Navigation("Cards");
-
-                    b.Navigation("DeckCards");
                 });
 
             modelBuilder.Entity("MtgCollectionTracker.Data.Vendor", b =>
