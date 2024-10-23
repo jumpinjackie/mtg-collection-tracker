@@ -12,7 +12,7 @@ namespace MtgCollectionTracker.Core.Services
 
     public record WishlistItemFilter(IEnumerable<string>? Tags);
 
-    public record DeckPrintOptions(bool ReportProxyUsage, bool ReportLoanUsage = false);
+    public record DeckPrintOptions(bool ReportProxyUsage);
 
     public record ContainerPrintOptions(bool ReportProxyUsage);
 

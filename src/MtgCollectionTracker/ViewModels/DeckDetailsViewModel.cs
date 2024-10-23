@@ -137,17 +137,9 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
     [ObservableProperty]
     private bool _reportProxyUsage = false;
 
-    [ObservableProperty]
-    private bool _reportLoanUsage = false;
-
     partial void OnReportProxyUsageChanged(bool value)
     {
-        this.DeckListText = _service.PrintDeck(_origDeck.Id, new DeckPrintOptions(value, this.ReportLoanUsage));
-    }
-
-    partial void OnReportLoanUsageChanging(bool value)
-    {
-        this.DeckListText = _service.PrintDeck(_origDeck.Id, new DeckPrintOptions(this.ReportProxyUsage, value));
+        this.DeckListText = _service.PrintDeck(_origDeck.Id, new DeckPrintOptions(value));
     }
 
     private void UpdateView(DeckViewMode mode)
