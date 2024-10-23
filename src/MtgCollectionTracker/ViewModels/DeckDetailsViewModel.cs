@@ -137,12 +137,25 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
     [ObservableProperty]
     private bool _reportProxyUsage = false;
 
+    [ObservableProperty]
+    private bool _reportLoanUsage = false;
+
+    partial void OnReportProxyUsageChanged(bool value)
+    {
+        this.DeckListText = _service.PrintDeck(_origDeck.Id, new DeckPrintOptions(value, this.ReportLoanUsage));
+    }
+
+    partial void OnReportLoanUsageChanging(bool value)
+    {
+        this.DeckListText = _service.PrintDeck(_origDeck.Id, new DeckPrintOptions(this.ReportProxyUsage, value));
+    }
+
     private void UpdateView(DeckViewMode mode)
     {
         switch (mode)
         {
             case DeckViewMode.Text:
-                this.DeckListText = _service.PrintDeck(_origDeck.Id, false);
+                this.DeckListText = _service.PrintDeck(_origDeck.Id, new DeckPrintOptions(false));
                 break;
             case DeckViewMode.VisualByCardName:
                 UpdateVisual(_service, _origDeck, ref _mainDeckByCardName, this.MainDeck, ref _sideboardByCardName, this.Sideboard, c => c.CardName);
@@ -299,18 +312,6 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
                 ViewModel = _dialog().WithContent("Split Card SKU", vm)
             });
         }
-    }
-
-    [RelayCommand]
-    private void ShowProxyUsage()
-    {
-        this.DeckListText = _service.PrintDeck(_origDeck.Id, true);
-    }
-
-    [RelayCommand]
-    private void HideProxyUsage()
-    {
-        this.DeckListText = _service.PrintDeck(_origDeck.Id, false);
     }
 
     [RelayCommand]

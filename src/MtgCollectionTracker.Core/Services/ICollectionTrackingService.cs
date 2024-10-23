@@ -12,6 +12,10 @@ namespace MtgCollectionTracker.Core.Services
 
     public record WishlistItemFilter(IEnumerable<string>? Tags);
 
+    public record DeckPrintOptions(bool ReportProxyUsage, bool ReportLoanUsage = false);
+
+    public record ContainerPrintOptions(bool ReportProxyUsage);
+
     public record struct ApplyTagsResult(int Added, int Deleted, int Detached, List<string> CurrentTags);
 
     public record struct CheckQuantityResult(int ShortAmount, HashSet<string> FromDeckNames, HashSet<string> FromContainerNames, string? SuggestedName, int WishlistAmount);
@@ -51,8 +55,8 @@ namespace MtgCollectionTracker.Core.Services
         IEnumerable<ContainerSummaryModel> GetContainers();
         IEnumerable<DeckSummaryModel> GetDecks(DeckFilterModel? filter);
         bool IsBasicLand(string cardName);
-        string PrintDeck(int deckId, bool reportProxyUsage);
-        string PrintContainer(int containerId, bool reportProxyUsage);
+        string PrintDeck(int deckId, DeckPrintOptions options);
+        string PrintContainer(int containerId, ContainerPrintOptions options);
         ValueTask<(CardSkuModel sku, bool wasMerged)> RemoveFromDeckAsync(RemoveFromDeckInputModel model);
         Task<CardSkuModel> SplitCardSkuAsync(SplitCardSkuInputModel model);
         ValueTask<UpdateCardSkuResult> UpdateCardSkuAsync(UpdateCardSkuInputModel model, IScryfallApiClient? scryfallApiClient, CancellationToken cancel);

@@ -155,7 +155,7 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
-    public string PrintDeck(int deckId, bool reportProxyUsage)
+    public string PrintDeck(int deckId, DeckPrintOptions options)
     {
         throw new System.NotImplementedException();
     }
@@ -265,7 +265,7 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
-    public string PrintContainer(int containerId, bool reportProxyUsage)
+    public string PrintContainer(int containerId, ContainerPrintOptions options)
     {
         throw new System.NotImplementedException();
     }

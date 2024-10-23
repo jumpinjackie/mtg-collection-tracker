@@ -17,7 +17,7 @@ internal class PrintDeckCommand : CommandBase
     {
         var service = serviceProvider.GetRequiredService<CollectionTrackingService>();
 
-        var text = service.PrintDeck(this.DeckId, this.ReportProxyUsage);
+        var text = service.PrintDeck(this.DeckId, new DeckPrintOptions(this.ReportProxyUsage));
         Stdout(text);
 
         return 0;

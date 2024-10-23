@@ -32,7 +32,11 @@ public static class CardListPrinter
 
     internal const int SIDEBOARD_LIMIT = 15;
 
-    public static void PrintContainer<T>(string name, string? description, IEnumerable<T> cards, Action<string> writeLine, bool reportProxyUsage) where T : IDeckPrintableSlot
+    public static void PrintContainer<T>(string name,
+                                         string? description,
+                                         IEnumerable<T> cards,
+                                         Action<string> writeLine,
+                                         ContainerPrintOptions options) where T : IDeckPrintableSlot
     {
         var containerTotal = cards.Sum(c => c.Quantity);
         var proxyTotal = cards.Where(c => IsProxyEdition(c.Edition)).Sum(c => c.Quantity);
@@ -50,14 +54,18 @@ public static class CardListPrinter
 
         foreach (var item in slots)
         {
-            if (item.ProxyCount > 0 && reportProxyUsage)
+            if (item.ProxyCount > 0 && options.ReportProxyUsage)
                 writeLine($"{item.Count} {item.Name} [{item.ProxyCount} proxies]");
             else
                 writeLine($"{item.Count} {item.Name}");
         }
     }
 
-    public static void PrintDeck<T>(string deckName, string? deckFormat, IEnumerable<T> cards, Action<string> writeLine, bool reportProxyUsage) where T : IDeckPrintableSlot
+    public static void PrintDeck<T>(string deckName,
+                                    string? deckFormat,
+                                    IEnumerable<T> cards,
+                                    Action<string> writeLine,
+                                    DeckPrintOptions options) where T : IDeckPrintableSlot
     {
         var deckTotal = cards.Sum(c => c.Quantity);
         var proxyTotal = cards.Where(c => IsProxyEdition(c.Edition)).Sum(c => c.Quantity);
@@ -85,7 +93,7 @@ public static class CardListPrinter
         writeLine($"// Main Deck ({mdNonLandTotal} / {mdNonLandTotal + mdLandTotal})");
         foreach (var item in mdNonLand)
         {
-            if (item.ProxyCount > 0 && reportProxyUsage)
+            if (item.ProxyCount > 0 && options.ReportProxyUsage)
                 writeLine($"{item.Count} {item.Name} [{item.ProxyCount} proxies]");
             else
                 writeLine($"{item.Count} {item.Name}");
@@ -93,7 +101,7 @@ public static class CardListPrinter
         writeLine($"// Lands ({mdLandTotal} / {mdNonLandTotal + mdLandTotal})");
         foreach (var item in mdLand)
         {
-            if (item.ProxyCount > 0 && reportProxyUsage)
+            if (item.ProxyCount > 0 && options.ReportProxyUsage)
                 writeLine($"{item.Count} {item.Name} [{item.ProxyCount} proxies]");
             else
                 writeLine($"{item.Count} {item.Name}");
@@ -107,7 +115,7 @@ public static class CardListPrinter
                 writeLine($"// Sideboard ({sbTotal})");
             foreach (var item in sb)
             {
-                if (item.ProxyCount > 0 && reportProxyUsage)
+                if (item.ProxyCount > 0 && options.ReportProxyUsage)
                     writeLine($"{item.Count} {item.Name} [{item.ProxyCount} proxies]");
                 else
                     writeLine($"{item.Count} {item.Name}");
@@ -118,7 +126,7 @@ public static class CardListPrinter
             writeLine("// WARNING: This deck has no sideboard!");
         }
 
-        if (reportProxyUsage)
+        if (options.ReportProxyUsage)
         {
             if (proxyTotal > 0)
             {

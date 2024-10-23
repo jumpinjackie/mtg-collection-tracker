@@ -810,7 +810,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         };
     }
 
-    public string PrintDeck(int deckId, bool reportProxyUsage)
+    public string PrintDeck(int deckId, DeckPrintOptions options)
     {
         using var db = _db.Invoke();
         var deck = db.Value.Decks.Include(d => d.Cards).FirstOrDefault(d => d.Id == deckId);
@@ -820,7 +820,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         var cards = deck.Cards.ToList();
         var text = new StringBuilder();
 
-        CardListPrinter.PrintDeck(deck.Name, deck.Format, deck.Cards, s => text.AppendLine(s), reportProxyUsage);
+        CardListPrinter.PrintDeck(deck.Name, deck.Format, deck.Cards, s => text.AppendLine(s), options);
 
         return text.ToString();
     }
@@ -1662,7 +1662,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         }
     }
 
-    public string PrintContainer(int containerId, bool reportProxyUsage)
+    public string PrintContainer(int containerId, ContainerPrintOptions options)
     {
         using var db = _db.Invoke();
         var container = db.Value.Containers.Include(d => d.Cards).FirstOrDefault(d => d.Id == containerId);
@@ -1672,7 +1672,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         var cards = container.Cards.ToList();
         var text = new StringBuilder();
 
-        CardListPrinter.PrintContainer(container.Name, container.Description, container.Cards.OrderBy(c => c.CardName), s => text.AppendLine(s), reportProxyUsage);
+        CardListPrinter.PrintContainer(container.Name, container.Description, container.Cards.OrderBy(c => c.CardName), s => text.AppendLine(s), options);
 
         return text.ToString();
     }
