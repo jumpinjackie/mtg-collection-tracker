@@ -60,7 +60,8 @@ public class CollectionTrackingService : ICollectionTrackingService
             .Include(c => c.Container)
             .Where(s => s.CardName.ToLower() == searchName.ToLower() || s.NormalizedCardName == searchName.ToLower());
         if (noProxies)
-            skus = skus.Where(s => !CardListPrinter.IsProxyEdition(s.Edition));
+            skus = skus.Where(s => s.Edition.ToLower() != "proxy");
+            //skus = skus.Where(s => !CardListPrinter.IsProxyEdition(s.Edition));
         if (sparesOnly) // A spare is any sku not belonging to an existing deck
             skus = skus.Where(s => s.DeckId == null);
 
