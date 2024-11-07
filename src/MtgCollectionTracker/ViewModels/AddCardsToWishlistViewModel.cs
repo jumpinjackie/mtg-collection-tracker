@@ -118,33 +118,30 @@ public partial class AddCardsToWishlistViewModel : DialogContentViewModel
             this.IsImporting = true;
             if (selectedFiles?.Count == 1)
             {
-                var csvPath = selectedFiles[0].TryGetLocalPath();
-                if (csvPath != null)
-                {
-                    var csvConf = new CsvConfiguration(CultureInfo.InvariantCulture);
-                    using var sr = new StreamReader(csvPath);
-                    using var csvr = new CsvReader(sr, csvConf);
+                using var stream = await selectedFiles[0].OpenReadAsync();
+                var csvConf = new CsvConfiguration(CultureInfo.InvariantCulture);
+                using var sr = new StreamReader(stream);
+                using var csvr = new CsvReader(sr, csvConf);
 
-                    var input = csvr.GetRecords<CsvImportRecord>()
-                        .Select(c => new AddCardSkuViewModel
-                        {
-                            AddCardsCommand = this.AddCardsCommand,
-                            Languages = _languages,
-                            Qty = c.Qty,
-                            CardName = c.CardName,
-                            Edition = c.Edition,
-                            Language = _languages.FirstOrDefault(l => l.Code == c.Language || l.PrintedCode == c.Language),
-                            //IsSideboard = c.IsSideboard ?? false,
-                            IsFoil = c.IsFoil ?? false,
-                            //IsLand = c.IsLand ?? false,
-                            Condition = TryParseCondition(c.Condition),
-                            Comments = c.Comments
-                        });
-
-                    foreach (var inr in input)
+                var input = csvr.GetRecords<CsvImportRecord>()
+                    .Select(c => new AddCardSkuViewModel
                     {
-                        Cards.Add(inr);
-                    }
+                        AddCardsCommand = this.AddCardsCommand,
+                        Languages = _languages,
+                        Qty = c.Qty,
+                        CardName = c.CardName,
+                        Edition = c.Edition,
+                        Language = _languages.FirstOrDefault(l => l.Code == c.Language || l.PrintedCode == c.Language),
+                        //IsSideboard = c.IsSideboard ?? false,
+                        IsFoil = c.IsFoil ?? false,
+                        //IsLand = c.IsLand ?? false,
+                        Condition = TryParseCondition(c.Condition),
+                        Comments = c.Comments
+                    });
+
+                foreach (var inr in input)
+                {
+                    Cards.Add(inr);
                 }
             }
         }
