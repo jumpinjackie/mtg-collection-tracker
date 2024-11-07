@@ -1,17 +1,24 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using Avalonia.Platform.Storage;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using CsvHelper.Configuration;
+using CsvHelper;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using ScryfallApi.Client;
+using ScryfallApi.Client.Apis;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using MtgCollectionTracker.Services;
 
 namespace MtgCollectionTracker.ViewModels;
 
@@ -36,18 +43,21 @@ public record DeckListCardItem(string CardName, int Requested, int Short, HashSe
 
 public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
 {
+    readonly IStorageProvider? _storageProvider;
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _client;
     readonly Func<DialogViewModel> _dialog;
     readonly Func<AddCardsToWishlistViewModel> _addToWishlist;
 
-    public CanIBuildThisDeckViewModel(ICollectionTrackingService service,
+    public CanIBuildThisDeckViewModel(IStorageProvider storageProvider,
+                                      ICollectionTrackingService service,
                                       Func<DialogViewModel> dialog,
                                       Func<AddCardsToWishlistViewModel> addToWishlist,
                                       IMessenger messenger,
                                       IScryfallApiClient client)
         : base(messenger)
     {
+        _storageProvider = storageProvider;
         _service = service;
         _client = client;
         _dialog = dialog;
@@ -211,6 +221,39 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
 
         this.CheckResultSummary = text.ToString();
         this.HasResult = true;
+    }
+
+    [RelayCommand]
+    private async Task Import()
+    {
+        if (_storageProvider == null)
+            return;
+
+        var selectedFiles = await _storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+        {
+            AllowMultiple = false,
+            Title = "Load decklist",
+            FileTypeFilter = [new FilePickerFileType(null) { Patterns = ["*.txt"] }]
+        });
+
+        try
+        {
+            if (selectedFiles?.Count == 1)
+            {
+                var filePath = selectedFiles[0].TryGetLocalPath();
+                if (filePath != null)
+                {
+                    using var stream = await selectedFiles[0].OpenReadAsync();
+                    using var sr = new StreamReader(stream);
+                    this.DeckListContents = await sr.ReadToEndAsync();
+                    Messenger.ToastNotify("Decklist loaded", Avalonia.Controls.Notifications.NotificationType.Information);
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            Messenger.ToastNotify($"Error loading decklist: {ex.Message}", Avalonia.Controls.Notifications.NotificationType.Error);
+        }
     }
 
     private void ApplyObservableList()

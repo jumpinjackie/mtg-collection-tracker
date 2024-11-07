@@ -23,7 +23,7 @@ namespace MtgCollectionTracker.ViewModels;
 
 public partial class AddCardsToWishlistViewModel : DialogContentViewModel
 {
-    readonly IStorageProvider _storage;
+    readonly IStorageProvider? _storage;
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
     readonly LanguageViewModel[] _languages;

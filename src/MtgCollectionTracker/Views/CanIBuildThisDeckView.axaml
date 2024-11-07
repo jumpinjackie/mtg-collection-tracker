@@ -32,7 +32,7 @@
 					</CheckBox>
 					<StackPanel Orientation="Horizontal">
 						<Button Command="{Binding CheckCommand}">Check</Button>
-						<Button>Import</Button>
+						<Button Command="{Binding ImportCommand}">Import</Button>
 						<Button Command="{Binding ResetCommand}">Reset</Button>
 					</StackPanel>
 				</StackPanel>

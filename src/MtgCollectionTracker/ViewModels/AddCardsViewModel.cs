@@ -25,7 +25,7 @@ record CsvImportRecord(int Qty, string CardName, string Edition, string? Languag
 
 public partial class AddCardsViewModel : DialogContentViewModel
 {
-    readonly IStorageProvider _storage;
+    readonly IStorageProvider? _storage;
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
     readonly LanguageViewModel[] _languages;
