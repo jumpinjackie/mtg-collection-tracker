@@ -26,7 +26,7 @@ public partial class App : Application
         Visual? root = null;
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            root = new MainWindow();
+            root = new MainWindow() { WindowState = Avalonia.Controls.WindowState.Maximized };
             init = (cnt) =>
             {
                 root.DataContext = cnt.Resolve().Value;
