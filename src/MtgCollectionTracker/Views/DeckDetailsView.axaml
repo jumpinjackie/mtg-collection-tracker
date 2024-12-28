@@ -31,10 +31,11 @@
 			<!-- By Text -->
 			<DockPanel IsVisible="{Binding Mode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:DeckViewMode.Text}}">
 				<StackPanel Margin="10" Spacing="10" DockPanel.Dock="Bottom" Orientation="Horizontal">
+					<Button Click="CopyToClipboard_Click">Copy to Clipboard</Button>
 					<CheckBox IsChecked="{Binding ReportProxyUsage}">Show Proxy Usage</CheckBox>
 				</StackPanel>
 				<ScrollViewer>
-					<TextBlock TextWrapping="Wrap" Text="{Binding DeckListText}" />
+					<TextBlock x:Name="deckListText" TextWrapping="Wrap" Text="{Binding DeckListText}" />
 				</ScrollViewer>
 			</DockPanel>
 			<!-- Visual -->

@@ -14,7 +14,6 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -409,4 +408,6 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
             UpdateView(this.Mode);
         }
     }
+
+    internal void DeckListCopiedToClipboard() => Messenger.ToastNotify("Deck list copied to clipboard", Avalonia.Controls.Notifications.NotificationType.Information);
 }
