@@ -2,7 +2,7 @@
 
 namespace MtgCollectionTracker.Core.Model;
 
-public record BuyingListItem(int Qty, string CardName, decimal Price, string? Notes);
+public record BuyingListItem(int Qty, string CardName, decimal? Price, string? Notes);
 
 public class WishlistBuyingListModel
 {
@@ -26,11 +26,14 @@ public class WishlistBuyingListModel
             decimal total = 0;
             foreach (var item in kvp.Value)
             {
+                var priceFrag = item.Price.HasValue ? $"@ ${item.Price.Value} " : string.Empty;
+                var totalFrag = item.Price.HasValue ? $"[${item.Qty * item.Price.Value}]" : string.Empty;
                 if (string.IsNullOrWhiteSpace(item.Notes))
-                    writer.AppendLine($"{item.Qty} {item.CardName} @ ${item.Price} [${item.Qty * item.Price}]");
+                    writer.AppendLine($"{item.Qty} {item.CardName} {priceFrag}{totalFrag}");
                 else
-                    writer.AppendLine($"{item.Qty} {item.CardName} @ ${item.Price} [${item.Qty * item.Price}] ({item.Notes})");
-                total += (item.Qty * item.Price);
+                    writer.AppendLine($"{item.Qty} {item.CardName} {priceFrag}{totalFrag} ({item.Notes})");
+                if (item.Price.HasValue)
+                    total += (item.Qty * item.Price.Value);
             }
             writer.AppendLine();
             writer.AppendLine($"Total spend: ${total}");

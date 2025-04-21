@@ -5,6 +5,7 @@ using ScryfallApi.Client;
 using StrongInject;
 using System.Data;
 using System.Linq.Expressions;
+using System.Numerics;
 using System.Text;
 
 namespace MtgCollectionTracker.Core.Services;
@@ -1421,14 +1422,20 @@ public class CollectionTrackingService : ICollectionTrackingService
         foreach (var item in wishlist)
         {
             var (subTotal, vendors, isComplete) = item.OfferedPrices.ComputeBestPrice(item.Quantity);
-            foreach (var vendor in vendors)
+            if (vendors.Count > 0)
             {
-                ret.Add(vendor.Name, new BuyingListItem(vendor.Qty, item.CardName, vendor.Price, vendor.Notes));
+                foreach (var vendor in vendors)
+                {
+                    ret.Add(vendor.Name, new BuyingListItem(vendor.Qty, item.CardName, vendor.Price, vendor.Notes));
+                }
+            }
+            else
+            {
+                ret.Add("<other>", new BuyingListItem(item.Quantity, item.CardName, null, null));
             }
         }
         return ret;
     }
-
     public IEnumerable<string> GetDeckFormats()
     {
         using var db = _db.Invoke();
