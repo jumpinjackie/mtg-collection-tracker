@@ -6,6 +6,8 @@ public abstract class DeckModelBase
 
     public required string Name { get; set; }
 
+    public required string DeckName { get; init; }
+
     public string? ContainerName { get; set; }
 
     public string? Format { get; set; }

@@ -135,7 +135,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 800,
-                ViewModel = _dialog().WithContent("Edit Deck", _editDeckOrContainer().WithType(DeckOrContainer.Deck).WithDeck(this.SelectedDeck.DeckId, this.SelectedDeck.Name, this.SelectedDeck.Format))
+                ViewModel = _dialog().WithContent("Edit Deck", _editDeckOrContainer().WithType(DeckOrContainer.Deck).WithDeck(this.SelectedDeck.DeckId, this.SelectedDeck.DeckName, this.SelectedDeck.Format))
             });
         }
     }

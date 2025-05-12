@@ -15,6 +15,8 @@ public partial class DeckViewModel : ViewModelBase
 
     public int DeckId { get; private set; }
 
+    public string DeckName { get; private set; }
+
     [ObservableProperty]
     private string _name;
 
@@ -37,6 +39,7 @@ public partial class DeckViewModel : ViewModelBase
     {
         this.DeckId = deck.Id;
         this.Format = deck.Format ?? "Unknown Format";
+        this.DeckName = deck.DeckName;
         this.Name = deck.Name;
         this.ContainerName = deck.ContainerName;
         this.Maindeck = $"MD: {deck.MaindeckTotal}";

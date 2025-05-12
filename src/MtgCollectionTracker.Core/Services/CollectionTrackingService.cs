@@ -152,6 +152,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             .Select(d => new DeckSummaryModel
             {
                 Id = d.Id,
+                DeckName = d.Name,
                 Name = "[" + d.Format + "] " + d.Name,
                 ContainerName = d.Container!.Name,
                 Format = d.Format,
@@ -758,7 +759,8 @@ public class CollectionTrackingService : ICollectionTrackingService
         return new DeckSummaryModel
         {
             Id = d.Id,
-            Name = d.Name,
+            DeckName = d.Name,
+            Name = "[" + d.Format + "] " + d.Name,
             ContainerName = d.Container?.Name,
             Format = d.Format,
             MaindeckTotal = d.Cards.Where(c => !c.IsSideboard).Sum(c => c.Quantity),
@@ -795,7 +797,8 @@ public class CollectionTrackingService : ICollectionTrackingService
         return new DeckSummaryModel
         {
             Id = d.Id,
-            Name = d.Name,
+            DeckName = d.Name,
+            Name = "[" + d.Format + "] " + d.Name,
             ContainerName = d.Container?.Name,
             Format = d.Format,
             MaindeckTotal = d.Cards.Where(c => !c.IsSideboard).Sum(c => c.Quantity),

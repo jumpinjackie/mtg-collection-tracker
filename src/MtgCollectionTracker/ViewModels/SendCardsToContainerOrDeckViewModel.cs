@@ -73,8 +73,8 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
             new MockSendableCard(9, 1, "Timetwister", "LEB")
         ];
         this.AvailableDecks = [
-            new DeckViewModel().WithData(new(){ Id = 1, Name = "My Vintage Deck" }),
-            new DeckViewModel().WithData(new(){ Id = 1, Name = "My Legacy Deck" })
+            new DeckViewModel().WithData(new() { Id = 1, Format = "Vintage", Name = "[Vintage] My Vintage Deck", DeckName = "My Vintage Deck"}),
+            new DeckViewModel().WithData(new() { Id = 2, Format = "Legacy", Name = "[Legacy] My Legacy Deck", DeckName = "My Legacy Deck"}),
         ];
     }
 
