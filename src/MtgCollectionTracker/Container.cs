@@ -103,6 +103,6 @@ public partial class Container : IContainer<MainViewModel>
         };
         http.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
         http.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64)");
-        return new ScryfallApiClient(http);
+        return new ScryfallClient(http);
     }
 }

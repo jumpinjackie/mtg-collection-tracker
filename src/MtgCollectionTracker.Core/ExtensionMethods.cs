@@ -3,6 +3,7 @@ using MtgCollectionTracker.Data;
 using ScryfallApi.Client;
 using ScryfallApi.Client.Models;
 using System.Globalization;
+using System.Net.Http.Json;
 using System.Text;
 
 namespace MtgCollectionTracker.Core;
@@ -74,7 +75,20 @@ public static class PublicExtensionMethods
         }
 
         if (allCards.Count == 0)
+        {
+            if (client is ScryfallClient wrap)
+            {
+                // Try fuzzy search in the case we've misspelled
+                // NOTE: This API is not covered by our client nuget package, so we'll hit it with the raw HTTP client
+                var fuzzyMatch = await wrap.RawClient.GetFromJsonAsync<Card>($"cards/named?fuzzy={name}");
+                apiCalls++;
+                if (fuzzyMatch?.ObjectType == "card")
+                {
+                    return (fuzzyMatch.Name, fuzzyMatch.Set, apiCalls);
+                }
+            }
             return (null, null, apiCalls);
+        }
 
         if (allCards.Count == 1)
             return (allCards.First().name, allCards.First().set, apiCalls);
