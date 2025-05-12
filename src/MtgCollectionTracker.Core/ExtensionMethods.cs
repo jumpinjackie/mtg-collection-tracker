@@ -50,6 +50,20 @@ public static class PublicExtensionMethods
     public static async Task<(string? name, string? correctEdition, int apiCalls)> CheckCardNameAsync(this IScryfallApiClient client, string name, string? setHint = null)
     {
         int apiCalls = 0;
+        // In most cases, fuzzy search should hit it, and fast!
+        // NOTE: This API is not covered by our client nuget package, so we'll hit it with the raw HTTP client
+        // that's only accessible from our wrapper
+        if (client is ScryfallClient wrap)
+        {
+            var uri = setHint != null ? $"cards/named?fuzzy={name}&set={setHint}" : $"cards/named?fuzzy={name}";
+            var fuzzyMatch = await wrap.RawClient.GetFromJsonAsync<Card>(uri);
+            apiCalls++;
+            if (fuzzyMatch?.ObjectType == "card")
+            {
+                return (fuzzyMatch.Name, fuzzyMatch.Set, apiCalls);
+            }
+        }
+
         var allCards = new HashSet<(string name, string set, string releasedAt)>();
         int pageNo = 0;
         while (true)
@@ -76,17 +90,6 @@ public static class PublicExtensionMethods
 
         if (allCards.Count == 0)
         {
-            if (client is ScryfallClient wrap)
-            {
-                // Try fuzzy search in the case we've misspelled
-                // NOTE: This API is not covered by our client nuget package, so we'll hit it with the raw HTTP client
-                var fuzzyMatch = await wrap.RawClient.GetFromJsonAsync<Card>($"cards/named?fuzzy={name}");
-                apiCalls++;
-                if (fuzzyMatch?.ObjectType == "card")
-                {
-                    return (fuzzyMatch.Name, fuzzyMatch.Set, apiCalls);
-                }
-            }
             return (null, null, apiCalls);
         }
 
