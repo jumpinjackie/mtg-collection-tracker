@@ -242,7 +242,11 @@ public partial class AddCardsViewModel : DialogContentViewModel
             int editionsFixed = 0;
             foreach (var sku in this.Cards)
             {
-                var (res, correctEdition, _) = await _scryfallApiClient.CheckCardNameAsync(sku.CardName, sku.Edition);
+                var (found, res, correctEdition, _) = await _scryfallApiClient.CheckCardNameAsync(sku.CardName, sku.Edition);
+                if (!found)
+                {
+                    Messenger.ToastNotify($"No such card: {sku.CardName}", Avalonia.Controls.Notifications.NotificationType.Success);
+                }
                 if (res != null && sku.CardName != res)
                 {
                     sku.CardName = res;

@@ -292,7 +292,12 @@ public partial class EditCardSkuViewModel : DialogContentViewModel
         bool bFixedEdition = false;
         if (!string.IsNullOrWhiteSpace(this.CardName) && _scryfallApiClient != null)
         {
-            var (res, correctEdition, _) = await _scryfallApiClient.CheckCardNameAsync(this.CardName, this.Edition);
+            var (found, res, correctEdition, _) = await _scryfallApiClient.CheckCardNameAsync(this.CardName, this.Edition);
+            if (!found)
+            {
+                Messenger.ToastNotify($"No such card: {this.CardName}", Avalonia.Controls.Notifications.NotificationType.Success);
+                return;
+            }
             if (res != null && this.CardName != res)
             {
                 this.CardName = res;

@@ -47,7 +47,7 @@ public static class PublicExtensionMethods
         return matrix[source1Length, source2Length];
     }
 
-    public static async Task<(string? name, string? correctEdition, int apiCalls)> CheckCardNameAsync(this IScryfallApiClient client, string name, string? setHint = null)
+    public static async Task<(bool found, string? name, string? correctEdition, int apiCalls)> CheckCardNameAsync(this IScryfallApiClient client, string name, string? setHint = null)
     {
         int apiCalls = 0;
         // In most cases, fuzzy search should hit it, and fast!
@@ -56,11 +56,15 @@ public static class PublicExtensionMethods
         if (client is ScryfallClient wrap)
         {
             var uri = setHint != null ? $"cards/named?fuzzy={name}&set={setHint}" : $"cards/named?fuzzy={name}";
-            var fuzzyMatch = await wrap.RawClient.GetFromJsonAsync<Card>(uri);
+            var resp = await wrap.RawClient.GetAsync(uri);
             apiCalls++;
-            if (fuzzyMatch?.ObjectType == "card")
+            if (resp.StatusCode != System.Net.HttpStatusCode.NotFound)
             {
-                return (fuzzyMatch.Name, fuzzyMatch.Set, apiCalls);
+                var fuzzyMatch = await resp.Content.ReadFromJsonAsync<Card>();
+                if (fuzzyMatch?.ObjectType == "card")
+                {
+                    return (true, fuzzyMatch.Name, fuzzyMatch.Set, apiCalls);
+                }
             }
         }
 
@@ -90,11 +94,11 @@ public static class PublicExtensionMethods
 
         if (allCards.Count == 0)
         {
-            return (null, null, apiCalls);
+            return (false, null, null, apiCalls);
         }
 
         if (allCards.Count == 1)
-            return (allCards.First().name, allCards.First().set, apiCalls);
+            return (true, allCards.First().name, allCards.First().set, apiCalls);
 
         // In the event of in-exact match, prefer name with shortest levenshtein distance
         if (!string.IsNullOrWhiteSpace(setHint))
@@ -103,10 +107,10 @@ public static class PublicExtensionMethods
             // levenshtein false positives due to mismatched casing
             var inSetHint = setHint.ToLower();
             var first = allCards.OrderBy(c => LevenshteinDist(c.name, name)).ThenBy(c => LevenshteinDist(c.set, inSetHint)).ThenBy(c => c.releasedAt).First();
-            return (first.name, first.set, apiCalls);
+            return (true, first.name, first.set, apiCalls);
         }
         var match = allCards.OrderBy(c => LevenshteinDist(c.name, name)).ThenBy(c => c.releasedAt).First();
-        return (match.name, match.set, apiCalls);
+        return (true, match.name, match.set, apiCalls);
     }
 
     public static (decimal TotalPrice, List<VendorOffer> Vendors, bool IsComplete) ComputeBestPrice<T>(this IEnumerable<T> offers, int requiredQty)
