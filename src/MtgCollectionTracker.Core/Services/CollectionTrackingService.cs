@@ -5,7 +5,6 @@ using ScryfallApi.Client;
 using StrongInject;
 using System.Data;
 using System.Linq.Expressions;
-using System.Numerics;
 using System.Text;
 
 namespace MtgCollectionTracker.Core.Services;
@@ -18,9 +17,12 @@ public class CollectionTrackingService : ICollectionTrackingService
     // when done
     readonly Func<Owned<CardsDbContext>> _db;
 
-    public CollectionTrackingService(Func<Owned<CardsDbContext>> db)
+    readonly CardImageCache _cache;
+
+    public CollectionTrackingService(Func<Owned<CardsDbContext>> db, CardImageCache cache)
     {
         _db = db;
+        _cache = cache;
     }
 
     static string FixCardName(string name)
@@ -252,7 +254,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             // A double-faced card has back-face image, but if we haven't loaded SF metadata
             // for this card yet, then a DFC should have '//' in its card name
             IsDoubleFaced = c.Scryfall != null
-                ? c.Scryfall.BackImageSmall != null
+                ? c.Scryfall.BackImageSmallUrl != null
                 : c.CardName.Contains(" // ")
         });
     }
@@ -480,7 +482,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             Colors = w.Scryfall != null ? w.Scryfall.Colors : null,
             ColorIdentity = w.Scryfall != null ? w.Scryfall.ColorIdentity : null,
             // A double-faced card has back-face image
-            IsDoubleFaced = w.Scryfall?.BackImageSmall != null,
+            IsDoubleFaced = w.Scryfall?.BackImageSmallUrl != null,
             Offers = w.OfferedPrices?.Select(o => new VendorOfferModel
             {
                 VendorId = o.VendorId,
@@ -521,7 +523,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             Colors = c.Scryfall != null ? c.Scryfall.Colors : null,
             ColorIdentity = c.Scryfall != null ? c.Scryfall.ColorIdentity : null,
             // A double-faced card has back-face image
-            IsDoubleFaced = c.Scryfall?.BackImageSmall != null
+            IsDoubleFaced = c.Scryfall?.BackImageSmallUrl != null
         };
     }
 
@@ -557,7 +559,7 @@ public class CollectionTrackingService : ICollectionTrackingService
                 Colors = w.Scryfall != null ? w.Scryfall.Colors : null,
                 ColorIdentity = w.Scryfall != null ? w.Scryfall.ColorIdentity : null,
                 // A double-faced card has back-face image
-                IsDoubleFaced = w.Scryfall!.BackImageSmall != null,
+                IsDoubleFaced = w.Scryfall!.BackImageSmallUrl != null,
                 Offers = w.OfferedPrices.Select(o => new VendorOfferModel
                 {
                     VendorId = o.VendorId,
@@ -1296,7 +1298,7 @@ public class CollectionTrackingService : ICollectionTrackingService
                     Colors = sku.Scryfall != null ? sku.Scryfall.Colors : null,
                     ColorIdentity = sku.Scryfall != null ? sku.Scryfall.ColorIdentity : null,
                     // A double-faced card has back-face image
-                    IsDoubleFaced = sku.Scryfall?.BackImageSmall != null,
+                    IsDoubleFaced = sku.Scryfall?.BackImageSmallUrl != null,
                     IsLand = sku.IsLand,
                     Edition = sku.Edition
                 };
@@ -1319,7 +1321,7 @@ public class CollectionTrackingService : ICollectionTrackingService
     {
         return sku.Scryfall == null
             || sku.Scryfall.Type == null
-            || sku.Scryfall.ImageSmall == null
+            || sku.Scryfall.ImageSmallUrl == null
             || sku.Scryfall.ManaValue == null;
     }
 
@@ -1451,39 +1453,24 @@ public class CollectionTrackingService : ICollectionTrackingService
         return db.Value.Decks.Any(d => d.Format == format);
     }
 
-    private async ValueTask<Stream?> GetCardFaceImageAsync(string scryfallId, string tag, Expression<Func<ScryfallCardMetadata, byte[]?>> selector)
-    {
-        using var db = _db.Invoke();
-        var imgBytes = await db.Value.Set<ScryfallCardMetadata>()
-            .Where(m => m.Id == scryfallId)
-            .Select(selector)
-            .FirstOrDefaultAsync();
-        if (imgBytes != null)
-        {
-            var stream = MemoryStreamPool.GetStream(tag, imgBytes);
-            return stream;
-        }
-        return null;
-    }
-
     public async ValueTask<Stream?> GetLargeFrontFaceImageAsync(string scryfallId)
     {
-        return await GetCardFaceImageAsync(scryfallId, "img_front_face_large", m => m.ImageLarge);
+        return await _cache.GetLargeFrontFaceImageAsync(scryfallId);
     }
 
     public async ValueTask<Stream?> GetLargeBackFaceImageAsync(string scryfallId)
     {
-        return await GetCardFaceImageAsync(scryfallId, "img_back_face_large", m => m.BackImageLarge);
+        return await _cache.GetLargeBackFaceImageAsync(scryfallId);
     }
 
     public async ValueTask<Stream?> GetSmallFrontFaceImageAsync(string scryfallId)
     {
-        return await GetCardFaceImageAsync(scryfallId, "img_front_face_small", m => m.ImageSmall);
+        return await _cache.GetSmallFrontFaceImageAsync(scryfallId);
     }
 
     public async ValueTask<Stream?> GetSmallBackFaceImageAsync(string scryfallId)
     {
-        return await GetCardFaceImageAsync(scryfallId, "img_back_face_small", m => m.BackImageSmall);
+        return await _cache.GetSmallBackFaceImageAsync(scryfallId);
     }
 
     public IEnumerable<string> GetTags()

@@ -3,11 +3,8 @@ using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IO;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Data;
-using MtgCollectionTracker.Services;
-using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.ViewModels;
 using ScryfallApi.Client;
 using StrongInject;
@@ -46,6 +43,7 @@ namespace MtgCollectionTracker;
 [Register(typeof(MoveWishlistItemsToCollectionViewModel), Scope.InstancePerResolution)]
 [Register(typeof(CardsDbContext), Scope.InstancePerResolution)]
 [Register(typeof(CollectionTrackingService), Scope.InstancePerResolution, typeof(ICollectionTrackingService))]
+[Register(typeof(CardImageCache), Scope.InstancePerResolution)]
 #pragma warning disable SI1103 // Return type of delegate has a single instance scope and so will always have the same value
 public partial class Container : IContainer<MainViewModel>
 #pragma warning restore SI1103 // Return type of delegate has a single instance scope and so will always have the same value

@@ -84,22 +84,22 @@ public class ScryfallCardMetadata
     public string? Language { get; set; }
 
     /// <summary>
-    /// Small card image (JPG format)
+    /// Small card image URL (JPG format)
     /// </summary>
-    public byte[]? ImageSmall { get; set; }
+    public string? ImageSmallUrl { get; set; }
 
     /// <summary>
-    /// Small back face card image (JPG format)
+    /// Small back face card image URL (JPG format)
     /// </summary>
-    public byte[]? BackImageSmall { get; set; }
+    public string? BackImageSmallUrl { get; set; }
 
     /// <summary>
-    /// Large card image (JPG format)
+    /// Large card image URL (JPG format)
     /// </summary>
-    public byte[]? ImageLarge { get; set; } // Reserved for future use
+    public string? ImageLargeUrl { get; set; }
 
     /// <summary>
-    /// Large back face card image (JPG format)
+    /// Large back face card image URL (JPG format)
     /// </summary>
-    public byte[]? BackImageLarge { get; set; } // Reserved for future use
+    public string? BackImageLargeUrl { get; set; }
 }

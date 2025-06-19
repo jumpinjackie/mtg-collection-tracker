@@ -244,16 +244,14 @@ internal class ScryfallMetadataResolver
                     sfMeta.ColorIdentity = sfCardMeta.ColorIdentity;
 
                 // Small card image (front face)
-                if (sfMeta.ImageSmall == null)
+                if (sfMeta.ImageSmallUrl == null)
                 {
-                    byte[]? imageSmall = null;
-                    var smallUri = sfCardMeta.GetFrontFaceImageUri(IMG_SIZE_SMALL);
-                    if (smallUri != null)
+                    var imageUri = sfCardMeta.GetFrontFaceImageUri(IMG_SIZE_SMALL);
+                    if (imageUri != null)
                     {
                         try
                         {
-                            imageSmall = await _http.GetByteArrayAsync(smallUri, cancel);
-                            sfMeta.ImageSmall = imageSmall;
+                            sfMeta.ImageSmallUrl = imageUri.ToString();
                             this.ScryfallSmallImageFetches++;
                         }
                         catch { }
@@ -261,16 +259,14 @@ internal class ScryfallMetadataResolver
                 }
 
                 // Small card image (back face)
-                if (sfMeta.BackImageSmall == null)
+                if (sfMeta.BackImageSmallUrl == null)
                 {
-                    byte[]? imageSmall = null;
-                    var smallUri = sfCardMeta.GetBackFaceImageUri(IMG_SIZE_NORMAL);
-                    if (smallUri != null)
+                    var imageUri = sfCardMeta.GetBackFaceImageUri(IMG_SIZE_NORMAL);
+                    if (imageUri != null)
                     {
                         try
                         {
-                            imageSmall = await _http.GetByteArrayAsync(smallUri, cancel);
-                            sfMeta.BackImageSmall = imageSmall;
+                            sfMeta.BackImageSmallUrl = imageUri.ToString();
                             this.ScryfallSmallImageFetches++;
                         }
                         catch { }
@@ -278,16 +274,14 @@ internal class ScryfallMetadataResolver
                 }
 
                 // Large card image (front face)
-                if (sfMeta.ImageLarge == null)
+                if (sfMeta.ImageLargeUrl == null)
                 {
-                    byte[]? imageLarge = null;
-                    var smallUri = sfCardMeta.GetFrontFaceImageUri(IMG_SIZE_NORMAL);
-                    if (smallUri != null)
+                    var imageUri = sfCardMeta.GetFrontFaceImageUri(IMG_SIZE_NORMAL);
+                    if (imageUri != null)
                     {
                         try
                         {
-                            imageLarge = await _http.GetByteArrayAsync(smallUri, cancel);
-                            sfMeta.ImageLarge = imageLarge;
+                            sfMeta.ImageLargeUrl = imageUri.ToString();
                             this.ScryfallSmallImageFetches++;
                         }
                         catch { }
@@ -295,16 +289,14 @@ internal class ScryfallMetadataResolver
                 }
 
                 // Large card image (back face)
-                if (sfMeta.BackImageLarge == null)
+                if (sfMeta.BackImageLargeUrl == null)
                 {
-                    byte[]? imageLarge = null;
-                    var smallUri = sfCardMeta.GetBackFaceImageUri(IMG_SIZE_NORMAL);
-                    if (smallUri != null)
+                    var imageUri = sfCardMeta.GetBackFaceImageUri(IMG_SIZE_NORMAL);
+                    if (imageUri != null)
                     {
                         try
                         {
-                            imageLarge = await _http.GetByteArrayAsync(smallUri, cancel);
-                            sfMeta.BackImageLarge = imageLarge;
+                            sfMeta.BackImageLargeUrl = imageUri.ToString();
                             this.ScryfallSmallImageFetches++;
                         }
                         catch { }
