@@ -9,6 +9,7 @@ using MtgCollectionTracker.ViewModels;
 using ScryfallApi.Client;
 using StrongInject;
 using System;
+using System.IO;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
@@ -53,6 +54,15 @@ public partial class Container : IContainer<MainViewModel>
     public Container(Visual root)
     {
         _root = root;
+    }
+
+    [Factory(Scope.SingleInstance)]
+    public ICardImageFileSystem CreateCardImageFileSystem()
+    {
+        var appDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "mtg-collection-tracker");
+        if (!Directory.Exists(appDir))
+            Directory.CreateDirectory(appDir);
+        return new CardImageFileSystem(appDir);
     }
 
     [Factory]

@@ -6,10 +6,14 @@ using System.Linq.Expressions;
 
 namespace MtgCollectionTracker.Core.Services;
 
-public class CardImageCache(Func<Owned<CardsDbContext>> _db, IScryfallApiClient client)
+public class CardImageCache(Func<Owned<CardsDbContext>> _db, ICardImageFileSystem fs, IScryfallApiClient client)
 {
     private async ValueTask<Stream?> GetCardFaceImageAsync(string scryfallId, string tag, Expression<Func<ScryfallCardMetadata, string?>> urlSelector)
     {
+        var cachedStream = fs.TryGetStream(scryfallId, tag);
+        if (cachedStream != null)
+            return cachedStream;
+
         using var db = _db.Invoke();
         var imgUrl = await db.Value.Set<ScryfallCardMetadata>()
             .Where(m => m.Id == scryfallId)
@@ -20,7 +24,9 @@ public class CardImageCache(Func<Owned<CardsDbContext>> _db, IScryfallApiClient 
             var resp = await sc.RawClient.GetAsync(imgUrl);
             if (resp.StatusCode == System.Net.HttpStatusCode.OK)
             {
-                var stream = await resp.Content.ReadAsStreamAsync();
+                var stream = fs.OpenStream(scryfallId, tag);
+                await resp.Content.CopyToAsync(stream);
+                stream.Position = 0L; //Rewind
                 return stream;
             }
 
