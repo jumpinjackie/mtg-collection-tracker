@@ -16,18 +16,37 @@
 			<Button Command="{Binding MoveCommand}">Move</Button>
 			<Button Command="{Binding CancelCommand}">Cancel</Button>
 		</StackPanel>
-		<StackPanel>
-			<TextBlock Margin="6">Are you sure you want move these wishlist items to your collection?</TextBlock>
+		<ScrollViewer>
 			<StackPanel>
-				<TextBlock Margin="6">Move these cards to container (cards will be un-parented if no container selected)</TextBlock>
-				<ComboBox Margin="6" SelectedItem="{Binding SelectedContainer}" ItemsSource="{Binding AvailableContainers}">
-					<ComboBox.ItemTemplate>
-						<DataTemplate x:DataType="vm:ContainerViewModel">
-							<TextBlock Text="{Binding Name}" />
-						</DataTemplate>
-					</ComboBox.ItemTemplate>
-				</ComboBox>
+				<TextBlock Margin="6">Are you sure you want move these wishlist items to your collection?</TextBlock>
+				<StackPanel>
+					<TextBlock Margin="6">Move these cards to container (cards will be un-parented if no container selected)</TextBlock>
+					<ComboBox Margin="6" SelectedItem="{Binding SelectedContainer}" ItemsSource="{Binding AvailableContainers}">
+						<ComboBox.ItemTemplate>
+							<DataTemplate x:DataType="vm:ContainerViewModel">
+								<TextBlock Text="{Binding Name}" />
+							</DataTemplate>
+						</ComboBox.ItemTemplate>
+					</ComboBox>
+				</StackPanel>
+				<TextBlock Margin="6">The following items will be moved</TextBlock>
+				<DataGrid ItemsSource="{Binding WishListItems}"
+						  CanUserReorderColumns="True"
+						  CanUserResizeColumns="True"
+						  CanUserSortColumns="False"
+						  GridLinesVisibility="All"
+						  IsReadOnly="True"
+						  BorderThickness="1"
+						  MinHeight="300"
+						  Margin="6"
+						  BorderBrush="Gray">
+					<DataGrid.Columns>
+						<DataGridTextColumn Header="Qty" Binding="{Binding RealQty}" />
+						<DataGridTextColumn Header="Card Name" Binding="{Binding CardName}" Width="*" />
+						<DataGridTextColumn Header="Edition" Binding="{Binding Edition}" />
+					</DataGrid.Columns>
+				</DataGrid>
 			</StackPanel>
-		</StackPanel>
+		</ScrollViewer>
 	</DockPanel>
 </UserControl>

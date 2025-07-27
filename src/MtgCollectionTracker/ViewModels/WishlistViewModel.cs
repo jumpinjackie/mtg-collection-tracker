@@ -181,7 +181,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
                 ViewModel = _dialog().WithContent(
                     "Move to Collection",
                     _moveToCollection()
-                        .WithData(Behavior.SelectedItems.Select(w => w.Id).ToArray()))
+                        .WithData(Behavior.SelectedItems))
             });
         }
     }

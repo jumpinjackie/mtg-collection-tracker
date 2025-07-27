@@ -15,36 +15,47 @@
 		<StackPanel DockPanel.Dock="Bottom" Margin="10" Orientation="Horizontal">
 			<Button Command="{Binding SendCardsCommand}">Send Cards</Button>
 		</StackPanel>
-		<StackPanel Margin="10">
-			<TextBlock Margin="6">Container</TextBlock>
-			<ComboBox Margin="6" SelectedItem="{Binding SelectedContainer}" ItemsSource="{Binding AvailableContainers}">
-				<ComboBox.ItemTemplate>
-					<DataTemplate x:DataType="vm:ContainerViewModel">
-						<TextBlock Text="{Binding Name}" />
-					</DataTemplate>
-				</ComboBox.ItemTemplate>
-			</ComboBox>
-			<TextBlock Margin="6">Deck</TextBlock>
-			<ComboBox Margin="6" SelectedItem="{Binding SelectedDeck}" ItemsSource="{Binding AvailableDecks}">
-				<ComboBox.ItemTemplate>
-					<DataTemplate x:DataType="vm:DeckViewModel">
-						<TextBlock Text="{Binding Name}" />
-					</DataTemplate>
-				</ComboBox.ItemTemplate>
-			</ComboBox>
-			<CheckBox IsChecked="{Binding UnSetDeck}">Un-set currently assigned deck</CheckBox>
-			<CheckBox IsChecked="{Binding UnSetContainer}">Un-set currently assigned container</CheckBox>
-			<CheckBox IsThreeState="True" IsChecked="{Binding MarkAsSideboard}">Mark as sideboard card</CheckBox>
-			<TextBlock Margin="6" LineSpacing="6" TextWrapping="WrapWithOverflow">
-				The following card SKUs will be added to the specified container or deck
-			</TextBlock>
-			<DataGrid ItemsSource="{Binding Cards}" MinHeight="200" BorderBrush="Gray">
-				<DataGrid.Columns>
-					<DataGridTextColumn Header="Qty" Binding="{Binding Quantity}"/>
-					<DataGridTextColumn Header="Card Name" Binding="{Binding CardName}"/>
-					<DataGridTextColumn Header="Edition" Binding="{Binding Edition}"/>
-				</DataGrid.Columns>
-			</DataGrid>
-		</StackPanel>	
+		<ScrollViewer Margin="10">
+			<StackPanel>
+				<TextBlock Margin="6">Container</TextBlock>
+				<ComboBox Margin="6" SelectedItem="{Binding SelectedContainer}" ItemsSource="{Binding AvailableContainers}">
+					<ComboBox.ItemTemplate>
+						<DataTemplate x:DataType="vm:ContainerViewModel">
+							<TextBlock Text="{Binding Name}" />
+						</DataTemplate>
+					</ComboBox.ItemTemplate>
+				</ComboBox>
+				<TextBlock Margin="6">Deck</TextBlock>
+				<ComboBox Margin="6" SelectedItem="{Binding SelectedDeck}" ItemsSource="{Binding AvailableDecks}">
+					<ComboBox.ItemTemplate>
+						<DataTemplate x:DataType="vm:DeckViewModel">
+							<TextBlock Text="{Binding Name}" />
+						</DataTemplate>
+					</ComboBox.ItemTemplate>
+				</ComboBox>
+				<CheckBox IsChecked="{Binding UnSetDeck}">Un-set currently assigned deck</CheckBox>
+				<CheckBox IsChecked="{Binding UnSetContainer}">Un-set currently assigned container</CheckBox>
+				<CheckBox IsThreeState="True" IsChecked="{Binding MarkAsSideboard}">Mark as sideboard card</CheckBox>
+				<TextBlock Margin="6" LineSpacing="6" TextWrapping="WrapWithOverflow">
+					The following card SKUs will be added to the specified container or deck
+				</TextBlock>
+				<DataGrid ItemsSource="{Binding Cards}"
+						  CanUserReorderColumns="True"
+						  CanUserResizeColumns="True"
+						  CanUserSortColumns="False"
+						  GridLinesVisibility="All"
+						  IsReadOnly="True"
+						  BorderThickness="1"
+						  MinHeight="300"
+						  Margin="6"
+						  BorderBrush="Gray">
+					<DataGrid.Columns>
+						<DataGridTextColumn Header="Qty" Binding="{Binding Quantity}"/>
+						<DataGridTextColumn Header="Card Name" Binding="{Binding CardName}"/>
+						<DataGridTextColumn Header="Edition" Binding="{Binding Edition}"/>
+					</DataGrid.Columns>
+				</DataGrid>
+			</StackPanel>
+		</ScrollViewer>
 	</DockPanel>
 </UserControl>

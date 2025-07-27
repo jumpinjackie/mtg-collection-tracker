@@ -8,6 +8,7 @@ using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
 
@@ -29,13 +30,14 @@ public partial class MoveWishlistItemsToCollectionViewModel : DialogContentViewM
     {
         this.ThrowIfNotDesignMode();
         _service = new StubCollectionTrackingService();
+        this.WishListItems = [];
     }
 
-    public int[] WishlistItemIds { get; private set; } = [];
+    public ObservableCollection<WishlistItemViewModel> WishListItems { get; private set; }
 
-    public MoveWishlistItemsToCollectionViewModel WithData(int[] ids)
+    public MoveWishlistItemsToCollectionViewModel WithData(ObservableCollection<WishlistItemViewModel> items)
     {
-        this.WishlistItemIds = ids;
+        this.WishListItems = items;
         return this;
     }
 
@@ -52,7 +54,7 @@ public partial class MoveWishlistItemsToCollectionViewModel : DialogContentViewM
     {
         var arg = new MoveWishlistItemsToCollectionInputModel
         {
-            WishlistItemIds = this.WishlistItemIds,
+            WishlistItemIds = this.WishListItems.Select(w => w.Id).ToArray(),
             ContainerId = this.SelectedContainer?.Id
         };
         var result = await _service.MoveWishlistItemsToCollectionAsync(arg);
