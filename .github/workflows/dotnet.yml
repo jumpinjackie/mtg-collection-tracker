@@ -30,7 +30,7 @@ jobs:
     #- name: Add wasm workload
     #  run: dotnet workload install wasm-tools
     - name: Add pupnet
-      run: dotnet tool install -g KuiperZone.PupNet
+      run: dotnet tool install -g KuiperZone.PupNet --version 1.8.0
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
