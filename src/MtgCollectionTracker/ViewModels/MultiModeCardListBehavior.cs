@@ -1,5 +1,8 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using Avalonia.Media.Imaging;
+using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
@@ -13,6 +16,14 @@ public interface ICardSkuItem
     int RealQty { get; }
 
     int ProxyQty { get; }
+
+    string SwitchLabel { get; }
+
+    IRelayCommand SwitchFaceCommand { get; }
+
+    Task<Bitmap?> CardImageLarge { get; }
+
+    bool IsDoubleFaced { get; }
 }
 
 public partial class MultiModeCardListBehavior<T> : ObservableObject where T : class, ICardSkuItem
@@ -24,6 +35,18 @@ public partial class MultiModeCardListBehavior<T> : ObservableObject where T : c
         _parent = parent;
         this.SelectedItems.CollectionChanged += SelectedCardSkus_CollectionChanged;
     }
+
+    public Task<Bitmap?> SelectedCardImageLarge => this.SelectedItems.Count > 0
+        ? this.SelectedItems[0].CardImageLarge : Task.FromResult<Bitmap?>(null);
+
+    public bool SelectedIsDoubleFaced => this.SelectedItems.Count > 0
+        ? this.SelectedItems[0].IsDoubleFaced : false;
+
+    public string? SelectedSwitchLabel => this.SelectedItems.Count > 0
+        ? this.SelectedItems[0].SwitchLabel : null;
+
+    public IRelayCommand? SelectedSwitchFaceCommand => this.SelectedItems.Count > 0
+        ? this.SelectedItems[0].SwitchFaceCommand : null;
 
     private void SelectedCardSkus_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
@@ -52,6 +75,10 @@ public partial class MultiModeCardListBehavior<T> : ObservableObject where T : c
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsItemSplittable))]
     [NotifyPropertyChangedFor(nameof(HasOneSelectedItem))]
+    [NotifyPropertyChangedFor(nameof(SelectedCardImageLarge))]
+    [NotifyPropertyChangedFor(nameof(SelectedIsDoubleFaced))]
+    [NotifyPropertyChangedFor(nameof(SelectedSwitchLabel))]
+    [NotifyPropertyChangedFor(nameof(SelectedSwitchFaceCommand))]
     private bool _hasSelectedCardSku;
 
     public bool IsItemMergeable => !this.IsBusy && this.HasMultipleSelectedCardSkus;
