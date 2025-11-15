@@ -2,9 +2,7 @@
 using MtgCollectionTracker.Data;
 using ScryfallApi.Client;
 using ScryfallApi.Client.Models;
-using System.Globalization;
 using System.Net.Http.Json;
-using System.Text;
 
 namespace MtgCollectionTracker.Core;
 

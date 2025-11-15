@@ -1576,6 +1576,33 @@ public class CollectionTrackingService : ICollectionTrackingService
         await this.AddMissingMetadataAsync(callback, scryfallApiClient, cancel);
     }
 
+    public async ValueTask<List<LowestPriceCheckItem>> GetLowestPricesAsync(LowestPriceCheckOptions options, IScryfallApiClient client, CancellationToken cancel)
+    {
+        using var db = _db.Invoke();
+        var resolver = new ScryfallMetadataResolver(db.Value, client);
+        var results = new List<LowestPriceCheckItem>();
+        foreach (var item in options.Items)
+        {
+            if (options.SkipBasicLands && this.IsBasicLand(item.CardName))
+            {
+                results.Add(new LowestPriceCheckItem(item.CardName, null, item.Quantity, 0));
+                continue;
+            }
+
+            var meta = await resolver.GetLowestPriceAsync(item.CardName, cancel);
+            var (edition, price) = meta;
+            if (edition is not null && price is not null)
+            {
+                results.Add(new LowestPriceCheckItem(item.CardName, edition, item.Quantity, price));
+            }
+            else
+            {
+                results.Add(new LowestPriceCheckItem(item.CardName, null, item.Quantity, null));
+            }
+        }
+        return results;
+    }
+
     public async ValueTask NormalizeCardNamesAsync(UpdateCardMetadataProgressCallback callback, CancellationToken cancel)
     {
         List<int> skuIdsToProcess;

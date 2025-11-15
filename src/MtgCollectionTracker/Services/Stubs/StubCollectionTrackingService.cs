@@ -269,4 +269,9 @@ public class StubCollectionTrackingService : ICollectionTrackingService
     {
         throw new System.NotImplementedException();
     }
+
+    public ValueTask<List<LowestPriceCheckItem>> GetLowestPricesAsync(LowestPriceCheckOptions options, IScryfallApiClient client, CancellationToken cancel)
+    {
+        throw new System.NotImplementedException();
+    }
 }

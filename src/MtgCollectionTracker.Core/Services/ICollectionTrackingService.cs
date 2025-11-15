@@ -33,6 +33,25 @@ namespace MtgCollectionTracker.Core.Services
         public IEnumerable<SkuUpdateInfo> Orphaned() => Skus.Where(s => s.OldContainerId.HasValue && !s.NewContainerId.HasValue);
     }
 
+    public record struct PriceCheckItem(string CardName, int Quantity);
+
+    public record struct LowestPriceCheckItem(string CardName, string? Edition, int Quantity, decimal? ItemTotal)
+    {
+        public decimal? QuantityTotal
+        {
+            get
+            {
+                if (ItemTotal.HasValue)
+                {
+                    return ItemTotal.Value * Quantity;
+                }
+                return null;
+            }
+        }
+    }
+
+    public record LowestPriceCheckOptions(IEnumerable<PriceCheckItem> Items, bool SkipBasicLands);
+
     public interface ICollectionTrackingService
     {
         IEnumerable<CardLanguageModel> GetLanguages();
@@ -87,5 +106,6 @@ namespace MtgCollectionTracker.Core.Services
         ValueTask AddMissingMetadataAsync(UpdateCardMetadataProgressCallback callback, IScryfallApiClient scryfallApiClient, CancellationToken cancel);
         ValueTask RebuildAllMetadataAsync(UpdateCardMetadataProgressCallback callback, IScryfallApiClient scryfallApiClient, CancellationToken cancel);
         ValueTask NormalizeCardNamesAsync(UpdateCardMetadataProgressCallback callback, CancellationToken cancel);
+        ValueTask<List<LowestPriceCheckItem>> GetLowestPricesAsync(LowestPriceCheckOptions options, IScryfallApiClient client, CancellationToken cancel);
     }
 }

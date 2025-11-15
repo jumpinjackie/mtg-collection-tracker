@@ -2,23 +2,19 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
-using CsvHelper.Configuration;
-using CsvHelper;
 using MtgCollectionTracker.Core.Services;
-using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using ScryfallApi.Client;
-using ScryfallApi.Client.Apis;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using MtgCollectionTracker.Services;
+using System.Threading;
 
 namespace MtgCollectionTracker.ViewModels;
 
@@ -48,11 +44,13 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
     readonly IScryfallApiClient? _client;
     readonly Func<DialogViewModel> _dialog;
     readonly Func<AddCardsToWishlistViewModel> _addToWishlist;
+    readonly Func<LowestPriceCheckViewModel> _lowestPriceCheck;
 
     public CanIBuildThisDeckViewModel(IStorageProvider storageProvider,
                                       ICollectionTrackingService service,
                                       Func<DialogViewModel> dialog,
                                       Func<AddCardsToWishlistViewModel> addToWishlist,
+                                      Func<LowestPriceCheckViewModel> lowestPriceCheck,
                                       IMessenger messenger,
                                       IScryfallApiClient client)
         : base(messenger)
@@ -62,6 +60,7 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
         _client = client;
         _dialog = dialog;
         _addToWishlist = addToWishlist;
+        _lowestPriceCheck = lowestPriceCheck;
     }
 
     public CanIBuildThisDeckViewModel()
@@ -89,6 +88,7 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
     private bool _ignoreBasicLands;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(LowestPriceCheckCommand))]
     private bool _hasResult = false;
 
     [ObservableProperty]
@@ -141,6 +141,23 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
                         .WithCards(wishlistItems))
             });
         }
+    }
+
+    private bool CanPriceCheck() => this.HasResult;
+
+    [RelayCommand(CanExecute = nameof(CanPriceCheck))]
+    private async Task LowestPriceCheck(CancellationToken cancel)
+    {
+        var items = _deckListCardItems.Select(i => new PriceCheckItem(i.CardName, i.Requested));
+        var priceList = await _service.GetLowestPricesAsync(new(items, true), _client!, cancel);
+        
+        Messenger.Send(new OpenDialogMessage
+        {
+            DrawerWidth = 800,
+            ViewModel = _dialog().WithContent("Lowest Price Check", 
+                _lowestPriceCheck()
+                    .WithCards(priceList))
+        });
     }
 
     [RelayCommand]

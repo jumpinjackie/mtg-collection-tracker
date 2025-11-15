@@ -65,11 +65,12 @@
 						</StackPanel>
 					</Grid>
 					<TextBlock Text="{Binding CheckResultSummary}" Margin="10" TextWrapping="Wrap" />
-					<StackPanel IsVisible="{Binding HasShort}" Orientation="Horizontal" Spacing="10">
-						<Button Command="{Binding AddToWishlistCommand}">Add missing to Wishlist</Button>
-						<CheckBox IsChecked="{Binding ShowShortOnly}">
+					<StackPanel Orientation="Horizontal" Spacing="10">
+						<Button IsVisible="{Binding HasShort}" Command="{Binding AddToWishlistCommand}">Add missing to Wishlist</Button>
+						<CheckBox IsVisible="{Binding HasShort}" IsChecked="{Binding ShowShortOnly}">
 							<TextBlock>Show only missing</TextBlock>
 						</CheckBox>
+						<Button Command="{Binding LowestPriceCheckCommand}">Lowest Price Check</Button>
 					</StackPanel>
 				</StackPanel>
 				<DataGrid ItemsSource="{Binding DeckListReportItems}"

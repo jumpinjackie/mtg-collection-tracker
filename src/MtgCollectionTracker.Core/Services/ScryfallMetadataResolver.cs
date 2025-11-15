@@ -31,11 +31,27 @@ internal class ScryfallMetadataResolver
 
     static string? NullIf(string? s) => string.IsNullOrWhiteSpace(s) ? null : s;
 
-    public async ValueTask<(ScryfallResolvedCard? meta, bool added)> ResolveEditionAsync(string cardName, CancellationToken cancel)
+    public async ValueTask<(string? edition, decimal? lowestPriceUsd)> GetLowestPriceAsync(string cardName, CancellationToken cancel)
     {
-        if (_scryfallApiClient == null)
-            return (null, false);
+        if (_scryfallApiClient != null)
+        {
+            var sfc = await TryResolveCard(cardName, PickPreference.CheapestPrice);
+            if (sfc is not null)
+            {
+                return (sfc.Set.ToUpperInvariant(), sfc.Prices.Usd);
+            }
+        }
+        return (null, null);
+    }
 
+    enum PickPreference
+    {
+        OldestPrinting,
+        CheapestPrice
+    }
+
+    private async ValueTask<Card?> TryResolveCard(string cardName, PickPreference pref)
+    {
         Card? sfc = null;
         int pageNo = 0;
         while (true)
@@ -53,7 +69,12 @@ internal class ScryfallMetadataResolver
                 if (sfCards.Data.Count > 0)
                 {
                     // Get first matching oldest paper printing of card name
-                    sfc = sfCards.Data.OrderBy(c => c.ReleasedAt).FirstOrDefault(c => c.Name.ToLower() == cardName.ToLower() && c.Games?.Contains("paper") == true);
+                    sfc = pref switch
+                    {
+                        PickPreference.OldestPrinting => sfCards.Data.OrderBy(c => c.ReleasedAt).FirstOrDefault(c => c.Name.ToLower() == cardName.ToLower() && c.Games?.Contains("paper") == true),
+                        PickPreference.CheapestPrice => sfCards.Data.Where(c => c.Prices.Usd.HasValue).OrderBy(c => c.Prices.Usd).FirstOrDefault(c => c.Name.ToLower() == cardName.ToLower() && c.Games?.Contains("paper") == true),
+                        _ => null
+                    };
                 }
 
                 // Break if no more results or found one
@@ -65,14 +86,22 @@ internal class ScryfallMetadataResolver
                 break;
             }
         }
+        return sfc;
+    }
 
+    public async ValueTask<(ScryfallResolvedCard? meta, bool added)> ResolveEditionAsync(string cardName, CancellationToken cancel)
+    {
+        if (_scryfallApiClient == null)
+            return (null, false);
+
+        var sfc = await TryResolveCard(cardName, PickPreference.OldestPrinting);
         if (sfc != null)
         {
             var res = new ScryfallResolvedCard(sfc.Name, sfc.Set.ToUpper());
             var (_, added) = await TryAddMetadataAsync(res.CardName, res.Edition, sfc, cancel);
             return (res, added);
         }
-        
+
         return (null, false);
     }
 
@@ -206,7 +235,7 @@ internal class ScryfallMetadataResolver
                 {
                     (sfMeta, _) = await TryAddMetadataAsync(key.cardName, key.edition, sfCardMeta, cancel);
                 }
-                
+
                 // New or existing, update these properties if different
 
                 // Collector #
