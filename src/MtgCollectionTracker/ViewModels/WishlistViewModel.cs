@@ -138,22 +138,29 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
     [RelayCommand]
     private void DeleteCards()
     {
-        if (Behavior.SelectedItems.Count == 1)
+        if (Behavior.SelectedItems.Count > 1)
         {
-            var item = Behavior.SelectedItems[0];
+            var items = Behavior.SelectedItems.Select(item => $" - {item.QuantityNum}x {item.CardName}, {item.Edition}, {item.Language ?? "en"}");
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 400,
                 ViewModel = _dialog().WithConfirmation(
                     "Delete Wishlist Item",
-                    $"Are you sure you want to delete this wishlist item ({item.QuantityNum}x {item.CardName}, {item.Edition}, {item.Language ?? "en"})?",
+                    $"Are you sure you want to delete these wishlist items?\n\n{string.Join("\n", items)}",
                     async () =>
                     {
-                        await _service.DeleteWishlistItemAsync(item.Id);
-                        Messenger.ToastNotify($"Wishlist item ({item.QuantityNum}x {item.CardName}, {item.Edition}, {item.Language ?? "en"}) deleted", Avalonia.Controls.Notifications.NotificationType.Success);
-                        Behavior.SelectedItems.Remove(item);
-                        this.Cards.Remove(item);
+                        int removed = 0;
+                        var toRemove = Behavior.SelectedItems.ToList();
+                        foreach (var item in toRemove)
+                        {
+                            await _service.DeleteWishlistItemAsync(item.Id);
+                            Behavior.SelectedItems.Remove(item);
+                            this.Cards.Remove(item);
+                            removed++;
+                        }
+
                         this.ApplySummary();
+                        Messenger.ToastNotify($"{removed} wishlist items deleted", Avalonia.Controls.Notifications.NotificationType.Success);
                     })
             });
         }
@@ -264,7 +271,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
 
     void IMultiModeCardListBehaviorHost.HandleBusyChanged(bool oldValue, bool newValue)
     {
-        
+
     }
 
     void IRecipient<TagsAppliedMessage>.Receive(TagsAppliedMessage message)

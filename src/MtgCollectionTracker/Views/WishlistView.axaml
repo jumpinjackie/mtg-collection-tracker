@@ -16,7 +16,7 @@
 			<Button IsEnabled="{Binding !Behavior.IsBusy}" Command="{Binding AddCardsCommand}" Content="Add New" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding Behavior.HasOneSelectedItem}" Command="{Binding EditItemCommand}" Content="Edit" />
 			<Button IsEnabled="{Binding Behavior.HasAtLeastOneSelectedItem}" Command="{Binding MoveToCollectionCommand}" Content="Move to Collection" ToolTip.Tip="Add these selected cards to your inventory. This marks these wishlist items as purchased and removes them from your wishlist" />
-			<Button IsEnabled="{Binding Behavior.HasOneSelectedItem}" Command="{Binding DeleteCardsCommand}" Content="Delete" />
+			<Button IsEnabled="{Binding Behavior.HasAtLeastOneSelectedItem}" Command="{Binding DeleteCardsCommand}" Content="Delete" />
 			<Button IsEnabled="{Binding !Behavior.IsBusy}" Command="{Binding ManageVendorsCommand}" Content="Manage Vendors" />
 			<Button Command="{Binding GenerateBuyingListCommand}" Content="Generate Buying List" />
 			<Button IsEnabled="{Binding Behavior.HasAtLeastOneSelectedItem}" Command="{Binding UpdateMetadataCommand}" Content="Update Metadata" HorizontalAlignment="Center" />
