@@ -138,7 +138,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
     [RelayCommand]
     private void DeleteCards()
     {
-        if (Behavior.SelectedItems.Count > 1)
+        if (Behavior.SelectedItems.Count > 0)
         {
             var items = Behavior.SelectedItems.Select(item => $" - {item.QuantityNum}x {item.CardName}, {item.Edition}, {item.Language ?? "en"}");
             Messenger.Send(new OpenDialogMessage
