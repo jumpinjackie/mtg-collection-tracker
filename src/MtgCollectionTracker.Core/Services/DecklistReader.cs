@@ -13,6 +13,10 @@ public class DecklistReader
         bool isSideboard = false;
         foreach (var line in lines)
         {
+            // Skip lines with comment markers
+            if (line.StartsWith("//"))
+                continue;
+
             // A line containing the word "sideboard" should be sufficient indicator that the sideboard
             // section is about to begin...
             //
