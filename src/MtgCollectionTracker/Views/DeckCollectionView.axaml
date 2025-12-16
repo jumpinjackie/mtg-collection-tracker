@@ -27,6 +27,7 @@
 				<Button IsEnabled="{Binding CanRunAgainstSelectedDeck}" Command="{Binding EditDeckCommand}" Content="Edit" HorizontalAlignment="Center" />
 				<Button IsEnabled="{Binding CanRunAgainstSelectedDeck}" Command="{Binding ViewDeckDetailsCommand}" Content="View Deck" HorizontalAlignment="Center" />
 				<Button IsEnabled="{Binding CanRunAgainstSelectedDeck}" Command="{Binding CheckDeckLegalityCommand}" Content="Check Legality" HorizontalAlignment="Center" />
+				<Button IsEnabled="{Binding CanRunAgainstSelectedDeck}" Command="{Binding LowestPriceCheckCommand}" Content="Lowest Price Check" HorizontalAlignment="Center" />
 				<Button IsEnabled="{Binding !IsBusy}" Command="{Binding RefreshDecksCommand}" Content="Refresh" HorizontalAlignment="Center" />
 				<TextBlock Margin="6" VerticalAlignment="Center" IsVisible="{Binding IsBusy}">Fetching missing images/metadata from Scryfall. Please wait ...</TextBlock>
 			</StackPanel>

@@ -19,10 +19,13 @@ public class CollectionTrackingService : ICollectionTrackingService
 
     readonly CardImageCache _cache;
 
-    public CollectionTrackingService(Func<Owned<CardsDbContext>> db, CardImageCache cache)
+    private readonly PriceCache _priceCache;
+
+    public CollectionTrackingService(Func<Owned<CardsDbContext>> db, CardImageCache cache, PriceCache priceCache)
     {
         _db = db;
         _cache = cache;
+        _priceCache = priceCache;
     }
 
     static string FixCardName(string name)
@@ -1583,13 +1586,26 @@ public class CollectionTrackingService : ICollectionTrackingService
         var results = new List<LowestPriceCheckItem>();
         foreach (var item in options.Items)
         {
-            if (options.SkipBasicLands && this.IsBasicLand(item.CardName))
+            bool isBasic = this.IsBasicLand(item.CardName);
+            bool isSnowBasic = isBasic && item.CardName.ToLower().StartsWith("snow-covered ");
+            if ((options.SkipBasicLands && isBasic && !isSnowBasic) || (options.SkipSnowBasicLands && isSnowBasic))
             {
                 results.Add(new LowestPriceCheckItem(item.CardName, null, item.Quantity, 0));
                 continue;
             }
 
-            var meta = await resolver.GetLowestPriceAsync(item.CardName, cancel);
+            (string? edition, decimal? price) meta;
+            var cached = _priceCache.Get(item.CardName);
+            if (cached.HasValue)
+            {
+                System.Diagnostics.Debug.WriteLine($"Using cached priced data for: {item.CardName}");
+                meta = cached.Value;
+            }
+            else
+            {
+                meta = await resolver.GetLowestPriceAsync(item.CardName, cancel);
+                _priceCache.Set(item.CardName, meta);
+            }
             var (edition, price) = meta;
             if (edition is not null && price is not null)
             {

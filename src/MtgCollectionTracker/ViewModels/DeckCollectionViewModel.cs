@@ -29,6 +29,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
     readonly Func<DeckDetailsViewModel> _deckDetails;
     readonly Func<EditDeckOrContainerViewModel> _editDeckOrContainer;
     readonly Func<NewDeckOrContainerViewModel> _newDeckOrContainer;
+    readonly Func<LowestPriceCheckViewModel> _lowestPriceCheck;
 
     public DeckCollectionViewModel()
     {
@@ -39,6 +40,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
         _deckDetails = () => new();
         _editDeckOrContainer = () => new();
         _newDeckOrContainer = () => new();
+        _lowestPriceCheck = () => new();
         this.SelectedFormats.CollectionChanged += SelectedFormats_CollectionChanged;
         this.IsActive = true;
     }
@@ -49,6 +51,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
                                    Func<DeckDetailsViewModel> deckDetails,
                                    Func<EditDeckOrContainerViewModel> editDeckOrContainer,
                                    Func<NewDeckOrContainerViewModel> newDeckOrContainer,
+                                   Func<LowestPriceCheckViewModel> lowestPriceCheck,
                                    IMessenger messenger,
                                    IScryfallApiClient scryfallApiClient)
         : base(messenger)
@@ -60,6 +63,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
         _deckDetails = deckDetails;
         _editDeckOrContainer = editDeckOrContainer;
         _newDeckOrContainer = newDeckOrContainer;
+        _lowestPriceCheck = lowestPriceCheck;
         this.SelectedFormats.CollectionChanged += SelectedFormats_CollectionChanged;
         this.IsActive = true;
     }
@@ -128,6 +132,21 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
     }
 
     [RelayCommand]
+    private async Task LowestPriceCheck(CancellationToken cancel)
+    {
+        if (this.SelectedDeck is not null)
+        {
+            var priceList = await _service.GetLowestPricesForDeckAsync(new(this.SelectedDeck.DeckId, true, false), _scryfallApiClient!, cancel);
+            Messenger.Send(new OpenDialogMessage
+            {
+                DrawerWidth = 800,
+                ViewModel = _dialog().WithContent("Lowest Price Check",
+                    _lowestPriceCheck()
+                        .WithCards(priceList))
+            });
+        }
+    }
+    [RelayCommand]
     private void EditDeck()
     {
         if (this.SelectedDeck != null)
@@ -150,7 +169,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
                 DrawerWidth = 800,
                 ViewModel = _dialog().WithConfirmation(
                     "Dismantle Deck",
-                    $"Are you sure you want to dismantle ({this.SelectedDeck.Name})?", 
+                    $"Are you sure you want to dismantle ({this.SelectedDeck.Name})?",
                     async () =>
                     {
                         try

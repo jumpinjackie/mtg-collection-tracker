@@ -50,7 +50,9 @@ namespace MtgCollectionTracker.Core.Services
         }
     }
 
-    public record LowestPriceCheckOptions(IEnumerable<PriceCheckItem> Items, bool SkipBasicLands);
+    public record LowestPriceCheckOptions(IEnumerable<PriceCheckItem> Items, bool SkipBasicLands, bool SkipSnowBasicLands);
+
+    public record LowestPriceCheckForDeckOptions(int DeckId, bool SkipBasicLands, bool SkipSnowBasicLands);
 
     public interface ICollectionTrackingService
     {
@@ -107,5 +109,23 @@ namespace MtgCollectionTracker.Core.Services
         ValueTask RebuildAllMetadataAsync(UpdateCardMetadataProgressCallback callback, IScryfallApiClient scryfallApiClient, CancellationToken cancel);
         ValueTask NormalizeCardNamesAsync(UpdateCardMetadataProgressCallback callback, CancellationToken cancel);
         ValueTask<List<LowestPriceCheckItem>> GetLowestPricesAsync(LowestPriceCheckOptions options, IScryfallApiClient client, CancellationToken cancel);
+    }
+
+    public static class CollectionTrackingServiceExtensions
+    {
+        public static async ValueTask<List<LowestPriceCheckItem>> GetLowestPricesForDeckAsync(this ICollectionTrackingService service, LowestPriceCheckForDeckOptions options, IScryfallApiClient client, CancellationToken cancel)
+        {
+            var deck = await service.GetDeckAsync(options.DeckId, client, cancel);
+            
+            var items = new List<PriceCheckItem>();
+
+            items.AddRange(deck.MainDeck.GroupBy(c => c.CardName).Select(grp => new PriceCheckItem(grp.Key, grp.Count())));
+            items.AddRange(deck.Sideboard.GroupBy(c => c.CardName).Select(grp => new PriceCheckItem(grp.Key, grp.Count())));
+
+            var checkOpts = new LowestPriceCheckOptions(items, options.SkipBasicLands, options.SkipSnowBasicLands);
+
+            var res = await service.GetLowestPricesAsync(checkOpts, client, cancel);
+            return res;
+        }
     }
 }

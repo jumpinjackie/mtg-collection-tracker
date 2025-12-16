@@ -46,6 +46,7 @@ namespace MtgCollectionTracker;
 [Register(typeof(CardsDbContext), Scope.InstancePerResolution)]
 [Register(typeof(CollectionTrackingService), Scope.InstancePerResolution, typeof(ICollectionTrackingService))]
 [Register(typeof(CardImageCache), Scope.InstancePerResolution)]
+[Register(typeof(PriceCache), Scope.SingleInstance)]
 #pragma warning disable SI1103 // Return type of delegate has a single instance scope and so will always have the same value
 public partial class Container : IContainer<MainViewModel>
 #pragma warning restore SI1103 // Return type of delegate has a single instance scope and so will always have the same value

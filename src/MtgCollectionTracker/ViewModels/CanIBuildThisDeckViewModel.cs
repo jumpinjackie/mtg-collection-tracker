@@ -70,6 +70,7 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
         _service = new StubCollectionTrackingService();
         _dialog = () => new();
         _addToWishlist = () => new();
+        _lowestPriceCheck = () => new();
     }
 
     [ObservableProperty]
@@ -149,7 +150,7 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
     private async Task LowestPriceCheck(CancellationToken cancel)
     {
         var items = _deckListCardItems.Select(i => new PriceCheckItem(i.CardName, i.Requested));
-        var priceList = await _service.GetLowestPricesAsync(new(items, true), _client!, cancel);
+        var priceList = await _service.GetLowestPricesAsync(new(items, true, false), _client!, cancel);
         
         Messenger.Send(new OpenDialogMessage
         {

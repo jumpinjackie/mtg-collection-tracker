@@ -19,7 +19,7 @@
                     ItemsSource="{Binding Cards}"
                     CanUserReorderColumns="True"
                     CanUserResizeColumns="True"
-                    CanUserSortColumns="False"
+                    CanUserSortColumns="True"
                     GridLinesVisibility="All"
                     BorderThickness="1"
                     MinHeight="300"
