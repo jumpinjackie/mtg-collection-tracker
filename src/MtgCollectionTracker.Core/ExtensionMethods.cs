@@ -61,6 +61,22 @@ public static class PublicExtensionMethods
                 var fuzzyMatch = await resp.Content.ReadFromJsonAsync<Card>();
                 if (fuzzyMatch?.ObjectType == "card")
                 {
+                    if (fuzzyMatch?.Games?.Contains("paper") == true)
+                    {
+                        return (true, fuzzyMatch.Name, fuzzyMatch.Set, apiCalls);
+                    }
+                    // If not a paper card, try to find a paper printing of the same name
+                    var paperCards = await client.Cards.Search(fuzzyMatch.Name, 1, new SearchOptions()
+                    {
+                        IncludeMultilingual = true,
+                        Mode = SearchOptions.RollupMode.Prints
+                    });
+                    var paperCard = paperCards.Data.FirstOrDefault(c => c.Games?.Contains("paper") == true);
+                    if (paperCard != null)
+                    {
+                        return (true, paperCard.Name, paperCard.Set, apiCalls);
+                    }
+                    // Fallback to original set if no paper found
                     return (true, fuzzyMatch.Name, fuzzyMatch.Set, apiCalls);
                 }
             }
@@ -129,13 +145,13 @@ public static class PublicExtensionMethods
                     total += (remainingQty * offer.Price);
                     var subQty = remainingQty;
                     remainingQty -= subQty;
-                    vendors.Add(new (offer.Name, subQty, offer.Price, offer.Notes));
+                    vendors.Add(new(offer.Name, subQty, offer.Price, offer.Notes));
                 }
                 else // Take what's left
                 {
                     total += (offer.AvailableStock * offer.Price);
                     remainingQty -= offer.AvailableStock;
-                    vendors.Add(new (offer.Name, offer.AvailableStock, offer.Price, offer.Notes));
+                    vendors.Add(new(offer.Name, offer.AvailableStock, offer.Price, offer.Notes));
                 }
 
                 if (remainingQty <= 0)
