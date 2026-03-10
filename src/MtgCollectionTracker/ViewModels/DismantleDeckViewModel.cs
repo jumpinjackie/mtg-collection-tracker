@@ -26,11 +26,14 @@ public partial class DismantleDeckViewModel : DialogContentViewModel
         _service = new StubCollectionTrackingService();
         _container = () => new();
         this.Message = "Are you sure you want to dismantle (My Deck)?";
+        var unparented = new ContainerViewModel { Name = "(Unparented)" };
         this.AvailableContainers = [
+            unparented,
             new ContainerViewModel().WithData(new() { Id = 1, Name = "Main Binder" }),
             new ContainerViewModel().WithData(new() { Id = 2, Name = "Secondary Binder" }),
             new ContainerViewModel().WithData(new() { Id = 3, Name = "Shoe Box" })
         ];
+        this.SelectedContainer = unparented;
     }
 
     public DismantleDeckViewModel(IMessenger messenger,
@@ -64,7 +67,11 @@ public partial class DismantleDeckViewModel : DialogContentViewModel
     public DismantleDeckViewModel WithDeck(int deckId, string deckName, Func<int?, ValueTask> onConfirm)
     {
         this.Message = $"Are you sure you want to dismantle ({deckName})?";
-        this.AvailableContainers = _service.GetContainers().Select(c => _container().WithData(c)).ToList();
+        var unparented = new ContainerViewModel { Name = "(Unparented)" };
+        var containers = new List<ContainerViewModel> { unparented };
+        containers.AddRange(_service.GetContainers().Select(c => _container().WithData(c)));
+        this.AvailableContainers = containers;
+        this.SelectedContainer = unparented;
         _confirmAction = onConfirm;
         return this;
     }
@@ -75,7 +82,7 @@ public partial class DismantleDeckViewModel : DialogContentViewModel
         if (_confirmAction != null)
         {
             this.CanExecuteConfirm = false;
-            await _confirmAction.Invoke(this.SelectedContainer?.Id);
+            await _confirmAction.Invoke(this.SelectedContainer is { Id: > 0 } c ? c.Id : (int?)null);
             this.CanExecuteConfirm = true;
             this.Messenger.Send(new CloseDialogMessage());
         }

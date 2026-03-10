@@ -126,13 +126,19 @@ public class ViewModelTests
 
         Assert.Equal("Are you sure you want to dismantle (Legacy Burn)?", vm.Message);
         Assert.NotNull(vm.AvailableContainers);
-        Assert.Equal(2, vm.AvailableContainers.Count());
+        // 2 real containers + 1 sentinel "(Unparented)" prepended
+        Assert.Equal(3, vm.AvailableContainers.Count());
+        Assert.Equal("(Unparented)", vm.AvailableContainers.First().Name);
         Assert.Contains(vm.AvailableContainers, c => c.Name == "Main Binder");
         Assert.Contains(vm.AvailableContainers, c => c.Name == "Shoe Box");
+        // (Unparented) is pre-selected
+        Assert.NotNull(vm.SelectedContainer);
+        Assert.Equal("(Unparented)", vm.SelectedContainer.Name);
+        Assert.Equal(0, vm.SelectedContainer.Id);
     }
 
     [Fact]
-    public void DismantleDeckViewModel_WithDeck_NoContainers_AvailableContainersIsEmpty()
+    public void DismantleDeckViewModel_WithDeck_NoContainers_OnlyUnparentedSentinel()
     {
         var mockService = new Mock<ICollectionTrackingService>();
         mockService.Setup(s => s.GetContainers()).Returns([]);
@@ -143,11 +149,13 @@ public class ViewModelTests
         vm.WithDeck(1, "Deck With No Containers", _ => ValueTask.CompletedTask);
 
         Assert.NotNull(vm.AvailableContainers);
-        Assert.Empty(vm.AvailableContainers);
+        // Only the sentinel "(Unparented)" entry
+        Assert.Single(vm.AvailableContainers);
+        Assert.Equal("(Unparented)", vm.AvailableContainers.Single().Name);
     }
 
     [Fact]
-    public async Task DismantleDeckViewModel_Confirm_InvokesCallbackWithNullContainerWhenNoneSelected()
+    public async Task DismantleDeckViewModel_Confirm_InvokesCallbackWithNullContainerWhenUnparentedSelected()
     {
         var mockService = new Mock<ICollectionTrackingService>();
         mockService.Setup(s => s.GetContainers()).Returns([]);
@@ -162,7 +170,7 @@ public class ViewModelTests
             return ValueTask.CompletedTask;
         });
 
-        // SelectedContainer is null by default
+        // SelectedContainer is the "(Unparented)" sentinel (Id=0) by default
         await vm.ConfirmCommand.ExecuteAsync(null);
 
         Assert.Null(capturedContainerId);
@@ -189,12 +197,42 @@ public class ViewModelTests
             return ValueTask.CompletedTask;
         });
 
-        // Select the container
-        vm.SelectedContainer = vm.AvailableContainers!.First();
+        // Select the real container (skip the "(Unparented)" sentinel at index 0)
+        vm.SelectedContainer = vm.AvailableContainers!.First(c => c.Id > 0);
 
         await vm.ConfirmCommand.ExecuteAsync(null);
 
         Assert.Equal(5, capturedContainerId);
+    }
+
+    [Fact]
+    public async Task DismantleDeckViewModel_Confirm_AfterSelectingContainer_CanSwitchBackToUnparented()
+    {
+        var containers = new List<ContainerSummaryModel>
+        {
+            new() { Id = 3, Name = "Some Box" }
+        };
+
+        var mockService = new Mock<ICollectionTrackingService>();
+        mockService.Setup(s => s.GetContainers()).Returns(containers);
+
+        var messenger = new WeakReferenceMessenger();
+        int? capturedContainerId = -1;
+
+        var vm = new DismantleDeckViewModel(messenger, mockService.Object, () => new ContainerViewModel());
+        vm.WithDeck(1, "My Deck", containerId =>
+        {
+            capturedContainerId = containerId;
+            return ValueTask.CompletedTask;
+        });
+
+        // First pick a real container, then switch back to the "(Unparented)" sentinel
+        vm.SelectedContainer = vm.AvailableContainers!.First(c => c.Id > 0);
+        vm.SelectedContainer = vm.AvailableContainers!.First(c => c.Id == 0);
+
+        await vm.ConfirmCommand.ExecuteAsync(null);
+
+        Assert.Null(capturedContainerId);
     }
 
     [Fact]

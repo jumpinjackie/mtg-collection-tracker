@@ -26,7 +26,6 @@
 					</DataTemplate>
 				</ComboBox.ItemTemplate>
 			</ComboBox>
-			<TextBlock Foreground="Gray" FontStyle="Italic">Leave blank to send cards to (Unparented)</TextBlock>
 		</StackPanel>
 	</DockPanel>
 </UserControl>
