@@ -151,6 +151,8 @@ public partial class CardVisualViewModel : ViewModelBase, ICardSkuItem, ISendabl
 
     public string? PT { get; set; }
 
+    public string? Loyalty { get; set; }
+
     public string[]? Colors { get; set; }
 
     public string[]? ColorIdentity { get; set; }
@@ -175,6 +177,7 @@ public partial class CardVisualViewModel : ViewModelBase, ICardSkuItem, ISendabl
         {
             this.PT = sku.Power + "/" + sku.Toughness;
         }
+        this.Loyalty = sku.Loyalty;
 
         return this;
     }
