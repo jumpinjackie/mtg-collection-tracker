@@ -174,6 +174,8 @@ public class CollectionTrackingService : ICollectionTrackingService
             .Cards
             .Include(c => c.Deck)
             .Include(c => c.Container)
+            .Include(c => c.Language)
+            .Include(c => c.Scryfall)
             .FirstOrDefaultAsync(c => c.Id == id, cancel);
 
         if (sku == null)

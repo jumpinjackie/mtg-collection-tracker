@@ -238,6 +238,11 @@ internal class ScryfallMetadataResolver
 
                 // New or existing, update these properties if different
 
+                // Language
+                var sfCardLanguage = sfCardMeta.Language?.ToLower();
+                if (sfMeta.Language != sfCardLanguage)
+                    sfMeta.Language = sfCardLanguage;
+
                 // Collector #
                 if (sfMeta.CollectorNumber != sfCardMeta.CollectorNumber)
                     sfMeta.CollectorNumber = sfCardMeta.CollectorNumber;
