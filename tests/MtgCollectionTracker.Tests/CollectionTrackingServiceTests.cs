@@ -264,6 +264,8 @@ public class CollectionTrackingServiceTests : IDisposable
         // Assert — language returned by the service model must be "ja", not the fallback "en"
         Assert.Equal("ja", model.Language);
         Assert.Equal("123", model.CollectorNumber);
+    }
+
     [Fact]
     public async Task UpdateWishlistItemAsync_RemovesVendorOffer_WhenOfferNotInUpdatedList()
     {
