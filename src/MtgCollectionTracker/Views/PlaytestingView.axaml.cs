@@ -116,6 +116,18 @@ public partial class PlaytestingView : UserControl
         }
     }
 
+    private async void OnLibraryViewTopXClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is PlaytestingViewModel vm && vm.IsInGame)
+        {
+            var count = await PromptForPositiveIntAsync("View Top X Cards", 5);
+            if (count is > 0)
+            {
+                vm.GameState.OpenViewTopXDialog(count.Value);
+            }
+        }
+    }
+
     private void OnGraveyardViewContentsClick(object? sender, RoutedEventArgs e)
     {
         if (DataContext is PlaytestingViewModel vm && vm.IsInGame)
@@ -224,6 +236,17 @@ public partial class PlaytestingView : UserControl
         if (DataContext is PlaytestingViewModel vm && vm.IsInGame)
         {
             vm.GameState.OpenCreateTokenDialog();
+        }
+    }
+
+    private void OnAddCounterClick(object? sender, RoutedEventArgs e)
+    {
+        if (TryGetCardFromSender(sender, out var card) &&
+            DataContext is PlaytestingViewModel vm &&
+            vm.IsInGame &&
+            card is not null)
+        {
+            vm.GameState.OpenAddCounterDialog(card);
         }
     }
 

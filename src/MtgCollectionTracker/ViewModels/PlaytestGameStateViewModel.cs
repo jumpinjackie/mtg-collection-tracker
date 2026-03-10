@@ -1,3 +1,4 @@
+using Avalonia.Media;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
@@ -74,6 +75,9 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
     [ObservableProperty]
     private int _energyCount = 0;
 
+    [ObservableProperty]
+    private int _poisonCount = 0;
+
     // Phase tracking
     [ObservableProperty]
     private GamePhase _currentPhase = GamePhase.Untap;
@@ -106,10 +110,11 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
     [ObservableProperty]
     private int _mulliganCount = 0;
 
-    // Card scaling (1.0 = 100x140 base size, 2.0 = current 200x280 size)
+    // Card scaling (1.0 = 100x140 base size)
+    // TODO: Could be made smarter based on display resolution, DPI, etc.
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CardWidth), nameof(CardHeight), nameof(CardFontSizeName), nameof(CardFontSizeText), nameof(CardFontSizePT), nameof(CardFontSizeMana), nameof(DetailsImageMaxHeight), nameof(StackCardWidth), nameof(StackCardHeight))]
-    private double _cardScale = 2.0;
+    private double _cardScale = 1.25;
 
     // Computed scaled dimensions (base: 100x140)
     public double CardWidth => 100 * CardScale;
@@ -183,6 +188,12 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
 
     [RelayCommand]
     private void DecrementEnergy() => EnergyCount = Math.Max(0, EnergyCount - 1);
+
+    [RelayCommand]
+    private void IncrementPoison() => PoisonCount++;
+
+    [RelayCommand]
+    private void DecrementPoison() => PoisonCount = Math.Max(0, PoisonCount - 1);
 
     /// <summary>
     /// Initialize the game with a deck
@@ -283,6 +294,7 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
         ColorlessMana = 0;
         StormCount = 0;
         EnergyCount = 0;
+        PoisonCount = 0;
 
         // Reset phase
         CurrentPhase = GamePhase.Untap;
@@ -457,6 +469,119 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
             DrawerWidth = 520,
             ViewModel = dialog,
         });
+    }
+
+    public void OpenAddCounterDialog(PlaytestCardViewModel card)
+    {
+        var viewModel = new AddCounterViewModel(_messenger).Configure((name, color, qty) =>
+        {
+            var counter = card.Counters.FirstOrDefault(c =>
+                string.Equals(c.CounterName, name, StringComparison.OrdinalIgnoreCase));
+
+            if (counter is not null)
+            {
+                counter.Quantity += qty;
+            }
+            else
+            {
+                card.Counters.Add(new CardCounterViewModel
+                {
+                    CounterName = name,
+                    CounterColor = color,
+                    Quantity = qty,
+                });
+            }
+        });
+
+        var dialog = new DialogViewModel(_messenger).WithContent("Add Counter", viewModel);
+        dialog.CanClose = true;
+
+        _messenger.Send(new OpenDialogMessage
+        {
+            DrawerWidth = 480,
+            ViewModel = dialog,
+        });
+    }
+
+    public void OpenViewTopXDialog(int topX)
+    {
+        if (Library.Count == 0)
+            return;
+
+        var topCards = Library.Take(topX).ToList();
+
+        var viewModel = new ViewTopXViewModel(_messenger).Configure(
+            topCards,
+            () => ShuffleLibrary(),
+            (cards, order) => MoveCardsToHand(cards),
+            (cards, order) => MoveCardsToGraveyard(cards, order),
+            (cards, order) => MoveCardsToExile(cards),
+            (cards, order) => MoveCardsToBottomOfLibrary(cards, order));
+
+        var dialog = new DialogViewModel(_messenger).WithContent(
+            $"View Top {topX} Cards",
+            viewModel);
+
+        dialog.CanClose = true;
+
+        _messenger.Send(new OpenDialogMessage
+        {
+            DrawerWidth = 680,
+            ViewModel = dialog,
+        });
+    }
+
+    private void MoveCardsToHand(IEnumerable<PlaytestCardViewModel> cards)
+    {
+        foreach (var card in cards.ToList())
+        {
+            Library.Remove(card);
+            card.Zone = GameZone.Hand;
+            Hand.Add(card);
+        }
+        OnPropertyChanged(nameof(LibraryCount));
+    }
+
+    private void MoveCardsToGraveyard(IEnumerable<PlaytestCardViewModel> cards, CardMoveOrder order)
+    {
+        var list = cards.ToList();
+        if (order == CardMoveOrder.Random)
+            ShuffleCards(list);
+
+        foreach (var card in list)
+        {
+            Library.Remove(card);
+            card.Zone = GameZone.Graveyard;
+            Graveyard.Insert(0, card);
+        }
+        OnPropertyChanged(nameof(LibraryCount));
+    }
+
+    private void MoveCardsToExile(IEnumerable<PlaytestCardViewModel> cards)
+    {
+        foreach (var card in cards.ToList())
+        {
+            Library.Remove(card);
+            card.Zone = GameZone.Exile;
+            Exile.Insert(0, card);
+        }
+        OnPropertyChanged(nameof(LibraryCount));
+    }
+
+    private void MoveCardsToBottomOfLibrary(IEnumerable<PlaytestCardViewModel> cards, CardMoveOrder order)
+    {
+        var list = cards.ToList();
+        if (order == CardMoveOrder.Random)
+            ShuffleCards(list);
+
+        foreach (var card in list)
+        {
+            Library.Remove(card);
+            card.Zone = GameZone.Library;
+            Library.Add(card);
+        }
+        // count notification not needed since cards stay in library
+        OnPropertyChanged(nameof(LibraryCount));
     }
 
     /// <summary>

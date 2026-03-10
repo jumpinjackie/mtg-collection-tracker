@@ -79,6 +79,7 @@
 										<MenuItem Header="Shuffle Library" Click="OnShuffleLibraryClick" />
 										<MenuItem Header="Draw X..." Click="OnDrawXClick" />
 										<MenuItem Header="Mill X..." Click="OnMillXClick" />
+										<MenuItem Header="View Top X Cards..." Click="OnLibraryViewTopXClick" />
 										<MenuItem Header="View Contents..." Click="OnLibraryViewContentsClick" />
 										<MenuItem Header="Exile Top X..." Click="OnExileTopXClick" />
 									</ContextMenu>
@@ -258,6 +259,17 @@
 										        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
 									</StackPanel>
 								</StackPanel>
+
+								<StackPanel Spacing="2">
+									<TextBlock Text="Poison" FontSize="10" />
+									<StackPanel Orientation="Horizontal" Spacing="2">
+										<Button Content="-" Width="24" Height="22" FontSize="9" Padding="0" Command="{Binding GameState.DecrementPoisonCommand}"
+										        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+										<TextBlock Text="{Binding GameState.PoisonCount}" Width="20" TextAlignment="Center" VerticalAlignment="Center" FontSize="11" />
+										<Button Content="+" Width="24" Height="22" FontSize="9" Padding="0" Command="{Binding GameState.IncrementPoisonCommand}"
+										        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+									</StackPanel>
+								</StackPanel>
 							</StackPanel>
 						</ScrollViewer>
 					</Border>
@@ -364,21 +376,34 @@
 							<ItemsControl ItemsSource="{Binding GameState.BattlefieldNonlands}">
 								<ItemsControl.ItemsPanel>
 									<ItemsPanelTemplate>
-									<WrapPanel ItemSpacing="60" LineSpacing="24" />
+									<WrapPanel ItemSpacing="40" LineSpacing="24" />
 								</ItemsPanelTemplate>
 							</ItemsControl.ItemsPanel>
 							<ItemsControl.ItemTemplate>
 								<DataTemplate>
-								<Border Width="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardWidth}" Height="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardHeight}" Margin="20" CornerRadius="6" BorderBrush="Black" BorderThickness="1" Background="#1E1E1E"
+								<Border Width="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardWidth}" Height="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardHeight}" Margin="6" CornerRadius="6" BorderBrush="Black" BorderThickness="1" Background="#1E1E1E"
 									        PointerEntered="OnCardPointerEntered"
 									        PointerPressed="OnCardPointerPressed"
 									        DoubleTapped="OnBattlefieldCardDoubleTapped">
+										<ToolTip.Tip>
+											<StackPanel Spacing="2">
+												<TextBlock Text="{Binding DisplayName}" FontWeight="Bold" />
+												<ItemsControl ItemsSource="{Binding Counters}" IsVisible="{Binding HasCounters}">
+													<ItemsControl.ItemTemplate>
+														<DataTemplate>
+															<TextBlock Text="{Binding CounterTooltipText}" FontSize="11" />
+														</DataTemplate>
+													</ItemsControl.ItemTemplate>
+												</ItemsControl>
+											</StackPanel>
+										</ToolTip.Tip>
 										<Border.ContextMenu>
 											<ContextMenu>
 												<MenuItem Header="Return to Hand" Click="OnBattlefieldReturnToHandClick" />
 												<MenuItem Header="Send to Graveyard" Click="OnBattlefieldSendToGraveyardClick" />
 												<MenuItem Header="Exile" Click="OnBattlefieldSendToExileClick" />
 												<MenuItem Header="Transform" Click="OnBattlefieldTransformClick" IsVisible="{Binding IsDoubleFaced}" />
+												<MenuItem Header="Add Counter..." Click="OnAddCounterClick" />
 											</ContextMenu>
 										</Border.ContextMenu>
 										<Border.RenderTransform>
@@ -388,18 +413,39 @@
 											<Image Source="{Binding CardImage^}" Stretch="UniformToFill" IsVisible="{Binding !IsToken}" />
 											<Border Background="#2A2A2A" IsVisible="{Binding IsToken}">
 												<Grid RowDefinitions="Auto,*,Auto">
-													<TextBlock Grid.Row="0" Text="{Binding CardName}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizeName}" FontWeight="Bold" Foreground="#F5F5F5" Margin="8,6,8,4" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" />
+													<TextBlock Grid.Row="0" Text="{Binding DisplayName}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizeName}" FontWeight="Bold" Foreground="#F5F5F5" Margin="8,6,8,4" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" />
 													<TextBlock Grid.Row="1" Text="{Binding OracleText}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizeText}" Foreground="#E0E0E0" Margin="10,8" TextWrapping="Wrap" VerticalAlignment="Center" TextAlignment="Center" />
 													<TextBlock Grid.Row="2" Text="{Binding PT}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizePT}" FontWeight="Bold" Foreground="#F5F5F5" Margin="8,4,8,6" HorizontalAlignment="Right" />
 												</Grid>
 											</Border>
 											<Border Background="#66000000" VerticalAlignment="Top" Padding="6,2" IsVisible="{Binding !IsToken}">
-												<TextBlock Text="{Binding CardName}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizeName}" Foreground="White" TextTrimming="CharacterEllipsis" />
+												<TextBlock Text="{Binding DisplayName}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizeName}" Foreground="White" TextTrimming="CharacterEllipsis" />
 											</Border>
 											<Border Background="#66000000" VerticalAlignment="Bottom" HorizontalAlignment="Right" Padding="6,2"
 											        IsVisible="{Binding !IsToken}">
 												<TextBlock Text="{Binding PT}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizePT}" Foreground="White" />
 											</Border>
+											<!-- Counter circles row, just above center -->
+											<ItemsControl ItemsSource="{Binding Counters}"
+											              VerticalAlignment="Center" HorizontalAlignment="Center"
+											              Margin="0,-24,0,0"
+											              IsVisible="{Binding HasCounters}">
+												<ItemsControl.ItemsPanel>
+													<ItemsPanelTemplate>
+														<StackPanel Orientation="Horizontal" Spacing="3" />
+													</ItemsPanelTemplate>
+												</ItemsControl.ItemsPanel>
+												<ItemsControl.ItemTemplate>
+													<DataTemplate>
+														<Grid Width="22" Height="22">
+															<Ellipse Fill="{Binding DisplayColor}" />
+															<Ellipse Fill="#55FFFFFF" Margin="3,3,3,11" />
+															<TextBlock Text="{Binding Quantity}" HorizontalAlignment="Center" VerticalAlignment="Center"
+															           Foreground="{Binding LabelForeground}" FontWeight="Bold" FontSize="9" />
+														</Grid>
+													</DataTemplate>
+												</ItemsControl.ItemTemplate>
+											</ItemsControl>
 										</Grid>
 										</Border>
 									</DataTemplate>
@@ -423,21 +469,34 @@
 							<ItemsControl ItemsSource="{Binding GameState.BattlefieldLands}">
 								<ItemsControl.ItemsPanel>
 									<ItemsPanelTemplate>
-									<WrapPanel ItemSpacing="60" LineSpacing="24" />
+									<WrapPanel ItemSpacing="40" LineSpacing="24" />
 								</ItemsPanelTemplate>
 							</ItemsControl.ItemsPanel>
 							<ItemsControl.ItemTemplate>
 								<DataTemplate>
-									<Border Width="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardWidth}" Height="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardHeight}" Margin="20" CornerRadius="6" BorderBrush="Black" BorderThickness="1" Background="#1E1E1E"
+									<Border Width="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardWidth}" Height="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardHeight}" Margin="6" CornerRadius="6" BorderBrush="Black" BorderThickness="1" Background="#1E1E1E"
 										        PointerEntered="OnCardPointerEntered"
 										        PointerPressed="OnCardPointerPressed"
 										        DoubleTapped="OnBattlefieldCardDoubleTapped">
+											<ToolTip.Tip>
+												<StackPanel Spacing="2">
+													<TextBlock Text="{Binding DisplayName}" FontWeight="Bold" />
+													<ItemsControl ItemsSource="{Binding Counters}" IsVisible="{Binding HasCounters}">
+														<ItemsControl.ItemTemplate>
+															<DataTemplate>
+																<TextBlock Text="{Binding CounterTooltipText}" FontSize="11" />
+															</DataTemplate>
+														</ItemsControl.ItemTemplate>
+													</ItemsControl>
+												</StackPanel>
+											</ToolTip.Tip>
 											<Border.ContextMenu>
 												<ContextMenu>
 													<MenuItem Header="Return to Hand" Click="OnBattlefieldReturnToHandClick" />
 													<MenuItem Header="Send to Graveyard" Click="OnBattlefieldSendToGraveyardClick" />
 													<MenuItem Header="Exile" Click="OnBattlefieldSendToExileClick" />
 													<MenuItem Header="Transform" Click="OnBattlefieldTransformClick" IsVisible="{Binding IsDoubleFaced}" />
+													<MenuItem Header="Add Counter..." Click="OnAddCounterClick" />
 												</ContextMenu>
 											</Border.ContextMenu>
 											<Border.RenderTransform>
@@ -447,18 +506,39 @@
 												<Image Source="{Binding CardImage^}" Stretch="UniformToFill" IsVisible="{Binding !IsToken}" />
 												<Border Background="#2A2A2A" IsVisible="{Binding IsToken}">
 													<Grid RowDefinitions="Auto,*,Auto">
-														<TextBlock Grid.Row="0" Text="{Binding CardName}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizeName}" FontWeight="Bold" Foreground="#F5F5F5" Margin="8,6,8,4" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" />
+														<TextBlock Grid.Row="0" Text="{Binding DisplayName}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizeName}" FontWeight="Bold" Foreground="#F5F5F5" Margin="8,6,8,4" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" />
 														<TextBlock Grid.Row="1" Text="{Binding OracleText}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizeText}" Foreground="#E0E0E0" Margin="10,8" TextWrapping="Wrap" VerticalAlignment="Center" TextAlignment="Center" />
 														<TextBlock Grid.Row="2" Text="{Binding PT}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizePT}" FontWeight="Bold" Foreground="#F5F5F5" Margin="8,4,8,6" HorizontalAlignment="Right" />
 													</Grid>
 												</Border>
 												<Border Background="#66000000" VerticalAlignment="Top" Padding="6,2" IsVisible="{Binding !IsToken}">
-													<TextBlock Text="{Binding CardName}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizeName}" Foreground="White" TextTrimming="CharacterEllipsis" />
+													<TextBlock Text="{Binding DisplayName}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizeName}" Foreground="White" TextTrimming="CharacterEllipsis" />
 												</Border>
 												<Border Background="#66000000" VerticalAlignment="Bottom" HorizontalAlignment="Right" Padding="6,2"
 												        IsVisible="{Binding !IsToken}">
 													<TextBlock Text="{Binding PT}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizePT}" Foreground="White" />
 												</Border>
+												<!-- Counter circles row, just above center -->
+												<ItemsControl ItemsSource="{Binding Counters}"
+												              VerticalAlignment="Center" HorizontalAlignment="Center"
+												              Margin="0,-24,0,0"
+												              IsVisible="{Binding HasCounters}">
+													<ItemsControl.ItemsPanel>
+														<ItemsPanelTemplate>
+															<StackPanel Orientation="Horizontal" Spacing="3" />
+														</ItemsPanelTemplate>
+													</ItemsControl.ItemsPanel>
+													<ItemsControl.ItemTemplate>
+														<DataTemplate>
+															<Grid Width="22" Height="22">
+																<Ellipse Fill="{Binding DisplayColor}" />
+																<Ellipse Fill="#55FFFFFF" Margin="3,3,3,11" />
+																<TextBlock Text="{Binding Quantity}" HorizontalAlignment="Center" VerticalAlignment="Center"
+																           Foreground="{Binding LabelForeground}" FontWeight="Bold" FontSize="9" />
+															</Grid>
+														</DataTemplate>
+													</ItemsControl.ItemTemplate>
+												</ItemsControl>
 											</Grid>
 										</Border>
 									</DataTemplate>
@@ -503,7 +583,7 @@
 													<TextBlock Text="{Binding CardName}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizeName}" Foreground="White" TextTrimming="CharacterEllipsis" />
 												</Border>
 												<Border Background="#66000000" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="6,2"
-												        IsVisible="{Binding ManaCost, Converter={x:Static ObjectConverters.IsNotNull}}">
+												        IsVisible="{Binding HasManaCost}">
 													<TextBlock Text="{Binding ManaCost}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizeMana}" Foreground="White" />
 												</Border>
 												<Border Background="#66000000" VerticalAlignment="Bottom" HorizontalAlignment="Right" Padding="6,2"

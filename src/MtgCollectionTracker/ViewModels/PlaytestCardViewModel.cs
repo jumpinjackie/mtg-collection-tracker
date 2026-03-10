@@ -1,3 +1,5 @@
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -16,16 +18,60 @@ public partial class PlaytestCardViewModel : ViewModelBase
     public PlaytestCardViewModel(CardImageCache imageCache)
     {
         _imageCache = imageCache;
+        Counters.CollectionChanged += OnCountersChanged;
     }
 
     public PlaytestCardViewModel()
     {
         ThrowIfNotDesignMode();
         _imageCache = null!;
+        Counters.CollectionChanged += OnCountersChanged;
+    }
+
+    private void OnCountersChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        OnPropertyChanged(nameof(HasCounters));
     }
 
     [ObservableProperty]
     private string _cardName = "";
+
+    /// <summary>
+    /// The name to display for the current face of the card.
+    /// For true double-faced cards (transform/modal DFC), shows only the relevant face name.
+    /// Adventure cards and split cards with " // " naming are kept as-is (IsDoubleFaced = false).
+    /// </summary>
+    public string DisplayName
+    {
+        get
+        {
+            if (!IsDoubleFaced)
+                return CardName;
+
+            var sep = CardName.IndexOf(" // ", System.StringComparison.Ordinal);
+            if (sep < 0)
+                return CardName;
+
+            return IsFrontFace
+                ? CardName[..sep]
+                : CardName[(sep + 4)..];
+        }
+    }
+
+    /// <summary>
+    /// Counters placed on this card or token
+    /// </summary>
+    public ObservableCollection<CardCounterViewModel> Counters { get; } = new();
+
+    /// <summary>
+    /// Whether this card has any counters on it
+    /// </summary>
+    public bool HasCounters => Counters.Count > 0;
+
+    /// <summary>
+    /// Whether this card has a mana cost to display
+    /// </summary>
+    public bool HasManaCost => !string.IsNullOrEmpty(ManaCost);
 
     [ObservableProperty]
     private string? _scryfallId;
@@ -34,6 +80,7 @@ public partial class PlaytestCardViewModel : ViewModelBase
     private string? _scryfallIdBack;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasManaCost))]
     private string? _manaCost;
 
     [ObservableProperty]
@@ -61,6 +108,7 @@ public partial class PlaytestCardViewModel : ViewModelBase
     private bool _isTapped;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayName))]
     private bool _isFrontFace = true;
 
     [ObservableProperty]
