@@ -273,4 +273,266 @@ public class CollectionTrackingServiceTests : IDisposable
         // Assert: original offer is untouched
         Assert.Single(updated.Offers);
     }
+
+    // ── Color filter tests ──────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Seeds the database with a small set of card skus that have Scryfall metadata
+    /// so color and card-type filter tests can exercise the in-memory filtering logic.
+    /// Returns the IDs of the seeded skus in insertion order.
+    /// </summary>
+    private void SeedCardsWithMetadata(CardsDbContext ctx)
+    {
+        // Red instant
+        var sfBolt = new ScryfallCardMetadata { Id = "sf-bolt", CardName = "Lightning Bolt", Edition = "M10", CardType = "Instant", Rarity = "common", Colors = ["R"] };
+        var bolt = new CardSku { CardName = "Lightning Bolt", Edition = "M10", Quantity = 4, ScryfallId = "sf-bolt", Scryfall = sfBolt };
+
+        // Blue instant
+        var sfCounterspell = new ScryfallCardMetadata { Id = "sf-counter", CardName = "Counterspell", Edition = "6ED", CardType = "Instant", Rarity = "uncommon", Colors = ["U"] };
+        var counterspell = new CardSku { CardName = "Counterspell", Edition = "6ED", Quantity = 4, ScryfallId = "sf-counter", Scryfall = sfCounterspell };
+
+        // White/Blue/Black instant (tricolor)
+        var sfStormbind = new ScryfallCardMetadata { Id = "sf-sbb", CardName = "Absorb", Edition = "INV", CardType = "Instant", Rarity = "rare", Colors = ["W", "U", "B"] };
+        var absorb = new CardSku { CardName = "Absorb", Edition = "INV", Quantity = 2, ScryfallId = "sf-sbb", Scryfall = sfStormbind };
+
+        // Colorless artifact creature
+        var sfColossus = new ScryfallCardMetadata { Id = "sf-walker", CardName = "Darksteel Colossus", Edition = "DST", CardType = "Artifact Creature — Golem", Rarity = "rare", Colors = [] };
+        var walker = new CardSku { CardName = "Darksteel Colossus", Edition = "DST", Quantity = 1, ScryfallId = "sf-walker", Scryfall = sfColossus };
+
+        // Green sorcery
+        var sfRampant = new ScryfallCardMetadata { Id = "sf-rampant", CardName = "Rampant Growth", Edition = "M10", CardType = "Sorcery", Rarity = "common", Colors = ["G"] };
+        var rampant = new CardSku { CardName = "Rampant Growth", Edition = "M10", Quantity = 4, ScryfallId = "sf-rampant", Scryfall = sfRampant };
+
+        // Land (colorless, type Land)
+        var sfIsland = new ScryfallCardMetadata { Id = "sf-island", CardName = "Island", Edition = "M10", CardType = "Basic Land — Island", Rarity = "common", Colors = [] };
+        var island = new CardSku { CardName = "Island", Edition = "M10", Quantity = 10, ScryfallId = "sf-island", Scryfall = sfIsland };
+
+        // Black enchantment
+        var sfEnch = new ScryfallCardMetadata { Id = "sf-necropotence", CardName = "Necropotence", Edition = "ICE", CardType = "Enchantment", Rarity = "rare", Colors = ["B"] };
+        var necropotence = new CardSku { CardName = "Necropotence", Edition = "ICE", Quantity = 1, ScryfallId = "sf-necropotence", Scryfall = sfEnch };
+
+        ctx.Cards.AddRange(bolt, counterspell, absorb, walker, rampant, island, necropotence);
+        ctx.SaveChanges();
+    }
+
+    [Fact]
+    public void GetCards_ColorFilter_ReturnsOnlyRedCards()
+    {
+        using var ctx = new CardsDbContext(_dbOptions);
+        SeedCardsWithMetadata(ctx);
+
+        var service = CreateService();
+        var results = service.GetCards(new CardQueryModel { Colors = ["R"], IncludeScryfallMetadata = true }).ToList();
+
+        Assert.Single(results);
+        Assert.Equal("Lightning Bolt", results[0].CardName);
+    }
+
+    [Fact]
+    public void GetCards_ColorFilter_ReturnsBlueAndWhiteBlueCards()
+    {
+        using var ctx = new CardsDbContext(_dbOptions);
+        SeedCardsWithMetadata(ctx);
+
+        var service = CreateService();
+        // Asking for U should return Counterspell (mono-U) and Absorb (W/U/B)
+        var results = service.GetCards(new CardQueryModel { Colors = ["U"], IncludeScryfallMetadata = true }).ToList();
+
+        Assert.Equal(2, results.Count);
+        Assert.Contains(results, r => r.CardName == "Counterspell");
+        Assert.Contains(results, r => r.CardName == "Absorb");
+    }
+
+    [Fact]
+    public void GetCards_ColorFilter_MultipleColors_ReturnsUnionOfMatchingCards()
+    {
+        using var ctx = new CardsDbContext(_dbOptions);
+        SeedCardsWithMetadata(ctx);
+
+        var service = CreateService();
+        // R + G should return Lightning Bolt and Rampant Growth
+        var results = service.GetCards(new CardQueryModel { Colors = ["R", "G"], IncludeScryfallMetadata = true }).ToList();
+
+        Assert.Equal(2, results.Count);
+        Assert.Contains(results, r => r.CardName == "Lightning Bolt");
+        Assert.Contains(results, r => r.CardName == "Rampant Growth");
+    }
+
+    [Fact]
+    public void GetCards_ColorFilter_Colorless_ReturnsArtifactAndLand()
+    {
+        using var ctx = new CardsDbContext(_dbOptions);
+        SeedCardsWithMetadata(ctx);
+
+        var service = CreateService();
+        // Colorless (C) matches cards with empty Colors array
+        var results = service.GetCards(new CardQueryModel { Colors = ["C"], IncludeScryfallMetadata = true }).ToList();
+
+        Assert.Equal(2, results.Count);
+        Assert.Contains(results, r => r.CardName == "Darksteel Colossus");
+        Assert.Contains(results, r => r.CardName == "Island");
+    }
+
+    [Fact]
+    public void GetCards_ColorFilter_ColorlessAndColored_ReturnsBothColorlessAndMatchingColoredCards()
+    {
+        using var ctx = new CardsDbContext(_dbOptions);
+        SeedCardsWithMetadata(ctx);
+
+        var service = CreateService();
+        // C + R: colorless cards + red cards
+        var results = service.GetCards(new CardQueryModel { Colors = ["C", "R"], IncludeScryfallMetadata = true }).ToList();
+
+        Assert.Equal(3, results.Count);
+        Assert.Contains(results, r => r.CardName == "Darksteel Colossus");
+        Assert.Contains(results, r => r.CardName == "Island");
+        Assert.Contains(results, r => r.CardName == "Lightning Bolt");
+    }
+
+    [Fact]
+    public void GetCards_ColorFilter_Null_ReturnsAllCardsRegardlessOfColor()
+    {
+        using var ctx = new CardsDbContext(_dbOptions);
+        SeedCardsWithMetadata(ctx);
+
+        var service = CreateService();
+        var results = service.GetCards(new CardQueryModel { SearchFilter = "Lightning Bolt", IncludeScryfallMetadata = true }).ToList();
+
+        Assert.Single(results);
+        Assert.Equal("Lightning Bolt", results[0].CardName);
+    }
+
+    // ── Card type filter tests ──────────────────────────────────────────────────
+
+    [Fact]
+    public void GetCards_CardTypeFilter_ReturnsOnlyInstants()
+    {
+        using var ctx = new CardsDbContext(_dbOptions);
+        SeedCardsWithMetadata(ctx);
+
+        var service = CreateService();
+        var results = service.GetCards(new CardQueryModel { CardTypes = ["Instant"], IncludeScryfallMetadata = true }).ToList();
+
+        Assert.Equal(3, results.Count);
+        Assert.Contains(results, r => r.CardName == "Absorb");
+        Assert.Contains(results, r => r.CardName == "Counterspell");
+        Assert.Contains(results, r => r.CardName == "Lightning Bolt");
+    }
+
+    [Fact]
+    public void GetCards_CardTypeFilter_ReturnsSorceries()
+    {
+        using var ctx = new CardsDbContext(_dbOptions);
+        SeedCardsWithMetadata(ctx);
+
+        var service = CreateService();
+        var results = service.GetCards(new CardQueryModel { CardTypes = ["Sorcery"], IncludeScryfallMetadata = true }).ToList();
+
+        Assert.Single(results);
+        Assert.Equal("Rampant Growth", results[0].CardName);
+    }
+
+    [Fact]
+    public void GetCards_CardTypeFilter_ReturnsCreatureAndArtifact_ViaPartialTypeLineMatch()
+    {
+        using var ctx = new CardsDbContext(_dbOptions);
+        SeedCardsWithMetadata(ctx);
+
+        var service = CreateService();
+        // "Artifact" matches "Artifact Creature — Golem"
+        var results = service.GetCards(new CardQueryModel { CardTypes = ["Artifact"], IncludeScryfallMetadata = true }).ToList();
+
+        Assert.Single(results);
+        Assert.Equal("Darksteel Colossus", results[0].CardName);
+    }
+
+    [Fact]
+    public void GetCards_CardTypeFilter_MultipleTypes_ReturnsUnionOfMatchingCards()
+    {
+        using var ctx = new CardsDbContext(_dbOptions);
+        SeedCardsWithMetadata(ctx);
+
+        var service = CreateService();
+        // Instant + Enchantment
+        var results = service.GetCards(new CardQueryModel { CardTypes = ["Instant", "Enchantment"], IncludeScryfallMetadata = true }).ToList();
+
+        Assert.Equal(4, results.Count);
+        Assert.Contains(results, r => r.CardName == "Absorb");
+        Assert.Contains(results, r => r.CardName == "Counterspell");
+        Assert.Contains(results, r => r.CardName == "Lightning Bolt");
+        Assert.Contains(results, r => r.CardName == "Necropotence");
+    }
+
+    [Fact]
+    public void GetCards_CardTypeFilter_TypeMatchIsCaseInsensitive()
+    {
+        using var ctx = new CardsDbContext(_dbOptions);
+        SeedCardsWithMetadata(ctx);
+
+        var service = CreateService();
+        var results = service.GetCards(new CardQueryModel { CardTypes = ["enchantment"], IncludeScryfallMetadata = true }).ToList();
+
+        Assert.Single(results);
+        Assert.Equal("Necropotence", results[0].CardName);
+    }
+
+    // ── Combined color + type filter tests ────────────────────────────────────
+
+    [Fact]
+    public void GetCards_ColorAndTypeFilter_ReturnsOnlyMatchingIntersection()
+    {
+        using var ctx = new CardsDbContext(_dbOptions);
+        SeedCardsWithMetadata(ctx);
+
+        var service = CreateService();
+        // Blue Instants: Counterspell and Absorb
+        var results = service.GetCards(new CardQueryModel
+        {
+            Colors = ["U"],
+            CardTypes = ["Instant"],
+            IncludeScryfallMetadata = true
+        }).ToList();
+
+        Assert.Equal(2, results.Count);
+        Assert.Contains(results, r => r.CardName == "Counterspell");
+        Assert.Contains(results, r => r.CardName == "Absorb");
+    }
+
+    [Fact]
+    public void GetCards_ColorAndTypeFilter_ReturnsEmpty_WhenNoCardsMatch()
+    {
+        using var ctx = new CardsDbContext(_dbOptions);
+        SeedCardsWithMetadata(ctx);
+
+        var service = CreateService();
+        // There are no Red Sorceries in the seed data
+        var results = service.GetCards(new CardQueryModel
+        {
+            Colors = ["R"],
+            CardTypes = ["Sorcery"],
+            IncludeScryfallMetadata = true
+        }).ToList();
+
+        Assert.Empty(results);
+    }
+
+    [Fact]
+    public void GetCards_ColorAndTypeFilter_WithSearchText_NarrowsResults()
+    {
+        using var ctx = new CardsDbContext(_dbOptions);
+        SeedCardsWithMetadata(ctx);
+
+        var service = CreateService();
+        // Search "bolt" + Red + Instant → only Lightning Bolt
+        var results = service.GetCards(new CardQueryModel
+        {
+            SearchFilter = "bolt",
+            Colors = ["R"],
+            CardTypes = ["Instant"],
+            IncludeScryfallMetadata = true
+        }).ToList();
+
+        Assert.Single(results);
+        Assert.Equal("Lightning Bolt", results[0].CardName);
+    }
 }
