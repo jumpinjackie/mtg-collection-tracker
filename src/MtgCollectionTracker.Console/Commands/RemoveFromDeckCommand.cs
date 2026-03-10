@@ -8,7 +8,7 @@ namespace MtgCollectionTracker.Console.Commands;
 internal class RemoveFromDeckCommand : CommandBase
 {
     [Option("card-sku-id", HelpText = "The id of card sku to remove")]
-    public int CardSkuId { get; set; }
+    public Guid CardSkuId { get; set; }
 
     [Option("container-id", HelpText = "The id of the container to return this sku to")]
     public int? ContainerId { get; set; }

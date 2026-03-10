@@ -5,6 +5,7 @@ using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
+using System;
 using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
@@ -26,7 +27,7 @@ public partial class SplitCardSkuViewModel : DialogContentViewModel
         this.CurrentQuantity = 4;
     }
 
-    public int CardSkuId { get; set; }
+    public Guid CardSkuId { get; set; }
 
     public int CurrentQuantity { get; set; }
 

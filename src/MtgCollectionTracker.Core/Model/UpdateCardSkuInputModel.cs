@@ -4,7 +4,7 @@ namespace MtgCollectionTracker.Core.Model;
 
 public class UpdateCardSkuInputModel
 {
-    public required IEnumerable<int> Ids { get; set; }
+    public required IEnumerable<Guid> Ids { get; set; }
 
     public string? CardName { get; set; }
 

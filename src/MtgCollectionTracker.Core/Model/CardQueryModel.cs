@@ -4,7 +4,7 @@ public class CardQueryModel
 {
     public string? SearchFilter { get; set; }
 
-    public IEnumerable<int>? CardSkuIds { get; set; }
+    public IEnumerable<Guid>? CardSkuIds { get; set; }
 
     public int[]? DeckIds { get; set; }
 

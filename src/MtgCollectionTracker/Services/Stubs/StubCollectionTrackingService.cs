@@ -1,6 +1,7 @@
 ﻿using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
 using ScryfallApi.Client;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
@@ -55,7 +56,7 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<CardSkuModel> DeleteCardSkuAsync(int skuId)
+    public ValueTask<CardSkuModel> DeleteCardSkuAsync(Guid skuId)
     {
         throw new System.NotImplementedException();
     }
@@ -95,7 +96,7 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<CardSkuModel> GetCardSkuByIdAsync(int id, CancellationToken cancel)
+    public ValueTask<CardSkuModel> GetCardSkuByIdAsync(Guid id, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
@@ -175,7 +176,7 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<IEnumerable<CardSkuModel>> UpdateCardMetadataAsync(ICollection<int> ids, IScryfallApiClient scryfallApiClient, UpdateCardMetadataProgressCallback? callback, CancellationToken cancel)
+    public ValueTask<IEnumerable<CardSkuModel>> UpdateCardMetadataAsync(ICollection<Guid> ids, IScryfallApiClient scryfallApiClient, UpdateCardMetadataProgressCallback? callback, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }

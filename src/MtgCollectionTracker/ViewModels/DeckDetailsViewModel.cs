@@ -373,7 +373,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
             _mainDeckByCardName = _mainDeckBySku = _sideboardByCardName = _sideboardBySku = null;
             UpdateView(this.Mode);
 
-            static int UpdateList(List<DeckCardModel> list, int skuId, int newSkuId, int quantity)
+            static int UpdateList(List<DeckCardModel> list, Guid skuId, Guid newSkuId, int quantity)
             {
                 int moved = 0;
                 var skus = list.FindAll(c => c.SkuId == skuId);

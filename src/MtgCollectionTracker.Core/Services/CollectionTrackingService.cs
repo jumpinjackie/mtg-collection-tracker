@@ -167,7 +167,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             .ToList();
     }
 
-    public async ValueTask<CardSkuModel> GetCardSkuByIdAsync(int id, CancellationToken cancel)
+    public async ValueTask<CardSkuModel> GetCardSkuByIdAsync(Guid id, CancellationToken cancel)
     {
         using var db = _db.Invoke();
         var sku = await db.Value
@@ -323,7 +323,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         return cards;
     }
 
-    public async ValueTask<IEnumerable<CardSkuModel>> UpdateCardMetadataAsync(ICollection<int> ids, IScryfallApiClient scryfallApiClient, UpdateCardMetadataProgressCallback? callback, CancellationToken cancel)
+    public async ValueTask<IEnumerable<CardSkuModel>> UpdateCardMetadataAsync(ICollection<Guid> ids, IScryfallApiClient scryfallApiClient, UpdateCardMetadataProgressCallback? callback, CancellationToken cancel)
     {
         using var db = _db.Invoke();
         var cards = new List<CardSkuModel>(ids.Count);
@@ -826,7 +826,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         return text.ToString();
     }
 
-    public async ValueTask<CardSkuModel> DeleteCardSkuAsync(int skuId)
+    public async ValueTask<CardSkuModel> DeleteCardSkuAsync(Guid skuId)
     {
         using var db = _db.Invoke();
         var sku = await db.Value.Cards.FindAsync(skuId);
@@ -1527,7 +1527,7 @@ public class CollectionTrackingService : ICollectionTrackingService
 
     public async ValueTask AddMissingMetadataAsync(UpdateCardMetadataProgressCallback callback, IScryfallApiClient scryfallApiClient, CancellationToken cancel)
     {
-        List<int> skuIdsToProcess;
+        List<Guid> skuIdsToProcess;
         List<int> wishlistToProcess;
         int processed = 0;
         int total = 0;
@@ -1621,7 +1621,7 @@ public class CollectionTrackingService : ICollectionTrackingService
 
     public async ValueTask NormalizeCardNamesAsync(UpdateCardMetadataProgressCallback callback, CancellationToken cancel)
     {
-        List<int> skuIdsToProcess;
+        List<Guid> skuIdsToProcess;
         List<int> wishlistToProcess;
         int total = 0;
         int processed = 0;
