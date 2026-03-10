@@ -30,6 +30,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
     readonly Func<EditDeckOrContainerViewModel> _editDeckOrContainer;
     readonly Func<NewDeckOrContainerViewModel> _newDeckOrContainer;
     readonly Func<LowestPriceCheckViewModel> _lowestPriceCheck;
+    readonly Func<DismantleDeckViewModel> _dismantleDeck;
 
     public DeckCollectionViewModel()
     {
@@ -41,6 +42,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
         _editDeckOrContainer = () => new();
         _newDeckOrContainer = () => new();
         _lowestPriceCheck = () => new();
+        _dismantleDeck = () => new();
         this.SelectedFormats.CollectionChanged += SelectedFormats_CollectionChanged;
         this.IsActive = true;
     }
@@ -52,6 +54,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
                                    Func<EditDeckOrContainerViewModel> editDeckOrContainer,
                                    Func<NewDeckOrContainerViewModel> newDeckOrContainer,
                                    Func<LowestPriceCheckViewModel> lowestPriceCheck,
+                                   Func<DismantleDeckViewModel> dismantleDeck,
                                    IMessenger messenger,
                                    IScryfallApiClient scryfallApiClient)
         : base(messenger)
@@ -64,6 +67,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
         _editDeckOrContainer = editDeckOrContainer;
         _newDeckOrContainer = newDeckOrContainer;
         _lowestPriceCheck = lowestPriceCheck;
+        _dismantleDeck = dismantleDeck;
         this.SelectedFormats.CollectionChanged += SelectedFormats_CollectionChanged;
         this.IsActive = true;
     }
@@ -164,25 +168,28 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
     {
         if (this.SelectedDeck != null)
         {
+            var selectedDeck = this.SelectedDeck;
             Messenger.Send(new OpenDialogMessage
             {
-                DrawerWidth = 800,
-                ViewModel = _dialog().WithConfirmation(
+                DrawerWidth = 500,
+                ViewModel = _dialog().WithContent(
                     "Dismantle Deck",
-                    $"Are you sure you want to dismantle ({this.SelectedDeck.Name})?",
-                    async () =>
-                    {
-                        try
+                    _dismantleDeck().WithDeck(
+                        selectedDeck.DeckId,
+                        selectedDeck.Name,
+                        async (containerId) =>
                         {
-                            await _service.DismantleDeckAsync(new() { DeckId = this.SelectedDeck.DeckId });
-                            this.Messenger.ToastNotify("Deck dismantled", Avalonia.Controls.Notifications.NotificationType.Success);
-                            this.Messenger.Send(new DeckDismantledMessage { Id = this.SelectedDeck.DeckId, Format = this.SelectedDeck.Format });
-                        }
-                        catch (Exception ex)
-                        {
-                            this.Messenger.ToastNotify($"Error dismantling deck: {ex.Message}", Avalonia.Controls.Notifications.NotificationType.Error);
-                        }
-                    })
+                            try
+                            {
+                                await _service.DismantleDeckAsync(new() { DeckId = selectedDeck.DeckId, ContainerId = containerId });
+                                this.Messenger.ToastNotify("Deck dismantled", Avalonia.Controls.Notifications.NotificationType.Success);
+                                this.Messenger.Send(new DeckDismantledMessage { Id = selectedDeck.DeckId, Format = selectedDeck.Format });
+                            }
+                            catch (Exception ex)
+                            {
+                                this.Messenger.ToastNotify($"Error dismantling deck: {ex.Message}", Avalonia.Controls.Notifications.NotificationType.Error);
+                            }
+                        }))
             });
         }
     }

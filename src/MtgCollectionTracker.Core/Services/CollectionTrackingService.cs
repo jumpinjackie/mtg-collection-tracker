@@ -220,10 +220,35 @@ public class CollectionTrackingService : ICollectionTrackingService
             queryable = queryable.Where(c => c.DeckId != null && query.DeckIds.Contains((int)c.DeckId));
 
         var bq = queryable;
-        if (query.IncludeScryfallMetadata)
+        if (query.IncludeScryfallMetadata || query.Colors?.Any() == true || query.CardTypes?.Any() == true)
             bq = queryable.Include(c => c.Scryfall);
 
-        return ToCardSkuModel(bq.OrderBy(c => c.CardName)).ToList();
+        var results = ToCardSkuModel(bq.OrderBy(c => c.CardName)).ToList();
+
+        if (query.Colors?.Any() == true)
+        {
+            var selectedColors = query.Colors.ToHashSet();
+            var hasColorless = selectedColors.Contains("C");
+            var nonColorlessColors = selectedColors.Where(c => c != "C").ToHashSet();
+            results = results.Where(c => MatchesColorFilter(c, hasColorless, nonColorlessColors)).ToList();
+        }
+
+        if (query.CardTypes?.Any() == true)
+        {
+            results = results.Where(c => c.CardType != null && query.CardTypes.Any(type => c.CardType.Contains(type, StringComparison.OrdinalIgnoreCase))).ToList();
+        }
+
+        return results;
+    }
+
+    private static bool MatchesColorFilter(CardSkuModel card, bool hasColorless, HashSet<string> nonColorlessColors)
+    {
+        var isColorless = card.Colors == null || card.Colors.Length == 0;
+        if (hasColorless && isColorless)
+            return true;
+        if (nonColorlessColors.Count > 0 && card.Colors != null && card.Colors.Any(color => nonColorlessColors.Contains(color)))
+            return true;
+        return false;
     }
 
     private IQueryable<CardSkuModel> ToCardSkuModel(IQueryable<CardSku> skus)
@@ -1193,6 +1218,13 @@ public class CollectionTrackingService : ICollectionTrackingService
 
         if (model.VendorOffers != null)
         {
+            var incomingVendorIds = new HashSet<int>(model.VendorOffers.Select(off => off.VendorId));
+            var offersToRemove = wi.OfferedPrices
+                .Where(o => !incomingVendorIds.Contains(o.VendorId))
+                .ToList();
+            foreach (var offer in offersToRemove)
+                wi.OfferedPrices.Remove(offer);
+
             foreach (var off in model.VendorOffers)
             {
                 var currentOffer = wi.OfferedPrices.FirstOrDefault(o => o.VendorId == off.VendorId);

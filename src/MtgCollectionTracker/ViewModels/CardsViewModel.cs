@@ -26,6 +26,18 @@ public partial class TagSelectionViewModel : ObservableObject
     private bool _isSelected;
 }
 
+public partial class FilterItemViewModel : ObservableObject
+{
+    [ObservableProperty]
+    private string _name = string.Empty;
+
+    [ObservableProperty]
+    private string _displayName = string.Empty;
+
+    [ObservableProperty]
+    private bool _isSelected;
+}
+
 public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAddedMessage>, IViewModelWithBusyState, IMultiModeCardListBehaviorHost, IRecipient<TagsAppliedMessage>, IRecipient<CardsSentToContainerMessage>, IRecipient<CardsSentToDeckMessage>, IRecipient<CardSkuSplitMessage>
 {
     readonly ICollectionTrackingService _service;
@@ -52,6 +64,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
 
         this.Behavior = new(this);
         this.SelectedTags.CollectionChanged += Tags_CollectionChanged;
+        InitializeFilterSubscriptions();
         this.IsActive = true;
     }
 
@@ -78,7 +91,33 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
 
         this.Behavior = new(this);
         this.SelectedTags.CollectionChanged += Tags_CollectionChanged;
+        InitializeFilterSubscriptions();
         this.IsActive = true;
+    }
+
+    private void InitializeFilterSubscriptions()
+    {
+        foreach (var item in ColorItems)
+            item.PropertyChanged += FilterItem_PropertyChanged;
+        foreach (var item in CardTypeItems)
+            item.PropertyChanged += FilterItem_PropertyChanged;
+    }
+
+    private void FilterItem_PropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(FilterItemViewModel.IsSelected))
+        {
+            if (sender is FilterItemViewModel item)
+            {
+                if (ColorItems.Contains(item))
+                    this.OnPropertyChanged(nameof(ColorFilterLabel));
+                else if (CardTypeItems.Contains(item))
+                    this.OnPropertyChanged(nameof(CardTypeFilterLabel));
+            }
+
+            this.OnPropertyChanged(nameof(CanSearch));
+            this.PerformSearchCommand.Execute(null);
+        }
     }
 
     private void Tags_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -167,10 +206,59 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
 
     public ObservableCollection<string> SelectedTags { get; } = new();
 
+    public ObservableCollection<FilterItemViewModel> ColorItems { get; } = new()
+    {
+        new FilterItemViewModel { Name = "W", DisplayName = "White" },
+        new FilterItemViewModel { Name = "U", DisplayName = "Blue" },
+        new FilterItemViewModel { Name = "B", DisplayName = "Black" },
+        new FilterItemViewModel { Name = "R", DisplayName = "Red" },
+        new FilterItemViewModel { Name = "G", DisplayName = "Green" },
+        new FilterItemViewModel { Name = "C", DisplayName = "Colorless" },
+    };
+
+    public ObservableCollection<FilterItemViewModel> CardTypeItems { get; } = new()
+    {
+        new FilterItemViewModel { Name = "Artifact", DisplayName = "Artifact" },
+        new FilterItemViewModel { Name = "Battle", DisplayName = "Battle" },
+        new FilterItemViewModel { Name = "Creature", DisplayName = "Creature" },
+        new FilterItemViewModel { Name = "Enchantment", DisplayName = "Enchantment" },
+        new FilterItemViewModel { Name = "Instant", DisplayName = "Instant" },
+        new FilterItemViewModel { Name = "Land", DisplayName = "Land" },
+        new FilterItemViewModel { Name = "Planeswalker", DisplayName = "Planeswalker" },
+        new FilterItemViewModel { Name = "Sorcery", DisplayName = "Sorcery" },
+        new FilterItemViewModel { Name = "Tribal", DisplayName = "Tribal" },
+    };
+
+    public string ColorFilterLabel
+    {
+        get
+        {
+            var selected = ColorItems.Where(c => c.IsSelected).Select(c => c.DisplayName).ToList();
+            return selected.Count == 0 ? "Color: Any" : $"Color: {string.Join(", ", selected)}";
+        }
+    }
+
+    public string CardTypeFilterLabel
+    {
+        get
+        {
+            var selected = CardTypeItems.Where(t => t.IsSelected).Select(t => t.DisplayName).ToList();
+            return selected.Count == 0 ? "Type: Any" : $"Type: {string.Join(", ", selected)}";
+        }
+    }
+
     [RelayCommand]
     private async Task PerformSearch()
     {
-        var hasMinSearchParams = !string.IsNullOrWhiteSpace(this.SearchText) || this.SelectedTags.Count > 0 || this.UnParented || this.MissingMetadata;
+        var selectedColors = this.ColorItems.Where(c => c.IsSelected).Select(c => c.Name).ToList();
+        var selectedCardTypes = this.CardTypeItems.Where(t => t.IsSelected).Select(t => t.Name).ToList();
+
+        var hasMinSearchParams = !string.IsNullOrWhiteSpace(this.SearchText)
+            || this.SelectedTags.Count > 0
+            || this.UnParented
+            || this.MissingMetadata
+            || selectedColors.Count > 0
+            || selectedCardTypes.Count > 0;
         if (!hasMinSearchParams)
             return;
 
@@ -184,6 +272,8 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
             {
                 SearchFilter = this.SearchText,
                 Tags = this.SelectedTags.Count > 0 ? this.SelectedTags : null,
+                Colors = selectedColors.Count > 0 ? selectedColors : null,
+                CardTypes = selectedCardTypes.Count > 0 ? selectedCardTypes : null,
                 NoProxies = this.NoProxies,
                 NotInDecks = this.NotInDecks,
                 UnParented = this.UnParented,
@@ -246,7 +336,9 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
             if (((IViewModelWithBusyState)this).IsBusy)
                 return false;
 
-            if (!this.UnParented && !this.MissingMetadata)
+            if (!this.UnParented && !this.MissingMetadata
+                && !this.ColorItems.Any(c => c.IsSelected)
+                && !this.CardTypeItems.Any(t => t.IsSelected))
                 return !string.IsNullOrWhiteSpace(SearchText);
 
             return true;

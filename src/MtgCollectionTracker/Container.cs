@@ -46,6 +46,7 @@ namespace MtgCollectionTracker;
 [Register(typeof(PlaytestingViewModel), Scope.InstancePerResolution)]
 [Register(typeof(PlaytestGameStateViewModel), Scope.InstancePerResolution)]
 [Register(typeof(PlaytestCardViewModel), Scope.InstancePerResolution)]
+[Register(typeof(DismantleDeckViewModel), Scope.InstancePerResolution)]
 [Register(typeof(CardsDbContext), Scope.InstancePerResolution)]
 [Register(typeof(CollectionTrackingService), Scope.InstancePerResolution, typeof(ICollectionTrackingService))]
 [Register(typeof(CardImageCache), Scope.InstancePerResolution)]
