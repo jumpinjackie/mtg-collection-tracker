@@ -265,9 +265,23 @@ internal class ScryfallMetadataResolver
 
                 // P/T
                 if (sfMeta.Power == null)
-                    sfMeta.Power = sfCardMeta.Power;
+                    sfMeta.Power = sfCardMeta.CardFaces?.Length > 0 ? sfCardMeta.CardFaces[0].Power : sfCardMeta.Power;
                 if (sfMeta.Toughness == null)
-                    sfMeta.Toughness = sfCardMeta.Toughness;
+                    sfMeta.Toughness = sfCardMeta.CardFaces?.Length > 0 ? sfCardMeta.CardFaces[0].Toughness : sfCardMeta.Toughness;
+
+                // Back face P/T
+                if (sfMeta.BackPower == null)
+                    sfMeta.BackPower = sfCardMeta.CardFaces?.Length > 1 ? sfCardMeta.CardFaces[1].Power : null;
+                if (sfMeta.BackToughness == null)
+                    sfMeta.BackToughness = sfCardMeta.CardFaces?.Length > 1 ? sfCardMeta.CardFaces[1].Toughness : null;
+
+                // Loyalty
+                if (sfMeta.Loyalty == null)
+                    sfMeta.Loyalty = sfCardMeta.CardFaces?.Length > 0 ? sfCardMeta.CardFaces[0].Loyalty : sfCardMeta.Loyalty;
+
+                // Back face loyalty
+                if (sfMeta.BackLoyalty == null)
+                    sfMeta.BackLoyalty = sfCardMeta.CardFaces?.Length > 1 ? sfCardMeta.CardFaces[1].Loyalty : null;
 
                 // Color
                 if (sfMeta.Colors == null)

@@ -157,6 +157,8 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
 
     public string? PT { get; set; }
 
+    public string? Loyalty { get; set; }
+
     public string[]? Colors { get; set; }
 
     public string[]? ColorIdentity { get; set; }
@@ -226,6 +228,7 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
         {
             this.PT = sku.Power + "/" + sku.Toughness;
         }
+        this.Loyalty = sku.Loyalty;
 
         this.IsDoubleFaced = sku.IsDoubleFaced;
         this.IsSideboard = sku.IsSideboard;

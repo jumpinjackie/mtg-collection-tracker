@@ -66,6 +66,26 @@ public class ScryfallCardMetadata
     public string? Toughness { get; set; }
 
     /// <summary>
+    /// The back face power (for double-faced creature cards)
+    /// </summary>
+    public string? BackPower { get; set; }
+
+    /// <summary>
+    /// The back face toughness (for double-faced creature cards)
+    /// </summary>
+    public string? BackToughness { get; set; }
+
+    /// <summary>
+    /// The card's loyalty (for planeswalkers)
+    /// </summary>
+    public string? Loyalty { get; set; }
+
+    /// <summary>
+    /// The back face loyalty (for double-faced planeswalker cards)
+    /// </summary>
+    public string? BackLoyalty { get; set; }
+
+    /// <summary>
     /// The card's casting cost
     /// </summary>
     [MaxLength(32)]

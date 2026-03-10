@@ -50,6 +50,14 @@ public class CardSkuModel
 
     public string? Toughness { get; set; }
 
+    public string? BackPower { get; set; }
+
+    public string? BackToughness { get; set; }
+
+    public string? Loyalty { get; set; }
+
+    public string? BackLoyalty { get; set; }
+
     public string[]? Colors { get; set; }
 
     public string[]? ColorIdentity { get; set; }
