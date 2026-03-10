@@ -95,7 +95,11 @@ namespace MtgCollectionTracker.Data.Migrations
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            // Rebuilding down would lose the UUID-to-int mapping, so we recreate with new integers
+            // WARNING: Rolling back this migration will result in loss of all tag associations.
+            // The original UUID→int ID mapping cannot be recovered, so CardSkuTag rows cannot be
+            // reliably re-linked to the restored integer-keyed Cards rows.
+
+            // Rebuild Cards table with new auto-increment integer PKs
             migrationBuilder.Sql(@"
                 CREATE TABLE ""Cards_old"" (
                     ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_Cards"" PRIMARY KEY AUTOINCREMENT,
@@ -130,6 +134,8 @@ namespace MtgCollectionTracker.Data.Migrations
                 FROM ""Cards""
             ");
 
+            // Rebuild empty CardSkuTag table with integer FK.
+            // All existing tag associations are dropped because the UUID→int mapping is unavailable.
             migrationBuilder.Sql(@"
                 CREATE TABLE ""CardSkuTag_old"" (
                     ""Id"" INTEGER NOT NULL CONSTRAINT ""PK_CardSkuTag"" PRIMARY KEY AUTOINCREMENT,
@@ -139,7 +145,6 @@ namespace MtgCollectionTracker.Data.Migrations
                 )
             ");
 
-            // NOTE: Tag-to-card mapping is lost in down migration since UUID→int mapping is unavailable
             migrationBuilder.Sql(@"DROP TABLE ""CardSkuTag""");
             migrationBuilder.Sql(@"DROP TABLE ""Cards""");
             migrationBuilder.Sql(@"ALTER TABLE ""Cards_old"" RENAME TO ""Cards""");
