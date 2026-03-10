@@ -147,4 +147,121 @@ public class CollectionTrackingServiceTests : IDisposable
         Assert.Contains(decks, d => d.DeckName == "Deck A");
         Assert.Contains(decks, d => d.DeckName == "Deck B");
     }
+
+    // -------------------------------------------------------------------------
+    // Tests for: updating a SKU's collector number must not reset its language
+    // -------------------------------------------------------------------------
+
+    [Fact]
+    public async Task GetCardSkuByIdAsync_ReturnsCorrectLanguage_ForNonEnglishSku()
+    {
+        // Arrange — insert a Japanese card SKU directly via the db context
+        using (var ctx = new CardsDbContext(_dbOptions))
+        {
+            ctx.Cards.Add(new CardSku
+            {
+                CardName = "Lightning Bolt",
+                Edition = "M10",
+                LanguageId = "ja",
+                Quantity = 1
+            });
+            ctx.SaveChanges();
+        }
+
+        // Act
+        var service = CreateService();
+        int id;
+        using (var ctx = new CardsDbContext(_dbOptions))
+        {
+            id = ctx.Cards.Single().Id;
+        }
+
+        var model = await service.GetCardSkuByIdAsync(id, CancellationToken.None);
+
+        // Assert — language must be "ja", not the fallback "en"
+        Assert.Equal("ja", model.Language);
+    }
+
+    [Fact]
+    public async Task UpdateCardSkuAsync_WithCollectorNumberOnly_PreservesNonEnglishLanguage()
+    {
+        // Arrange — insert a Japanese card SKU
+        using (var ctx = new CardsDbContext(_dbOptions))
+        {
+            ctx.Cards.Add(new CardSku
+            {
+                CardName = "Lightning Bolt",
+                Edition = "M10",
+                LanguageId = "ja",
+                Quantity = 1
+            });
+            ctx.SaveChanges();
+        }
+
+        int id;
+        using (var ctx = new CardsDbContext(_dbOptions))
+        {
+            id = ctx.Cards.Single().Id;
+        }
+
+        // Act — update only the collector number, do NOT provide a language
+        var service = CreateService();
+        await service.UpdateCardSkuAsync(
+            new MtgCollectionTracker.Core.Model.UpdateCardSkuInputModel
+            {
+                Ids = [id],
+                CollectorNumber = "123"
+            },
+            scryfallApiClient: null,
+            cancel: CancellationToken.None);
+
+        // Assert — the LanguageId in the database must still be "ja"
+        using (var ctx = new CardsDbContext(_dbOptions))
+        {
+            var sku = ctx.Cards.Single(c => c.Id == id);
+            Assert.Equal("ja", sku.LanguageId);
+            Assert.Equal("123", sku.CollectorNumber);
+        }
+    }
+
+    [Fact]
+    public async Task UpdateCardSkuAsync_WithCollectorNumberOnly_GetCardSkuByIdReturnsCorrectLanguage()
+    {
+        // Arrange — insert a Japanese card SKU
+        using (var ctx = new CardsDbContext(_dbOptions))
+        {
+            ctx.Cards.Add(new CardSku
+            {
+                CardName = "Lightning Bolt",
+                Edition = "M10",
+                LanguageId = "ja",
+                Quantity = 1
+            });
+            ctx.SaveChanges();
+        }
+
+        int id;
+        using (var ctx = new CardsDbContext(_dbOptions))
+        {
+            id = ctx.Cards.Single().Id;
+        }
+
+        // Act — update only the collector number
+        var service = CreateService();
+        await service.UpdateCardSkuAsync(
+            new MtgCollectionTracker.Core.Model.UpdateCardSkuInputModel
+            {
+                Ids = [id],
+                CollectorNumber = "123"
+            },
+            scryfallApiClient: null,
+            cancel: CancellationToken.None);
+
+        // Re-fetch via the service (exercises the Include fix in GetCardSkuByIdAsync)
+        var model = await service.GetCardSkuByIdAsync(id, CancellationToken.None);
+
+        // Assert — language returned by the service model must be "ja", not the fallback "en"
+        Assert.Equal("ja", model.Language);
+        Assert.Equal("123", model.CollectorNumber);
+    }
 }
