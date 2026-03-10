@@ -150,6 +150,92 @@ public class CollectionTrackingServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task DismantleDeckAsync_WithNoContainer_ReturnsCardsToUnparented()
+    {
+        var service = CreateService();
+
+        // Create a deck and add two card SKUs to it
+        var deck = await service.CreateDeckAsync("Legacy Burn", "Legacy", null);
+        await service.AddToDeckOrContainerAsync(null, deck.Id, new() { CardName = "Lightning Bolt", Edition = "M10", Quantity = 4 });
+        await service.AddToDeckOrContainerAsync(null, deck.Id, new() { CardName = "Mountain", Edition = "M10", Quantity = 16 });
+
+        var result = await service.DismantleDeckAsync(new() { DeckId = deck.Id, ContainerId = null });
+
+        Assert.Equal(20, result.Removed);
+        Assert.Null(result.ContainerName);
+
+        // Deck should be gone
+        var decks = service.GetDecks(null).ToList();
+        Assert.DoesNotContain(decks, d => d.Id == deck.Id);
+
+        // Cards should be unparented (no container, no deck)
+        var cards = service.GetCards(new MtgCollectionTracker.Core.Model.CardQueryModel()).ToList();
+        Assert.All(cards, c => Assert.Null(c.ContainerName));
+        Assert.All(cards, c => Assert.Null(c.DeckName));
+    }
+
+    [Fact]
+    public async Task DismantleDeckAsync_WithContainer_ReturnsCardsToContainer()
+    {
+        var service = CreateService();
+
+        // Create a container, a deck and add card SKUs to the deck
+        var container = await service.CreateContainerAsync("Main Binder", null);
+        var deck = await service.CreateDeckAsync("Legacy Burn", "Legacy", null);
+        await service.AddToDeckOrContainerAsync(null, deck.Id, new() { CardName = "Lightning Bolt", Edition = "M10", Quantity = 4 });
+        await service.AddToDeckOrContainerAsync(null, deck.Id, new() { CardName = "Mountain", Edition = "M10", Quantity = 16 });
+
+        var result = await service.DismantleDeckAsync(new() { DeckId = deck.Id, ContainerId = container.Id });
+
+        Assert.Equal(20, result.Removed);
+        Assert.Equal("Main Binder", result.ContainerName);
+
+        // Deck should be gone
+        var decks = service.GetDecks(null).ToList();
+        Assert.DoesNotContain(decks, d => d.Id == deck.Id);
+
+        // Cards should be in the specified container with no deck
+        var cards = service.GetCards(new MtgCollectionTracker.Core.Model.CardQueryModel()).ToList();
+        Assert.All(cards, c => Assert.StartsWith("Main Binder", c.ContainerName));
+        Assert.All(cards, c => Assert.Null(c.DeckName));
+    }
+
+    [Fact]
+    public async Task DismantleDeckAsync_ClearsSideboardFlag()
+    {
+        var service = CreateService();
+
+        var deck = await service.CreateDeckAsync("Vintage Deck", "Vintage", null);
+        await service.AddToDeckOrContainerAsync(null, deck.Id, new() { CardName = "Black Lotus", Edition = "LEA", Quantity = 1, IsSideboard = true });
+
+        await service.DismantleDeckAsync(new() { DeckId = deck.Id, ContainerId = null });
+
+        // The card should no longer be flagged as sideboard
+        var cards = service.GetCards(new MtgCollectionTracker.Core.Model.CardQueryModel()).ToList();
+        Assert.Single(cards);
+        Assert.False(cards[0].IsSideboard);
+    }
+
+    [Fact]
+    public async Task DismantleDeckAsync_InvalidDeckId_ThrowsException()
+    {
+        var service = CreateService();
+
+        await Assert.ThrowsAsync<Exception>(() =>
+            service.DismantleDeckAsync(new() { DeckId = 9999, ContainerId = null }).AsTask());
+    }
+
+    [Fact]
+    public async Task DismantleDeckAsync_InvalidContainerId_ThrowsException()
+    {
+        var service = CreateService();
+        var deck = await service.CreateDeckAsync("Test Deck", "Modern", null);
+
+        await Assert.ThrowsAsync<Exception>(() =>
+            service.DismantleDeckAsync(new() { DeckId = deck.Id, ContainerId = 9999 }).AsTask());
+    }
+
+    [Fact]
     public async Task UpdateWishlistItemAsync_RemovesVendorOffer_WhenOfferNotInUpdatedList()
     {
         // Arrange: seed two vendors and a wishlist item with both vendors' offers
