@@ -255,19 +255,36 @@ internal class ScryfallMetadataResolver
                 if (sfMeta.ManaValue == null)
                     sfMeta.ManaValue = (int)sfCardMeta.Cmc;
 
-                // Casting cost
-                if (sfMeta.CastingCost == null)
-                    sfMeta.CastingCost = sfCardMeta.ManaCost;
+                var frontFace = sfCardMeta.CardFaces?.Length > 0 ? sfCardMeta.CardFaces[0] : null;
+                var backFace = sfCardMeta.CardFaces?.Length > 1 ? sfCardMeta.CardFaces[1] : null;
 
-                // Oracle text
+                // Casting cost (use front face for DFCs since root ManaCost is null for them)
+                if (sfMeta.CastingCost == null)
+                    sfMeta.CastingCost = frontFace?.ManaCost ?? sfCardMeta.ManaCost;
+
+                // Oracle text (use front face for DFCs since root OracleText is null for them)
                 if (sfMeta.OracleText != sfCardMeta.OracleText)
-                    sfMeta.OracleText = sfCardMeta.OracleText;
+                    sfMeta.OracleText = frontFace?.OracleText ?? sfCardMeta.OracleText;
 
                 // P/T
                 if (sfMeta.Power == null)
-                    sfMeta.Power = sfCardMeta.Power;
+                    sfMeta.Power = frontFace?.Power ?? sfCardMeta.Power;
                 if (sfMeta.Toughness == null)
-                    sfMeta.Toughness = sfCardMeta.Toughness;
+                    sfMeta.Toughness = frontFace?.Toughness ?? sfCardMeta.Toughness;
+
+                // Back face P/T
+                if (sfMeta.BackPower == null)
+                    sfMeta.BackPower = backFace?.Power;
+                if (sfMeta.BackToughness == null)
+                    sfMeta.BackToughness = backFace?.Toughness;
+
+                // Loyalty
+                if (sfMeta.Loyalty == null)
+                    sfMeta.Loyalty = frontFace?.Loyalty ?? sfCardMeta.Loyalty;
+
+                // Back face loyalty
+                if (sfMeta.BackLoyalty == null)
+                    sfMeta.BackLoyalty = backFace?.Loyalty;
 
                 // Color
                 if (sfMeta.Colors == null)
