@@ -65,13 +65,15 @@ public static class PublicExtensionMethods
                     {
                         return (true, fuzzyMatch.Name, fuzzyMatch.Set, apiCalls);
                     }
-                    // If not a paper card, try to find a paper printing of the same name
+                    // If not a paper card, try to find a paper printing of the same name.
+                    // The search results may contain cards with different names, so filter
+                    // by both the paper flag and an exact case-insensitive name match.
                     var paperCards = await client.Cards.Search(fuzzyMatch.Name, 1, new SearchOptions()
                     {
                         IncludeMultilingual = true,
                         Mode = SearchOptions.RollupMode.Prints
                     });
-                    var paperCard = paperCards.Data.FirstOrDefault(c => c.Games?.Contains("paper") == true);
+                    var paperCard = paperCards.Data.FirstOrDefault(c => c.Games?.Contains("paper") == true && string.Equals(c.Name, fuzzyMatch.Name, StringComparison.OrdinalIgnoreCase));
                     if (paperCard != null)
                     {
                         return (true, paperCard.Name, paperCard.Set, apiCalls);
