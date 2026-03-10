@@ -3,6 +3,7 @@ using Moq;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.ViewModels;
+using System;
 
 namespace MtgCollectionTracker.Tests;
 
@@ -271,7 +272,7 @@ public class CardSkuItemViewModelTests
         var vm = CreateViewModel();
         var sku = new CardSkuModel
         {
-            Id = 1,
+            Id = Guid.NewGuid(),
             CardName = "Black Lotus",
             Edition = "PROXY",
             Quantity = 4,
@@ -289,7 +290,7 @@ public class CardSkuItemViewModelTests
         var vm = CreateViewModel();
         var sku = new CardSkuModel
         {
-            Id = 2,
+            Id = Guid.NewGuid(),
             CardName = "Lightning Bolt",
             Edition = "M10",
             Quantity = 4,

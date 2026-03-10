@@ -4,7 +4,7 @@ namespace MtgCollectionTracker.Core.Model;
 
 public class DeckCardModel
 {
-    public int SkuId { get; set; }
+    public Guid SkuId { get; set; }
 
     public string CardName { get; set; }
 
@@ -34,7 +34,7 @@ public class DeckCardModel
 
     public string[]? ColorIdentity { get; set; }
 
-    public DeckCardModel WithSkuId(int id)
+    public DeckCardModel WithSkuId(Guid id)
     {
         return new DeckCardModel
         {

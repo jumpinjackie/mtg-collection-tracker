@@ -2,7 +2,7 @@
 
 public class SplitCardSkuInputModel
 {
-    public int CardSkuId { get; set; }
+    public Guid CardSkuId { get; set; }
 
     public int Quantity { get; set; }
 }

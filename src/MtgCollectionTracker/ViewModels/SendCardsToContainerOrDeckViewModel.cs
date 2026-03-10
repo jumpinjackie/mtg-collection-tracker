@@ -18,7 +18,7 @@ namespace MtgCollectionTracker.ViewModels;
 
 public interface ISendableCardItem
 {
-    int Id { get; }
+    Guid Id { get; }
 
     int Quantity { get; }
 
@@ -35,7 +35,7 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
     readonly Func<ContainerViewModel> _container;
     readonly Func<DeckViewModel> _deck;
 
-    record MockSendableCard(int Id, int Quantity, string CardName, string Edition) : ISendableCardItem;
+    record MockSendableCard(Guid Id, int Quantity, string CardName, string Edition) : ISendableCardItem;
 
     public SendCardsToContainerOrDeckViewModel(IMessenger messenger,
                                                Func<ContainerViewModel> container,
@@ -62,15 +62,15 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
             new ContainerViewModel().WithData(new() { Id = 3, Name = "Shoe Box" })
         ];
         this.Cards = [
-            new MockSendableCard(1, 1, "Black Lotus", "LEB"),
-            new MockSendableCard(2, 1, "Mox Jet", "LEB"),
-            new MockSendableCard(3, 1, "Mox Ruby", "LEB"),
-            new MockSendableCard(4, 1, "Mox Emerald", "LEB"),
-            new MockSendableCard(5, 1, "Mox Pearl", "LEB"),
-            new MockSendableCard(6, 1, "Mox Sapphire", "LEB"),
-            new MockSendableCard(7, 1, "Ancestral Recall", "LEB"),
-            new MockSendableCard(8, 1, "Time Walk", "LEB"),
-            new MockSendableCard(9, 1, "Timetwister", "LEB")
+            new MockSendableCard(Guid.NewGuid(), 1, "Black Lotus", "LEB"),
+            new MockSendableCard(Guid.NewGuid(), 1, "Mox Jet", "LEB"),
+            new MockSendableCard(Guid.NewGuid(), 1, "Mox Ruby", "LEB"),
+            new MockSendableCard(Guid.NewGuid(), 1, "Mox Emerald", "LEB"),
+            new MockSendableCard(Guid.NewGuid(), 1, "Mox Pearl", "LEB"),
+            new MockSendableCard(Guid.NewGuid(), 1, "Mox Sapphire", "LEB"),
+            new MockSendableCard(Guid.NewGuid(), 1, "Ancestral Recall", "LEB"),
+            new MockSendableCard(Guid.NewGuid(), 1, "Time Walk", "LEB"),
+            new MockSendableCard(Guid.NewGuid(), 1, "Timetwister", "LEB")
         ];
         this.AvailableDecks = [
             new DeckViewModel().WithData(new() { Id = 1, Format = "Vintage", Name = "[Vintage] My Vintage Deck", DeckName = "My Vintage Deck"}),

@@ -5,6 +5,7 @@ using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Data;
 using StrongInject;
+using System;
 
 namespace MtgCollectionTracker.Tests;
 
@@ -171,7 +172,7 @@ public class CollectionTrackingServiceTests : IDisposable
 
         // Act
         var service = CreateService();
-        int id;
+        Guid id;
         using (var ctx = new CardsDbContext(_dbOptions))
         {
             id = ctx.Cards.Single().Id;
@@ -199,7 +200,7 @@ public class CollectionTrackingServiceTests : IDisposable
             ctx.SaveChanges();
         }
 
-        int id;
+        Guid id;
         using (var ctx = new CardsDbContext(_dbOptions))
         {
             id = ctx.Cards.Single().Id;
@@ -241,7 +242,7 @@ public class CollectionTrackingServiceTests : IDisposable
             ctx.SaveChanges();
         }
 
-        int id;
+        Guid id;
         using (var ctx = new CardsDbContext(_dbOptions))
         {
             id = ctx.Cards.Single().Id;

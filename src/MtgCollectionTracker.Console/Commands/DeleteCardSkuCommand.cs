@@ -8,7 +8,7 @@ namespace MtgCollectionTracker.Console.Commands;
 internal class DeleteCardSkuCommand : CommandBase
 {
     [Option("sku-id", Required = true, HelpText = "The id of the card sku")]
-    public int SkuId { get; set; }
+    public Guid SkuId { get; set; }
 
     protected override async ValueTask<int> ExecuteInternalAsync(IServiceProvider serviceProvider)
     {

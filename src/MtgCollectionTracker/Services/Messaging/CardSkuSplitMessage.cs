@@ -1,4 +1,6 @@
-﻿namespace MtgCollectionTracker.Services.Messaging;
+﻿using System;
+
+namespace MtgCollectionTracker.Services.Messaging;
 
 internal class CardSkuSplitMessage
 {
@@ -8,7 +10,7 @@ internal class CardSkuSplitMessage
 
     public required int Quantity { get; set; }
 
-    public required int SplitSkuId { get; set; }
+    public required Guid SplitSkuId { get; set; }
 
-    public required int NewSkuId { get; set; }
+    public required Guid NewSkuId { get; set; }
 }

@@ -4,6 +4,7 @@ using CommunityToolkit.Mvvm.Input;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services.Stubs;
+using System;
 using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
@@ -23,7 +24,7 @@ public partial class CardVisualViewModel : ViewModelBase, ICardSkuItem, ISendabl
         _service = service;
     }
 
-    public int Id { get; set; }
+    public Guid Id { get; set; }
 
     public string? ScryfallId { get; set; }
 

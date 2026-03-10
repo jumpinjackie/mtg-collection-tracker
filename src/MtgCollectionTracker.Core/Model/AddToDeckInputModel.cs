@@ -2,7 +2,7 @@
 
 public class AddToDeckInputModel
 {
-    public int CardSkuId { get; set; }
+    public Guid CardSkuId { get; set; }
 
     public int DeckId { get; set; }
 

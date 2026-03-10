@@ -37,7 +37,7 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
         this.TagsText = $"{this.TagList.Length} tag(s)";
     }
 
-    public int Id { get; private set; }
+    public Guid Id { get; private set; }
 
     public string? ScryfallId { get; private set; }
 
