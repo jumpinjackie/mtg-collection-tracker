@@ -31,6 +31,12 @@ jobs:
     #  run: dotnet workload install wasm-tools
     - name: Add pupnet
       run: dotnet tool install -g KuiperZone.PupNet --version 1.8.0
+    - name: Set build version
+      run: |
+        SHORT_SHA="${GITHUB_SHA:0:7}"
+        APP_VER="${VERSION}-${GITHUB_RUN_NUMBER}.${SHORT_SHA}"
+        echo "APP_VERSION=${APP_VER}" >> $GITHUB_ENV
+        echo "APP_VERSION_PUPNET=${APP_VER}-1" >> $GITHUB_ENV
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
@@ -38,20 +44,20 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal
     - name: Publish windows
-      run: pupnet --runtime win-x64 --kind zip --skip-yes --app-version ${{env.VERSION}}
+      run: pupnet --runtime win-x64 --kind zip --skip-yes --app-version ${{env.APP_VERSION}}
     #- name: Publish windows single file
     #  run: dotnet publish -c Release -r win-x64 -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:PublishTrimmed=true --self-contained -o publish/desktop-sf/win-x64 ./src/MtgCollectionTracker.Desktop
     - name: Publish linux
-      run: pupnet --runtime linux-x64 --kind zip --skip-yes --app-version ${{env.VERSION}}
+      run: pupnet --runtime linux-x64 --kind zip --skip-yes --app-version ${{env.APP_VERSION}}
     - name: Publish osx
-      run: pupnet --runtime osx-x64 --kind zip --skip-yes --app-version ${{env.VERSION}}
+      run: pupnet --runtime osx-x64 --kind zip --skip-yes --app-version ${{env.APP_VERSION}}
     #- name: Publish WASM AppBundle
     #  run: |
     #    dotnet publish -c Release -r browser-wasm ./src/Maestro.Browser
     #    cp -R ./src/Maestro.Browser/bin/Release/net8.0/browser-wasm/AppBundle ./artifacts/browser-wasm
     #    tar -zcf ./artifacts/files/MtgCollectionTracker-${{env.VERSION}}-browser-wasm.tar.gz -C ./artifacts/browser-wasm .
     - name: Publish linux appimage
-      run: pupnet --runtime linux-x64 --kind appimage --skip-yes --app-version ${{env.VERSION}}
+      run: pupnet --runtime linux-x64 --kind appimage --skip-yes --app-version ${{env.APP_VERSION}}
     #- name: Deploy WASM AppBundle to GH pages
     #  uses: peaceiris/actions-gh-pages@v3
     #  with:
@@ -64,36 +70,36 @@ jobs:
         mkdir -p artifacts/desktop/win-x64
         mkdir -p artifacts/desktop/linux-x64
         mkdir -p artifacts/desktop/osx-x64
-        unzip artifacts/files/MtgCollectionTracker-${{env.VERSION_PUPNET}}.win-x64.zip -d artifacts/desktop/win-x64
-        unzip artifacts/files/MtgCollectionTracker-${{env.VERSION_PUPNET}}.linux-x64.zip -d artifacts/desktop/linux-x64
-        unzip artifacts/files/MtgCollectionTracker-${{env.VERSION_PUPNET}}.osx-x64.zip -d artifacts/desktop/osx-x64
+        unzip artifacts/files/MtgCollectionTracker-${{env.APP_VERSION_PUPNET}}.win-x64.zip -d artifacts/desktop/win-x64
+        unzip artifacts/files/MtgCollectionTracker-${{env.APP_VERSION_PUPNET}}.linux-x64.zip -d artifacts/desktop/linux-x64
+        unzip artifacts/files/MtgCollectionTracker-${{env.APP_VERSION_PUPNET}}.osx-x64.zip -d artifacts/desktop/osx-x64
         chmod +x artifacts/files/*.AppImage
         ls -la artifacts
         ls -la artifacts/desktop
     - name: Upload Windows artifact for this build
       uses: actions/upload-artifact@v4
       with:
-        name: MtgCollectionTracker-${{env.VERSION}}-win-x64
+        name: MtgCollectionTracker-${{env.APP_VERSION}}-win-x64
         path: artifacts/desktop/win-x64
     - name: Upload Linux artifact for this build
       uses: actions/upload-artifact@v4
       with:
-        name: MtgCollectionTracker-${{env.VERSION}}-linux-x64
+        name: MtgCollectionTracker-${{env.APP_VERSION}}-linux-x64
         path: artifacts/desktop/linux-x64
     - name: Upload OSX artifact for this build
       uses: actions/upload-artifact@v4
       with:
-        name: MtgCollectionTracker-${{env.VERSION}}-osx-x64
+        name: MtgCollectionTracker-${{env.APP_VERSION}}-osx-x64
         path: artifacts/desktop/osx-x64
     #- name: Upload WASM AppBundle artifact for this build
     #  uses: actions/upload-artifact@v4
     #  with:
-    #    name: MtgCollectionTracker-${{env.VERSION}}-browser-wasm
+    #    name: MtgCollectionTracker-${{env.APP_VERSION}}-browser-wasm
     #    path: artifacts/browser-wasm
     - name: Upload AppImage artifact for this build
       uses: actions/upload-artifact@v4
       with:
-        name: MtgCollectionTracker-${{env.VERSION}}.AppImage
+        name: MtgCollectionTracker-${{env.APP_VERSION}}.AppImage
         path: artifacts/files/*.AppImage
     - name: Create release from tag
       uses: softprops/action-gh-release@v1
