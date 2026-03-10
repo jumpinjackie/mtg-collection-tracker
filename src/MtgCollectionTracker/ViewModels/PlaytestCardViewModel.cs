@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
@@ -27,6 +28,37 @@ public partial class PlaytestCardViewModel : ViewModelBase
     [ObservableProperty]
     private string _cardName = "";
 
+    /// <summary>
+    /// The name to display for the current face of the card.
+    /// For double-faced cards, shows only the relevant face name.
+    /// </summary>
+    public string DisplayName
+    {
+        get
+        {
+            if (!IsDoubleFaced)
+                return CardName;
+
+            var sep = CardName.IndexOf(" // ", System.StringComparison.Ordinal);
+            if (sep < 0)
+                return CardName;
+
+            return IsFrontFace
+                ? CardName[..sep]
+                : CardName[(sep + 4)..];
+        }
+    }
+
+    /// <summary>
+    /// Counters placed on this card or token
+    /// </summary>
+    public ObservableCollection<CardCounterViewModel> Counters { get; } = new();
+
+    /// <summary>
+    /// Whether this card has a mana cost to display
+    /// </summary>
+    public bool HasManaCost => !string.IsNullOrEmpty(ManaCost);
+
     [ObservableProperty]
     private string? _scryfallId;
 
@@ -34,6 +66,7 @@ public partial class PlaytestCardViewModel : ViewModelBase
     private string? _scryfallIdBack;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasManaCost))]
     private string? _manaCost;
 
     [ObservableProperty]
@@ -61,6 +94,7 @@ public partial class PlaytestCardViewModel : ViewModelBase
     private bool _isTapped;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(DisplayName))]
     private bool _isFrontFace = true;
 
     [ObservableProperty]

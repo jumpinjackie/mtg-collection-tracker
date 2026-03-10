@@ -1,0 +1,41 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="480" d:DesignHeight="320"
+             x:Class="MtgCollectionTracker.Views.AddCounterView"
+             x:DataType="vm:AddCounterViewModel">
+    <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto" RowSpacing="12">
+        <StackPanel Grid.Row="0" Spacing="4">
+            <TextBlock Text="Counter Name" FontWeight="Bold" />
+            <TextBox Text="{Binding CounterName}" Watermark="e.g. +1/+1, Loyalty, Charge" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="1" Spacing="4">
+            <TextBlock Text="Color" FontWeight="Bold" />
+            <Grid ColumnDefinitions="*,40" ColumnSpacing="8">
+                <TextBox Grid.Column="0" Text="{Binding ColorHex}" Watermark="#22CC44 or LimeGreen" />
+                <Border Grid.Column="1" Width="40" Height="32" CornerRadius="4"
+                        Background="{Binding PreviewBrush}"
+                        BorderBrush="Gray" BorderThickness="1" />
+            </Grid>
+            <TextBlock Text="{Binding ColorParseError}" Foreground="Tomato" FontSize="11"
+                       IsVisible="{Binding ColorParseError, Converter={x:Static ObjectConverters.IsNotNull}}" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="2" Spacing="4">
+            <TextBlock Text="Initial Quantity" FontWeight="Bold" />
+            <NumericUpDown Value="{Binding Quantity}"
+                           Minimum="1"
+                           Increment="1"
+                           FormatString="0"
+                           AllowSpin="True" />
+        </StackPanel>
+
+        <StackPanel Grid.Row="4" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,4,0,0">
+            <Button Content="Cancel" Command="{Binding CancelCommand}" />
+            <Button Content="Add Counter" Command="{Binding AddCommand}" IsEnabled="{Binding CanAdd}" />
+        </StackPanel>
+    </Grid>
+</UserControl>
