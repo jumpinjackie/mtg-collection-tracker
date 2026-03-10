@@ -80,11 +80,29 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SendCardsCommand))]
+    [NotifyPropertyChangedFor(nameof(IsUnSetContainerEnabled))]
     private ContainerViewModel? _selectedContainer;
+
+    partial void OnSelectedContainerChanged(ContainerViewModel? value)
+    {
+        if (value != null)
+            this.UnSetContainer = false;
+    }
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SendCardsCommand))]
+    [NotifyPropertyChangedFor(nameof(IsUnSetDeckEnabled))]
     private DeckViewModel? _selectedDeck;
+
+    partial void OnSelectedDeckChanged(DeckViewModel? value)
+    {
+        if (value != null)
+            this.UnSetDeck = false;
+    }
+
+    public bool IsUnSetDeckEnabled => this.SelectedDeck == null;
+
+    public bool IsUnSetContainerEnabled => this.SelectedContainer == null;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SendCardsCommand))]
