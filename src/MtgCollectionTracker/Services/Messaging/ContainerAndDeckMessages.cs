@@ -13,6 +13,8 @@ internal record CardsRemovedFromDeckMessage(int? DeckId, List<int> SkuIds);
 
 internal record CardsSentToDeckMessage(int DeckId, string DeckName, List<int> SkuIds);
 
+internal record DeckSideboardChangedMessage(int DeckId, List<int> SkuIds, bool IsSideboard);
+
 internal record DeckTotalsChangedMessage(List<int> DeckIds);
 
 internal record DeckCreatedMessage(DeckSummaryModel Deck);

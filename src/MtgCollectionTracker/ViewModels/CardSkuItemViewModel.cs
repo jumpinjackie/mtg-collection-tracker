@@ -87,10 +87,17 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
     }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasContainer))]
+    [NotifyPropertyChangedFor(nameof(ShowContainerName))]
     private string? _containerName;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasDeck))]
     private string? _deckName;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowContainerName))]
+    private bool _hideContainerLabel;
 
     [ObservableProperty]
     private bool _isFrontFace;
@@ -157,6 +164,8 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
     public bool HasComments => !string.IsNullOrWhiteSpace(this.Comments);
 
     public bool HasContainer => !string.IsNullOrEmpty(this.ContainerName);
+
+    public bool ShowContainerName => HasContainer && !HideContainerLabel;
 
     public bool HasDeck => !string.IsNullOrEmpty(this.DeckName);
 
