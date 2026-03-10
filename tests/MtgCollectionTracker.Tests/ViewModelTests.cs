@@ -251,6 +251,58 @@ public class ViewModelTests
 }
 
 /// <summary>
+/// Tests for <see cref="CardSkuItemViewModel"/> proxy quantity handling via <see cref="ISendableCardItem"/>.
+/// </summary>
+public class CardSkuItemViewModelTests
+{
+    private static CardSkuItemViewModel CreateViewModel()
+    {
+        var mockService = new Mock<ICollectionTrackingService>();
+        mockService.Setup(s => s.GetSmallFrontFaceImageAsync(It.IsAny<string>())).ReturnsAsync(System.IO.Stream.Null);
+        mockService.Setup(s => s.GetSmallBackFaceImageAsync(It.IsAny<string>())).ReturnsAsync(System.IO.Stream.Null);
+        mockService.Setup(s => s.GetLargeFrontFaceImageAsync(It.IsAny<string>())).ReturnsAsync(System.IO.Stream.Null);
+        mockService.Setup(s => s.GetLargeBackFaceImageAsync(It.IsAny<string>())).ReturnsAsync(System.IO.Stream.Null);
+        return new CardSkuItemViewModel(mockService.Object);
+    }
+
+    [Fact]
+    public void SendableCardItem_Quantity_ReturnsProxyQty_WhenSkuIsProxy()
+    {
+        var vm = CreateViewModel();
+        var sku = new CardSkuModel
+        {
+            Id = 1,
+            CardName = "Black Lotus",
+            Edition = "PROXY",
+            Quantity = 4,
+            Tags = []
+        };
+
+        vm.WithData(sku);
+
+        Assert.Equal(4, ((ISendableCardItem)vm).Quantity);
+    }
+
+    [Fact]
+    public void SendableCardItem_Quantity_ReturnsRealQty_WhenSkuIsNotProxy()
+    {
+        var vm = CreateViewModel();
+        var sku = new CardSkuModel
+        {
+            Id = 2,
+            CardName = "Lightning Bolt",
+            Edition = "M10",
+            Quantity = 4,
+            Tags = []
+        };
+
+        vm.WithData(sku);
+
+        Assert.Equal(4, ((ISendableCardItem)vm).Quantity);
+    }
+}
+
+/// <summary>
 /// Tests for <see cref="SendCardsToContainerOrDeckViewModel"/> safeguard logic:
 /// when a target deck or container is selected, the corresponding "Un-set" option
 /// must be disabled and auto-cleared.
