@@ -11,7 +11,7 @@ using System.Linq;
 
 namespace MtgCollectionTracker.ViewModels;
 
-public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<ContainerCreatedMessage>, IRecipient<ContainerDeletedMessage>, IRecipient<ContainerUpdatedMessage>
+public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<ContainerCreatedMessage>, IRecipient<ContainerDeletedMessage>, IRecipient<ContainerUpdatedMessage>, IRecipient<CardsSentToContainerMessage>
 {
     readonly ICollectionTrackingService _service;
     readonly Func<DialogViewModel> _dialog;
@@ -182,6 +182,18 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
         if (item != null)
         {
             item.WithData(message.Container);
+        }
+    }
+
+    void IRecipient<CardsSentToContainerMessage>.Receive(CardsSentToContainerMessage message)
+    {
+        // Update the target container's card count
+        var item = this.Containers.FirstOrDefault(c => c.Id == message.ContainerId);
+        if (item != null)
+        {
+            var updated = _service.GetContainers().FirstOrDefault(c => c.Id == message.ContainerId);
+            if (updated != null)
+                item.WithData(updated);
         }
     }
 }

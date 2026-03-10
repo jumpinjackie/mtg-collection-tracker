@@ -483,6 +483,12 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
         this.SkuTotal += message.SkuTotal;
         this.ProxyTotal += message.ProxyTotal;
         this.CardTotal += message.CardsTotal;
+
+        // If we're showing unparented items, re-run the search to include newly added unparented cards
+        if (this.ShowSearchResults && this.UnParented)
+        {
+            this.PerformSearchCommand.Execute(null);
+        }
     }
 
     void IRecipient<CardsSentToContainerMessage>.Receive(CardsSentToContainerMessage message)
