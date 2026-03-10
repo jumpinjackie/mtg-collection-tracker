@@ -263,25 +263,28 @@ internal class ScryfallMetadataResolver
                 if (sfMeta.OracleText != sfCardMeta.OracleText)
                     sfMeta.OracleText = sfCardMeta.OracleText;
 
+                var frontFace = sfCardMeta.CardFaces?.Length > 0 ? sfCardMeta.CardFaces[0] : null;
+                var backFace = sfCardMeta.CardFaces?.Length > 1 ? sfCardMeta.CardFaces[1] : null;
+
                 // P/T
                 if (sfMeta.Power == null)
-                    sfMeta.Power = sfCardMeta.CardFaces?.Length > 0 ? sfCardMeta.CardFaces[0].Power : sfCardMeta.Power;
+                    sfMeta.Power = frontFace?.Power ?? sfCardMeta.Power;
                 if (sfMeta.Toughness == null)
-                    sfMeta.Toughness = sfCardMeta.CardFaces?.Length > 0 ? sfCardMeta.CardFaces[0].Toughness : sfCardMeta.Toughness;
+                    sfMeta.Toughness = frontFace?.Toughness ?? sfCardMeta.Toughness;
 
                 // Back face P/T
                 if (sfMeta.BackPower == null)
-                    sfMeta.BackPower = sfCardMeta.CardFaces?.Length > 1 ? sfCardMeta.CardFaces[1].Power : null;
+                    sfMeta.BackPower = backFace?.Power;
                 if (sfMeta.BackToughness == null)
-                    sfMeta.BackToughness = sfCardMeta.CardFaces?.Length > 1 ? sfCardMeta.CardFaces[1].Toughness : null;
+                    sfMeta.BackToughness = backFace?.Toughness;
 
                 // Loyalty
                 if (sfMeta.Loyalty == null)
-                    sfMeta.Loyalty = sfCardMeta.CardFaces?.Length > 0 ? sfCardMeta.CardFaces[0].Loyalty : sfCardMeta.Loyalty;
+                    sfMeta.Loyalty = frontFace?.Loyalty ?? sfCardMeta.Loyalty;
 
                 // Back face loyalty
                 if (sfMeta.BackLoyalty == null)
-                    sfMeta.BackLoyalty = sfCardMeta.CardFaces?.Length > 1 ? sfCardMeta.CardFaces[1].Loyalty : null;
+                    sfMeta.BackLoyalty = backFace?.Loyalty;
 
                 // Color
                 if (sfMeta.Colors == null)
