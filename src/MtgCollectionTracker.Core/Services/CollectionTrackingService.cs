@@ -279,10 +279,11 @@ public class CollectionTrackingService : ICollectionTrackingService
             OracleText = c.Scryfall != null ? c.Scryfall.OracleText : null,
             Colors = c.Scryfall != null ? c.Scryfall.Colors : null,
             ColorIdentity = c.Scryfall != null ? c.Scryfall.ColorIdentity : null,
-            // A double-faced card has back-face image, but if we haven't loaded SF metadata
-            // for this card yet, then a DFC should have '//' in its card name
+            // A double-faced card has a DISTINCT back-face image (different from the front-face image).
+            // Adventure cards (e.g. "Questing Druid // Seek the Beast") may have BackImageSmallUrl set
+            // to the same URL as ImageSmallUrl because both halves share the same physical card face.
             IsDoubleFaced = c.Scryfall != null
-                ? c.Scryfall.BackImageSmallUrl != null
+                ? c.Scryfall.BackImageSmallUrl != null && c.Scryfall.BackImageSmallUrl != c.Scryfall.ImageSmallUrl
                 : c.CardName.Contains(" // ")
         });
     }
@@ -509,8 +510,8 @@ public class CollectionTrackingService : ICollectionTrackingService
             OracleText = w.Scryfall != null ? w.Scryfall.OracleText : null,
             Colors = w.Scryfall != null ? w.Scryfall.Colors : null,
             ColorIdentity = w.Scryfall != null ? w.Scryfall.ColorIdentity : null,
-            // A double-faced card has back-face image
-            IsDoubleFaced = w.Scryfall?.BackImageSmallUrl != null,
+            // A double-faced card has a DISTINCT back-face image (different from the front-face image)
+            IsDoubleFaced = w.Scryfall?.BackImageSmallUrl != null && w.Scryfall?.BackImageSmallUrl != w.Scryfall?.ImageSmallUrl,
             Offers = w.OfferedPrices?.Select(o => new VendorOfferModel
             {
                 VendorId = o.VendorId,
@@ -550,8 +551,8 @@ public class CollectionTrackingService : ICollectionTrackingService
             OracleText = c.Scryfall != null ? c.Scryfall.OracleText : null,
             Colors = c.Scryfall != null ? c.Scryfall.Colors : null,
             ColorIdentity = c.Scryfall != null ? c.Scryfall.ColorIdentity : null,
-            // A double-faced card has back-face image
-            IsDoubleFaced = c.Scryfall?.BackImageSmallUrl != null
+            // A double-faced card has a DISTINCT back-face image (different from the front-face image)
+            IsDoubleFaced = c.Scryfall?.BackImageSmallUrl != null && c.Scryfall?.BackImageSmallUrl != c.Scryfall?.ImageSmallUrl
         };
     }
 
@@ -586,8 +587,8 @@ public class CollectionTrackingService : ICollectionTrackingService
                 OracleText = w.Scryfall != null ? w.Scryfall.OracleText : null,
                 Colors = w.Scryfall != null ? w.Scryfall.Colors : null,
                 ColorIdentity = w.Scryfall != null ? w.Scryfall.ColorIdentity : null,
-                // A double-faced card has back-face image
-                IsDoubleFaced = w.Scryfall!.BackImageSmallUrl != null,
+                // A double-faced card has a DISTINCT back-face image (different from the front-face image)
+                IsDoubleFaced = w.Scryfall!.BackImageSmallUrl != null && w.Scryfall!.BackImageSmallUrl != w.Scryfall!.ImageSmallUrl,
                 Offers = w.OfferedPrices.Select(o => new VendorOfferModel
                 {
                     VendorId = o.VendorId,
@@ -1332,8 +1333,8 @@ public class CollectionTrackingService : ICollectionTrackingService
                     OracleText = sku.Scryfall != null ? sku.Scryfall.OracleText : null,
                     Colors = sku.Scryfall != null ? sku.Scryfall.Colors : null,
                     ColorIdentity = sku.Scryfall != null ? sku.Scryfall.ColorIdentity : null,
-                    // A double-faced card has back-face image
-                    IsDoubleFaced = sku.Scryfall?.BackImageSmallUrl != null,
+                    // A double-faced card has a DISTINCT back-face image (different from the front-face image)
+                    IsDoubleFaced = sku.Scryfall?.BackImageSmallUrl != null && sku.Scryfall?.BackImageSmallUrl != sku.Scryfall?.ImageSmallUrl,
                     IsLand = sku.IsLand,
                     Edition = sku.Edition
                 };

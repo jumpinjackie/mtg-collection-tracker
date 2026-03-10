@@ -376,19 +376,19 @@
 							<ItemsControl ItemsSource="{Binding GameState.BattlefieldNonlands}">
 								<ItemsControl.ItemsPanel>
 									<ItemsPanelTemplate>
-									<WrapPanel ItemSpacing="60" LineSpacing="24" />
+									<WrapPanel ItemSpacing="40" LineSpacing="24" />
 								</ItemsPanelTemplate>
 							</ItemsControl.ItemsPanel>
 							<ItemsControl.ItemTemplate>
 								<DataTemplate>
-								<Border Width="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardWidth}" Height="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardHeight}" Margin="20" CornerRadius="6" BorderBrush="Black" BorderThickness="1" Background="#1E1E1E"
+								<Border Width="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardWidth}" Height="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardHeight}" Margin="6" CornerRadius="6" BorderBrush="Black" BorderThickness="1" Background="#1E1E1E"
 									        PointerEntered="OnCardPointerEntered"
 									        PointerPressed="OnCardPointerPressed"
 									        DoubleTapped="OnBattlefieldCardDoubleTapped">
 										<ToolTip.Tip>
 											<StackPanel Spacing="2">
 												<TextBlock Text="{Binding DisplayName}" FontWeight="Bold" />
-												<ItemsControl ItemsSource="{Binding Counters}" IsVisible="{Binding Counters, Converter={StaticResource CollectionNotEmpty}}">
+												<ItemsControl ItemsSource="{Binding Counters}" IsVisible="{Binding HasCounters}">
 													<ItemsControl.ItemTemplate>
 														<DataTemplate>
 															<TextBlock Text="{Binding CounterTooltipText}" FontSize="11" />
@@ -429,7 +429,7 @@
 											<ItemsControl ItemsSource="{Binding Counters}"
 											              VerticalAlignment="Center" HorizontalAlignment="Center"
 											              Margin="0,-24,0,0"
-											              IsVisible="{Binding Counters, Converter={StaticResource CollectionNotEmpty}}">
+											              IsVisible="{Binding HasCounters}">
 												<ItemsControl.ItemsPanel>
 													<ItemsPanelTemplate>
 														<StackPanel Orientation="Horizontal" Spacing="3" />
@@ -469,19 +469,19 @@
 							<ItemsControl ItemsSource="{Binding GameState.BattlefieldLands}">
 								<ItemsControl.ItemsPanel>
 									<ItemsPanelTemplate>
-									<WrapPanel ItemSpacing="60" LineSpacing="24" />
+									<WrapPanel ItemSpacing="40" LineSpacing="24" />
 								</ItemsPanelTemplate>
 							</ItemsControl.ItemsPanel>
 							<ItemsControl.ItemTemplate>
 								<DataTemplate>
-									<Border Width="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardWidth}" Height="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardHeight}" Margin="20" CornerRadius="6" BorderBrush="Black" BorderThickness="1" Background="#1E1E1E"
+									<Border Width="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardWidth}" Height="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardHeight}" Margin="6" CornerRadius="6" BorderBrush="Black" BorderThickness="1" Background="#1E1E1E"
 										        PointerEntered="OnCardPointerEntered"
 										        PointerPressed="OnCardPointerPressed"
 										        DoubleTapped="OnBattlefieldCardDoubleTapped">
 											<ToolTip.Tip>
 												<StackPanel Spacing="2">
 													<TextBlock Text="{Binding DisplayName}" FontWeight="Bold" />
-													<ItemsControl ItemsSource="{Binding Counters}" IsVisible="{Binding Counters, Converter={StaticResource CollectionNotEmpty}}">
+													<ItemsControl ItemsSource="{Binding Counters}" IsVisible="{Binding HasCounters}">
 														<ItemsControl.ItemTemplate>
 															<DataTemplate>
 																<TextBlock Text="{Binding CounterTooltipText}" FontSize="11" />
@@ -522,7 +522,7 @@
 												<ItemsControl ItemsSource="{Binding Counters}"
 												              VerticalAlignment="Center" HorizontalAlignment="Center"
 												              Margin="0,-24,0,0"
-												              IsVisible="{Binding Counters, Converter={StaticResource CollectionNotEmpty}}">
+												              IsVisible="{Binding HasCounters}">
 													<ItemsControl.ItemsPanel>
 														<ItemsPanelTemplate>
 															<StackPanel Orientation="Horizontal" Spacing="3" />
