@@ -43,7 +43,7 @@ public enum DeckViewMode
     VisualByCardName
 }
 
-public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCardListBehaviorHost, IViewModelWithBusyState, IRecipient<CardSkuSplitMessage>, IRecipient<CardsRemovedFromDeckMessage>, IRecipient<DeckSideboardChangedMessage>
+public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCardListBehaviorHost, IViewModelWithBusyState, IRecipient<CardSkuSplitMessage>, IRecipient<CardsRemovedFromDeckMessage>, IRecipient<DeckSideboardChangedMessage>, IRecipient<CardsAddedToDeckMessage>
 {
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
@@ -51,6 +51,8 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
     readonly Func<DialogViewModel> _dialog;
     readonly Func<SplitCardSkuViewModel> _splitCardSku;
     readonly Func<SendCardsToContainerOrDeckViewModel> _sendToContainer;
+    readonly Func<AddCardsViewModel> _addCards;
+    readonly Func<AddExistingCardsToDeckViewModel> _addExistingCards;
 
     [ObservableProperty]
     private string _name;
@@ -63,6 +65,8 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
         _dialog = () => new();
         _splitCardSku = () => new();
         _sendToContainer = () => new();
+        _addCards = () => new();
+        _addExistingCards = () => new();
         this.Behavior = new(this);
         this.IsActive = true;
         this.Name = "Test Deck";
@@ -72,6 +76,8 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
                                 Func<DialogViewModel> dialog,
                                 Func<SplitCardSkuViewModel> splitCardSku,
                                 Func<SendCardsToContainerOrDeckViewModel> sendToContainer,
+                                Func<AddCardsViewModel> addCards,
+                                Func<AddExistingCardsToDeckViewModel> addExistingCards,
                                 IScryfallApiClient scryfallApiClient,
                                 IMessenger messenger)
         : base(messenger)
@@ -81,6 +87,8 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
         _dialog = dialog;
         _splitCardSku = splitCardSku;
         _sendToContainer = sendToContainer;
+        _addCards = addCards;
+        _addExistingCards = addExistingCards;
         this.Behavior = new(this);
         this.IsActive = true;
     }
@@ -319,6 +327,28 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
     }
 
     [RelayCommand]
+    private void AddNewCards()
+    {
+        var vm = _addCards().WithTargetDeck(_origDeck.Id, _origDeck.Name);
+        Messenger.Send(new OpenDialogMessage
+        {
+            DrawerWidth = 800,
+            ViewModel = _dialog().WithContent("Add New Cards to Deck", vm)
+        });
+    }
+
+    [RelayCommand]
+    private void AddExistingCards()
+    {
+        var vm = _addExistingCards().WithDeck(_origDeck.Id, _origDeck.Name);
+        Messenger.Send(new OpenDialogMessage
+        {
+            DrawerWidth = 800,
+            ViewModel = _dialog().WithContent("Add Existing Cards to Deck", vm)
+        });
+    }
+
+    [RelayCommand]
     private async Task UpdateSkuMetadata()
     {
         if (Behavior.SelectedItems.Count > 0 && _scryfallApiClient != null)
@@ -437,4 +467,23 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
     }
 
     internal void DeckListCopiedToClipboard() => Messenger.ToastNotify("Deck list copied to clipboard", Avalonia.Controls.Notifications.NotificationType.Information);
+
+    void IRecipient<CardsAddedToDeckMessage>.Receive(CardsAddedToDeckMessage message)
+    {
+        if (message.DeckId == _origDeck.Id)
+        {
+            ReloadDeckAsync().ContinueWith(t =>
+            {
+                if (t.IsFaulted)
+                    Messenger.ToastNotify("Failed to refresh deck view", Avalonia.Controls.Notifications.NotificationType.Error);
+            }, TaskContinuationOptions.OnlyOnFaulted);
+        }
+    }
+
+    private async Task ReloadDeckAsync()
+    {
+        var deck = await _service.GetDeckAsync(_origDeck.Id, _scryfallApiClient, CancellationToken.None);
+        _origDeck = deck;
+        RefreshDeckView();
+    }
 }

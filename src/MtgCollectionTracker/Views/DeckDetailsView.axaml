@@ -21,11 +21,11 @@
 			<RadioButton GroupName="View Mode" IsChecked="{Binding Mode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:DeckViewMode.TableByCardName}}" Content="Table (by Card Name)"/>
 		</StackPanel>
 		<StackPanel IsVisible="{Binding IsSkuBasedMode}" DockPanel.Dock="Bottom" Margin="8" Orientation="Horizontal">
-			<!-- TODO: Add cards to this deck command -->
+			<Button Command="{Binding AddNewCardsCommand}" Content="Add New" HorizontalAlignment="Center" />
+			<Button Command="{Binding AddExistingCardsCommand}" Content="Add Existing" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding Behavior.HasAtLeastOneSelectedItem}" Command="{Binding SendSkusToContainerCommand}" Content="Send to Deck/Container" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding Behavior.IsItemSplittable}" Command="{Binding SplitSelectedSkuCommand}" Content="Split" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding Behavior.HasAtLeastOneSelectedItem}" Command="{Binding UpdateSkuMetadataCommand}" Content="Update Metadata" HorizontalAlignment="Center" />
-			<!-- TODO: Remove from this deck command -->
 		</StackPanel>
 		<Grid>
 			<!-- By Text -->
