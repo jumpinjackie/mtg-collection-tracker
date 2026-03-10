@@ -1195,6 +1195,13 @@ public class CollectionTrackingService : ICollectionTrackingService
 
         if (model.VendorOffers != null)
         {
+            var incomingVendorIds = new HashSet<int>(model.VendorOffers.Select(off => off.VendorId));
+            var offersToRemove = wi.OfferedPrices
+                .Where(o => !incomingVendorIds.Contains(o.VendorId))
+                .ToList();
+            foreach (var offer in offersToRemove)
+                wi.OfferedPrices.Remove(offer);
+
             foreach (var off in model.VendorOffers)
             {
                 var currentOffer = wi.OfferedPrices.FirstOrDefault(o => o.VendorId == off.VendorId);
