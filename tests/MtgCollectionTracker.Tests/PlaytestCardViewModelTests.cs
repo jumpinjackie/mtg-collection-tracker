@@ -193,4 +193,127 @@ public class PlaytestCardViewModelTests
 
         Assert.True(vm.IsFrontFace);
     }
+
+    // ── DisplayName ──────────────────────────────────────────────────────────
+
+    [Fact]
+    public void DisplayName_ReturnsFrontPartOfName_ForDoubleFacedCard_WhenOnFrontFace()
+    {
+        var vm = CreateCardVm();
+        vm.InitializeFrom(MakeModel(name: "Delver of Secrets // Insectile Aberration", isDoubleFaced: true, isFrontFace: true));
+
+        Assert.Equal("Delver of Secrets", vm.DisplayName);
+    }
+
+    [Fact]
+    public void DisplayName_ReturnsBackPartOfName_ForDoubleFacedCard_WhenOnBackFace()
+    {
+        var vm = CreateCardVm();
+        vm.InitializeFrom(MakeModel(name: "Delver of Secrets // Insectile Aberration", isDoubleFaced: true, isFrontFace: false));
+
+        Assert.Equal("Insectile Aberration", vm.DisplayName);
+    }
+
+    [Fact]
+    public void DisplayName_ReturnsFullName_ForAdventureCard_WhenIsDoubleFacedIsFalse()
+    {
+        // Adventure cards (e.g. "Questing Druid // Seek the Beast") are single-face cards
+        // and must NOT have their name split, even though the name contains " // ".
+        var vm = CreateCardVm();
+        vm.InitializeFrom(MakeModel(name: "Questing Druid // Seek the Beast", isDoubleFaced: false, isFrontFace: true));
+
+        Assert.Equal("Questing Druid // Seek the Beast", vm.DisplayName);
+    }
+
+    [Fact]
+    public void DisplayName_ReturnsFullName_ForSingleFaceCard()
+    {
+        var vm = CreateCardVm();
+        vm.InitializeFrom(MakeModel(name: "Lightning Bolt", isDoubleFaced: false));
+
+        Assert.Equal("Lightning Bolt", vm.DisplayName);
+    }
+
+    // ── HasManaCost ──────────────────────────────────────────────────────────
+
+    [Fact]
+    public void HasManaCost_ReturnsTrue_WhenManaCostIsSet()
+    {
+        var vm = CreateCardVm();
+        var model = MakeModel();
+        model.ManaCost = "{1}{U}";
+        vm.InitializeFrom(model);
+
+        Assert.True(vm.HasManaCost);
+    }
+
+    [Fact]
+    public void HasManaCost_ReturnsFalse_WhenManaCostIsNull()
+    {
+        var vm = CreateCardVm();
+        var model = MakeModel();
+        model.ManaCost = null;
+        vm.InitializeFrom(model);
+
+        Assert.False(vm.HasManaCost);
+    }
+
+    [Fact]
+    public void HasManaCost_ReturnsFalse_WhenManaCostIsEmpty()
+    {
+        var vm = CreateCardVm();
+        var model = MakeModel();
+        model.ManaCost = string.Empty;
+        vm.InitializeFrom(model);
+
+        Assert.False(vm.HasManaCost);
+    }
+
+    // ── HasCounters ──────────────────────────────────────────────────────────
+
+    [Fact]
+    public void HasCounters_ReturnsFalse_Initially()
+    {
+        var vm = CreateCardVm();
+        vm.InitializeFrom(MakeModel());
+
+        Assert.False(vm.HasCounters);
+    }
+
+    [Fact]
+    public void HasCounters_ReturnsTrue_WhenCounterIsAdded()
+    {
+        var vm = CreateCardVm();
+        vm.InitializeFrom(MakeModel());
+
+        vm.Counters.Add(new CardCounterViewModel { CounterName = "+1/+1", Quantity = 1 });
+
+        Assert.True(vm.HasCounters);
+    }
+
+    [Fact]
+    public void HasCounters_ReturnsFalse_AfterLastCounterIsRemoved()
+    {
+        var vm = CreateCardVm();
+        vm.InitializeFrom(MakeModel());
+        var counter = new CardCounterViewModel { CounterName = "+1/+1", Quantity = 1 };
+        vm.Counters.Add(counter);
+
+        vm.Counters.Remove(counter);
+
+        Assert.False(vm.HasCounters);
+    }
+
+    [Fact]
+    public void HasCounters_ReturnsTrue_WithMultipleCounters()
+    {
+        var vm = CreateCardVm();
+        vm.InitializeFrom(MakeModel());
+
+        vm.Counters.Add(new CardCounterViewModel { CounterName = "+1/+1", Quantity = 2 });
+        vm.Counters.Add(new CardCounterViewModel { CounterName = "-1/-1", Quantity = 1 });
+
+        Assert.True(vm.HasCounters);
+        Assert.Equal(2, vm.Counters.Count);
+    }
 }
