@@ -105,7 +105,9 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
             this.CurrentPage.Clear();
             foreach (var sku in page.Items)
             {
-                this.CurrentPage.Add(_cardSku().WithData(sku));
+                var item = _cardSku().WithData(sku);
+                item.HideContainerLabel = true;
+                this.CurrentPage.Add(item);
             }
             this.HasNoResults = this.CurrentPage.Count == 0;
             var from = Math.Max(page.PageNumber, 0) * page.PageSize;

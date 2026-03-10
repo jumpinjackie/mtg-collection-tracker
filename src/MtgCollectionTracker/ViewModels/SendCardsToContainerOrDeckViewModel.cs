@@ -80,11 +80,29 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SendCardsCommand))]
+    [NotifyPropertyChangedFor(nameof(IsUnSetContainerEnabled))]
     private ContainerViewModel? _selectedContainer;
+
+    partial void OnSelectedContainerChanged(ContainerViewModel? value)
+    {
+        if (value != null)
+            this.UnSetContainer = false;
+    }
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SendCardsCommand))]
+    [NotifyPropertyChangedFor(nameof(IsUnSetDeckEnabled))]
     private DeckViewModel? _selectedDeck;
+
+    partial void OnSelectedDeckChanged(DeckViewModel? value)
+    {
+        if (value != null)
+            this.UnSetDeck = false;
+    }
+
+    public bool IsUnSetDeckEnabled => this.SelectedDeck == null;
+
+    public bool IsUnSetContainerEnabled => this.SelectedContainer == null;
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SendCardsCommand))]
@@ -145,6 +163,14 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
             {
                 var affectedSkus = res.Skus.Select(s => s.Id).ToList();
                 Messenger.Send(new CardsOrphanedMessage(affectedSkus));
+            }
+            if (this.MarkAsSideboard.HasValue)
+            {
+                // Notify deck views of cards whose sideboard status changed in the same deck
+                foreach (var grp in res.Skus.Where(s => s.NewDeckId.HasValue && s.OldDeckId == s.NewDeckId).GroupBy(s => s.NewDeckId!.Value))
+                {
+                    Messenger.Send(new DeckSideboardChangedMessage(grp.Key, grp.Select(s => s.Id).ToList(), this.MarkAsSideboard.Value));
+                }
             }
 
             Messenger.HandleSkuUpdate(res);

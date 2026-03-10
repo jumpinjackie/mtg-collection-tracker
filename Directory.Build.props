@@ -2,5 +2,7 @@
   <PropertyGroup>
     <Nullable>enable</Nullable>
     <AvaloniaVersion>11.3.12</AvaloniaVersion>
+    <!-- When built in CI, bake the full commit SHA into AssemblyInformationalVersion as +<sha> build metadata -->
+    <SourceRevisionId Condition="'$(COMMIT_SHA)' != ''">$(COMMIT_SHA)</SourceRevisionId>
   </PropertyGroup>
 </Project>

@@ -21,4 +21,8 @@ public class CardQueryModel
     public bool MissingMetadata { get; set; }
 
     public bool IncludeScryfallMetadata { get; set; }
+
+    public IEnumerable<string>? Colors { get; set; }
+
+    public IEnumerable<string>? CardTypes { get; set; }
 }

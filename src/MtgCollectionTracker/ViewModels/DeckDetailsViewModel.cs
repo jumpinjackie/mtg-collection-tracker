@@ -43,7 +43,7 @@ public enum DeckViewMode
     VisualByCardName
 }
 
-public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCardListBehaviorHost, IViewModelWithBusyState, IRecipient<CardSkuSplitMessage>, IRecipient<CardsRemovedFromDeckMessage>
+public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCardListBehaviorHost, IViewModelWithBusyState, IRecipient<CardSkuSplitMessage>, IRecipient<CardsRemovedFromDeckMessage>, IRecipient<DeckSideboardChangedMessage>
 {
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
@@ -359,6 +359,14 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
 
     public void HandleBusyChanged(bool oldValue, bool newValue) { }
 
+    private void RefreshDeckView()
+    {
+        this.MainDeckSize = _origDeck.MainDeck.Count;
+        this.SideboardSize = _origDeck.Sideboard.Count;
+        _mainDeckByCardName = _mainDeckBySku = _sideboardByCardName = _sideboardBySku = null;
+        UpdateView(this.Mode);
+    }
+
     void IRecipient<CardSkuSplitMessage>.Receive(CardSkuSplitMessage message)
     {
         if (message.DeckId == _origDeck.Id)
@@ -366,12 +374,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
             int mdm = UpdateList(_origDeck.MainDeck, message.SplitSkuId, message.NewSkuId, message.Quantity);
             int sbm = UpdateList(_origDeck.Sideboard, message.SplitSkuId, message.NewSkuId, message.Quantity);
 
-            this.MainDeckSize = _origDeck.MainDeck.Count;
-            this.SideboardSize = _origDeck.Sideboard.Count;
-
-            // Bit nuclear, but will do the job for now
-            _mainDeckByCardName = _mainDeckBySku = _sideboardByCardName = _sideboardBySku = null;
-            UpdateView(this.Mode);
+            RefreshDeckView();
 
             static int UpdateList(List<DeckCardModel> list, Guid skuId, Guid newSkuId, int quantity)
             {
@@ -400,12 +403,36 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
             _origDeck.MainDeck.RemoveAll(c => message.SkuIds.Contains(c.SkuId));
             _origDeck.Sideboard.RemoveAll(c => message.SkuIds.Contains(c.SkuId));
 
-            this.MainDeckSize = _origDeck.MainDeck.Count;
-            this.SideboardSize = _origDeck.Sideboard.Count;
+            RefreshDeckView();
+        }
+    }
 
-            // Bit nuclear, but will do the job for now
-            _mainDeckByCardName = _mainDeckBySku = _sideboardByCardName = _sideboardBySku = null;
-            UpdateView(this.Mode);
+    void IRecipient<DeckSideboardChangedMessage>.Receive(DeckSideboardChangedMessage message)
+    {
+        if (message.DeckId == _origDeck.Id)
+        {
+            if (message.IsSideboard)
+            {
+                // Move matching cards from main deck to sideboard
+                var toMove = _origDeck.MainDeck.Where(c => message.SkuIds.Contains(c.SkuId)).ToList();
+                foreach (var card in toMove)
+                {
+                    _origDeck.MainDeck.Remove(card);
+                    _origDeck.Sideboard.Add(card);
+                }
+            }
+            else
+            {
+                // Move matching cards from sideboard to main deck
+                var toMove = _origDeck.Sideboard.Where(c => message.SkuIds.Contains(c.SkuId)).ToList();
+                foreach (var card in toMove)
+                {
+                    _origDeck.Sideboard.Remove(card);
+                    _origDeck.MainDeck.Add(card);
+                }
+            }
+
+            RefreshDeckView();
         }
     }
 
