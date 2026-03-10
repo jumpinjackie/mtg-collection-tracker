@@ -5,26 +5,26 @@ VisualStudioVersion = 17.0.31903.59
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{9C581D46-A54D-4C17-8058-5980122C7F1F}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MtgCollectionTracker.Console", "src\MtgCollectionTracker.Console\MtgCollectionTracker.Console.csproj", "{B3B81381-A5F5-4B62-A77B-6FA63764FEC0}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MtgCollectionTracker.Console", "src/MtgCollectionTracker.Console/MtgCollectionTracker.Console.csproj", "{B3B81381-A5F5-4B62-A77B-6FA63764FEC0}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MtgCollectionTracker.Data", "src\MtgCollectionTracker.Data\MtgCollectionTracker.Data.csproj", "{C14E6989-4D80-4C5B-9467-198555BBE811}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MtgCollectionTracker.Data", "src/MtgCollectionTracker.Data/MtgCollectionTracker.Data.csproj", "{C14E6989-4D80-4C5B-9467-198555BBE811}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MtgCollectionTracker.Core", "src\MtgCollectionTracker.Core\MtgCollectionTracker.Core.csproj", "{C0936480-5200-498D-8B39-9E1E6D3C8A19}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MtgCollectionTracker.Core", "src/MtgCollectionTracker.Core/MtgCollectionTracker.Core.csproj", "{C0936480-5200-498D-8B39-9E1E6D3C8A19}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{474C39D7-9E53-457B-9D3C-3EEC28141233}"
 	ProjectSection(SolutionItems) = preProject
-		.github\workflows\dotnet.yml = .github\workflows\dotnet.yml
+		.github/workflows/dotnet.yml = .github/workflows/dotnet.yml
 		LICENSE = LICENSE
 		README.md = README.md
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MtgCollectionTracker", "src\MtgCollectionTracker\MtgCollectionTracker.csproj", "{53E4FB67-79D2-47F5-968C-04EB4A93F18A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MtgCollectionTracker", "src/MtgCollectionTracker/MtgCollectionTracker.csproj", "{53E4FB67-79D2-47F5-968C-04EB4A93F18A}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MtgCollectionTracker.Desktop", "src\MtgCollectionTracker.Desktop\MtgCollectionTracker.Desktop.csproj", "{5AC48BE1-E7F4-4A22-888D-991FABC25136}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "MtgCollectionTracker.Desktop", "src/MtgCollectionTracker.Desktop/MtgCollectionTracker.Desktop.csproj", "{5AC48BE1-E7F4-4A22-888D-991FABC25136}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{0AB3BF05-4346-4AA6-1389-037BE0695223}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MtgCollectionTracker.Tests", "tests\MtgCollectionTracker.Tests\MtgCollectionTracker.Tests.csproj", "{897AA902-B178-4197-95B9-04DF5984C1EC}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MtgCollectionTracker.Tests", "tests/MtgCollectionTracker.Tests/MtgCollectionTracker.Tests.csproj", "{897AA902-B178-4197-95B9-04DF5984C1EC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
