@@ -13,7 +13,7 @@ internal class FindCardsCommand : CommandBase
     public string? Name { get; set; }
 
     [Option("card-sku-ids", SetName = "by-ids", Required = true, HelpText = "A series of sku ids")]
-    public IEnumerable<int>? CardSkuIds { get; set; }
+    public IEnumerable<Guid>? CardSkuIds { get; set; }
 
     [Option("not-in-decks", SetName = "by-name", Required = false, HelpText = "If true, will omit card skus from results where it is already in another deck")]
     public bool NotInDecks { get; set; }

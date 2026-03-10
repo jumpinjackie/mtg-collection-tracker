@@ -100,8 +100,19 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
 
     void IRecipient<NotificationMessage>.Receive(NotificationMessage message)
     {
+        var key = (message.Content, message.Type);
+        var now = DateTime.UtcNow;
+        if (_recentNotifications.TryGetValue(key, out var lastShown) && (now - lastShown).TotalMilliseconds < 500)
+            return;
+        _recentNotifications[key] = now;
+        // Purge stale entries to prevent unbounded dictionary growth
+        var staleKeys = _recentNotifications.Where(kv => (now - kv.Value).TotalMilliseconds >= 500).Select(kv => kv.Key).ToList();
+        foreach (var staleKey in staleKeys)
+            _recentNotifications.Remove(staleKey);
         this.NotificationManager?.Show(message.Content, message.Type);
     }
+
+    private readonly Dictionary<(string Content, NotificationType Type), DateTime> _recentNotifications = new();
 
     void IRecipient<CardsAddedMessage>.Receive(CardsAddedMessage message)
     {

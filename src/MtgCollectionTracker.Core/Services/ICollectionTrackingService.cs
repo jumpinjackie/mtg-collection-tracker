@@ -20,7 +20,7 @@ namespace MtgCollectionTracker.Core.Services
 
     public record struct CheckQuantityResult(int ShortAmount, HashSet<string> FromDeckNames, HashSet<string> FromContainerNames, string? SuggestedName, int WishlistAmount);
 
-    public record struct SkuUpdateInfo(int Id, int OldQuantity, int NewQuantity, int? OldDeckId, int? NewDeckId, int? OldContainerId, int? NewContainerId);
+    public record struct SkuUpdateInfo(Guid Id, int OldQuantity, int NewQuantity, int? OldDeckId, int? NewDeckId, int? OldContainerId, int? NewContainerId);
 
     public record struct UpdateCardSkuResult(int RecordsAffected, List<SkuUpdateInfo> Skus)
     {
@@ -66,12 +66,12 @@ namespace MtgCollectionTracker.Core.Services
         ValueTask<ContainerSummaryModel> UpdateContainerAsync(int id, string name, string? description);
         ValueTask<DeckSummaryModel> CreateDeckAsync(string name, string? format, int? containerId);
         ValueTask<DeckSummaryModel> UpdateDeckAsync(int id, string name, string? format, int? containerId);
-        ValueTask<CardSkuModel> DeleteCardSkuAsync(int skuId);
+        ValueTask<CardSkuModel> DeleteCardSkuAsync(Guid skuId);
         ValueTask<DismantleDeckResult> DismantleDeckAsync(DismantleDeckInputModel model);
-        ValueTask<IEnumerable<CardSkuModel>> UpdateCardMetadataAsync(ICollection<int> ids, IScryfallApiClient scryfallApiClient, UpdateCardMetadataProgressCallback? callback, CancellationToken cancel);
+        ValueTask<IEnumerable<CardSkuModel>> UpdateCardMetadataAsync(ICollection<Guid> ids, IScryfallApiClient scryfallApiClient, UpdateCardMetadataProgressCallback? callback, CancellationToken cancel);
         ValueTask<IEnumerable<WishlistItemModel>> UpdateWishlistMetadataAsync(ICollection<int> ids, IScryfallApiClient scryfallApiClient, UpdateCardMetadataProgressCallback? callback, CancellationToken cancel);
         IEnumerable<CardSkuModel> GetCards(CardQueryModel query);
-        ValueTask<CardSkuModel> GetCardSkuByIdAsync(int id, CancellationToken cancel);
+        ValueTask<CardSkuModel> GetCardSkuByIdAsync(Guid id, CancellationToken cancel);
         PaginatedCardSkuModel GetCardsForContainer(int containerId, FetchContainerPageModel options);
         IEnumerable<ContainerSummaryModel> GetContainers();
         IEnumerable<DeckSummaryModel> GetDecks(DeckFilterModel? filter);

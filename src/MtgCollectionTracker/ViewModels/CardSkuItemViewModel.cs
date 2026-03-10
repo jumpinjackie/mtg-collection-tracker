@@ -37,7 +37,7 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
         this.TagsText = $"{this.TagList.Length} tag(s)";
     }
 
-    public int Id { get; private set; }
+    public Guid Id { get; private set; }
 
     public string? ScryfallId { get; private set; }
 
@@ -87,10 +87,17 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
     }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasContainer))]
+    [NotifyPropertyChangedFor(nameof(ShowContainerName))]
     private string? _containerName;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasDeck))]
     private string? _deckName;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowContainerName))]
+    private bool _hideContainerLabel;
 
     [ObservableProperty]
     private bool _isFrontFace;
@@ -158,6 +165,8 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
 
     public bool HasContainer => !string.IsNullOrEmpty(this.ContainerName);
 
+    public bool ShowContainerName => HasContainer && !HideContainerLabel;
+
     public bool HasDeck => !string.IsNullOrEmpty(this.DeckName);
 
     public int ProxyQty { get; private set; }
@@ -181,7 +190,7 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
 
     public string[] TagList { get; set; }
 
-    int ISendableCardItem.Quantity => CardListPrinter.IsProxyEdition(this.Edition) ? this.ProxyQty : this.RealQty;
+    int ISendableCardItem.Quantity => CardListPrinter.IsProxyEdition(this.OriginalEdition ?? string.Empty) ? this.ProxyQty : this.RealQty;
 
     private async Task<Bitmap?> GetLargeFrontFaceImageAsync()
     {

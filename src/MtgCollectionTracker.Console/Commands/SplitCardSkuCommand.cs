@@ -8,7 +8,7 @@ namespace MtgCollectionTracker.Console.Commands;
 internal class SplitCardSkuCommand : CommandBase
 {
     [Option("card-sku-id", HelpText = "The card sku to split")]
-    public int CardSkuId { get; set; }
+    public Guid CardSkuId { get; set; }
 
     [Option("quantity", HelpText = "The quantity to split off. This must be greater than 0 and less than the quantity of the sku to split")]
     public int Quantity { get; set; }

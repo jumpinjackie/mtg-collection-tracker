@@ -119,7 +119,7 @@
 									</Panel>
 								</Panel>
 							</Canvas>
-							<Button IsVisible="{Binding Behavior.SelectedRow.IsDoubleFaced}" Grid.Column="0" HorizontalAlignment="Center" Content="{Binding Behavior.SelectedItems[0].SwitchLabel}" Command="{Binding Behavior.SelectedItems[0].SwitchFaceCommand}" />
+							<Button IsVisible="{Binding Behavior.SelectedRow.IsDoubleFaced}" Grid.Column="0" HorizontalAlignment="Center" Content="{Binding Behavior.SelectedSwitchLabel}" Command="{Binding Behavior.SelectedSwitchFaceCommand}" />
 						</StackPanel>
 					</SplitView.Pane>
 					<Grid>

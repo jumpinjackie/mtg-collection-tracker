@@ -11,7 +11,7 @@ namespace MtgCollectionTracker.Data;
 /// </summary>
 public class CardSku : IScryfallMetaLinkable, IDeckPrintableSlot
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
 
     /// <summary>
     /// The quantity of cards

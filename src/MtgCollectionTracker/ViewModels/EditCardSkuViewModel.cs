@@ -66,7 +66,7 @@ public partial class EditCardSkuViewModel : DialogContentViewModel
     [ObservableProperty]
     private ContainerViewModel? _container;
 
-    public IEnumerable<int> Ids { get; private set; }
+    public IEnumerable<Guid> Ids { get; private set; }
 
     private CardSkuItemViewModel _origItem;
 

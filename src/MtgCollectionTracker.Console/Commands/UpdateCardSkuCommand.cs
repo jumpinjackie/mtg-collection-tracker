@@ -9,7 +9,7 @@ namespace MtgCollectionTracker.Console.Commands;
 internal class UpdateCardSkuCommand : CommandBase
 {
     [Option("card-sku-ids", Required = true, HelpText = "The ids of the card skus to update")]
-    public required IEnumerable<int> CardSkuIds { get; set; }
+    public required IEnumerable<Guid> CardSkuIds { get; set; }
 
     [Option("quantity", Required = false, HelpText = "The new quantity to apply to affected skus")]
     public int? Quantity { get; set; }

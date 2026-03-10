@@ -4,7 +4,7 @@ namespace MtgCollectionTracker.Core.Model;
 
 public class CardSkuModel
 {
-    public int Id { get; set; }
+    public Guid Id { get; set; }
 
     public string? ScryfallId { get; set; }
 
