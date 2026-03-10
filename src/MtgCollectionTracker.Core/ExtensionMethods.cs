@@ -61,23 +61,29 @@ public static class PublicExtensionMethods
                 var fuzzyMatch = await resp.Content.ReadFromJsonAsync<Card>();
                 if (fuzzyMatch?.ObjectType == "card")
                 {
-                    if (fuzzyMatch?.Games?.Contains("paper") == true)
+                    // Only accept the fuzzy result if it matches the requested name exactly.
+                    // If it doesn't match exactly, fall through to the exhaustive search below
+                    // so we can verify whether a card with the original name actually exists.
+                    if (string.Equals(fuzzyMatch.Name, name, StringComparison.OrdinalIgnoreCase))
                     {
+                        if (fuzzyMatch.Games?.Contains("paper") == true)
+                        {
+                            return (true, fuzzyMatch.Name, fuzzyMatch.Set, apiCalls);
+                        }
+                        // If not a paper card, try to find a paper printing of the same name
+                        var paperCards = await client.Cards.Search(fuzzyMatch.Name, 1, new SearchOptions()
+                        {
+                            IncludeMultilingual = true,
+                            Mode = SearchOptions.RollupMode.Prints
+                        });
+                        var paperCard = paperCards.Data.FirstOrDefault(c => c.Games?.Contains("paper") == true);
+                        if (paperCard != null)
+                        {
+                            return (true, paperCard.Name, paperCard.Set, apiCalls);
+                        }
+                        // Fallback to original set if no paper found
                         return (true, fuzzyMatch.Name, fuzzyMatch.Set, apiCalls);
                     }
-                    // If not a paper card, try to find a paper printing of the same name
-                    var paperCards = await client.Cards.Search(fuzzyMatch.Name, 1, new SearchOptions()
-                    {
-                        IncludeMultilingual = true,
-                        Mode = SearchOptions.RollupMode.Prints
-                    });
-                    var paperCard = paperCards.Data.FirstOrDefault(c => c.Games?.Contains("paper") == true);
-                    if (paperCard != null)
-                    {
-                        return (true, paperCard.Name, paperCard.Set, apiCalls);
-                    }
-                    // Fallback to original set if no paper found
-                    return (true, fuzzyMatch.Name, fuzzyMatch.Set, apiCalls);
                 }
             }
         }
@@ -113,6 +119,22 @@ public static class PublicExtensionMethods
 
         if (allCards.Count == 1)
             return (true, allCards.First().name, allCards.First().set, apiCalls);
+
+        // Before falling back to levenshtein distance, check if any result is an exact
+        // name match for the requested name. If so, use that rather than the closest fuzzy match.
+        // This prevents a card like "Black Lotus" from being "corrected" to "Blacker Lotus".
+        var exactNameMatches = allCards.Where(c => string.Equals(c.name, name, StringComparison.OrdinalIgnoreCase)).ToList();
+        if (exactNameMatches.Count > 0)
+        {
+            if (!string.IsNullOrWhiteSpace(setHint))
+            {
+                var inSetHint = setHint.ToLowerInvariant();
+                var best = exactNameMatches.OrderBy(c => LevenshteinDist(c.set, inSetHint)).ThenBy(c => c.releasedAt).First();
+                return (true, best.name, best.set, apiCalls);
+            }
+            var oldest = exactNameMatches.OrderBy(c => c.releasedAt).First();
+            return (true, oldest.name, oldest.set, apiCalls);
+        }
 
         // In the event of in-exact match, prefer name with shortest levenshtein distance
         if (!string.IsNullOrWhiteSpace(setHint))
