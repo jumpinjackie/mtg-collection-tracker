@@ -1,6 +1,7 @@
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 using Moq;
+using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Data;
 using StrongInject;
@@ -146,5 +147,130 @@ public class CollectionTrackingServiceTests : IDisposable
         Assert.Equal(2, decks.Count);
         Assert.Contains(decks, d => d.DeckName == "Deck A");
         Assert.Contains(decks, d => d.DeckName == "Deck B");
+    }
+
+    [Fact]
+    public async Task UpdateWishlistItemAsync_RemovesVendorOffer_WhenOfferNotInUpdatedList()
+    {
+        // Arrange: seed two vendors and a wishlist item with both vendors' offers
+        int itemId;
+        int vendor1Id;
+        using (var ctx = new CardsDbContext(_dbOptions))
+        {
+            var vendor1 = new Vendor { Name = "VendorA" };
+            var vendor2 = new Vendor { Name = "VendorB" };
+            ctx.Vendors.AddRange(vendor1, vendor2);
+
+            var item = new WishlistItem
+            {
+                CardName = "Lightning Bolt",
+                NormalizedCardName = "lightning bolt",
+                Edition = "LEA",
+                Quantity = 4
+            };
+            ctx.WishlistItems.Add(item);
+            await ctx.SaveChangesAsync();
+
+            ctx.Add(new VendorPrice { ItemId = item.Id, VendorId = vendor1.Id, Price = 1.50m, AvailableStock = 4 });
+            ctx.Add(new VendorPrice { ItemId = item.Id, VendorId = vendor2.Id, Price = 2.00m, AvailableStock = 2 });
+            await ctx.SaveChangesAsync();
+
+            itemId = item.Id;
+            vendor1Id = vendor1.Id;
+        }
+
+        var service = CreateService();
+
+        // Act: update the item keeping only VendorA's offer (removing VendorB)
+        var updated = await service.UpdateWishlistItemAsync(new UpdateWishlistItemInputModel
+        {
+            Id = itemId,
+            VendorOffers =
+            [
+                new UpdateVendorOfferInputModel { VendorId = vendor1Id, Price = 1.50m, Available = 4 }
+            ]
+        }, null, CancellationToken.None);
+
+        // Assert: only VendorA's offer remains
+        Assert.Single(updated.Offers);
+        Assert.Equal(vendor1Id, updated.Offers[0].VendorId);
+    }
+
+    [Fact]
+    public async Task UpdateWishlistItemAsync_ClearsAllVendorOffers_WhenEmptyListProvided()
+    {
+        // Arrange: seed a vendor and a wishlist item with one offer
+        int itemId;
+        using (var ctx = new CardsDbContext(_dbOptions))
+        {
+            var vendor = new Vendor { Name = "MegaVendor" };
+            ctx.Vendors.Add(vendor);
+
+            var item = new WishlistItem
+            {
+                CardName = "Dark Ritual",
+                NormalizedCardName = "dark ritual",
+                Edition = "LEA",
+                Quantity = 1
+            };
+            ctx.WishlistItems.Add(item);
+            await ctx.SaveChangesAsync();
+
+            ctx.Add(new VendorPrice { ItemId = item.Id, VendorId = vendor.Id, Price = 5.00m, AvailableStock = 1 });
+            await ctx.SaveChangesAsync();
+
+            itemId = item.Id;
+        }
+
+        var service = CreateService();
+
+        // Act: update with an empty vendor offers list (user removed all offers)
+        var updated = await service.UpdateWishlistItemAsync(new UpdateWishlistItemInputModel
+        {
+            Id = itemId,
+            VendorOffers = []
+        }, null, CancellationToken.None);
+
+        // Assert: no offers remain
+        Assert.Empty(updated.Offers);
+    }
+
+    [Fact]
+    public async Task UpdateWishlistItemAsync_RetainsExistingOffers_WhenVendorOffersIsNull()
+    {
+        // Arrange: seed a vendor and wishlist item with an offer
+        int itemId;
+        using (var ctx = new CardsDbContext(_dbOptions))
+        {
+            var vendor = new Vendor { Name = "StableVendor" };
+            ctx.Vendors.Add(vendor);
+
+            var item = new WishlistItem
+            {
+                CardName = "Black Lotus",
+                NormalizedCardName = "black lotus",
+                Edition = "LEA",
+                Quantity = 1
+            };
+            ctx.WishlistItems.Add(item);
+            await ctx.SaveChangesAsync();
+
+            ctx.Add(new VendorPrice { ItemId = item.Id, VendorId = vendor.Id, Price = 9999.99m, AvailableStock = 1 });
+            await ctx.SaveChangesAsync();
+
+            itemId = item.Id;
+        }
+
+        var service = CreateService();
+
+        // Act: update with VendorOffers = null (apply offers checkbox was NOT ticked)
+        var updated = await service.UpdateWishlistItemAsync(new UpdateWishlistItemInputModel
+        {
+            Id = itemId,
+            VendorOffers = null
+        }, null, CancellationToken.None);
+
+        // Assert: original offer is untouched
+        Assert.Single(updated.Offers);
     }
 }
