@@ -24,14 +24,15 @@ public class CardImageCache(Func<Owned<CardsDbContext>> _db, ICardImageFileSyste
             var resp = await sc.RawClient.GetAsync(imgUrl);
             if (resp.StatusCode == System.Net.HttpStatusCode.OK)
             {
-                var stream = fs.OpenStream(scryfallId, tag);
-                await resp.Content.CopyToAsync(stream);
-                stream.Position = 0L; //Rewind
-                return stream;
+                // Write to disk then immediately close the file to avoid holding an
+                // exclusive lock that would block concurrent readers of the same image.
+                using (var writeStream = fs.OpenStream(scryfallId, tag))
+                {
+                    await resp.Content.CopyToAsync(writeStream);
+                }
+                // Re-read into a MemoryStream so callers never hold a FileStream open.
+                return fs.TryGetStream(scryfallId, tag);
             }
-
-            //var stream = MemoryStreamPool.GetStream(tag, imgUrl);
-            //return stream;
         }
         return null;
     }

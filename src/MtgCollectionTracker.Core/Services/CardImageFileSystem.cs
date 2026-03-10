@@ -12,9 +12,10 @@ public class CardImageFileSystem(string baseDir) : ICardImageFileSystem
     public Stream? TryGetStream(string scryfallId, string tag)
     {
         var file = Path.Combine(baseDir, $"{scryfallId}_{tag}.jpg");
-        var fi = new FileInfo(file);
-        if (fi.Exists)
-            return fi.OpenRead();
-        return null;
+        if (!File.Exists(file))
+            return null;
+        // Read all bytes into a MemoryStream so the file handle is released immediately,
+        // avoiding file locking and contention when multiple callers access the same image.
+        return new MemoryStream(File.ReadAllBytes(file));
     }
 }
