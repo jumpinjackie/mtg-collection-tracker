@@ -163,7 +163,7 @@ public partial class PlaytestCardViewModel : ViewModelBase
         if (ScryfallId == null)
             return null;
 
-        var stream = await _imageCache.GetSmallFrontFaceImageAsync(ScryfallId);
+        using var stream = await _imageCache.GetSmallFrontFaceImageAsync(ScryfallId);
         if (stream == null)
             return null;
         return new Bitmap(stream);
@@ -174,7 +174,7 @@ public partial class PlaytestCardViewModel : ViewModelBase
         if (ScryfallIdBack == null || !IsDoubleFaced)
             return null;
 
-        var stream = await _imageCache.GetSmallBackFaceImageAsync(ScryfallIdBack);
+        using var stream = await _imageCache.GetSmallBackFaceImageAsync(ScryfallIdBack);
         if (stream == null)
             return null;
         return new Bitmap(stream);
@@ -185,7 +185,7 @@ public partial class PlaytestCardViewModel : ViewModelBase
         if (ScryfallId == null)
             return null;
 
-        var stream = await _imageCache.GetLargeFrontFaceImageAsync(ScryfallId);
+        using var stream = await _imageCache.GetLargeFrontFaceImageAsync(ScryfallId);
         if (stream == null)
             return null;
         return new Bitmap(stream);
@@ -196,7 +196,7 @@ public partial class PlaytestCardViewModel : ViewModelBase
         if (ScryfallIdBack == null || !IsDoubleFaced)
             return null;
 
-        var stream = await _imageCache.GetLargeBackFaceImageAsync(ScryfallIdBack);
+        using var stream = await _imageCache.GetLargeBackFaceImageAsync(ScryfallIdBack);
         if (stream == null)
             return null;
         return new Bitmap(stream);
