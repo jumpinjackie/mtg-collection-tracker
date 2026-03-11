@@ -61,7 +61,7 @@
                             <DataGridTextColumn Header="Edition" Binding="{Binding Edition}" Width="80" />
                             <DataGridTextColumn Header="Available" Binding="{Binding Quantity}" Width="80" />
                             <DataGridTextColumn Header="Location" Binding="{Binding Location}" Width="*" />
-                            <DataGridTemplateColumn Width="70">
+                            <DataGridTemplateColumn>
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate x:DataType="vm:SearchResultViewModel">
                                         <Button Command="{Binding #SearchResultsGrid.((vm:AddExistingCardsToDeckViewModel)DataContext).AddToStagingCommand}"
@@ -108,7 +108,7 @@
                                     </DataTemplate>
                                 </DataGridTemplateColumn.CellTemplate>
                             </DataGridTemplateColumn>
-                            <DataGridTemplateColumn Width="80">
+                            <DataGridTemplateColumn>
                                 <DataGridTemplateColumn.CellTemplate>
                                     <DataTemplate x:DataType="vm:PendingItemViewModel">
                                         <Button Command="{Binding #PendingItemsGrid.((vm:AddExistingCardsToDeckViewModel)DataContext).RemovePendingItemCommand}"
