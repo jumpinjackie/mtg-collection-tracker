@@ -98,7 +98,7 @@ public partial class AddCardsViewModel : DialogContentViewModel
         {
             AllowMultiple = false,
             Title = "Load rows from CSV",
-            FileTypeFilter = [new FilePickerFileType(null) { Patterns = ["*.csv"] }]
+            FileTypeFilter = [new FilePickerFileType("CSV Files") { Patterns = ["*.csv"] }]
         });
 
         try
