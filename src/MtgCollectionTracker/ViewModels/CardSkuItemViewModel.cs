@@ -71,7 +71,8 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
         if (this.ScryfallId != null)
         {
             using var stream = await _service.GetSmallFrontFaceImageAsync(this.ScryfallId);
-            return new Bitmap(stream);
+            if (stream != null)
+                return new Bitmap(stream);
         }
         return null;
     }
@@ -81,7 +82,8 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
         if (this.ScryfallId != null)
         {
             using var stream = await _service.GetSmallBackFaceImageAsync(this.ScryfallId);
-            return new Bitmap(stream);
+            if (stream != null)
+                return new Bitmap(stream);
         }
         return null;
     }
@@ -199,7 +201,8 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
         if (this.ScryfallId != null)
         {
             using var stream = await _service.GetLargeFrontFaceImageAsync(this.ScryfallId);
-            return new Bitmap(stream);
+            if (stream != null)
+                return new Bitmap(stream);
         }
         return null;
     }
@@ -209,7 +212,8 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
         if (this.ScryfallId != null)
         {
             using var stream = await _service.GetLargeBackFaceImageAsync(this.ScryfallId);
-            return new Bitmap(stream);
+            if (stream != null)
+                return new Bitmap(stream);
         }
         return null;
     }
