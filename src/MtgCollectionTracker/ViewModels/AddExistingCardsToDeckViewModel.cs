@@ -30,6 +30,8 @@ public partial class AddExistingCardsToDeckViewModel : DialogContentViewModel
         this.SearchResults.Add(new SearchResultViewModel { SkuId = Guid.NewGuid(), CardName = "Black Lotus", Edition = "LEB", Quantity = 1, Location = "Main Binder" });
         this.SearchResults.Add(new SearchResultViewModel { SkuId = Guid.NewGuid(), CardName = "Mox Pearl", Edition = "LEB", Quantity = 2, Location = "Main Binder" });
         this.HasSearchResults = true;
+        this.PendingItems.Add(new PendingItemViewModel { SkuId = Guid.NewGuid(), CardName = "Ancestral Recall", Edition = "LEB", AvailableQty = 1, QtyToAdd = 1, Location = "Main Binder" });
+        this.HasPendingItems = true;
     }
 
     public AddExistingCardsToDeckViewModel(IMessenger messenger,
@@ -55,15 +57,20 @@ public partial class AddExistingCardsToDeckViewModel : DialogContentViewModel
     private string _searchFilter = string.Empty;
 
     [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(AddToDeckCommand))]
     private bool _hasSearchResults;
 
     [ObservableProperty]
     private bool _hasNoResults;
 
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AddToDeckCommand))]
+    private bool _hasPendingItems;
+
     public ObservableCollection<SearchResultViewModel> SearchResults { get; } = new();
 
-    private bool CanAddToDeck() => HasSearchResults;
+    public ObservableCollection<PendingItemViewModel> PendingItems { get; } = new();
+
+    private bool CanAddToDeck() => HasPendingItems;
 
     [RelayCommand]
     private void Search()
@@ -91,10 +98,37 @@ public partial class AddExistingCardsToDeckViewModel : DialogContentViewModel
         this.HasNoResults = this.SearchResults.Count == 0;
     }
 
+    [RelayCommand]
+    private void AddToStaging(SearchResultViewModel item)
+    {
+        // Skip if already staged
+        if (this.PendingItems.Any(p => p.SkuId == item.SkuId))
+            return;
+
+        this.PendingItems.Add(new PendingItemViewModel
+        {
+            SkuId = item.SkuId,
+            CardName = item.CardName,
+            Edition = item.Edition,
+            AvailableQty = item.Quantity,
+            QtyToAdd = 1,
+            Location = item.Location
+        });
+
+        this.HasPendingItems = true;
+    }
+
+    [RelayCommand]
+    private void RemovePendingItem(PendingItemViewModel item)
+    {
+        this.PendingItems.Remove(item);
+        this.HasPendingItems = this.PendingItems.Count > 0;
+    }
+
     [RelayCommand(CanExecute = nameof(CanAddToDeck))]
     private async Task AddToDeck(CancellationToken cancel)
     {
-        var itemsToAdd = this.SearchResults.Where(r => r.QtyToAdd >= 1).ToList();
+        var itemsToAdd = this.PendingItems.Where(r => r.QtyToAdd >= 1).ToList();
         if (itemsToAdd.Count == 0)
             return;
 
@@ -102,7 +136,7 @@ public partial class AddExistingCardsToDeckViewModel : DialogContentViewModel
         {
             var skuId = item.SkuId;
             var qty = item.QtyToAdd;
-            var skuQty = item.Quantity;
+            var skuQty = item.AvailableQty;
 
             Guid transferSkuId;
             if (qty < skuQty)
@@ -164,14 +198,25 @@ public partial class SearchResultViewModel : ObservableObject
 
     [ObservableProperty]
     private string _location = string.Empty;
+}
+
+public partial class PendingItemViewModel : ObservableObject
+{
+    public Guid SkuId { get; set; }
+
+    [ObservableProperty]
+    private string _cardName = string.Empty;
+
+    [ObservableProperty]
+    private string _edition = string.Empty;
+
+    [ObservableProperty]
+    private int _availableQty;
 
     [ObservableProperty]
     private int _qtyToAdd;
 
-    partial void OnQuantityChanged(int value)
-    {
-        // Default QtyToAdd to the full available quantity when the search result is first populated.
-        // Quantity is only set once during initialisation and never changes afterwards.
-        QtyToAdd = value;
-    }
+    [ObservableProperty]
+    private string _location = string.Empty;
 }
+
