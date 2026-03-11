@@ -24,6 +24,18 @@ public interface ICardSkuItem
     Task<Bitmap?> CardImageLarge { get; }
 
     bool IsDoubleFaced { get; }
+
+    string CardName { get; }
+
+    string Edition { get; }
+
+    string? CastingCost { get; }
+
+    string? OracleText { get; }
+
+    string? CardType { get; }
+
+    string? PT { get; }
 }
 
 public partial class MultiModeCardListBehavior<T> : ObservableObject where T : class, ICardSkuItem
@@ -47,6 +59,24 @@ public partial class MultiModeCardListBehavior<T> : ObservableObject where T : c
 
     public IRelayCommand? SelectedSwitchFaceCommand => this.SelectedItems.Count > 0
         ? this.SelectedItems[0].SwitchFaceCommand : null;
+
+    public string? SelectedCardName => this.SelectedItems.Count > 0
+        ? this.SelectedItems[0].CardName : null;
+
+    public string? SelectedEdition => this.SelectedItems.Count > 0
+        ? this.SelectedItems[0].Edition : null;
+
+    public string? SelectedCastingCost => this.SelectedItems.Count > 0
+        ? this.SelectedItems[0].CastingCost : null;
+
+    public string? SelectedOracleText => this.SelectedItems.Count > 0
+        ? this.SelectedItems[0].OracleText : null;
+
+    public string? SelectedCardType => this.SelectedItems.Count > 0
+        ? this.SelectedItems[0].CardType : null;
+
+    public string? SelectedPT => this.SelectedItems.Count > 0
+        ? this.SelectedItems[0].PT : null;
 
     private void SelectedCardSkus_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
@@ -79,6 +109,12 @@ public partial class MultiModeCardListBehavior<T> : ObservableObject where T : c
     [NotifyPropertyChangedFor(nameof(SelectedIsDoubleFaced))]
     [NotifyPropertyChangedFor(nameof(SelectedSwitchLabel))]
     [NotifyPropertyChangedFor(nameof(SelectedSwitchFaceCommand))]
+    [NotifyPropertyChangedFor(nameof(SelectedCardName))]
+    [NotifyPropertyChangedFor(nameof(SelectedEdition))]
+    [NotifyPropertyChangedFor(nameof(SelectedCastingCost))]
+    [NotifyPropertyChangedFor(nameof(SelectedOracleText))]
+    [NotifyPropertyChangedFor(nameof(SelectedCardType))]
+    [NotifyPropertyChangedFor(nameof(SelectedPT))]
     private bool _hasSelectedCardSku;
 
     public bool IsItemMergeable => !this.IsBusy && this.HasMultipleSelectedCardSkus;

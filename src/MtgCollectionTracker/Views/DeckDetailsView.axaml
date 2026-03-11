@@ -99,17 +99,17 @@
 						-->
 						<StackPanel IsVisible="{Binding Behavior.HasSelectedCardSku}" VerticalAlignment="Center" HorizontalAlignment="Center">
 							<TextBlock TextAlignment="Center">
-								<Run Text="{Binding Behavior.SelectedRow.CardName, FallbackValue=''}" />
+								<Run Text="{Binding Behavior.SelectedCardName}" />
 								<Run Text=" - " />
-								<Run Text="{Binding Behavior.SelectedRow.CastingCost, FallbackValue=''}" />
+								<Run Text="{Binding Behavior.SelectedCastingCost}" />
 								<LineBreak />
-								<Run Text="{Binding Behavior.SelectedRow.CardType, FallbackValue=''}" />
+								<Run Text="{Binding Behavior.SelectedCardType}" />
 								<LineBreak />
-								<Run Text="{Binding Behavior.SelectedRow.PT, FallbackValue=''}" />
+								<Run Text="{Binding Behavior.SelectedPT}" />
 								<LineBreak />
-								<Run Text="{Binding Behavior.SelectedRow.Edition, FallbackValue=''}" />
+								<Run Text="{Binding Behavior.SelectedEdition}" />
 							</TextBlock>
-							<TextBlock Margin="8" TextWrapping="WrapWithOverflow" Text="{Binding Behavior.SelectedRow.OracleText, FallbackValue=''}" />
+							<TextBlock Margin="8" TextWrapping="WrapWithOverflow" Text="{Binding Behavior.SelectedOracleText}" />
 							<Canvas Width="400" Height="560">
 								<Panel Canvas.Left="0" Canvas.Top="0" Canvas.Bottom="0" Canvas.Right="0" Background="#7FFF22DD">
 									<!-- TODO: If this is even possible, do a flip animation for double-faced cards -->
