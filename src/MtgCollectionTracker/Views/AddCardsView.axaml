@@ -84,7 +84,11 @@
 				<Run>These cards will be added to:</Run>
 				<Run Text="{Binding SelectedContainer.Name}" />
 			</TextBlock>
-			<StackPanel IsVisible="{Binding !LockedTargetContainer}">
+			<TextBlock Margin="6" IsVisible="{Binding LockedTargetDeck}">
+				<Run>These cards will be added to deck:</Run>
+				<Run Text="{Binding TargetDeckName}" />
+			</TextBlock>
+			<StackPanel IsVisible="{Binding ShowContainerSelector}">
 				<TextBlock Margin="6">Add these cards to container</TextBlock>
 				<ComboBox Margin="6" SelectedItem="{Binding SelectedContainer}" ItemsSource="{Binding AvailableContainers}">
 					<ComboBox.ItemTemplate>

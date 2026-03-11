@@ -1,0 +1,127 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="700"
+             MinWidth="900"
+             x:Class="MtgCollectionTracker.Views.AddExistingCardsToDeckView"
+             x:DataType="vm:AddExistingCardsToDeckViewModel">
+    <Design.DataContext>
+        <vm:AddExistingCardsToDeckViewModel />
+    </Design.DataContext>
+    <DockPanel>
+        <!-- Bottom action bar -->
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="10" Spacing="10">
+            <Button Command="{Binding AddToDeckCommand}">Add to Deck</Button>
+            <Button Command="{Binding CancelCommand}">Cancel</Button>
+        </StackPanel>
+        <!-- Main content -->
+        <DockPanel Margin="10">
+            <!-- Header -->
+            <TextBlock DockPanel.Dock="Top" Margin="0,0,0,6">
+                <Run>Search for cards to add to deck:</Run>
+                <Run FontWeight="Bold" Text="{Binding DeckName}" />
+            </TextBlock>
+            <!-- Search row -->
+            <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="6" Margin="0,0,0,6">
+                <TextBox Width="300" Watermark="Search by card name..." Text="{Binding SearchFilter}">
+                    <TextBox.KeyBindings>
+                        <KeyBinding Gesture="Enter" Command="{Binding SearchCommand}" />
+                    </TextBox.KeyBindings>
+                </TextBox>
+                <Button Command="{Binding SearchCommand}">Search</Button>
+            </StackPanel>
+            <!-- No results message -->
+            <TextBlock DockPanel.Dock="Top" IsVisible="{Binding HasNoResults}" Foreground="Gray" Margin="0,0,0,6">No cards found. Try a different search term.</TextBlock>
+
+            <!-- Two-panel grid: search results (top) + pending items (bottom) -->
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="*" MinHeight="80" />
+                    <RowDefinition Height="8" />
+                    <RowDefinition Height="*" MinHeight="80" />
+                </Grid.RowDefinitions>
+
+                <!-- Search results panel -->
+                <DockPanel Grid.Row="0">
+                    <TextBlock DockPanel.Dock="Top" FontWeight="Bold" Margin="0,0,0,4">Search Results</TextBlock>
+                    <TextBlock DockPanel.Dock="Top" IsVisible="{Binding !HasSearchResults}" Foreground="Gray" FontSize="11" Margin="0,0,0,4">Search for cards above to see results here. Click "Add" to stage a card.</TextBlock>
+                    <DataGrid x:Name="SearchResultsGrid"
+                              ItemsSource="{Binding SearchResults}"
+                              IsVisible="{Binding HasSearchResults}"
+                              CanUserReorderColumns="True"
+                              CanUserResizeColumns="True"
+                              CanUserSortColumns="True"
+                              GridLinesVisibility="All"
+                              IsReadOnly="True"
+                              SelectionMode="Single"
+                              BorderThickness="1">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Card Name" Binding="{Binding CardName}" Width="*" />
+                            <DataGridTextColumn Header="Edition" Binding="{Binding Edition}" Width="80" />
+                            <DataGridTextColumn Header="Available" Binding="{Binding Quantity}" Width="80" />
+                            <DataGridTextColumn Header="Location" Binding="{Binding Location}" Width="*" />
+                            <DataGridTemplateColumn MinWidth="80">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:SearchResultViewModel">
+                                        <Button Command="{Binding #SearchResultsGrid.((vm:AddExistingCardsToDeckViewModel)DataContext).AddToStagingCommand}"
+                                                CommandParameter="{Binding}"
+                                                HorizontalAlignment="Stretch">Add</Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+
+                <!-- Splitter -->
+                <GridSplitter Grid.Row="1" ResizeDirection="Rows" HorizontalAlignment="Stretch" Background="Transparent" />
+
+                <!-- Pending items panel -->
+                <DockPanel Grid.Row="2">
+                    <TextBlock DockPanel.Dock="Top" FontWeight="Bold" Margin="0,0,0,4">Items to Add to Deck</TextBlock>
+                    <TextBlock DockPanel.Dock="Top" IsVisible="{Binding !HasPendingItems}" Foreground="Gray" FontSize="11" Margin="0,0,0,4">No items staged yet. Use "Add" buttons above to stage cards for adding.</TextBlock>
+                    <DataGrid x:Name="PendingItemsGrid"
+                              ItemsSource="{Binding PendingItems}"
+                              IsVisible="{Binding HasPendingItems}"
+                              CanUserReorderColumns="True"
+                              CanUserResizeColumns="True"
+                              CanUserSortColumns="True"
+                              GridLinesVisibility="All"
+                              IsReadOnly="True"
+                              SelectionMode="Single"
+                              BorderThickness="1">
+                        <DataGrid.Columns>
+                            <DataGridTextColumn Header="Card Name" Binding="{Binding CardName}" Width="*" />
+                            <DataGridTextColumn Header="Edition" Binding="{Binding Edition}" Width="80" />
+                            <DataGridTextColumn Header="Available" Binding="{Binding AvailableQty}" Width="80" />
+                            <DataGridTextColumn Header="Location" Binding="{Binding Location}" Width="*" />
+                            <DataGridTemplateColumn Header="Qty to Add" Width="120">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:PendingItemViewModel">
+                                        <NumericUpDown Value="{Binding QtyToAdd}"
+                                                       Minimum="1"
+                                                       Maximum="{Binding AvailableQty}"
+                                                       FormatString="0"
+                                                       BorderThickness="0"
+                                                       Padding="4,0" />
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                            <DataGridTemplateColumn MinWidth="100">
+                                <DataGridTemplateColumn.CellTemplate>
+                                    <DataTemplate x:DataType="vm:PendingItemViewModel">
+                                        <Button Command="{Binding #PendingItemsGrid.((vm:AddExistingCardsToDeckViewModel)DataContext).RemovePendingItemCommand}"
+                                                CommandParameter="{Binding}"
+                                                HorizontalAlignment="Stretch">Remove</Button>
+                                    </DataTemplate>
+                                </DataGridTemplateColumn.CellTemplate>
+                            </DataGridTemplateColumn>
+                        </DataGrid.Columns>
+                    </DataGrid>
+                </DockPanel>
+            </Grid>
+        </DockPanel>
+    </DockPanel>
+</UserControl>

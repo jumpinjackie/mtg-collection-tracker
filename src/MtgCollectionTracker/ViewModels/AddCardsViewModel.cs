@@ -98,7 +98,7 @@ public partial class AddCardsViewModel : DialogContentViewModel
         {
             AllowMultiple = false,
             Title = "Load rows from CSV",
-            FileTypeFilter = [new FilePickerFileType(null) { Patterns = ["*.csv"] }]
+            FileTypeFilter = [new FilePickerFileType("CSV Files") { Patterns = ["*.csv"] }]
         });
 
         try
@@ -188,6 +188,17 @@ public partial class AddCardsViewModel : DialogContentViewModel
 
     public IEnumerable<ContainerViewModel>? AvailableContainers { get; internal set; }
 
+    private int? _targetDeckId;
+    private string? _targetDeckName;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowContainerSelector))]
+    private bool _lockedTargetDeck = false;
+
+    public string? TargetDeckName => _targetDeckName;
+
+    public bool ShowContainerSelector => !LockedTargetContainer && !LockedTargetDeck;
+
     [RelayCommand(CanExecute = nameof(CanAddCards))]
     private async Task AddCards()
     {
@@ -211,8 +222,18 @@ public partial class AddCardsViewModel : DialogContentViewModel
             containerId = this.SelectedContainer.Id;
         }
 
+        if (_targetDeckId.HasValue)
+        {
+            deckId = _targetDeckId.Value;
+        }
+
         var (total, proxyTotal, rows) = await _service.AddMultipleToContainerOrDeckAsync(containerId, deckId, adds, _scryfallApiClient);
         Messenger.Send(new CardsAddedMessage { CardsTotal = total, ProxyTotal = proxyTotal, SkuTotal = rows });
+        if (deckId.HasValue)
+        {
+            Messenger.Send(new DeckTotalsChangedMessage([deckId.Value]));
+            Messenger.Send(new CardsAddedToDeckMessage(deckId.Value));
+        }
         Messenger.Send(new CloseDialogMessage());
     }
 
@@ -223,6 +244,7 @@ public partial class AddCardsViewModel : DialogContentViewModel
     }
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(ShowContainerSelector))]
     private bool _lockedTargetContainer = false;
 
     public AddCardsViewModel WithTargetContainer(int containerId)
@@ -230,6 +252,14 @@ public partial class AddCardsViewModel : DialogContentViewModel
         this.SelectedContainer = this.AvailableContainers?.FirstOrDefault(c => c.Id == containerId);
         if (this.SelectedContainer != null)
             this.LockedTargetContainer = true;
+        return this;
+    }
+
+    public AddCardsViewModel WithTargetDeck(int deckId, string deckName)
+    {
+        _targetDeckId = deckId;
+        _targetDeckName = deckName;
+        this.LockedTargetDeck = true;
         return this;
     }
 
