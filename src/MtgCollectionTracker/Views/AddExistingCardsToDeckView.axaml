@@ -69,7 +69,7 @@
                     <TextBlock Foreground="Gray" FontSize="11" TextWrapping="Wrap">
                         If quantity is less than available, the SKU will be split and the split portion transferred to the deck.
                     </TextBlock>
-                    <Button Command="{Binding AddSelectedCommand}" IsEnabled="{Binding CanAddSelected}" HorizontalAlignment="Left">Add to Deck</Button>
+                    <Button Command="{Binding AddSelectedCommand}" HorizontalAlignment="Left">Add to Deck</Button>
                 </StackPanel>
             </Grid>
         </DockPanel>

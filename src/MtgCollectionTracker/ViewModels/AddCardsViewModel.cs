@@ -231,6 +231,7 @@ public partial class AddCardsViewModel : DialogContentViewModel
         Messenger.Send(new CardsAddedMessage { CardsTotal = total, ProxyTotal = proxyTotal, SkuTotal = rows });
         if (deckId.HasValue)
         {
+            Messenger.Send(new DeckTotalsChangedMessage([deckId.Value]));
             Messenger.Send(new CardsAddedToDeckMessage(deckId.Value));
         }
         Messenger.Send(new CloseDialogMessage());

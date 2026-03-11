@@ -60,17 +60,17 @@ public partial class AddExistingCardsToDeckViewModel : DialogContentViewModel
     private bool _hasNoResults;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanAddSelected))]
     [NotifyPropertyChangedFor(nameof(MaxQuantityToAdd))]
+    [NotifyCanExecuteChangedFor(nameof(AddSelectedCommand))]
     private SearchResultViewModel? _selectedResult;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(CanAddSelected))]
+    [NotifyCanExecuteChangedFor(nameof(AddSelectedCommand))]
     private int _quantityToAdd = 1;
 
     public int MaxQuantityToAdd => SelectedResult?.Quantity ?? 1;
 
-    public bool CanAddSelected => SelectedResult != null && QuantityToAdd >= 1 && QuantityToAdd <= MaxQuantityToAdd;
+    private bool CanAddSelected() => SelectedResult != null && QuantityToAdd >= 1 && QuantityToAdd <= MaxQuantityToAdd;
 
     public ObservableCollection<SearchResultViewModel> SearchResults { get; } = new();
 
@@ -111,7 +111,7 @@ public partial class AddExistingCardsToDeckViewModel : DialogContentViewModel
     [RelayCommand(CanExecute = nameof(CanAddSelected))]
     private async Task AddSelected(CancellationToken cancel)
     {
-        if (SelectedResult == null || !CanAddSelected)
+        if (SelectedResult == null)
             return;
 
         var skuId = SelectedResult.SkuId;
@@ -142,12 +142,14 @@ public partial class AddExistingCardsToDeckViewModel : DialogContentViewModel
             transferSkuId = skuId;
         }
 
-        await _service.UpdateCardSkuAsync(new UpdateCardSkuInputModel
+        var res = await _service.UpdateCardSkuAsync(new UpdateCardSkuInputModel
         {
             Ids = [transferSkuId],
             DeckId = _deckId
         }, null, cancel);
 
+        Messenger.HandleSkuUpdate(res);
+        Messenger.Send(new DeckTotalsChangedMessage([_deckId]));
         Messenger.Send(new CardsAddedToDeckMessage(_deckId));
         Messenger.Send(new CloseDialogMessage());
     }
