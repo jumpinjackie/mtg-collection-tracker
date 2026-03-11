@@ -99,27 +99,27 @@
 						-->
 						<StackPanel IsVisible="{Binding Behavior.HasSelectedCardSku}" VerticalAlignment="Center" HorizontalAlignment="Center">
 							<TextBlock TextAlignment="Center">
-								<Run Text="{Binding Behavior.SelectedRow.CardName}" />
+								<Run Text="{Binding Behavior.SelectedRow.CardName, FallbackValue=''}" />
 								<Run Text=" - " />
-								<Run Text="{Binding Behavior.SelectedRow.CastingCost}" />
+								<Run Text="{Binding Behavior.SelectedRow.CastingCost, FallbackValue=''}" />
 								<LineBreak />
-								<Run Text="{Binding Behavior.SelectedRow.CardType}" />
+								<Run Text="{Binding Behavior.SelectedRow.CardType, FallbackValue=''}" />
 								<LineBreak />
-								<Run Text="{Binding Behavior.SelectedRow.PT}" />
+								<Run Text="{Binding Behavior.SelectedRow.PT, FallbackValue=''}" />
 								<LineBreak />
-								<Run Text="{Binding Behavior.SelectedRow.Edition}" />
+								<Run Text="{Binding Behavior.SelectedRow.Edition, FallbackValue=''}" />
 							</TextBlock>
-							<TextBlock Margin="8" TextWrapping="WrapWithOverflow" Text="{Binding Behavior.SelectedRow.OracleText}" />
+							<TextBlock Margin="8" TextWrapping="WrapWithOverflow" Text="{Binding Behavior.SelectedRow.OracleText, FallbackValue=''}" />
 							<Canvas Width="400" Height="560">
 								<Panel Canvas.Left="0" Canvas.Top="0" Canvas.Bottom="0" Canvas.Right="0" Background="#7FFF22DD">
 									<!-- TODO: If this is even possible, do a flip animation for double-faced cards -->
-									<Image Width="400" Stretch="Uniform" Source="{Binding Behavior.SelectedRow.CardImageLarge^}" />
-									<Panel Height="560" IsVisible="{Binding Behavior.SelectedRow.CardImageLarge, Converter={x:Static ObjectConverters.IsNull}}">
+									<Image Width="400" Stretch="Uniform" Source="{Binding Behavior.SelectedCardImageLarge^}" />
+									<Panel Height="560" IsVisible="{Binding Behavior.SelectedCardImageLarge, Converter={x:Static ObjectConverters.IsNull}}">
 										<PathIcon Height="75" Width="75" Data="{StaticResource card}" />
 									</Panel>
 								</Panel>
 							</Canvas>
-							<Button IsVisible="{Binding Behavior.SelectedRow.IsDoubleFaced}" Grid.Column="0" HorizontalAlignment="Center" Content="{Binding Behavior.SelectedSwitchLabel}" Command="{Binding Behavior.SelectedSwitchFaceCommand}" />
+							<Button IsVisible="{Binding Behavior.SelectedIsDoubleFaced}" Grid.Column="0" HorizontalAlignment="Center" Content="{Binding Behavior.SelectedSwitchLabel}" Command="{Binding Behavior.SelectedSwitchFaceCommand}" />
 						</StackPanel>
 					</SplitView.Pane>
 					<Grid>
