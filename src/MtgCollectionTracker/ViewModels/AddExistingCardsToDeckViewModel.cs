@@ -29,6 +29,7 @@ public partial class AddExistingCardsToDeckViewModel : DialogContentViewModel
         _service = new StubCollectionTrackingService();
         this.SearchResults.Add(new SearchResultViewModel { SkuId = Guid.NewGuid(), CardName = "Black Lotus", Edition = "LEB", Quantity = 1, Location = "Main Binder" });
         this.SearchResults.Add(new SearchResultViewModel { SkuId = Guid.NewGuid(), CardName = "Mox Pearl", Edition = "LEB", Quantity = 2, Location = "Main Binder" });
+        this.HasSearchResults = true;
     }
 
     public AddExistingCardsToDeckViewModel(IMessenger messenger,
@@ -54,33 +55,15 @@ public partial class AddExistingCardsToDeckViewModel : DialogContentViewModel
     private string _searchFilter = string.Empty;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AddToDeckCommand))]
     private bool _hasSearchResults;
 
     [ObservableProperty]
     private bool _hasNoResults;
 
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(MaxQuantityToAdd))]
-    [NotifyCanExecuteChangedFor(nameof(AddSelectedCommand))]
-    private SearchResultViewModel? _selectedResult;
-
-    [ObservableProperty]
-    [NotifyCanExecuteChangedFor(nameof(AddSelectedCommand))]
-    private int _quantityToAdd = 1;
-
-    public int MaxQuantityToAdd => SelectedResult?.Quantity ?? 1;
-
-    private bool CanAddSelected() => SelectedResult != null && QuantityToAdd >= 1 && QuantityToAdd <= MaxQuantityToAdd;
-
     public ObservableCollection<SearchResultViewModel> SearchResults { get; } = new();
 
-    partial void OnSelectedResultChanged(SearchResultViewModel? value)
-    {
-        if (value != null)
-        {
-            this.QuantityToAdd = 1;
-        }
-    }
+    private bool CanAddToDeck() => HasSearchResults;
 
     [RelayCommand]
     private void Search()
@@ -108,47 +91,52 @@ public partial class AddExistingCardsToDeckViewModel : DialogContentViewModel
         this.HasNoResults = this.SearchResults.Count == 0;
     }
 
-    [RelayCommand(CanExecute = nameof(CanAddSelected))]
-    private async Task AddSelected(CancellationToken cancel)
+    [RelayCommand(CanExecute = nameof(CanAddToDeck))]
+    private async Task AddToDeck(CancellationToken cancel)
     {
-        if (SelectedResult == null)
+        var itemsToAdd = this.SearchResults.Where(r => r.QtyToAdd >= 1).ToList();
+        if (itemsToAdd.Count == 0)
             return;
 
-        var skuId = SelectedResult.SkuId;
-        var qty = QuantityToAdd;
-        var skuQty = SelectedResult.Quantity;
-
-        Guid transferSkuId;
-        if (qty < skuQty)
+        foreach (var item in itemsToAdd)
         {
-            // Split the SKU and transfer the new split portion
-            var newSku = await _service.SplitCardSkuAsync(new SplitCardSkuInputModel
+            var skuId = item.SkuId;
+            var qty = item.QtyToAdd;
+            var skuQty = item.Quantity;
+
+            Guid transferSkuId;
+            if (qty < skuQty)
             {
-                CardSkuId = skuId,
-                Quantity = qty
-            });
-            transferSkuId = newSku.Id;
+                // Split the SKU and transfer the new split portion
+                var newSku = await _service.SplitCardSkuAsync(new SplitCardSkuInputModel
+                {
+                    CardSkuId = skuId,
+                    Quantity = qty
+                });
+                transferSkuId = newSku.Id;
 
-            Messenger.Send(new CardSkuSplitMessage
+                Messenger.Send(new CardSkuSplitMessage
+                {
+                    SplitSkuId = skuId,
+                    NewSkuId = newSku.Id,
+                    Quantity = qty
+                });
+            }
+            else
             {
-                SplitSkuId = skuId,
-                NewSkuId = newSku.Id,
-                Quantity = qty
-            });
-        }
-        else
-        {
-            // Transfer the whole SKU
-            transferSkuId = skuId;
+                // Transfer the whole SKU
+                transferSkuId = skuId;
+            }
+
+            var res = await _service.UpdateCardSkuAsync(new UpdateCardSkuInputModel
+            {
+                Ids = [transferSkuId],
+                DeckId = _deckId
+            }, null, cancel);
+
+            Messenger.HandleSkuUpdate(res);
         }
 
-        var res = await _service.UpdateCardSkuAsync(new UpdateCardSkuInputModel
-        {
-            Ids = [transferSkuId],
-            DeckId = _deckId
-        }, null, cancel);
-
-        Messenger.HandleSkuUpdate(res);
         Messenger.Send(new DeckTotalsChangedMessage([_deckId]));
         Messenger.Send(new CardsAddedToDeckMessage(_deckId));
         Messenger.Send(new CloseDialogMessage());
@@ -176,4 +164,14 @@ public partial class SearchResultViewModel : ObservableObject
 
     [ObservableProperty]
     private string _location = string.Empty;
+
+    [ObservableProperty]
+    private int _qtyToAdd;
+
+    partial void OnQuantityChanged(int value)
+    {
+        // Default QtyToAdd to the full available quantity when the search result is first populated.
+        // Quantity is only set once during initialisation and never changes afterwards.
+        QtyToAdd = value;
+    }
 }

@@ -11,6 +11,7 @@
     </Design.DataContext>
     <DockPanel>
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="10" Spacing="10">
+            <Button Command="{Binding AddToDeckCommand}">Add to Deck</Button>
             <Button Command="{Binding CancelCommand}">Cancel</Button>
         </StackPanel>
         <DockPanel Margin="10">
@@ -19,59 +20,45 @@
                 <Run FontWeight="Bold" Text="{Binding DeckName}" />
             </TextBlock>
             <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Spacing="6" Margin="0,0,0,10">
-                <TextBox Width="300" Watermark="Search by card name..." Text="{Binding SearchFilter}" />
+                <TextBox Width="300" Watermark="Search by card name..." Text="{Binding SearchFilter}">
+                    <TextBox.KeyBindings>
+                        <KeyBinding Gesture="Enter" Command="{Binding SearchCommand}" />
+                    </TextBox.KeyBindings>
+                </TextBox>
                 <Button Command="{Binding SearchCommand}">Search</Button>
             </StackPanel>
             <TextBlock DockPanel.Dock="Top" IsVisible="{Binding HasNoResults}" Foreground="Gray">No cards found. Try a different search term.</TextBlock>
-            <Grid DockPanel.Dock="Bottom" IsVisible="{Binding HasSearchResults}" Margin="0,10,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="*" />
-                    <ColumnDefinition Width="300" />
-                </Grid.ColumnDefinitions>
-                <!-- Search results list -->
-                <DockPanel Grid.Column="0">
-                    <TextBlock DockPanel.Dock="Top" FontWeight="Bold" Margin="0,0,0,4">Search Results</TextBlock>
-                    <DataGrid ItemsSource="{Binding SearchResults}"
-                              SelectedItem="{Binding SelectedResult}"
-                              CanUserReorderColumns="True"
-                              CanUserResizeColumns="True"
-                              CanUserSortColumns="True"
-                              GridLinesVisibility="All"
-                              IsReadOnly="True"
-                              SelectionMode="Single"
-                              BorderThickness="1">
-                        <DataGrid.Columns>
-                            <DataGridTextColumn Header="Card Name" Binding="{Binding CardName}" Width="*" />
-                            <DataGridTextColumn Header="Edition" Binding="{Binding Edition}" Width="80" />
-                            <DataGridTextColumn Header="Qty" Binding="{Binding Quantity}" Width="60" />
-                            <DataGridTextColumn Header="Location" Binding="{Binding Location}" Width="*" />
-                        </DataGrid.Columns>
-                    </DataGrid>
-                </DockPanel>
-                <!-- Add panel -->
-                <StackPanel Grid.Column="1" Margin="10,0,0,0" Spacing="8" IsVisible="{Binding SelectedResult, Converter={x:Static ObjectConverters.IsNotNull}}">
-                    <TextBlock FontWeight="Bold">Add to Deck</TextBlock>
-                    <TextBlock>
-                        <Run>Card:</Run>
-                        <Run FontWeight="Bold" Text="{Binding SelectedResult.CardName}" />
-                    </TextBlock>
-                    <TextBlock>
-                        <Run>Available:</Run>
-                        <Run Text="{Binding MaxQuantityToAdd}" />
-                    </TextBlock>
-                    <StackPanel Orientation="Horizontal" Spacing="6">
-                        <TextBlock VerticalAlignment="Center">Quantity:</TextBlock>
-                        <NumericUpDown Value="{Binding QuantityToAdd}"
-                                       Minimum="1"
-                                       Maximum="{Binding MaxQuantityToAdd}"
-                                       Width="100" />
-                    </StackPanel>
-                    <TextBlock Foreground="Gray" FontSize="11" TextWrapping="Wrap">
-                        If quantity is less than available, the SKU will be split and the split portion transferred to the deck.
-                    </TextBlock>
-                    <Button Command="{Binding AddSelectedCommand}" HorizontalAlignment="Left">Add to Deck</Button>
-                </StackPanel>
-            </Grid>
+            <TextBlock DockPanel.Dock="Top" IsVisible="{Binding HasSearchResults}" Foreground="Gray" FontSize="11" Margin="0,0,0,4">
+                Adjust the "Qty to Add" for each SKU. If quantity is less than available, the SKU will be split first.
+            </TextBlock>
+            <DataGrid DockPanel.Dock="Bottom"
+                      ItemsSource="{Binding SearchResults}"
+                      IsVisible="{Binding HasSearchResults}"
+                      CanUserReorderColumns="True"
+                      CanUserResizeColumns="True"
+                      CanUserSortColumns="True"
+                      GridLinesVisibility="All"
+                      SelectionMode="Single"
+                      BorderThickness="1">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Card Name" Binding="{Binding CardName}" Width="*" IsReadOnly="True" />
+                    <DataGridTextColumn Header="Edition" Binding="{Binding Edition}" Width="80" IsReadOnly="True" />
+                    <DataGridTextColumn Header="Available" Binding="{Binding Quantity}" Width="80" IsReadOnly="True" />
+                    <DataGridTextColumn Header="Location" Binding="{Binding Location}" Width="*" IsReadOnly="True" />
+                    <DataGridTemplateColumn Header="Qty to Add" Width="120">
+                        <DataGridTemplateColumn.CellTemplate>
+                            <DataTemplate x:DataType="vm:SearchResultViewModel">
+                                <NumericUpDown Value="{Binding QtyToAdd}"
+                                               Minimum="0"
+                                               Maximum="{Binding Quantity}"
+                                               FormatString="0"
+                                               BorderThickness="0"
+                                               Padding="4,0" />
+                            </DataTemplate>
+                        </DataGridTemplateColumn.CellTemplate>
+                    </DataGridTemplateColumn>
+                </DataGrid.Columns>
+            </DataGrid>
         </DockPanel>
     </DockPanel>
 </UserControl>
