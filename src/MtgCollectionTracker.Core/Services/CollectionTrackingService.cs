@@ -1843,9 +1843,10 @@ public class CollectionTrackingService : ICollectionTrackingService
                         CheapestEdition = cheapestEdition
                     });
                 }
-                catch
+                catch (Exception ex)
                 {
-                    // Don't let a single card failure abort the entire batch
+                    // Don't let a single card failure abort the entire batch - log for diagnostics
+                    System.Diagnostics.Debug.WriteLine($"Price fetch failed for SKU {sku.Id} ({sku.CardName}, {sku.Edition}): {ex.Message}");
                 }
             }
 

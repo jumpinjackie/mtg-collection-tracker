@@ -210,7 +210,9 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
     private decimal? _latestCheapestPriceUsd;
 
     /// <summary>
-    /// Formatted display string for the most recent tracked price
+    /// Formatted display string for the most recent tracked price.
+    /// Shows the edition-specific price as "$X.XX", or the cheapest printing price prefixed with "~"
+    /// (e.g. "~$X.XX") when no edition-specific price is available.
     /// </summary>
     public string? LatestPrice => LatestPriceUsd.HasValue
         ? $"${LatestPriceUsd:F2}"
