@@ -14,12 +14,12 @@ namespace MtgCollectionTracker.Data.Migrations
             // Step 1: Add a temporary NewId TEXT column to Cards and populate with UUIDs
             migrationBuilder.Sql(@"ALTER TABLE ""Cards"" ADD COLUMN ""NewId"" TEXT");
 
-            // Generate UUID v4 strings for all existing rows
+            // Generate UUID v4 strings for all existing rows (upper-case)
             migrationBuilder.Sql(@"
-                UPDATE ""Cards"" SET ""NewId"" = lower(
+                UPDATE ""Cards"" SET ""NewId"" = upper(
                     hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-4' ||
                     substr(hex(randomblob(2)), 2) || '-' ||
-                    substr('89ab', abs(random()) % 4 + 1, 1) || substr(hex(randomblob(2)), 2) || '-' ||
+                    substr('89AB', abs(random()) % 4 + 1, 1) || substr(hex(randomblob(2)), 2) || '-' ||
                     hex(randomblob(6))
                 )
             ");
