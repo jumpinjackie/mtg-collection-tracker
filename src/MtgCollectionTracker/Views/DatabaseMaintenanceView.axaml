@@ -30,5 +30,11 @@
 			<Button IsEnabled="{Binding !IsBusy}" Command="{Binding NormalizeCardNamesCommand}">Normalize Card Names</Button>
 			<ProgressBar IsVisible="{Binding NormalizeCardNamesCommand.IsRunning}" ShowProgressText="True" Value="{Binding Completed}" Maximum="{Binding Total}" ProgressTextFormat="{}{0}/{3} metadata items processed ({1:0}%)" />
 		</StackPanel>
+		<StackPanel Margin="10" Spacing="10">
+			<TextBlock TextWrapping="WrapWithOverflow">To fetch current Scryfall prices for all cards in your collection that have price tracking enabled, click the button below. Only cards not yet priced today will be fetched.</TextBlock>
+			<TextBlock TextWrapping="WrapWithOverflow">WARNING: This may take a while if you have many price-tracked cards</TextBlock>
+			<Button IsEnabled="{Binding !IsBusy}" Command="{Binding FetchPricesCommand}">Fetch Prices for Tracked Cards</Button>
+			<ProgressBar IsVisible="{Binding FetchPricesCommand.IsRunning}" ShowProgressText="True" Value="{Binding Completed}" Maximum="{Binding Total}" ProgressTextFormat="{}{0}/{3} card(s) priced ({1:0}%)" />
+		</StackPanel>
 	</StackPanel>
 </UserControl>

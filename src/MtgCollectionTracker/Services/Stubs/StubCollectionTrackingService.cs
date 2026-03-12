@@ -275,4 +275,14 @@ public class StubCollectionTrackingService : ICollectionTrackingService
     {
         throw new System.NotImplementedException();
     }
+
+    public ValueTask<int> SetPriceTrackingAsync(IEnumerable<Guid> ids, bool trackPrice, CancellationToken cancel)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public ValueTask FetchPricesForTrackedSkusAsync(UpdateCardMetadataProgressCallback callback, IScryfallApiClient scryfallApiClient, CancellationToken cancel)
+    {
+        throw new System.NotImplementedException();
+    }
 }

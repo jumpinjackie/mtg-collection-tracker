@@ -62,6 +62,31 @@ public class CardSkuModel
 
     public string[]? ColorIdentity { get; set; }
 
+    /// <summary>
+    /// Indicates if price tracking is enabled for this card SKU
+    /// </summary>
+    public bool TrackPrice { get; set; }
+
+    /// <summary>
+    /// The most recent tracked USD price for the specific edition of this card
+    /// </summary>
+    public decimal? LatestPriceUsd { get; set; }
+
+    /// <summary>
+    /// The most recent tracked USD price for the cheapest printing of this card
+    /// </summary>
+    public decimal? LatestCheapestPriceUsd { get; set; }
+
+    /// <summary>
+    /// The edition code with the cheapest price in the most recent price entry
+    /// </summary>
+    public string? LatestCheapestEdition { get; set; }
+
+    /// <summary>
+    /// The date of the most recent price entry
+    /// </summary>
+    public DateOnly? LatestPriceDate { get; set; }
+
     public string GetDescription(bool withId = true) => withId
         ? $"({Quantity}x {CardName}, {Edition}, id: {Id})"
         : $"({Quantity}x {CardName}, {Edition})";

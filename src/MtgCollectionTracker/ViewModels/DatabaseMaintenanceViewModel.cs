@@ -120,4 +120,34 @@ public partial class DatabaseMaintenanceViewModel : RecipientViewModelBase, IVie
             Messenger.ToastNotify("All card names normalized", Avalonia.Controls.Notifications.NotificationType.Success);
         }
     }
+
+    [RelayCommand]
+    private void CancelFetchPrices()
+    {
+        FetchPricesCommand.Cancel();
+    }
+
+    [RelayCommand]
+    private async Task FetchPrices(CancellationToken cancel)
+    {
+        if (_client == null)
+            return;
+
+        using (((IViewModelWithBusyState)this).StartBusyState())
+        {
+            Messenger.ToastNotify("Fetching prices for tracked cards. Please wait ...", Avalonia.Controls.Notifications.NotificationType.Information);
+
+            var cb = new UpdateCardMetadataProgressCallback
+            {
+                OnProgress = (processed, total) =>
+                {
+                    this.Completed = processed;
+                    this.Total = total;
+                }
+            };
+            await _service.FetchPricesForTrackedSkusAsync(cb, _client, cancel);
+
+            Messenger.ToastNotify("Prices updated", Avalonia.Controls.Notifications.NotificationType.Success);
+        }
+    }
 }

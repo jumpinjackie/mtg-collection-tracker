@@ -176,6 +176,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             .Include(c => c.Container)
             .Include(c => c.Language)
             .Include(c => c.Scryfall)
+            .Include(c => c.PriceHistory)
             .FirstOrDefaultAsync(c => c.Id == id, cancel);
 
         if (sku == null)
@@ -289,7 +290,24 @@ public class CollectionTrackingService : ICollectionTrackingService
             // for this card yet, then a DFC should have '//' in its card name
             IsDoubleFaced = c.Scryfall != null
                 ? c.Scryfall.BackImageSmallUrl != null
-                : c.CardName.Contains(" // ")
+                : c.CardName.Contains(" // "),
+            TrackPrice = c.TrackPrice,
+            LatestPriceUsd = c.PriceHistory
+                .OrderByDescending(p => p.Date)
+                .Select(p => (decimal?)p.PriceUsd)
+                .FirstOrDefault(),
+            LatestCheapestPriceUsd = c.PriceHistory
+                .OrderByDescending(p => p.Date)
+                .Select(p => (decimal?)p.CheapestPriceUsd)
+                .FirstOrDefault(),
+            LatestCheapestEdition = c.PriceHistory
+                .OrderByDescending(p => p.Date)
+                .Select(p => p.CheapestEdition)
+                .FirstOrDefault(),
+            LatestPriceDate = c.PriceHistory
+                .OrderByDescending(p => p.Date)
+                .Select(p => (DateOnly?)p.Date)
+                .FirstOrDefault()
         });
     }
 
@@ -363,6 +381,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             .Include(c => c.Deck)
             .Include(c => c.Container)
             .Include(c => c.Language)
+            .Include(c => c.PriceHistory)
             .Where(c => ids.Contains(c.Id));
 
         var resolver = new ScryfallMetadataResolver(db.Value, scryfallApiClient);
@@ -534,6 +553,10 @@ public class CollectionTrackingService : ICollectionTrackingService
 
     static CardSkuModel CardSkuToModel(CardSku c)
     {
+        var latestPrice = c.PriceHistory
+            .OrderByDescending(p => p.Date)
+            .FirstOrDefault();
+
         return new CardSkuModel
         {
             CardName = c.CardName,
@@ -565,7 +588,12 @@ public class CollectionTrackingService : ICollectionTrackingService
             Colors = c.Scryfall != null ? c.Scryfall.Colors : null,
             ColorIdentity = c.Scryfall != null ? c.Scryfall.ColorIdentity : null,
             // A double-faced card has back-face image
-            IsDoubleFaced = c.Scryfall?.BackImageSmallUrl != null
+            IsDoubleFaced = c.Scryfall?.BackImageSmallUrl != null,
+            TrackPrice = c.TrackPrice,
+            LatestPriceUsd = latestPrice?.PriceUsd,
+            LatestCheapestPriceUsd = latestPrice?.CheapestPriceUsd,
+            LatestCheapestEdition = latestPrice?.CheapestEdition,
+            LatestPriceDate = latestPrice?.Date
         };
     }
 
@@ -1739,5 +1767,91 @@ public class CollectionTrackingService : ICollectionTrackingService
         CardListPrinter.PrintContainer(container.Name, container.Description, container.Cards.OrderBy(c => c.CardName), s => text.AppendLine(s), options);
 
         return text.ToString();
+    }
+
+    public async ValueTask<int> SetPriceTrackingAsync(IEnumerable<Guid> ids, bool trackPrice, CancellationToken cancel)
+    {
+        using var db = _db.Invoke();
+        // Proxies are exempt from price tracking
+        var skus = db.Value.Cards
+            .Where(c => ids.Contains(c.Id) && !string.Equals(c.Edition, "PROXY", StringComparison.OrdinalIgnoreCase));
+
+        int count = 0;
+        foreach (var sku in skus)
+        {
+            if (sku.TrackPrice != trackPrice)
+            {
+                sku.TrackPrice = trackPrice;
+                count++;
+            }
+        }
+        if (count > 0)
+            await db.Value.SaveChangesAsync(cancel);
+        return count;
+    }
+
+    public async ValueTask FetchPricesForTrackedSkusAsync(UpdateCardMetadataProgressCallback callback, IScryfallApiClient scryfallApiClient, CancellationToken cancel)
+    {
+        var today = DateOnly.FromDateTime(DateTime.UtcNow);
+        List<Guid> skuIdsToProcess;
+        int total;
+        {
+            using var db = _db.Invoke();
+            // Get all non-proxy SKUs opted into price tracking that don't already have a price for today
+            skuIdsToProcess = db.Value.Cards
+                .Where(c => c.TrackPrice
+                    && !string.Equals(c.Edition, "PROXY", StringComparison.OrdinalIgnoreCase)
+                    && !c.PriceHistory.Any(p => p.Date == today))
+                .Select(c => c.Id)
+                .ToList();
+            total = skuIdsToProcess.Count;
+            callback.OnProgress?.Invoke(0, total);
+        }
+
+        int processed = 0;
+        foreach (var batch in skuIdsToProcess.Chunk(callback.ReportFrequency))
+        {
+            if (cancel.IsCancellationRequested)
+                break;
+
+            using var db = _db.Invoke();
+            var resolver = new ScryfallMetadataResolver(db.Value, scryfallApiClient);
+
+            var skus = db.Value.Cards
+                .Include(c => c.PriceHistory)
+                .Where(c => batch.Contains(c.Id))
+                .ToList();
+
+            foreach (var sku in skus)
+            {
+                if (cancel.IsCancellationRequested)
+                    break;
+
+                // Skip if we already have a price entry for today (safety check)
+                if (sku.PriceHistory.Any(p => p.Date == today))
+                    continue;
+
+                try
+                {
+                    var (editionPrice, cheapestPrice, cheapestEdition) = await resolver.GetPricesAsync(sku.CardName, sku.Edition, cancel);
+                    sku.PriceHistory.Add(new CardSkuPriceHistory
+                    {
+                        CardSkuId = sku.Id,
+                        Date = today,
+                        PriceUsd = editionPrice,
+                        CheapestPriceUsd = cheapestPrice,
+                        CheapestEdition = cheapestEdition
+                    });
+                }
+                catch
+                {
+                    // Don't let a single card failure abort the entire batch
+                }
+            }
+
+            await db.Value.SaveChangesAsync(cancel);
+            processed += batch.Length;
+            callback.OnProgress?.Invoke(processed, total);
+        }
     }
 }

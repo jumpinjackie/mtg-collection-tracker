@@ -44,6 +44,27 @@ internal class ScryfallMetadataResolver
         return (null, null);
     }
 
+    public async ValueTask<(decimal? editionPriceUsd, decimal? cheapestPriceUsd, string? cheapestEdition)> GetPricesAsync(string cardName, string edition, CancellationToken cancel)
+    {
+        if (_scryfallApiClient == null)
+            return (null, null, null);
+
+        decimal? editionPrice = null;
+
+        // Get price for the specific edition
+        var key = new ScryfallMetaIdentity(cardName.ToLower(), edition.ToLower(), "en", null);
+        var editionCard = await FindCardAsync(key);
+        if (editionCard != null)
+            editionPrice = editionCard.Prices.Usd;
+
+        // Get cheapest printing
+        var cheapestCard = await TryResolveCard(cardName, PickPreference.CheapestPrice);
+        if (cheapestCard != null)
+            return (editionPrice, cheapestCard.Prices.Usd, cheapestCard.Set.ToUpperInvariant());
+
+        return (editionPrice, null, null);
+    }
+
     enum PickPreference
     {
         OldestPrinting,

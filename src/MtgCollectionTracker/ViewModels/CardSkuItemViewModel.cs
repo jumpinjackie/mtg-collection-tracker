@@ -194,6 +194,30 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
 
     public string[] TagList { get; set; }
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(LatestPrice))]
+    [NotifyPropertyChangedFor(nameof(HasLatestPrice))]
+    private bool _trackPrice;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(LatestPrice))]
+    [NotifyPropertyChangedFor(nameof(HasLatestPrice))]
+    private decimal? _latestPriceUsd;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(LatestPrice))]
+    [NotifyPropertyChangedFor(nameof(HasLatestPrice))]
+    private decimal? _latestCheapestPriceUsd;
+
+    /// <summary>
+    /// Formatted display string for the most recent tracked price
+    /// </summary>
+    public string? LatestPrice => LatestPriceUsd.HasValue
+        ? $"${LatestPriceUsd:F2}"
+        : (LatestCheapestPriceUsd.HasValue ? $"~${LatestCheapestPriceUsd:F2}" : null);
+
+    public bool HasLatestPrice => TrackPrice && LatestPrice != null;
+
     int ISendableCardItem.Quantity => CardListPrinter.IsProxyEdition(this.OriginalEdition ?? string.Empty) ? this.ProxyQty : this.RealQty;
 
     private async Task<Bitmap?> GetLargeFrontFaceImageAsync()
@@ -260,6 +284,9 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
         this.TagList = sku.Tags;
         this.Tags = string.Join(Environment.NewLine, this.TagList);
         this.TagsText = $"{this.TagList.Length} tag(s)";
+        this.TrackPrice = sku.TrackPrice;
+        this.LatestPriceUsd = sku.LatestPriceUsd;
+        this.LatestCheapestPriceUsd = sku.LatestCheapestPriceUsd;
         this.SwitchToFront();
         return this;
     }

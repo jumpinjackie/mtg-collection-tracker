@@ -161,6 +161,21 @@ public partial class CardVisualViewModel : ViewModelBase, ICardSkuItem, ISendabl
 
     public string[]? ColorIdentity { get; set; }
 
+    public bool TrackPrice { get; set; }
+
+    public decimal? LatestPriceUsd { get; set; }
+
+    public decimal? LatestCheapestPriceUsd { get; set; }
+
+    /// <summary>
+    /// Formatted display string for the most recent tracked price
+    /// </summary>
+    public string? LatestPrice => LatestPriceUsd.HasValue
+        ? $"${LatestPriceUsd:F2}"
+        : (LatestCheapestPriceUsd.HasValue ? $"~${LatestCheapestPriceUsd:F2}" : null);
+
+    public bool HasLatestPrice => TrackPrice && LatestPrice != null;
+
     public CardVisualViewModel ApplyQuantities()
     {
         if (IsProxy)

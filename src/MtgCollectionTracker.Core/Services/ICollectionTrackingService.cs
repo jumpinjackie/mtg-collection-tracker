@@ -109,6 +109,18 @@ namespace MtgCollectionTracker.Core.Services
         ValueTask RebuildAllMetadataAsync(UpdateCardMetadataProgressCallback callback, IScryfallApiClient scryfallApiClient, CancellationToken cancel);
         ValueTask NormalizeCardNamesAsync(UpdateCardMetadataProgressCallback callback, CancellationToken cancel);
         ValueTask<List<LowestPriceCheckItem>> GetLowestPricesAsync(LowestPriceCheckOptions options, IScryfallApiClient client, CancellationToken cancel);
+
+        /// <summary>
+        /// Enables or disables price tracking for the specified card SKUs.
+        /// Proxy cards are automatically excluded.
+        /// </summary>
+        ValueTask<int> SetPriceTrackingAsync(IEnumerable<Guid> ids, bool trackPrice, CancellationToken cancel);
+
+        /// <summary>
+        /// Fetches current prices from Scryfall for all card SKUs that have opted in to price tracking.
+        /// Only fetches prices for SKUs that have not had a price entry recorded today (daily resolution).
+        /// </summary>
+        ValueTask FetchPricesForTrackedSkusAsync(UpdateCardMetadataProgressCallback callback, IScryfallApiClient scryfallApiClient, CancellationToken cancel);
     }
 
     public static class CollectionTrackingServiceExtensions

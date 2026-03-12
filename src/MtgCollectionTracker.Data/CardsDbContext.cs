@@ -42,6 +42,13 @@ public class CardsDbContext : DbContext
             });
         modelBuilder.Entity<ScryfallCardMetadata>().HasIndex(nameof(ScryfallCardMetadata.CardName), nameof(ScryfallCardMetadata.Edition), nameof(ScryfallCardMetadata.Language), nameof(ScryfallCardMetadata.CollectorNumber));
 
+        modelBuilder.Entity<CardSkuPriceHistory>()
+            .HasOne(p => p.CardSku)
+            .WithMany(c => c.PriceHistory)
+            .HasForeignKey(p => p.CardSkuId)
+            .OnDelete(DeleteBehavior.Cascade);
+        modelBuilder.Entity<CardSkuPriceHistory>().HasIndex(nameof(CardSkuPriceHistory.CardSkuId), nameof(CardSkuPriceHistory.Date)).IsUnique();
+
         modelBuilder.Entity<CardLanguage>().HasData(
             new CardLanguage { Code = "en", PrintedCode = "en", Name = "English" },
             new CardLanguage { Code = "es", PrintedCode = "sp", Name = "Spanish" },
