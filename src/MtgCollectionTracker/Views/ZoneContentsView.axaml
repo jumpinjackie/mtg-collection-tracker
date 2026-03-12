@@ -3,10 +3,16 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="650"
              x:Class="MtgCollectionTracker.Views.ZoneContentsView"
              x:DataType="vm:ZoneContentsViewModel">
-    <DockPanel LastChildFill="True">
+    <!--
+        MaxHeight caps the measurement height so that the * row in the inner Grid receives a finite
+        constraint even when DialogHostAvalonia measures popup content with infinite height.
+        Without this, the card-image details panel expands to full image height and the docked
+        bottom buttons are pushed off-screen.
+    -->
+    <DockPanel LastChildFill="True" MaxHeight="650">
         <Border DockPanel.Dock="Bottom" Height="1" Background="{DynamicResource SystemChromeLowColor}" Margin="0,8,0,8" />
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,0,0,4">
             <CheckBox Content="Shuffle library after closing"
@@ -19,7 +25,7 @@
             <Button Content="Close" Command="{Binding CloseCommand}" />
         </StackPanel>
 
-        <Grid RowDefinitions="Auto,*" ColumnDefinitions="1*,1*" RowSpacing="8" ColumnSpacing="8">
+        <Grid RowDefinitions="Auto,*" ColumnDefinitions="*,450" RowSpacing="8" ColumnSpacing="8">
             <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Spacing="6">
                 <TextBox Watermark="Search cards" Text="{Binding FilterText, UpdateSourceTrigger=PropertyChanged}" />
             </StackPanel>
@@ -48,29 +54,31 @@
             </Grid>
 
             <Border Grid.Row="1" Grid.Column="1" Padding="12" Background="{DynamicResource SystemChromeLowColor}">
-                <StackPanel Spacing="8" IsVisible="{Binding SelectedCard, Converter={x:Static ObjectConverters.IsNotNull}}">
-                    <TextBlock Text="{Binding SelectedCard.CardName}"
-                            FontSize="16"
-                            FontWeight="Bold"
-                            TextWrapping="Wrap" />
-                    <TextBlock Text="{Binding SelectedCard.ManaCost}"
-                            FontSize="14" />
-                    <TextBlock Text="{Binding SelectedCard.CardType}"
-                            FontSize="12"
-                            TextWrapping="Wrap"
-                            Opacity="0.9" />
-                    <TextBlock Text="{Binding SelectedCard.OracleText}"
-                            FontSize="11"
-                            TextWrapping="Wrap" />
-                    <TextBlock Text="{Binding SelectedCard.PT}"
-                            FontSize="13"
-                            FontWeight="Bold"
-                            IsVisible="{Binding SelectedCard.PT, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                    <Image Source="{Binding SelectedCard.CardImageLarge^}"
-                        Stretch="Uniform"
-                        MaxHeight="600"
-                        Margin="0,8,0,0" />
-                </StackPanel>
+                <ScrollViewer>
+                    <StackPanel Spacing="8" IsVisible="{Binding SelectedCard, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <TextBlock Text="{Binding SelectedCard.CardName}"
+                                FontSize="16"
+                                FontWeight="Bold"
+                                TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding SelectedCard.ManaCost}"
+                                FontSize="14" />
+                        <TextBlock Text="{Binding SelectedCard.CardType}"
+                                FontSize="12"
+                                TextWrapping="Wrap"
+                                Opacity="0.9" />
+                        <TextBlock Text="{Binding SelectedCard.OracleText}"
+                                FontSize="11"
+                                TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding SelectedCard.PT}"
+                                FontSize="13"
+                                FontWeight="Bold"
+                                IsVisible="{Binding SelectedCard.PT, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                        <Image Source="{Binding SelectedCard.CardImageLarge^}"
+                            Stretch="Uniform"
+                            MaxHeight="400"
+                            Margin="0,8,0,0" />
+                    </StackPanel>
+                </ScrollViewer>
             </Border>
 
             <TextBlock Grid.Row="1" Grid.Column="1" Text="Select a card to view details"

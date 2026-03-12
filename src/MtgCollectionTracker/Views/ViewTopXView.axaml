@@ -3,11 +3,17 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="720" d:DesignHeight="500"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="650"
              x:Class="MtgCollectionTracker.Views.ViewTopXView"
              x:DataType="vm:ViewTopXViewModel">
-    <!-- Root Grid with fixed rows so the button row is never crowded out -->
-    <Grid RowDefinitions="Auto,*,Auto,Auto" RowSpacing="0">
+    <!--
+        MaxHeight caps the measurement height so that * rows receive a finite constraint even when
+        DialogHostAvalonia measures popup content with infinite height. Without this, * rows behave
+        like Auto rows, the card preview expands to full image height (~600 px), and button rows are
+        pushed off-screen. With MaxHeight set, * gives the DataGrid the remaining bounded space,
+        the DataGrid scrolls internally, and the button row is always visible.
+    -->
+    <Grid RowDefinitions="Auto,*,Auto,Auto" RowSpacing="0" MaxHeight="650">
 
         <!-- Row 0: Summary info -->
         <StackPanel Grid.Row="0" Spacing="2" Margin="0,0,0,6">
@@ -18,7 +24,7 @@
         </StackPanel>
 
         <!-- Row 1: DataGrid (takes all remaining vertical space, scrolls internally) + card preview pane -->
-        <Grid Grid.Row="1" ColumnDefinitions="*,300" ColumnSpacing="8">
+        <Grid Grid.Row="1" ColumnDefinitions="*,450" ColumnSpacing="8">
             <DataGrid Grid.Column="0"
                       x:Name="CardDataGrid"
                       ItemsSource="{Binding TopCards}"
