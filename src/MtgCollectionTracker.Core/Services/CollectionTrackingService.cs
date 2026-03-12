@@ -1774,7 +1774,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         using var db = _db.Invoke();
         // Proxies are exempt from price tracking
         var skus = db.Value.Cards
-            .Where(c => ids.Contains(c.Id) && !string.Equals(c.Edition, "PROXY", StringComparison.OrdinalIgnoreCase));
+            .Where(c => ids.Contains(c.Id) && (c.Edition == null || c.Edition.ToUpper() != "PROXY"));
 
         int count = 0;
         foreach (var sku in skus)
@@ -1800,7 +1800,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             // Get all non-proxy SKUs opted into price tracking that don't already have a price for today
             skuIdsToProcess = db.Value.Cards
                 .Where(c => c.TrackPrice
-                    && !string.Equals(c.Edition, "PROXY", StringComparison.OrdinalIgnoreCase)
+                    && (c.Edition == null || c.Edition.ToUpper() != "PROXY")
                     && !c.PriceHistory.Any(p => p.Date == today))
                 .Select(c => c.Id)
                 .ToList();
