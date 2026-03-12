@@ -13,30 +13,37 @@ public partial class ZoneContentsView : UserControl
     }
 
     /// <summary>
-    /// Keeps <see cref="RootPanel"/>'s MaxHeight equal to the UserControl's actual arranged
-    /// height so that the DockPanel's inner Grid * row receives the correct finite constraint
-    /// and the button row is always pinned to the bottom regardless of window size.
+    /// Keeps <see cref="RootGrid"/>'s MaxHeight equal to the UserControl's actual arranged
+    /// height so that the Grid * row receives the correct finite constraint and the button row
+    /// is always pinned to the bottom regardless of window size.
     /// </summary>
     protected override void OnSizeChanged(SizeChangedEventArgs e)
     {
         base.OnSizeChanged(e);
         if (e.NewSize.Height > 0 && !double.IsInfinity(e.NewSize.Height))
         {
-            RootPanel.MaxHeight = e.NewSize.Height;
+            RootGrid.MaxHeight = e.NewSize.Height;
         }
     }
 
-    private void OnCardListSelectionChanged(object? sender, SelectionChangedEventArgs e)
+    private void OnCardDataGridSelectionChanged(object? sender, SelectionChangedEventArgs e)
     {
-        var card = e.AddedItems.OfType<PlaytestCardViewModel>().LastOrDefault();
-        if (card is null)
-        {
+        if (DataContext is not ZoneContentsViewModel vm)
             return;
+
+        foreach (var item in e.AddedItems.OfType<PlaytestCardViewModel>())
+        {
+            if (!vm.SelectedCards.Contains(item))
+                vm.SelectedCards.Add(item);
         }
 
-        if (DataContext is ZoneContentsViewModel vm)
+        foreach (var item in e.RemovedItems.OfType<PlaytestCardViewModel>())
         {
-            vm.SelectedCard = card;
+            vm.SelectedCards.Remove(item);
         }
+
+        var lastAdded = e.AddedItems.OfType<PlaytestCardViewModel>().LastOrDefault();
+        if (lastAdded is not null)
+            vm.SelectedCard = lastAdded;
     }
 }
