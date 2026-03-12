@@ -3,14 +3,76 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="680" d:DesignHeight="500"
+             mc:Ignorable="d" d:DesignWidth="900" d:DesignHeight="650"
              x:Class="MtgCollectionTracker.Views.ViewTopXView"
              x:DataType="vm:ViewTopXViewModel">
-    <DockPanel LastChildFill="True">
+    <!--
+        MaxHeight caps the measurement height so that * rows receive a finite constraint even when
+        DialogHostAvalonia measures popup content with infinite height. Without this, * rows behave
+        like Auto rows, the card preview expands to full image height and button rows are pushed
+        off-screen. The initial value (560) is conservative enough for common window sizes; the
+        code-behind SizeChanged handler updates it to the actual arranged height so buttons remain
+        pinned to the bottom at any window size.
+    -->
+    <Grid x:Name="RootGrid" RowDefinitions="Auto,*,Auto,Auto" RowSpacing="0" MaxHeight="560">
 
-        <!-- Action Buttons -->
-        <Border DockPanel.Dock="Bottom" Height="1" Background="{DynamicResource SystemChromeLowColor}" Margin="0,8,0,8" />
-        <WrapPanel DockPanel.Dock="Bottom" HorizontalAlignment="Right" ItemSpacing="6" LineSpacing="6" Margin="0,0,0,4">
+        <!-- Row 0: Summary info -->
+        <StackPanel Grid.Row="0" Spacing="2" Margin="0,0,0,6">
+            <TextBlock Text="{Binding TopCards.Count, StringFormat='Showing top {0} card(s). Select cards to act on them.'}"
+                       FontSize="12" Opacity="0.8" />
+            <TextBlock Text="{Binding SelectedCount, StringFormat='Selected: {0} (use Ctrl+Click / Shift+Click to select multiple)'}"
+                       FontSize="11" />
+        </StackPanel>
+
+        <!-- Row 1: DataGrid (takes all remaining vertical space, scrolls internally) + card preview pane -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,450" ColumnSpacing="8">
+            <DataGrid Grid.Column="0"
+                      x:Name="CardDataGrid"
+                      ItemsSource="{Binding TopCards}"
+                      SelectedItem="{Binding SelectedCard, Mode=TwoWay}"
+                      SelectionMode="Extended"
+                      SelectionChanged="OnCardDataGridSelectionChanged"
+                      CanUserReorderColumns="False"
+                      CanUserResizeColumns="True"
+                      CanUserSortColumns="False"
+                      GridLinesVisibility="Horizontal"
+                      IsReadOnly="True"
+                      BorderThickness="1">
+                <DataGrid.Columns>
+                    <DataGridTextColumn Header="Card Name" Binding="{Binding DisplayName}" Width="*" />
+                    <DataGridTextColumn Header="Mana Cost" Binding="{Binding ManaCost}" Width="Auto" />
+                </DataGrid.Columns>
+            </DataGrid>
+
+            <!-- Card preview (right pane) -->
+            <Border Grid.Column="1" Padding="12" Background="{DynamicResource SystemChromeLowColor}">
+                <ScrollViewer>
+                    <StackPanel Spacing="8" IsVisible="{Binding SelectedCard, Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <TextBlock Text="{Binding SelectedCard.DisplayName}"
+                                   FontSize="16" FontWeight="Bold" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding SelectedCard.ManaCost}" FontSize="14" />
+                        <TextBlock Text="{Binding SelectedCard.CardType}" FontSize="12" TextWrapping="Wrap" Opacity="0.9" />
+                        <TextBlock Text="{Binding SelectedCard.OracleText}" FontSize="11" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding SelectedCard.PT}" FontSize="13" FontWeight="Bold"
+                                   IsVisible="{Binding SelectedCard.PT, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                        <Image Source="{Binding SelectedCard.CardImageLarge^}" Stretch="Uniform" MaxHeight="400" Margin="0,8,0,0" />
+                    </StackPanel>
+                </ScrollViewer>
+                <Border.IsVisible>
+                    <Binding Path="SelectedCard" Converter="{x:Static ObjectConverters.IsNotNull}" />
+                </Border.IsVisible>
+            </Border>
+
+            <TextBlock Grid.Column="1" Text="Select a card to view details"
+                       Opacity="0.6" VerticalAlignment="Center" HorizontalAlignment="Center"
+                       IsVisible="{Binding SelectedCard, Converter={x:Static ObjectConverters.IsNull}}" />
+        </Grid>
+
+        <!-- Row 2: Separator -->
+        <Border Grid.Row="2" Height="1" Background="{DynamicResource SystemChromeLowColor}" Margin="0,8,0,8" />
+
+        <!-- Row 3: Action buttons – left-aligned so they start at the left edge and never overflow off the right -->
+        <WrapPanel Grid.Row="3" HorizontalAlignment="Left" ItemSpacing="6" LineSpacing="6" Margin="0,0,0,4">
             <Button Content="Shuffle Library" Command="{Binding ShuffleAndCloseCommand}" />
             <Button Content="Move to Hand" Command="{Binding MoveToHandCommand}" IsEnabled="{Binding HasSelection}" />
             <Button Content="To Graveyard (random order)" Command="{Binding MoveToGraveyardRandomCommand}" IsEnabled="{Binding HasSelection}" />
@@ -20,50 +82,5 @@
             <Button Content="To Bottom (as selected)" Command="{Binding MoveToBottomAsSelectedCommand}" IsEnabled="{Binding HasSelection}" />
             <Button Content="Close" Command="{Binding CloseCommand}" />
         </WrapPanel>
-
-        <!-- Card List + Preview -->
-        <Grid RowDefinitions="Auto,*" ColumnDefinitions="1*,1*" RowSpacing="8" ColumnSpacing="8">
-            <StackPanel Grid.Row="0" Grid.ColumnSpan="2" Spacing="4">
-                <TextBlock Text="{Binding TopCards.Count, StringFormat='Showing top {0} card(s). Select cards to act on them.'}"
-                           FontSize="12" Opacity="0.8" />
-                <TextBlock Text="{Binding SelectedCount, StringFormat='Selected: {0}'}"
-                           FontSize="11" />
-            </StackPanel>
-
-            <ScrollViewer Grid.Row="1" Grid.Column="0">
-                <ListBox ItemsSource="{Binding TopCards}"
-                         SelectedItems="{Binding SelectedCards, Mode=TwoWay}"
-                         SelectionMode="Multiple, Toggle"
-                         SelectionChanged="OnCardListSelectionChanged">
-                    <ListBox.ItemTemplate>
-                        <DataTemplate>
-                            <Border Padding="8,4">
-                                <StackPanel Spacing="1">
-                                    <TextBlock Text="{Binding DisplayName}" FontWeight="Bold" />
-                                    <TextBlock Text="{Binding ManaCost}" FontSize="9" Opacity="0.7" />
-                                </StackPanel>
-                            </Border>
-                        </DataTemplate>
-                    </ListBox.ItemTemplate>
-                </ListBox>
-            </ScrollViewer>
-
-            <Border Grid.Row="1" Grid.Column="1" Padding="12" Background="{DynamicResource SystemChromeLowColor}">
-                <StackPanel Spacing="8" IsVisible="{Binding SelectedCard, Converter={x:Static ObjectConverters.IsNotNull}}">
-                    <TextBlock Text="{Binding SelectedCard.DisplayName}"
-                               FontSize="16" FontWeight="Bold" TextWrapping="Wrap" />
-                    <TextBlock Text="{Binding SelectedCard.ManaCost}" FontSize="14" />
-                    <TextBlock Text="{Binding SelectedCard.CardType}" FontSize="12" TextWrapping="Wrap" Opacity="0.9" />
-                    <TextBlock Text="{Binding SelectedCard.OracleText}" FontSize="11" TextWrapping="Wrap" />
-                    <TextBlock Text="{Binding SelectedCard.PT}" FontSize="13" FontWeight="Bold"
-                               IsVisible="{Binding SelectedCard.PT, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                    <Image Source="{Binding SelectedCard.CardImageLarge^}" Stretch="Uniform" MaxHeight="400" Margin="0,8,0,0" />
-                </StackPanel>
-            </Border>
-
-            <TextBlock Grid.Row="1" Grid.Column="1" Text="Select a card to view details"
-                       Opacity="0.6" VerticalAlignment="Center" HorizontalAlignment="Center"
-                       IsVisible="{Binding SelectedCard, Converter={x:Static ObjectConverters.IsNull}}" />
-        </Grid>
-    </DockPanel>
+    </Grid>
 </UserControl>
