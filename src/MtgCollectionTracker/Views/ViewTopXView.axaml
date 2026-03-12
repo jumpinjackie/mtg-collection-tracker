@@ -9,11 +9,12 @@
     <!--
         MaxHeight caps the measurement height so that * rows receive a finite constraint even when
         DialogHostAvalonia measures popup content with infinite height. Without this, * rows behave
-        like Auto rows, the card preview expands to full image height (~600 px), and button rows are
-        pushed off-screen. With MaxHeight set, * gives the DataGrid the remaining bounded space,
-        the DataGrid scrolls internally, and the button row is always visible.
+        like Auto rows, the card preview expands to full image height and button rows are pushed
+        off-screen. The initial value (560) is conservative enough for common window sizes; the
+        code-behind SizeChanged handler updates it to the actual arranged height so buttons remain
+        pinned to the bottom at any window size.
     -->
-    <Grid RowDefinitions="Auto,*,Auto,Auto" RowSpacing="0" MaxHeight="650">
+    <Grid x:Name="RootGrid" RowDefinitions="Auto,*,Auto,Auto" RowSpacing="0" MaxHeight="560">
 
         <!-- Row 0: Summary info -->
         <StackPanel Grid.Row="0" Spacing="2" Margin="0,0,0,6">
@@ -70,8 +71,8 @@
         <!-- Row 2: Separator -->
         <Border Grid.Row="2" Height="1" Background="{DynamicResource SystemChromeLowColor}" Margin="0,8,0,8" />
 
-        <!-- Row 3: Action buttons – always visible because the row has Auto height -->
-        <WrapPanel Grid.Row="3" HorizontalAlignment="Right" ItemSpacing="6" LineSpacing="6" Margin="0,0,0,4">
+        <!-- Row 3: Action buttons – left-aligned so they start at the left edge and never overflow off the right -->
+        <WrapPanel Grid.Row="3" HorizontalAlignment="Left" ItemSpacing="6" LineSpacing="6" Margin="0,0,0,4">
             <Button Content="Shuffle Library" Command="{Binding ShuffleAndCloseCommand}" />
             <Button Content="Move to Hand" Command="{Binding MoveToHandCommand}" IsEnabled="{Binding HasSelection}" />
             <Button Content="To Graveyard (random order)" Command="{Binding MoveToGraveyardRandomCommand}" IsEnabled="{Binding HasSelection}" />

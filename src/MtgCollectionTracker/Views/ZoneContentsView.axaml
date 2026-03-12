@@ -9,12 +9,12 @@
     <!--
         MaxHeight caps the measurement height so that the * row in the inner Grid receives a finite
         constraint even when DialogHostAvalonia measures popup content with infinite height.
-        Without this, the card-image details panel expands to full image height and the docked
-        bottom buttons are pushed off-screen.
+        The initial value (560) is conservative; the code-behind SizeChanged handler keeps it
+        equal to the actual arranged height so the button row is always pinned to the bottom.
     -->
-    <DockPanel LastChildFill="True" MaxHeight="650">
+    <DockPanel x:Name="RootPanel" LastChildFill="True" MaxHeight="560">
         <Border DockPanel.Dock="Bottom" Height="1" Background="{DynamicResource SystemChromeLowColor}" Margin="0,8,0,8" />
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="0,0,0,4">
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Left" Spacing="8" Margin="0,0,0,4">
             <CheckBox Content="Shuffle library after closing"
                 IsChecked="{Binding ShuffleAfterClose}"
                 IsVisible="{Binding ShowShuffleOption}" />
