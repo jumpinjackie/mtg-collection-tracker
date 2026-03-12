@@ -349,6 +349,51 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
     }
 
     [RelayCommand]
+    private async Task EnablePriceTracking()
+    {
+        await TogglePriceTracking(true);
+    }
+
+    [RelayCommand]
+    private async Task DisablePriceTracking()
+    {
+        await TogglePriceTracking(false);
+    }
+
+    private async Task TogglePriceTracking(bool enable)
+    {
+        if (Behavior.SelectedItems.Count > 0)
+        {
+            using (((IViewModelWithBusyState)this).StartBusyState())
+            {
+                var ids = Behavior.SelectedItems
+                    .Where(c => !c.IsProxy)
+                    .Select(c => c.Id)
+                    .ToList();
+                if (ids.Count == 0)
+                {
+                    Messenger.ToastNotify("No eligible cards selected (proxies cannot be price tracked)", Avalonia.Controls.Notifications.NotificationType.Warning);
+                    return;
+                }
+                var count = await _service.SetPriceTrackingAsync(ids, enable, CancellationToken.None);
+                if (count > 0)
+                {
+                    // Update the TrackPrice flag on any backing list items that were toggled
+                    var idSet = new HashSet<Guid>(ids);
+                    foreach (var list in new[] { _mainDeckBySku, _sideboardBySku, _mainDeckByCardName, _sideboardByCardName })
+                    {
+                        if (list == null) continue;
+                        foreach (var item in list.Where(c => idSet.Contains(c.Id)))
+                            item.TrackPrice = enable;
+                    }
+                }
+                var action = enable ? "enabled" : "disabled";
+                Messenger.ToastNotify($"Price tracking {action} for {count} sku(s)", Avalonia.Controls.Notifications.NotificationType.Success);
+            }
+        }
+    }
+
+    [RelayCommand]
     private async Task UpdateSkuMetadata()
     {
         if (Behavior.SelectedItems.Count > 0 && _scryfallApiClient != null)
