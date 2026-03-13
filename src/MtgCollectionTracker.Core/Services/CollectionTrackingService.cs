@@ -1968,28 +1968,63 @@ public class CollectionTrackingService : ICollectionTrackingService
 
     private static string[] ParseCsvLine(string line)
     {
-        // Simple CSV parser that handles quoted fields
+        // RFC 4180-compliant CSV parser: handles quoted fields and escaped double-quotes ("")
         var fields = new List<string>();
         int i = 0;
-        while (i < line.Length)
+        while (i <= line.Length)
         {
+            if (i == line.Length)
+            {
+                // Trailing comma produced an empty last field
+                fields.Add(string.Empty);
+                break;
+            }
+
             if (line[i] == '"')
             {
-                // Quoted field
-                int start = i + 1;
+                // Quoted field: scan for the closing unescaped quote
                 i++;
-                while (i < line.Length && !(line[i] == '"' && (i + 1 >= line.Length || line[i + 1] == ',')))
+                var sb = new System.Text.StringBuilder();
+                while (i < line.Length)
+                {
+                    if (line[i] == '"')
+                    {
+                        if (i + 1 < line.Length && line[i + 1] == '"')
+                        {
+                            // Escaped quote: "" → "
+                            sb.Append('"');
+                            i += 2;
+                        }
+                        else
+                        {
+                            // Closing quote
+                            i++;
+                            break;
+                        }
+                    }
+                    else
+                    {
+                        sb.Append(line[i]);
+                        i++;
+                    }
+                }
+                fields.Add(sb.ToString());
+                // Skip the comma separator (or we're at end of line)
+                if (i < line.Length && line[i] == ',')
                     i++;
-                fields.Add(line[start..i]);
-                i += 2; // skip closing quote and comma
             }
             else
             {
+                // Unquoted field: read until comma or end of line
                 int start = i;
                 while (i < line.Length && line[i] != ',')
                     i++;
                 fields.Add(line[start..i]);
-                i++; // skip comma
+                // Skip the comma separator
+                if (i < line.Length)
+                    i++;
+                else
+                    break; // end of line, no trailing empty field
             }
         }
         return [.. fields];

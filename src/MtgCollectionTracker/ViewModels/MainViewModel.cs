@@ -69,9 +69,10 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
                     });
                 }
             }
-            catch
+            catch (Exception ex)
             {
                 // Don't let startup check failures prevent app from running
+                System.Diagnostics.Debug.WriteLine($"Startup card identifier check failed: {ex.Message}");
             }
         }, DispatcherPriority.Background);
     }
