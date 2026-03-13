@@ -41,7 +41,8 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
                          Func<PlaytestingViewModel> playtesting,
                          ICollectionTrackingService service,
                          Func<DialogViewModel> dialog,
-                         Func<ImportCardIdentifiersViewModel> importCardIdentifiers)
+                         Func<ImportCardIdentifiersViewModel> importCardIdentifiers,
+                         Func<PlaytestingViewModel> playtesting)
     {
         this.Cards = cards();
         this.Decks = decks();
