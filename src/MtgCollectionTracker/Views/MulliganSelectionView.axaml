@@ -1,0 +1,71 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="500"
+             x:Class="MtgCollectionTracker.Views.MulliganSelectionView"
+             x:DataType="vm:MulliganSelectionViewModel">
+    <Grid RowDefinitions="Auto,*,Auto" ColumnDefinitions="1*,1*" RowSpacing="8" ColumnSpacing="8">
+        <!-- Header: Instruction -->
+        <TextBlock Grid.Row="0" Grid.ColumnSpan="2" Text="{Binding Instruction}" FontWeight="Bold" Margin="0,0,0,4" />
+        
+        <!-- Left Panel: Card List -->
+        <StackPanel Grid.Row="1" Grid.Column="0" Spacing="4">
+            <TextBlock Text="Cards in Hand" FontWeight="Bold" FontSize="12" />
+            <TextBlock Text="{Binding SelectedCount, StringFormat='Selected: {0} / {1}'}" 
+                       Margin="0,0,0,8" FontSize="11" />
+            <ListBox Name="CardListBox" ItemsSource="{Binding Cards}" SelectedItems="{Binding SelectedCards}" SelectionMode="Multiple, Toggle" VerticalAlignment="Stretch" PointerExited="OnCardListPointerExited" SelectionChanged="OnCardListSelectionChanged">
+                <ListBox.ItemTemplate>
+                    <DataTemplate>
+                        <Border Padding="8,4" PointerEntered="OnCardBorderPointerEntered">
+                            <StackPanel Spacing="1">
+                                <TextBlock Text="{Binding CardName}" FontWeight="Bold" />
+                                <TextBlock Text="{Binding ManaCost}" FontSize="9" Opacity="0.7" />
+                            </StackPanel>
+                        </Border>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+        </StackPanel>
+        
+        <!-- Right Panel: Details -->
+        <Border Grid.Row="1" Grid.Column="1" Padding="12" Background="{DynamicResource SystemChromeLowColor}">
+            <StackPanel Spacing="8" IsVisible="{Binding SelectedCard, Converter={x:Static ObjectConverters.IsNotNull}}">
+                <TextBlock Text="{Binding SelectedCard.CardName}"
+                           FontSize="16"
+                           FontWeight="Bold"
+                           TextWrapping="Wrap" />
+                <TextBlock Text="{Binding SelectedCard.ManaCost}"
+                           FontSize="14" />
+                <TextBlock Text="{Binding SelectedCard.CardType}"
+                           FontSize="12"
+                           TextWrapping="Wrap"
+                           Opacity="0.9" />
+                <TextBlock Text="{Binding SelectedCard.OracleText}"
+                           FontSize="11"
+                           TextWrapping="Wrap" />
+                <TextBlock Text="{Binding SelectedCard.PT}"
+                           FontSize="13"
+                           FontWeight="Bold"
+                           IsVisible="{Binding SelectedCard.PT, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                <Image Source="{Binding SelectedCard.CardImageLarge^}"
+                       Stretch="Uniform"
+                       MaxHeight="600"
+                       Margin="0,8,0,0" />
+            </StackPanel>
+        </Border>
+        
+        <!-- Empty state message -->
+        <TextBlock Grid.Row="1" Grid.Column="1" Text="Select a card to view details" 
+                   Opacity="0.6"
+                   VerticalAlignment="Center"
+                   HorizontalAlignment="Center"
+                   IsVisible="{Binding SelectedCard, Converter={x:Static ObjectConverters.IsNull}}" />
+        
+        <!-- Buttons: Bottom Row -->
+        <StackPanel Grid.Row="2" Grid.ColumnSpan="2" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8">
+            <Button Content="Confirm" Command="{Binding ConfirmCommand}" IsEnabled="{Binding CanConfirm}" />
+        </StackPanel>
+    </Grid>
+</UserControl>

@@ -33,6 +33,9 @@
 			<TabItem Header="Notes">
 				<views:NotesView DataContext="{Binding Notes}" />
 			</TabItem>
+			<TabItem Header="Playtesting">
+				<views:PlaytestingView DataContext="{Binding Playtesting}" />
+			</TabItem>
 			<TabItem Header="Settings">
 				<views:SettingsView DataContext="{Binding Settings}" />
 			</TabItem>

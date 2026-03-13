@@ -739,4 +739,115 @@ public class CollectionTrackingServiceTests : IDisposable
         Assert.Single(results);
         Assert.Equal("Lightning Bolt", results[0].CardName);
     }
+
+    // ── IsDoubleFaced calculation ────────────────────────────────────────────
+
+    [Fact]
+    public void GetCards_IsDoubleFaced_ReturnsTrue_WhenBackImageSmallUrlDistinctFromFront()
+    {
+        // A true double-faced card has a back-face image URL that differs from the front.
+        using var ctx = new CardsDbContext(_dbOptions);
+        var sfDfc = new ScryfallCardMetadata
+        {
+            Id = "sf-dfc",
+            CardName = "Delver of Secrets // Insectile Aberration",
+            Edition = "ISD",
+            CardType = "Human Wizard",
+            Rarity = "common",
+            Colors = ["U"],
+            ImageSmallUrl = "https://example.com/front.jpg",
+            BackImageSmallUrl = "https://example.com/back.jpg",
+        };
+        ctx.Cards.Add(new CardSku { CardName = "Delver of Secrets // Insectile Aberration", Edition = "ISD", Quantity = 1, ScryfallId = "sf-dfc", Scryfall = sfDfc });
+        ctx.SaveChanges();
+
+        var service = CreateService();
+        var results = service.GetCards(new CardQueryModel { IncludeScryfallMetadata = true }).ToList();
+
+        Assert.Single(results);
+        Assert.True(results[0].IsDoubleFaced);
+    }
+
+    [Fact]
+    public void GetCards_IsDoubleFaced_ReturnsFalse_ForAdventureCard_WhenBackImageMatchesFront()
+    {
+        // Adventure cards (e.g. "Questing Druid // Seek the Beast") may have BackImageSmallUrl
+        // populated with the SAME URL as ImageSmallUrl because both halves are on one physical face.
+        using var ctx = new CardsDbContext(_dbOptions);
+        const string sharedUrl = "https://example.com/questing-druid.jpg";
+        var sfAdventure = new ScryfallCardMetadata
+        {
+            Id = "sf-adventure",
+            CardName = "Questing Druid // Seek the Beast",
+            Edition = "WOE",
+            CardType = "Human Druid",
+            Rarity = "uncommon",
+            Colors = ["G"],
+            ImageSmallUrl = sharedUrl,
+            BackImageSmallUrl = sharedUrl,   // same as front → NOT a true DFC
+        };
+        ctx.Cards.Add(new CardSku { CardName = "Questing Druid // Seek the Beast", Edition = "WOE", Quantity = 1, ScryfallId = "sf-adventure", Scryfall = sfAdventure });
+        ctx.SaveChanges();
+
+        var service = CreateService();
+        var results = service.GetCards(new CardQueryModel { IncludeScryfallMetadata = true }).ToList();
+
+        Assert.Single(results);
+        Assert.False(results[0].IsDoubleFaced);
+    }
+
+    [Fact]
+    public void GetCards_IsDoubleFaced_ReturnsFalse_WhenNoBackImageSmallUrl()
+    {
+        using var ctx = new CardsDbContext(_dbOptions);
+        var sfSingle = new ScryfallCardMetadata
+        {
+            Id = "sf-single",
+            CardName = "Lightning Bolt",
+            Edition = "M10",
+            CardType = "Instant",
+            Rarity = "common",
+            Colors = ["R"],
+            ImageSmallUrl = "https://example.com/bolt.jpg",
+            BackImageSmallUrl = null,
+        };
+        ctx.Cards.Add(new CardSku { CardName = "Lightning Bolt", Edition = "M10", Quantity = 1, ScryfallId = "sf-single", Scryfall = sfSingle });
+        ctx.SaveChanges();
+
+        var service = CreateService();
+        var results = service.GetCards(new CardQueryModel { IncludeScryfallMetadata = true }).ToList();
+
+        Assert.Single(results);
+        Assert.False(results[0].IsDoubleFaced);
+    }
+
+    [Fact]
+    public void GetCards_IsDoubleFaced_ReturnsTrue_ForNameWithDoubleSlash_WhenNoScryfallMetadata()
+    {
+        // Before Scryfall metadata has been fetched, presence of " // " in the card name is used
+        // as a conservative fallback to show the Transform menu item.
+        using var ctx = new CardsDbContext(_dbOptions);
+        ctx.Cards.Add(new CardSku { CardName = "Delver of Secrets // Insectile Aberration", Edition = "ISD", Quantity = 1 });
+        ctx.SaveChanges();
+
+        var service = CreateService();
+        var results = service.GetCards(new CardQueryModel()).ToList();
+
+        Assert.Single(results);
+        Assert.True(results[0].IsDoubleFaced);
+    }
+
+    [Fact]
+    public void GetCards_IsDoubleFaced_ReturnsFalse_ForNameWithoutDoubleSlash_WhenNoScryfallMetadata()
+    {
+        using var ctx = new CardsDbContext(_dbOptions);
+        ctx.Cards.Add(new CardSku { CardName = "Lightning Bolt", Edition = "M10", Quantity = 1 });
+        ctx.SaveChanges();
+
+        var service = CreateService();
+        var results = service.GetCards(new CardQueryModel()).ToList();
+
+        Assert.Single(results);
+        Assert.False(results[0].IsDoubleFaced);
+    }
 }

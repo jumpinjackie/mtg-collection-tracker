@@ -207,6 +207,14 @@ internal static class InternalExtensionMethods
     {
         if (card.CardFaces?.Length == 2)
         {
+            // Only return a back-face image URI for true double-faced cards (transform, modal DFC, etc.)
+            // where the FRONT face also has its own distinct image_uris.
+            // Adventure cards (e.g. "Questing Druid // Seek the Beast") and split cards share the
+            // root image_uris across both halves — the front face has no per-face image_uris,
+            // so no distinct back-face image exists.
+            if (card.CardFaces[0].ImageUris == null)
+                return null;
+
             // 2nd item is the back face
             if (card.CardFaces[1].ImageUris?.TryGetValue(size, out var uri) == true)
                 return uri;
