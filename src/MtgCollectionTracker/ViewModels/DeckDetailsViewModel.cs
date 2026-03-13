@@ -319,7 +319,11 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
 
     private void UpdateBannerFlags()
     {
-        foreach (var card in (_mainDeckBySku ?? []).Concat(_sideboardBySku ?? []))
+        var allCards = (_mainDeckBySku ?? [])
+            .Concat(_sideboardBySku ?? [])
+            .Concat(_mainDeckByCardName ?? [])
+            .Concat(_sideboardByCardName ?? []);
+        foreach (var card in allCards)
         {
             card.IsBanner = _bannerCardId.HasValue && card.Id == _bannerCardId.Value;
         }
