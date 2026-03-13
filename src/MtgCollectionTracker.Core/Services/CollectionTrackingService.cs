@@ -1874,14 +1874,14 @@ public class CollectionTrackingService : ICollectionTrackingService
             int priceProviderIdx = Array.IndexOf(headers, "priceProvider");
             int providerListingIdx = Array.IndexOf(headers, "providerListing");
             int gameAvailabilityIdx = Array.IndexOf(headers, "gameAvailability");
+            int maxRequiredIdx = new[] { uuidIdx, cardFinishIdx, currencyIdx, dateIdx, priceIdx, priceProviderIdx, providerListingIdx }.Max();
 
             string? line;
             while ((line = await reader.ReadLineAsync(cancel)) != null)
             {
                 cancel.ThrowIfCancellationRequested();
                 var fields = ParseCsvLine(line);
-                var maxIdx = new[] { uuidIdx, cardFinishIdx, currencyIdx, dateIdx, priceIdx, priceProviderIdx, providerListingIdx }.Max();
-                if (fields.Length <= maxIdx)
+                if (fields.Length <= maxRequiredIdx)
                     continue;
 
                 var uuidStr = fields[uuidIdx].Trim('"');

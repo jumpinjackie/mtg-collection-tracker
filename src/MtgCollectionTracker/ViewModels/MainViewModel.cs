@@ -77,9 +77,9 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
         }, DispatcherPriority.Background);
     }
 
-    private readonly ICollectionTrackingService? _service;
-    private readonly Func<DialogViewModel>? _dialog;
-    private readonly Func<ImportCardIdentifiersViewModel>? _importCardIdentifiers;
+    private readonly ICollectionTrackingService _service;
+    private readonly Func<DialogViewModel> _dialog;
+    private readonly Func<ImportCardIdentifiersViewModel> _importCardIdentifiers;
 
     public IDialogPopupPositioner DialogPositioner { get; } = new DialogPopupPositioner();
 
