@@ -27,6 +27,10 @@
 				<Border IsVisible="{Binding IsGrouped}" Canvas.Top="4" Canvas.Left="4" CornerRadius="3" Background="{Binding CardNameBgColor}" Padding="6" Opacity="0.8">
 					<TextBlock Text="{Binding CardName}" />
 				</Border>
+				<!-- Banner indicator: shown in the bottom-right corner when this card is the deck banner -->
+				<Border IsVisible="{Binding IsBanner}" Canvas.Bottom="4" Canvas.Right="4" CornerRadius="3" Background="Gold" Padding="4" Opacity="0.9" ToolTip.Tip="Deck Banner">
+					<PathIcon Height="16" Width="16" Data="{StaticResource star_regular}" Foreground="Black" />
+				</Border>
 			</Canvas>
 		</Border>
 	</StackPanel>

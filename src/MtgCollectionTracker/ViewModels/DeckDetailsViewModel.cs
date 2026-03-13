@@ -103,11 +103,14 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
     [NotifyPropertyChangedFor(nameof(IsTableMode))]
     [NotifyPropertyChangedFor(nameof(IsVisualMode))]
     [NotifyPropertyChangedFor(nameof(IsSkuBasedMode))]
+    [NotifyPropertyChangedFor(nameof(IsVisualSkuMode))]
     private DeckViewMode _mode = DeckViewMode.Text;
 
     IMessenger IViewModelWithBusyState.Messenger => this.Messenger;
 
     public bool IsSkuBasedMode => this.Mode == DeckViewMode.TableBySku || this.Mode == DeckViewMode.VisualBySku;
+
+    public bool IsVisualSkuMode => this.Mode == DeckViewMode.VisualBySku;
 
     // For table view
     public MultiModeCardListBehavior<CardVisualViewModel> Behavior { get; }
@@ -135,6 +138,8 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
 
     private DeckModel _origDeck;
 
+    private Guid? _bannerCardId;
+
     partial void OnModeChanged(DeckViewMode value) => UpdateView(value);
 
     public bool IsVisualMode => this.Mode == DeckViewMode.VisualByCardName || this.Mode == DeckViewMode.VisualBySku;
@@ -157,16 +162,16 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
                 this.DeckListText = _service.PrintDeck(_origDeck.Id, new DeckPrintOptions(false));
                 break;
             case DeckViewMode.VisualByCardName:
-                UpdateVisual(_service, _origDeck, ref _mainDeckByCardName, this.MainDeck, ref _sideboardByCardName, this.Sideboard, c => c.CardName);
+                UpdateVisual(_service, _origDeck, null, ref _mainDeckByCardName, this.MainDeck, ref _sideboardByCardName, this.Sideboard, c => c.CardName);
                 break;
             case DeckViewMode.VisualBySku:
-                UpdateVisual(_service, _origDeck, ref _mainDeckBySku, this.MainDeck, ref _sideboardBySku, this.Sideboard, c => c.SkuId);
+                UpdateVisual(_service, _origDeck, _bannerCardId, ref _mainDeckBySku, this.MainDeck, ref _sideboardBySku, this.Sideboard, c => c.SkuId);
                 break;
             case DeckViewMode.TableByCardName:
-                UpdateTable(_service, _origDeck, ref _mainDeckByCardName, ref _sideboardByCardName, this.TableList, c => c.CardName);
+                UpdateTable(_service, _origDeck, null, ref _mainDeckByCardName, ref _sideboardByCardName, this.TableList, c => c.CardName);
                 break;
             case DeckViewMode.TableBySku:
-                UpdateTable(_service, _origDeck, ref _mainDeckBySku, ref _sideboardBySku, this.TableList, c => c.SkuId);
+                UpdateTable(_service, _origDeck, _bannerCardId, ref _mainDeckBySku, ref _sideboardBySku, this.TableList, c => c.SkuId);
                 break;
         }
     }
@@ -178,12 +183,13 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
 
     static void UpdateTable<T>(ICollectionTrackingService service,
                                DeckModel deck,
+                               Guid? bannerCardId,
                                ref List<CardVisualViewModel>? maindeckBackingList,
                                ref List<CardVisualViewModel>? sideboardBackingList,
                                ObservableCollection<CardVisualViewModel> table,
                                Func<DeckCardModel, T> grouping)
     {
-        InitBackingLists(service, deck, ref maindeckBackingList, ref sideboardBackingList, grouping);
+        InitBackingLists(service, deck, bannerCardId, ref maindeckBackingList, ref sideboardBackingList, grouping);
         table.Clear();
         foreach (var c in maindeckBackingList)
             table.Add(c);
@@ -193,6 +199,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
 
     static void InitBackingLists<T>(ICollectionTrackingService service,
                                     DeckModel deck,
+                                    Guid? bannerCardId,
                                     [NotNull] ref List<CardVisualViewModel>? maindeckBackingList,
                                     [NotNull] ref List<CardVisualViewModel>? sideboardBackingList,
                                     Func<DeckCardModel, T> grouping)
@@ -217,6 +224,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
                     IsLand = card.IsLand,
                     IsProxy = CardListPrinter.IsProxyEdition(card.Edition),
                     Edition = card.Edition,
+                    IsBanner = bannerCardId.HasValue && card.SkuId == bannerCardId.Value
                 }.ApplyQuantities().ApplyScryfallMetadata(card);
                 cm.SwitchToFront();
                 md.Add(cm);
@@ -244,7 +252,8 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
                     IsLand = card.IsLand,
                     IsProxy = CardListPrinter.IsProxyEdition(card.Edition),
                     Edition = card.Edition,
-                    IsSideboard = true
+                    IsSideboard = true,
+                    IsBanner = bannerCardId.HasValue && card.SkuId == bannerCardId.Value
                 }.ApplyQuantities().ApplyScryfallMetadata(card);
                 cm.SwitchToFront();
                 sideboardBackingList.Add(cm);
@@ -254,6 +263,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
 
     static void UpdateVisual<T>(ICollectionTrackingService service,
                                 DeckModel deck,
+                                Guid? bannerCardId,
                                 ref List<CardVisualViewModel>? maindeckBackingList,
                                 ObservableCollection<CardVisualViewModel> maindeck,
                                 ref List<CardVisualViewModel>? sideboardBackingList,
@@ -261,7 +271,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
                                 Func<DeckCardModel, T> grouping)
     {
 
-        InitBackingLists(service, deck, ref maindeckBackingList, ref sideboardBackingList, grouping);
+        InitBackingLists(service, deck, bannerCardId, ref maindeckBackingList, ref sideboardBackingList, grouping);
         // Sync backing list to their respective ObservableCollection
         maindeck.Clear();
         sideboard.Clear();
@@ -276,6 +286,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
         this.Name = deck.Name;
 
         _origDeck = deck;
+        _bannerCardId = deck.BannerCardId;
 
         this.MainDeckSize = _origDeck.MainDeck.Count;
         this.SideboardSize = _origDeck.Sideboard.Count;
@@ -283,6 +294,35 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
         this.UpdateView(this.Mode);
 
         return this;
+    }
+
+    [RelayCommand]
+    private async Task SetAsBanner()
+    {
+        if (Behavior.SelectedItems.Count == 1)
+        {
+            var selected = Behavior.SelectedItems[0];
+            // Toggle: if this card is already the banner, clear it; otherwise set it
+            var newBannerId = selected.Id == _bannerCardId ? (Guid?)null : selected.Id;
+            using (((IViewModelWithBusyState)this).StartBusyState())
+            {
+                var updatedDeck = await _service.SetDeckBannerAsync(_origDeck.Id, newBannerId);
+                _bannerCardId = newBannerId;
+                _origDeck.BannerCardId = newBannerId;
+                // Update IsBanner flags on all loaded card view models
+                UpdateBannerFlags();
+                // Notify the deck collection view to update the banner image
+                Messenger.Send(new DeckUpdatedMessage(updatedDeck));
+            }
+        }
+    }
+
+    private void UpdateBannerFlags()
+    {
+        foreach (var card in (_mainDeckBySku ?? []).Concat(_sideboardBySku ?? []))
+        {
+            card.IsBanner = _bannerCardId.HasValue && card.Id == _bannerCardId.Value;
+        }
     }
 
     [RelayCommand]

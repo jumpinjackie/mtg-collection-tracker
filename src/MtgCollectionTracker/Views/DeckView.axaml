@@ -16,7 +16,11 @@
 			<Canvas Width="200" Height="280">
 				<Panel Canvas.Left="0" Canvas.Top="0" Canvas.Bottom="0" Canvas.Right="0" Background="#7FFF22DD">
 					<Panel Width="200" Height="280">
-						<PathIcon Height="75" Width="75" Data="{StaticResource deckbox}" />
+						<!-- Show banner image if available, otherwise show the default deckbox icon -->
+						<Image IsVisible="{Binding HasBanner}" Width="200" Stretch="UniformToFill" Source="{Binding Banner^}" />
+						<Panel IsVisible="{Binding !HasBanner}">
+							<PathIcon Height="75" Width="75" Data="{StaticResource deckbox}" />
+						</Panel>
 					</Panel>
 				</Panel>
 				<Border Canvas.Top="4" Canvas.Left="4" CornerRadius="3" Background="Gray" Padding="6" Opacity="0.8">

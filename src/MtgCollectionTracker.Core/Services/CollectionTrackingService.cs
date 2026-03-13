@@ -151,6 +151,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         return db.Value
             .Decks
             .Include(d => d.Container)
+            .Include(d => d.BannerCard)
             .Where(predicate)
             .Where(predicate2)
             .OrderBy(d => d.Name)
@@ -162,7 +163,9 @@ public class CollectionTrackingService : ICollectionTrackingService
                 ContainerName = d.Container!.Name,
                 Format = d.Format,
                 MaindeckTotal = d.Cards.Where(c => !c.IsSideboard).Sum(c => c.Quantity),
-                SideboardTotal = d.Cards.Where(c => c.IsSideboard).Sum(c => c.Quantity)
+                SideboardTotal = d.Cards.Where(c => c.IsSideboard).Sum(c => c.Quantity),
+                BannerCardId = d.BannerCardId,
+                BannerScryfallId = d.BannerCard != null ? d.BannerCard.ScryfallId : null
             })
             .ToList();
     }
@@ -813,7 +816,9 @@ public class CollectionTrackingService : ICollectionTrackingService
             ContainerName = d.Container?.Name,
             Format = d.Format,
             MaindeckTotal = d.Cards.Where(c => !c.IsSideboard).Sum(c => c.Quantity),
-            SideboardTotal = d.Cards.Where(c => c.IsSideboard).Sum(c => c.Quantity)
+            SideboardTotal = d.Cards.Where(c => c.IsSideboard).Sum(c => c.Quantity),
+            BannerCardId = d.BannerCardId,
+            BannerScryfallId = null
         };
     }
 
@@ -842,6 +847,7 @@ public class CollectionTrackingService : ICollectionTrackingService
 
         await db.Value.SaveChangesAsync();
         await db.Value.Entry(d).Collection(nameof(d.Cards)).LoadAsync();
+        await db.Value.Entry(d).Reference(nameof(d.BannerCard)).LoadAsync();
 
         return new DeckSummaryModel
         {
@@ -851,7 +857,43 @@ public class CollectionTrackingService : ICollectionTrackingService
             ContainerName = d.Container?.Name,
             Format = d.Format,
             MaindeckTotal = d.Cards.Where(c => !c.IsSideboard).Sum(c => c.Quantity),
-            SideboardTotal = d.Cards.Where(c => c.IsSideboard).Sum(c => c.Quantity)
+            SideboardTotal = d.Cards.Where(c => c.IsSideboard).Sum(c => c.Quantity),
+            BannerCardId = d.BannerCardId,
+            BannerScryfallId = d.BannerCard?.ScryfallId
+        };
+    }
+
+    public async ValueTask<DeckSummaryModel> SetDeckBannerAsync(int deckId, Guid? cardSkuId)
+    {
+        using var db = _db.Invoke();
+        var deck = await db.Value.Decks
+            .Include(d => d.Cards)
+            .Include(d => d.Container)
+            .FirstOrDefaultAsync(d => d.Id == deckId);
+        if (deck == null)
+            throw new Exception("Deck not found");
+
+        if (cardSkuId.HasValue && !deck.Cards.Any(c => c.Id == cardSkuId.Value))
+            throw new Exception("Card is not in this deck");
+
+        deck.BannerCardId = cardSkuId;
+        await db.Value.SaveChangesAsync();
+
+        CardSku? bannerCard = cardSkuId.HasValue
+            ? deck.Cards.FirstOrDefault(c => c.Id == cardSkuId.Value)
+            : null;
+
+        return new DeckSummaryModel
+        {
+            Id = deck.Id,
+            DeckName = deck.Name,
+            Name = "[" + deck.Format + "] " + deck.Name,
+            ContainerName = deck.Container?.Name,
+            Format = deck.Format,
+            MaindeckTotal = deck.Cards.Where(c => !c.IsSideboard).Sum(c => c.Quantity),
+            SideboardTotal = deck.Cards.Where(c => c.IsSideboard).Sum(c => c.Quantity),
+            BannerCardId = deck.BannerCardId,
+            BannerScryfallId = bannerCard?.ScryfallId
         };
     }
 
@@ -1372,7 +1414,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             await db.Value.SaveChangesAsync(cancel);
         }
 
-        return new DeckModel { Name = deck.Name, Id = deck.Id, MainDeck = mainDeck, Sideboard = sideboard };
+        return new DeckModel { Name = deck.Name, Id = deck.Id, MainDeck = mainDeck, Sideboard = sideboard, BannerCardId = deck.BannerCardId };
     }
 
     static bool IsIncompleteForDeckDisplay(CardSku sku)
