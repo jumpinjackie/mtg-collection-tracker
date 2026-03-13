@@ -135,6 +135,74 @@ namespace MtgCollectionTracker.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("MtgCollectionTracker.Data.CardPricingDownloadHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Sha256")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("CardPricingDownloadHistory");
+                });
+
+            modelBuilder.Entity("MtgCollectionTracker.Data.CardPricingEntry", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("CardFinish")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasMaxLength(3)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("GameAvailability")
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<decimal>("Price")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PriceProvider")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ProviderListing")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Uuid")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Uuid");
+
+                    b.HasIndex("Uuid", "CardFinish", "Currency", "ProviderListing");
+
+                    b.ToTable("CardPricingEntries");
+                });
+
             modelBuilder.Entity("MtgCollectionTracker.Data.CardSku", b =>
                 {
                     b.Property<Guid>("Id")
@@ -191,9 +259,6 @@ namespace MtgCollectionTracker.Data.Migrations
                     b.Property<string>("ScryfallId")
                         .HasColumnType("TEXT");
 
-                    b.Property<bool>("TrackPrice")
-                        .HasColumnType("INTEGER");
-
                     b.HasKey("Id");
 
                     b.HasIndex("CardName");
@@ -207,36 +272,6 @@ namespace MtgCollectionTracker.Data.Migrations
                     b.HasIndex("ScryfallId");
 
                     b.ToTable("Cards");
-                });
-
-            modelBuilder.Entity("MtgCollectionTracker.Data.CardSkuPriceHistory", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<Guid>("CardSkuId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("CheapestEdition")
-                        .HasMaxLength(5)
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal?>("CheapestPriceUsd")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal?>("PriceUsd")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("CardSkuId", "Date")
-                        .IsUnique();
-
-                    b.ToTable("CardSkuPriceHistory");
                 });
 
             modelBuilder.Entity("MtgCollectionTracker.Data.Container", b =>
@@ -398,6 +433,24 @@ namespace MtgCollectionTracker.Data.Migrations
                     b.HasIndex("CardName", "Edition", "Language", "CollectorNumber");
 
                     b.ToTable("ScryfallCardMetadata");
+                });
+
+            modelBuilder.Entity("MtgCollectionTracker.Data.ScryfallIdMapping", b =>
+                {
+                    b.Property<string>("ScryfallId")
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("MtgJsonUuid")
+                        .IsRequired()
+                        .HasMaxLength(36)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("ScryfallId");
+
+                    b.HasIndex("MtgJsonUuid");
+
+                    b.ToTable("ScryfallIdMappings");
                 });
 
             modelBuilder.Entity("MtgCollectionTracker.Data.Tag", b =>
@@ -567,17 +620,6 @@ namespace MtgCollectionTracker.Data.Migrations
                     b.Navigation("Tags");
                 });
 
-            modelBuilder.Entity("MtgCollectionTracker.Data.CardSkuPriceHistory", b =>
-                {
-                    b.HasOne("MtgCollectionTracker.Data.CardSku", "CardSku")
-                        .WithMany("PriceHistory")
-                        .HasForeignKey("CardSkuId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("CardSku");
-                });
-
             modelBuilder.Entity("MtgCollectionTracker.Data.Deck", b =>
                 {
                     b.HasOne("MtgCollectionTracker.Data.Container", "Container")
@@ -647,11 +689,6 @@ namespace MtgCollectionTracker.Data.Migrations
                     b.Navigation("Scryfall");
 
                     b.Navigation("Tags");
-                });
-
-            modelBuilder.Entity("MtgCollectionTracker.Data.CardSku", b =>
-                {
-                    b.Navigation("PriceHistory");
                 });
 
             modelBuilder.Entity("MtgCollectionTracker.Data.Container", b =>

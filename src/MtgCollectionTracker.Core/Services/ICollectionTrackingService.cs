@@ -110,17 +110,18 @@ namespace MtgCollectionTracker.Core.Services
         ValueTask NormalizeCardNamesAsync(UpdateCardMetadataProgressCallback callback, CancellationToken cancel);
         ValueTask<List<LowestPriceCheckItem>> GetLowestPricesAsync(LowestPriceCheckOptions options, IScryfallApiClient client, CancellationToken cancel);
 
-        /// <summary>
-        /// Enables or disables price tracking for the specified card SKUs.
-        /// Proxy cards are automatically excluded.
-        /// </summary>
-        ValueTask<int> SetPriceTrackingAsync(IEnumerable<Guid> ids, bool trackPrice, CancellationToken cancel);
+        /// <summary>Checks if the ScryfallIdMapping table is empty (i.e., card identifiers have not been imported).</summary>
+        ValueTask<bool> IsScryfallIdMappingEmptyAsync(CancellationToken cancel);
 
-        /// <summary>
-        /// Fetches current prices from Scryfall for all card SKUs that have opted in to price tracking.
-        /// Only fetches prices for SKUs that have not had a price entry recorded today (daily resolution).
-        /// </summary>
-        ValueTask FetchPricesForTrackedSkusAsync(UpdateCardMetadataProgressCallback callback, IScryfallApiClient scryfallApiClient, CancellationToken cancel);
+        /// <summary>Downloads and imports card identifiers from MTG JSON. Clears existing data first on re-import.</summary>
+        ValueTask ImportCardIdentifiersAsync(UpdateCardMetadataProgressCallback callback, CancellationToken cancel);
+
+        /// <summary>Downloads and imports the latest price data from MTG JSON. Skips if the latest sha256 matches what's already been imported.</summary>
+        /// <returns>True if new data was imported, false if already up-to-date.</returns>
+        ValueTask<bool> ImportPriceDataAsync(UpdateCardMetadataProgressCallback callback, CancellationToken cancel);
+
+        /// <summary>Gets the latest price for a card SKU by its ID.</summary>
+        ValueTask<(decimal? price, string? provider)> GetLatestPriceForSkuAsync(Guid skuId, string currency, CancellationToken cancel);
     }
 
     public static class CollectionTrackingServiceExtensions

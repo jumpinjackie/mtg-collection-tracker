@@ -122,32 +122,43 @@ public partial class DatabaseMaintenanceViewModel : RecipientViewModelBase, IVie
     }
 
     [RelayCommand]
-    private void CancelFetchPrices()
+    private async Task ImportCardIdentifiers(CancellationToken cancel)
     {
-        FetchPricesCommand.Cancel();
-    }
-
-    [RelayCommand]
-    private async Task FetchPrices(CancellationToken cancel)
-    {
-        if (_client == null)
-            return;
-
         using (((IViewModelWithBusyState)this).StartBusyState())
         {
-            Messenger.ToastNotify("Fetching prices for tracked cards. Please wait ...", Avalonia.Controls.Notifications.NotificationType.Information);
-
+            Messenger.ToastNotify("Downloading and importing card identifiers. Please wait ...", Avalonia.Controls.Notifications.NotificationType.Information);
             var cb = new UpdateCardMetadataProgressCallback
             {
                 OnProgress = (processed, total) =>
                 {
                     this.Completed = processed;
-                    this.Total = total;
+                    if (total > 0) this.Total = total;
                 }
             };
-            await _service.FetchPricesForTrackedSkusAsync(cb, _client, cancel);
+            await _service.ImportCardIdentifiersAsync(cb, cancel);
+            Messenger.ToastNotify("Card identifiers imported", Avalonia.Controls.Notifications.NotificationType.Success);
+        }
+    }
 
-            Messenger.ToastNotify("Prices updated", Avalonia.Controls.Notifications.NotificationType.Success);
+    [RelayCommand]
+    private async Task ImportPriceData(CancellationToken cancel)
+    {
+        using (((IViewModelWithBusyState)this).StartBusyState())
+        {
+            Messenger.ToastNotify("Checking for new price data. Please wait ...", Avalonia.Controls.Notifications.NotificationType.Information);
+            var cb = new UpdateCardMetadataProgressCallback
+            {
+                OnProgress = (processed, total) =>
+                {
+                    this.Completed = processed;
+                    if (total > 0) this.Total = total;
+                }
+            };
+            var imported = await _service.ImportPriceDataAsync(cb, cancel);
+            if (imported)
+                Messenger.ToastNotify("Price data imported successfully", Avalonia.Controls.Notifications.NotificationType.Success);
+            else
+                Messenger.ToastNotify("Price data is already up to date", Avalonia.Controls.Notifications.NotificationType.Information);
         }
     }
 }

@@ -20,6 +20,10 @@ public class CardsDbContext : DbContext
 
     public DbSet<Notes> Notes { get; set; }
 
+    public DbSet<ScryfallIdMapping> ScryfallIdMappings { get; set; }
+    public DbSet<CardPricingEntry> CardPricingEntries { get; set; }
+    public DbSet<CardPricingDownloadHistory> CardPricingDownloadHistory { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<CardSku>().HasIndex(nameof(CardSku.CardName));
@@ -42,12 +46,11 @@ public class CardsDbContext : DbContext
             });
         modelBuilder.Entity<ScryfallCardMetadata>().HasIndex(nameof(ScryfallCardMetadata.CardName), nameof(ScryfallCardMetadata.Edition), nameof(ScryfallCardMetadata.Language), nameof(ScryfallCardMetadata.CollectorNumber));
 
-        modelBuilder.Entity<CardSkuPriceHistory>()
-            .HasOne(p => p.CardSku)
-            .WithMany(c => c.PriceHistory)
-            .HasForeignKey(p => p.CardSkuId)
-            .OnDelete(DeleteBehavior.Cascade);
-        modelBuilder.Entity<CardSkuPriceHistory>().HasIndex(nameof(CardSkuPriceHistory.CardSkuId), nameof(CardSkuPriceHistory.Date)).IsUnique();
+        modelBuilder.Entity<ScryfallIdMapping>().HasKey(s => s.ScryfallId);
+        modelBuilder.Entity<ScryfallIdMapping>().HasIndex(s => s.MtgJsonUuid);
+
+        modelBuilder.Entity<CardPricingEntry>().HasIndex(e => e.Uuid);
+        modelBuilder.Entity<CardPricingEntry>().HasIndex(e => new { e.Uuid, e.CardFinish, e.Currency, e.ProviderListing });
 
         modelBuilder.Entity<CardLanguage>().HasData(
             new CardLanguage { Code = "en", PrintedCode = "en", Name = "English" },

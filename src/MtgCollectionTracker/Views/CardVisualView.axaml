@@ -27,7 +27,7 @@
 				<Border IsVisible="{Binding IsGrouped}" Canvas.Top="4" Canvas.Left="4" CornerRadius="3" Background="{Binding CardNameBgColor}" Padding="6" Opacity="0.8">
 					<TextBlock Text="{Binding CardName}" />
 				</Border>
-				<Border IsVisible="{Binding HasLatestPrice}" Canvas.Bottom="4" Canvas.Right="4" CornerRadius="3" Background="DarkGreen" Padding="4" Opacity="0.9" ToolTip.Tip="Latest tracked price (USD)">
+				<Border IsVisible="{Binding HasLatestPrice}" Canvas.Bottom="4" Canvas.Right="4" CornerRadius="3" Background="DarkGreen" Padding="4" Opacity="0.9" ToolTip.Tip="Latest price">
 					<StackPanel Orientation="Horizontal" Spacing="2">
 						<PathIcon Height="12" Width="12" Data="{StaticResource money_regular}" />
 						<TextBlock Text="{Binding LatestPrice}" FontSize="11" />

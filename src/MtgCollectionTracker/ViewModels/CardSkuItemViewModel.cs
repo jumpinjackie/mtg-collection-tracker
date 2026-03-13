@@ -197,28 +197,22 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(LatestPrice))]
     [NotifyPropertyChangedFor(nameof(HasLatestPrice))]
-    private bool _trackPrice;
+    private decimal? _latestPriceValue;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(LatestPrice))]
     [NotifyPropertyChangedFor(nameof(HasLatestPrice))]
-    private decimal? _latestPriceUsd;
-
-    [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(LatestPrice))]
-    [NotifyPropertyChangedFor(nameof(HasLatestPrice))]
-    private decimal? _latestCheapestPriceUsd;
+    private string? _latestPriceProvider;
 
     /// <summary>
     /// Formatted display string for the most recent tracked price.
-    /// Shows the edition-specific price as "$X.XX", or the cheapest printing price prefixed with "~"
-    /// (e.g. "~$X.XX") when no edition-specific price is available.
+    /// Shows "N/A" for proxies, "$X.XX (provider)" when a price exists, or "None" otherwise.
     /// </summary>
-    public string? LatestPrice => LatestPriceUsd.HasValue
-        ? $"${LatestPriceUsd:F2}"
-        : (LatestCheapestPriceUsd.HasValue ? $"~${LatestCheapestPriceUsd:F2}" : null);
+    public string? LatestPrice => OriginalEdition == "PROXY"
+        ? "N/A"
+        : (LatestPriceValue.HasValue ? $"${LatestPriceValue:F2} ({LatestPriceProvider})" : "None");
 
-    public bool HasLatestPrice => TrackPrice && LatestPrice != null;
+    public bool HasLatestPrice => OriginalEdition != "PROXY" && LatestPriceValue != null;
 
     int ISendableCardItem.Quantity => CardListPrinter.IsProxyEdition(this.OriginalEdition ?? string.Empty) ? this.ProxyQty : this.RealQty;
 
@@ -286,9 +280,8 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
         this.TagList = sku.Tags;
         this.Tags = string.Join(Environment.NewLine, this.TagList);
         this.TagsText = $"{this.TagList.Length} tag(s)";
-        this.TrackPrice = sku.TrackPrice;
-        this.LatestPriceUsd = sku.LatestPriceUsd;
-        this.LatestCheapestPriceUsd = sku.LatestCheapestPriceUsd;
+        this.LatestPriceValue = sku.LatestPrice;
+        this.LatestPriceProvider = sku.LatestPriceProvider;
         this.SwitchToFront();
         return this;
     }

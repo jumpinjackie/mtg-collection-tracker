@@ -62,7 +62,7 @@
 			</Grid>
 			<PathIcon Grid.Column="2" IsVisible="{Binding HasComments}" Data="{StaticResource comment_regular}" ToolTip.Tip="{Binding Comments}" />
 		</Grid>
-		<Grid IsVisible="{Binding HasLatestPrice}" ColumnDefinitions="30, *" ToolTip.Tip="Latest tracked price (USD)">
+		<Grid IsVisible="{Binding HasLatestPrice}" ColumnDefinitions="30, *" ToolTip.Tip="Latest price">
 			<PathIcon Grid.Column="0" Data="{StaticResource money_regular}" />
 			<TextBlock Grid.Column="1" Text="{Binding LatestPrice}" VerticalAlignment="Center" />
 		</Grid>

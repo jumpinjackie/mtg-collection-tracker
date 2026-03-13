@@ -1,7 +1,9 @@
 ﻿using Avalonia.Controls.Notifications;
+using Avalonia.Threading;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Messaging;
 using DialogHostAvalonia.Positioners;
+using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Contracts;
 using MtgCollectionTracker.Services.Messaging;
@@ -9,6 +11,7 @@ using MtgCollectionTracker.Services.Stubs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace MtgCollectionTracker.ViewModels;
 
@@ -33,7 +36,10 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
                          Func<WishlistViewModel> wishlist,
                          Func<NotesViewModel> notes,
                          Func<CanIBuildThisDeckViewModel> canIBuild,
-                         Func<SettingsViewModel> settings)
+                         Func<SettingsViewModel> settings,
+                         ICollectionTrackingService service,
+                         Func<DialogViewModel> dialog,
+                         Func<ImportCardIdentifiersViewModel> importCardIdentifiers)
     {
         this.Cards = cards();
         this.Decks = decks();
@@ -42,8 +48,37 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
         this.Notes = notes();
         this.CanIBuild = canIBuild();
         this.Settings = settings();
+        _service = service;
+        _dialog = dialog;
+        _importCardIdentifiers = importCardIdentifiers;
         this.IsActive = true;
+
+        // Defer the startup check until after the window is shown
+        Dispatcher.UIThread.Post(async () =>
+        {
+            try
+            {
+                var isEmpty = await _service.IsScryfallIdMappingEmptyAsync(CancellationToken.None);
+                if (isEmpty)
+                {
+                    var vm = _importCardIdentifiers();
+                    Messenger.Send(new OpenDialogMessage
+                    {
+                        DrawerWidth = 500,
+                        ViewModel = _dialog().WithContent("Import Card Identifiers", vm)
+                    });
+                }
+            }
+            catch
+            {
+                // Don't let startup check failures prevent app from running
+            }
+        }, DispatcherPriority.Background);
     }
+
+    private readonly ICollectionTrackingService? _service;
+    private readonly Func<DialogViewModel>? _dialog;
+    private readonly Func<ImportCardIdentifiersViewModel>? _importCardIdentifiers;
 
     public IDialogPopupPositioner DialogPositioner { get; } = new DialogPopupPositioner();
 

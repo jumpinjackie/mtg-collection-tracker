@@ -220,48 +220,6 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
     }
 
     [RelayCommand]
-    private async Task EnablePriceTracking()
-    {
-        await TogglePriceTracking(true);
-    }
-
-    [RelayCommand]
-    private async Task DisablePriceTracking()
-    {
-        await TogglePriceTracking(false);
-    }
-
-    private async Task TogglePriceTracking(bool enable)
-    {
-        if (Behavior.SelectedItems.Count > 0)
-        {
-            using (((IViewModelWithBusyState)this).StartBusyState())
-            {
-                var ids = Behavior.SelectedItems
-                    .Where(c => !string.Equals(c.OriginalEdition, "PROXY", StringComparison.OrdinalIgnoreCase))
-                    .Select(c => c.Id)
-                    .ToList();
-                if (ids.Count == 0)
-                {
-                    Messenger.ToastNotify("No eligible cards selected (proxies cannot be price tracked)", Avalonia.Controls.Notifications.NotificationType.Warning);
-                    return;
-                }
-                var count = await _service.SetPriceTrackingAsync(ids, enable, CancellationToken.None);
-                if (count > 0)
-                {
-                    var updatedSkus = _service.GetCards(new CardQueryModel { CardSkuIds = ids });
-                    foreach (var sku in updatedSkus)
-                    {
-                        this.CurrentPage.FirstOrDefault(r => r.Id == sku.Id)?.WithData(sku);
-                    }
-                }
-                var action = enable ? "enabled" : "disabled";
-                Messenger.ToastNotify($"Price tracking {action} for {count} sku(s)", Avalonia.Controls.Notifications.NotificationType.Success);
-            }
-        }
-    }
-
-    [RelayCommand]
     private async Task UpdateSkuMetadata()
     {
         if (Behavior.SelectedItems.Count > 0)

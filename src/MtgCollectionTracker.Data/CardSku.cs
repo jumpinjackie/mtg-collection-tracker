@@ -103,20 +103,9 @@ public class CardSku : IScryfallMetaLinkable, IDeckPrintableSlot
     public bool IsLand { get; set; }
 
     /// <summary>
-    /// Indicates if price tracking is enabled for this card SKU. Defaults to <c>false</c>.
-    /// Proxy cards (edition == "PROXY") are exempt from price tracking even if this flag is set.
-    /// </summary>
-    public bool TrackPrice { get; set; }
-
-    /// <summary>
     /// Tags applied for this card
     /// </summary>
     public ICollection<CardSkuTag> Tags { get; } = new List<CardSkuTag>();
-
-    /// <summary>
-    /// Price history entries for this card SKU
-    /// </summary>
-    public ICollection<CardSkuPriceHistory> PriceHistory { get; } = new List<CardSkuPriceHistory>();
 
     public bool SyncTags(ICollection<string> tags)
     {
@@ -191,7 +180,6 @@ public class CardSku : IScryfallMetaLinkable, IDeckPrintableSlot
             IsLand = this.IsLand,
             IsSideboard = this.IsSideboard,
             Language = this.Language,
-            TrackPrice = this.TrackPrice,
         };
 
         // Copy tags

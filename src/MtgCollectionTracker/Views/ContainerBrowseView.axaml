@@ -32,8 +32,6 @@
 			<Button IsEnabled="{Binding Behavior.HasAtLeastOneSelectedItem}" Command="{Binding EditSelectedSkuCommand}" Content="Edit" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding Behavior.HasAtLeastOneSelectedItem}" Command="{Binding SendSkusToContainerCommand}" Content="Send to Deck/Container" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding Behavior.HasAtLeastOneSelectedItem}" Command="{Binding UpdateSkuMetadataCommand}" Content="Update Metadata" HorizontalAlignment="Center" />
-			<Button IsEnabled="{Binding Behavior.HasAtLeastOneSelectedItem}" Command="{Binding EnablePriceTrackingCommand}" Content="Enable Price Tracking" HorizontalAlignment="Center" />
-			<Button IsEnabled="{Binding Behavior.HasAtLeastOneSelectedItem}" Command="{Binding DisablePriceTrackingCommand}" Content="Disable Price Tracking" HorizontalAlignment="Center" />
 			<TextBlock Margin="6" VerticalAlignment="Center" Text="{Binding ContainerSummary}" />
 		</StackPanel>
 		<Panel>

@@ -176,7 +176,6 @@ public class CollectionTrackingService : ICollectionTrackingService
             .Include(c => c.Container)
             .Include(c => c.Language)
             .Include(c => c.Scryfall)
-            .Include(c => c.PriceHistory)
             .FirstOrDefaultAsync(c => c.Id == id, cancel);
 
         if (sku == null)
@@ -291,23 +290,8 @@ public class CollectionTrackingService : ICollectionTrackingService
             IsDoubleFaced = c.Scryfall != null
                 ? c.Scryfall.BackImageSmallUrl != null
                 : c.CardName.Contains(" // "),
-            TrackPrice = c.TrackPrice,
-            LatestPriceUsd = c.PriceHistory
-                .OrderByDescending(p => p.Date)
-                .Select(p => (decimal?)p.PriceUsd)
-                .FirstOrDefault(),
-            LatestCheapestPriceUsd = c.PriceHistory
-                .OrderByDescending(p => p.Date)
-                .Select(p => (decimal?)p.CheapestPriceUsd)
-                .FirstOrDefault(),
-            LatestCheapestEdition = c.PriceHistory
-                .OrderByDescending(p => p.Date)
-                .Select(p => p.CheapestEdition)
-                .FirstOrDefault(),
-            LatestPriceDate = c.PriceHistory
-                .OrderByDescending(p => p.Date)
-                .Select(p => (DateOnly?)p.Date)
-                .FirstOrDefault()
+            LatestPrice = null,
+            LatestPriceProvider = null
         });
     }
 
@@ -381,7 +365,6 @@ public class CollectionTrackingService : ICollectionTrackingService
             .Include(c => c.Deck)
             .Include(c => c.Container)
             .Include(c => c.Language)
-            .Include(c => c.PriceHistory)
             .Where(c => ids.Contains(c.Id));
 
         var resolver = new ScryfallMetadataResolver(db.Value, scryfallApiClient);
@@ -553,10 +536,6 @@ public class CollectionTrackingService : ICollectionTrackingService
 
     static CardSkuModel CardSkuToModel(CardSku c)
     {
-        var latestPrice = c.PriceHistory
-            .OrderByDescending(p => p.Date)
-            .FirstOrDefault();
-
         return new CardSkuModel
         {
             CardName = c.CardName,
@@ -589,11 +568,8 @@ public class CollectionTrackingService : ICollectionTrackingService
             ColorIdentity = c.Scryfall != null ? c.Scryfall.ColorIdentity : null,
             // A double-faced card has back-face image
             IsDoubleFaced = c.Scryfall?.BackImageSmallUrl != null,
-            TrackPrice = c.TrackPrice,
-            LatestPriceUsd = latestPrice?.PriceUsd,
-            LatestCheapestPriceUsd = latestPrice?.CheapestPriceUsd,
-            LatestCheapestEdition = latestPrice?.CheapestEdition,
-            LatestPriceDate = latestPrice?.Date
+            LatestPrice = null,
+            LatestPriceProvider = null
         };
     }
 
@@ -1769,90 +1745,253 @@ public class CollectionTrackingService : ICollectionTrackingService
         return text.ToString();
     }
 
-    public async ValueTask<int> SetPriceTrackingAsync(IEnumerable<Guid> ids, bool trackPrice, CancellationToken cancel)
+    public async ValueTask<bool> IsScryfallIdMappingEmptyAsync(CancellationToken cancel)
     {
         using var db = _db.Invoke();
-        // Proxies are exempt from price tracking
-        var skus = db.Value.Cards
-            .Where(c => ids.Contains(c.Id) && (c.Edition == null || c.Edition.ToUpper() != "PROXY"));
-
-        int count = 0;
-        foreach (var sku in skus)
-        {
-            if (sku.TrackPrice != trackPrice)
-            {
-                sku.TrackPrice = trackPrice;
-                count++;
-            }
-        }
-        if (count > 0)
-            await db.Value.SaveChangesAsync(cancel);
-        return count;
+        return !await db.Value.ScryfallIdMappings.AnyAsync(cancel);
     }
 
-    public async ValueTask FetchPricesForTrackedSkusAsync(UpdateCardMetadataProgressCallback callback, IScryfallApiClient scryfallApiClient, CancellationToken cancel)
+    public async ValueTask ImportCardIdentifiersAsync(UpdateCardMetadataProgressCallback callback, CancellationToken cancel)
     {
-        var today = DateOnly.FromDateTime(DateTime.UtcNow);
-        List<Guid> skuIdsToProcess;
-        int total;
+        const string url = "https://mtgjson.com/api/v5/csv/cardIdentifiers.csv.zip";
+        var tmpDir = Path.Combine(Path.GetTempPath(), "mtg_card_identifiers_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tmpDir);
+        try
         {
-            using var db = _db.Invoke();
-            // Get all non-proxy SKUs opted into price tracking that don't already have a price for today
-            skuIdsToProcess = db.Value.Cards
-                .Where(c => c.TrackPrice
-                    && (c.Edition == null || c.Edition.ToUpper() != "PROXY")
-                    && !c.PriceHistory.Any(p => p.Date == today))
-                .Select(c => c.Id)
-                .ToList();
-            total = skuIdsToProcess.Count;
-            callback.OnProgress?.Invoke(0, total);
-        }
-
-        int processed = 0;
-        foreach (var batch in skuIdsToProcess.Chunk(callback.ReportFrequency))
-        {
-            if (cancel.IsCancellationRequested)
-                break;
-
-            using var db = _db.Invoke();
-            var resolver = new ScryfallMetadataResolver(db.Value, scryfallApiClient);
-
-            var skus = db.Value.Cards
-                .Include(c => c.PriceHistory)
-                .Where(c => batch.Contains(c.Id))
-                .ToList();
-
-            foreach (var sku in skus)
+            callback.OnProgress?.Invoke(0, -1);
+            var zipPath = Path.Combine(tmpDir, "cardIdentifiers.csv.zip");
+            using (var http = new System.Net.Http.HttpClient())
             {
-                if (cancel.IsCancellationRequested)
-                    break;
+                var bytes = await http.GetByteArrayAsync(url, cancel);
+                await File.WriteAllBytesAsync(zipPath, bytes, cancel);
+            }
 
-                // Skip if we already have a price entry for today (safety check)
-                if (sku.PriceHistory.Any(p => p.Date == today))
+            System.IO.Compression.ZipFile.ExtractToDirectory(zipPath, tmpDir);
+            var csvPath = Path.Combine(tmpDir, "cardIdentifiers.csv");
+
+            using var db = _db.Invoke();
+            await db.Value.ScryfallIdMappings.ExecuteDeleteAsync(cancel);
+
+            int count = 0;
+            const int batchSize = 1000;
+            var batch = new List<ScryfallIdMapping>();
+
+            using var reader = new StreamReader(csvPath);
+            // Skip header line
+            var header = await reader.ReadLineAsync(cancel);
+            if (header == null) return;
+
+            // Find scryfallId and uuid column indices
+            var headers = header.Split(',');
+            int scryfallIdIdx = Array.IndexOf(headers, "scryfallId");
+            int uuidIdx = Array.IndexOf(headers, "uuid");
+            if (scryfallIdIdx < 0 || uuidIdx < 0)
+                throw new InvalidOperationException("cardIdentifiers.csv is missing expected columns (scryfallId, uuid)");
+
+            string? line;
+            while ((line = await reader.ReadLineAsync(cancel)) != null)
+            {
+                cancel.ThrowIfCancellationRequested();
+                var fields = ParseCsvLine(line);
+                if (fields.Length <= Math.Max(scryfallIdIdx, uuidIdx))
+                    continue;
+                var scryfallId = fields[scryfallIdIdx].Trim('"');
+                var uuid = fields[uuidIdx].Trim('"');
+                if (string.IsNullOrEmpty(scryfallId) || string.IsNullOrEmpty(uuid))
                     continue;
 
-                try
+                batch.Add(new ScryfallIdMapping { ScryfallId = scryfallId, MtgJsonUuid = uuid });
+                count++;
+
+                if (batch.Count >= batchSize)
                 {
-                    var (editionPrice, cheapestPrice, cheapestEdition) = await resolver.GetPricesAsync(sku.CardName, sku.Edition, cancel);
-                    sku.PriceHistory.Add(new CardSkuPriceHistory
-                    {
-                        CardSkuId = sku.Id,
-                        Date = today,
-                        PriceUsd = editionPrice,
-                        CheapestPriceUsd = cheapestPrice,
-                        CheapestEdition = cheapestEdition
-                    });
-                }
-                catch (Exception ex)
-                {
-                    // Don't let a single card failure abort the entire batch - log for diagnostics
-                    System.Diagnostics.Debug.WriteLine($"Price fetch failed for SKU {sku.Id} ({sku.CardName}, {sku.Edition}): {ex.Message}");
+                    await db.Value.ScryfallIdMappings.AddRangeAsync(batch, cancel);
+                    await db.Value.SaveChangesAsync(cancel);
+                    batch.Clear();
+                    callback.OnProgress?.Invoke(count, -1);
                 }
             }
 
-            await db.Value.SaveChangesAsync(cancel);
-            processed += batch.Length;
-            callback.OnProgress?.Invoke(processed, total);
+            if (batch.Count > 0)
+            {
+                await db.Value.ScryfallIdMappings.AddRangeAsync(batch, cancel);
+                await db.Value.SaveChangesAsync(cancel);
+            }
+            callback.OnProgress?.Invoke(count, count);
         }
+        finally
+        {
+            Directory.Delete(tmpDir, recursive: true);
+        }
+    }
+
+    public async ValueTask<bool> ImportPriceDataAsync(UpdateCardMetadataProgressCallback callback, CancellationToken cancel)
+    {
+        const string sha256Url = "https://mtgjson.com/api/v5/csv/cardPrices.csv.zip.sha256";
+        const string zipUrl = "https://mtgjson.com/api/v5/csv/cardPrices.csv.zip";
+
+        using var http = new System.Net.Http.HttpClient();
+
+        var sha256Response = await http.GetStringAsync(sha256Url, cancel);
+        var sha256 = sha256Response.Trim().Split(' ')[0];
+
+        {
+            using var db = _db.Invoke();
+            var alreadyImported = await db.Value.CardPricingDownloadHistory.AnyAsync(h => h.Sha256 == sha256, cancel);
+            if (alreadyImported)
+                return false;
+        }
+
+        var tmpDir = Path.Combine(Path.GetTempPath(), "mtg_prices_" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(tmpDir);
+        try
+        {
+            callback.OnProgress?.Invoke(0, -1);
+            var zipPath = Path.Combine(tmpDir, "cardPrices.csv.zip");
+            var bytes = await http.GetByteArrayAsync(zipUrl, cancel);
+            await File.WriteAllBytesAsync(zipPath, bytes, cancel);
+
+            System.IO.Compression.ZipFile.ExtractToDirectory(zipPath, tmpDir);
+            var csvPath = Path.Combine(tmpDir, "cardPrices.csv");
+
+            using var db = _db.Invoke();
+            await db.Value.CardPricingEntries.ExecuteDeleteAsync(cancel);
+
+            int count = 0;
+            const int batchSize = 5000;
+            var batch = new List<CardPricingEntry>();
+
+            using var reader = new StreamReader(csvPath);
+            var header = await reader.ReadLineAsync(cancel);
+            if (header == null) return false;
+
+            var headers = header.Split(',');
+            int uuidIdx = Array.IndexOf(headers, "uuid");
+            int cardFinishIdx = Array.IndexOf(headers, "cardFinish");
+            int currencyIdx = Array.IndexOf(headers, "currency");
+            int dateIdx = Array.IndexOf(headers, "date");
+            int priceIdx = Array.IndexOf(headers, "price");
+            int priceProviderIdx = Array.IndexOf(headers, "priceProvider");
+            int providerListingIdx = Array.IndexOf(headers, "providerListing");
+            int gameAvailabilityIdx = Array.IndexOf(headers, "gameAvailability");
+
+            string? line;
+            while ((line = await reader.ReadLineAsync(cancel)) != null)
+            {
+                cancel.ThrowIfCancellationRequested();
+                var fields = ParseCsvLine(line);
+                var maxIdx = new[] { uuidIdx, cardFinishIdx, currencyIdx, dateIdx, priceIdx, priceProviderIdx, providerListingIdx }.Max();
+                if (fields.Length <= maxIdx)
+                    continue;
+
+                var uuidStr = fields[uuidIdx].Trim('"');
+                var priceStr = fields[priceIdx].Trim('"');
+                var dateStr = fields[dateIdx].Trim('"');
+
+                if (string.IsNullOrEmpty(uuidStr))
+                    continue;
+                if (!decimal.TryParse(priceStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var price))
+                    continue;
+                if (!DateOnly.TryParse(dateStr, out var date))
+                    continue;
+
+                var gameAvailability = gameAvailabilityIdx >= 0 && gameAvailabilityIdx < fields.Length
+                    ? fields[gameAvailabilityIdx].Trim('"')
+                    : null;
+
+                batch.Add(new CardPricingEntry
+                {
+                    Uuid = uuidStr,
+                    CardFinish = fields[cardFinishIdx].Trim('"') is { Length: > 0 } cf ? cf : "normal",
+                    Currency = fields[currencyIdx].Trim('"') is { Length: > 0 } cur ? cur : "usd",
+                    Date = date,
+                    Price = price,
+                    PriceProvider = fields[priceProviderIdx].Trim('"') is { Length: > 0 } pp ? pp : string.Empty,
+                    ProviderListing = fields[providerListingIdx].Trim('"') is { Length: > 0 } pl ? pl : string.Empty,
+                    GameAvailability = string.IsNullOrEmpty(gameAvailability) ? null : gameAvailability
+                });
+                count++;
+
+                if (batch.Count >= batchSize)
+                {
+                    await db.Value.CardPricingEntries.AddRangeAsync(batch, cancel);
+                    await db.Value.SaveChangesAsync(cancel);
+                    batch.Clear();
+                    callback.OnProgress?.Invoke(count, -1);
+                }
+            }
+
+            if (batch.Count > 0)
+            {
+                await db.Value.CardPricingEntries.AddRangeAsync(batch, cancel);
+                await db.Value.SaveChangesAsync(cancel);
+            }
+
+            await db.Value.CardPricingDownloadHistory.AddAsync(new CardPricingDownloadHistory
+            {
+                Date = DateOnly.FromDateTime(DateTime.UtcNow),
+                Sha256 = sha256
+            }, cancel);
+            await db.Value.SaveChangesAsync(cancel);
+
+            callback.OnProgress?.Invoke(count, count);
+            return true;
+        }
+        finally
+        {
+            Directory.Delete(tmpDir, recursive: true);
+        }
+    }
+
+    public async ValueTask<(decimal? price, string? provider)> GetLatestPriceForSkuAsync(Guid skuId, string currency, CancellationToken cancel)
+    {
+        using var db = _db.Invoke();
+        var sku = await db.Value.Cards.FirstOrDefaultAsync(c => c.Id == skuId, cancel);
+        if (sku == null || sku.ScryfallId == null)
+            return (null, null);
+
+        var finish = sku.IsFoil ? "foil" : "normal";
+        var mapping = await db.Value.ScryfallIdMappings.FirstOrDefaultAsync(m => m.ScryfallId == sku.ScryfallId, cancel);
+        if (mapping == null)
+            return (null, null);
+
+        var entry = await db.Value.CardPricingEntries
+            .Where(e => e.Uuid == mapping.MtgJsonUuid
+                && e.CardFinish == finish
+                && e.Currency == currency
+                && e.ProviderListing == "retail")
+            .OrderBy(e => e.Price)
+            .FirstOrDefaultAsync(cancel);
+
+        return (entry?.Price, entry?.PriceProvider);
+    }
+
+    private static string[] ParseCsvLine(string line)
+    {
+        // Simple CSV parser that handles quoted fields
+        var fields = new List<string>();
+        int i = 0;
+        while (i < line.Length)
+        {
+            if (line[i] == '"')
+            {
+                // Quoted field
+                int start = i + 1;
+                i++;
+                while (i < line.Length && !(line[i] == '"' && (i + 1 >= line.Length || line[i + 1] == ',')))
+                    i++;
+                fields.Add(line[start..i]);
+                i += 2; // skip closing quote and comma
+            }
+            else
+            {
+                int start = i;
+                while (i < line.Length && line[i] != ',')
+                    i++;
+                fields.Add(line[start..i]);
+                i++; // skip comma
+            }
+        }
+        return [.. fields];
     }
 }

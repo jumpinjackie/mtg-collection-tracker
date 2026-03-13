@@ -81,8 +81,6 @@
 			<Button IsEnabled="{Binding Behavior.HasSelectedCardSku}" Command="{Binding DeleteSkuCommand}" Content="Delete" />
 			<Button IsEnabled="{Binding Behavior.IsItemSplittable}" Command="{Binding SplitSelectedSkuCommand}" Content="Split" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding Behavior.HasAtLeastOneSelectedItem}" Command="{Binding UpdateSkuMetadataCommand}" Content="Update Metadata" HorizontalAlignment="Center" />
-			<Button IsEnabled="{Binding Behavior.HasAtLeastOneSelectedItem}" Command="{Binding EnablePriceTrackingCommand}" Content="Enable Price Tracking" HorizontalAlignment="Center" />
-			<Button IsEnabled="{Binding Behavior.HasAtLeastOneSelectedItem}" Command="{Binding DisablePriceTrackingCommand}" Content="Disable Price Tracking" HorizontalAlignment="Center" />
 			<TextBlock Margin="6" VerticalAlignment="Center" Text="{Binding CollectionSummary}" />
 		</StackPanel>
 		<Panel>
@@ -176,8 +174,7 @@
 								<DataGridTextColumn Header="Foil?" Binding="{Binding IsFoil}"/>
 								<DataGridTextColumn Header="Sideboard?" Binding="{Binding IsSideboard}"/>
 								<DataGridTextColumn Header="Comments" Binding="{Binding Comments}"/>
-								<DataGridCheckBoxColumn Header="Track Price?" Binding="{Binding TrackPrice}"/>
-								<DataGridTextColumn Header="Latest Price (USD)" Binding="{Binding LatestPrice}"/>
+								<DataGridTextColumn Header="Latest Price" Binding="{Binding LatestPrice}"/>
 							</DataGrid.Columns>
 						</DataGrid>
 					</Grid>

@@ -1,0 +1,19 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="200"
+             x:Class="MtgCollectionTracker.Views.ImportCardIdentifiersView"
+             x:DataType="vm:ImportCardIdentifiersViewModel">
+    <Design.DataContext>
+        <vm:ImportCardIdentifiersViewModel />
+    </Design.DataContext>
+    <StackPanel Margin="16" Spacing="12">
+        <TextBlock TextWrapping="WrapWithOverflow" Text="{Binding StatusMessage}" />
+        <ProgressBar IsVisible="{Binding IsBusy}" IsIndeterminate="True" />
+        <TextBlock IsVisible="{Binding IsBusy}" Text="{Binding Completed, StringFormat='Imported {0} identifiers...'}" />
+        <Button IsEnabled="{Binding !IsBusy}" IsVisible="{Binding !IsDone}" Command="{Binding BeginCommand}">Begin</Button>
+        <Button IsVisible="{Binding IsDone}" Command="{Binding DoneCommand}">Done</Button>
+    </StackPanel>
+</UserControl>

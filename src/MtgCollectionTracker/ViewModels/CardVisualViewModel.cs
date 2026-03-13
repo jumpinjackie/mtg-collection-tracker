@@ -161,22 +161,19 @@ public partial class CardVisualViewModel : ViewModelBase, ICardSkuItem, ISendabl
 
     public string[]? ColorIdentity { get; set; }
 
-    public bool TrackPrice { get; set; }
+    public decimal? LatestPriceValue { get; set; }
 
-    public decimal? LatestPriceUsd { get; set; }
-
-    public decimal? LatestCheapestPriceUsd { get; set; }
+    public string? LatestPriceProvider { get; set; }
 
     /// <summary>
     /// Formatted display string for the most recent tracked price.
-    /// Shows the edition-specific price as "$X.XX", or the cheapest printing price prefixed with "~"
-    /// (e.g. "~$X.XX") when no edition-specific price is available.
+    /// Shows "N/A" for proxies, "$X.XX (provider)" when a price exists, or "None" otherwise.
     /// </summary>
-    public string? LatestPrice => LatestPriceUsd.HasValue
-        ? $"${LatestPriceUsd:F2}"
-        : (LatestCheapestPriceUsd.HasValue ? $"~${LatestCheapestPriceUsd:F2}" : null);
+    public string? LatestPrice => IsProxy
+        ? "N/A"
+        : (LatestPriceValue.HasValue ? $"${LatestPriceValue:F2} ({LatestPriceProvider})" : "None");
 
-    public bool HasLatestPrice => TrackPrice && LatestPrice != null;
+    public bool HasLatestPrice => !IsProxy && LatestPriceValue != null;
 
     public CardVisualViewModel ApplyQuantities()
     {
