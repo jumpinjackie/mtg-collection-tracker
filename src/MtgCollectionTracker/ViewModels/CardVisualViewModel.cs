@@ -139,6 +139,9 @@ public partial class CardVisualViewModel : ViewModelBase, ICardSkuItem, ISendabl
 
     public bool IsSideboard { get; set; }
 
+    [ObservableProperty]
+    private bool _isBanner;
+
     public string CardNameBgColor => IsProxy ? "RosyBrown" : "Gray";
 
     public int ProxyQty { get; private set; }

@@ -34,4 +34,15 @@ public class Deck
     /// The cards in this deck
     /// </summary>
     public virtual ICollection<CardSku> Cards { get; set; }
+
+    /// <summary>
+    /// The optional banner card SKU id for this deck. When set, the card image of this SKU
+    /// is used as the visual banner of this deck in the deck box view.
+    /// </summary>
+    public Guid? BannerCardId { get; set; }
+
+    /// <summary>
+    /// The optional banner card SKU for this deck
+    /// </summary>
+    public virtual CardSku? BannerCard { get; set; }
 }

@@ -151,6 +151,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         return db.Value
             .Decks
             .Include(d => d.Container)
+            .Include(d => d.BannerCard)
             .Where(predicate)
             .Where(predicate2)
             .OrderBy(d => d.Name)
@@ -162,7 +163,9 @@ public class CollectionTrackingService : ICollectionTrackingService
                 ContainerName = d.Container!.Name,
                 Format = d.Format,
                 MaindeckTotal = d.Cards.Where(c => !c.IsSideboard).Sum(c => c.Quantity),
-                SideboardTotal = d.Cards.Where(c => c.IsSideboard).Sum(c => c.Quantity)
+                SideboardTotal = d.Cards.Where(c => c.IsSideboard).Sum(c => c.Quantity),
+                BannerCardId = d.BannerCardId,
+                BannerScryfallId = d.BannerCard != null ? d.BannerCard.ScryfallId : null
             })
             .ToList();
     }
@@ -285,10 +288,11 @@ public class CollectionTrackingService : ICollectionTrackingService
             OracleText = c.Scryfall != null ? c.Scryfall.OracleText : null,
             Colors = c.Scryfall != null ? c.Scryfall.Colors : null,
             ColorIdentity = c.Scryfall != null ? c.Scryfall.ColorIdentity : null,
-            // A double-faced card has back-face image, but if we haven't loaded SF metadata
-            // for this card yet, then a DFC should have '//' in its card name
+            // A double-faced card has a DISTINCT back-face image (different from the front-face image).
+            // Adventure cards (e.g. "Questing Druid // Seek the Beast") may have BackImageSmallUrl set
+            // to the same URL as ImageSmallUrl because both halves share the same physical card face.
             IsDoubleFaced = c.Scryfall != null
-                ? c.Scryfall.BackImageSmallUrl != null
+                ? c.Scryfall.BackImageSmallUrl != null && c.Scryfall.BackImageSmallUrl != c.Scryfall.ImageSmallUrl
                 : c.CardName.Contains(" // "),
             LatestPrice = null,
             LatestPriceProvider = null
@@ -521,8 +525,8 @@ public class CollectionTrackingService : ICollectionTrackingService
             OracleText = w.Scryfall != null ? w.Scryfall.OracleText : null,
             Colors = w.Scryfall != null ? w.Scryfall.Colors : null,
             ColorIdentity = w.Scryfall != null ? w.Scryfall.ColorIdentity : null,
-            // A double-faced card has back-face image
-            IsDoubleFaced = w.Scryfall?.BackImageSmallUrl != null,
+            // A double-faced card has a DISTINCT back-face image (different from the front-face image)
+            IsDoubleFaced = w.Scryfall?.BackImageSmallUrl != null && w.Scryfall?.BackImageSmallUrl != w.Scryfall?.ImageSmallUrl,
             Offers = w.OfferedPrices?.Select(o => new VendorOfferModel
             {
                 VendorId = o.VendorId,
@@ -566,8 +570,8 @@ public class CollectionTrackingService : ICollectionTrackingService
             OracleText = c.Scryfall != null ? c.Scryfall.OracleText : null,
             Colors = c.Scryfall != null ? c.Scryfall.Colors : null,
             ColorIdentity = c.Scryfall != null ? c.Scryfall.ColorIdentity : null,
-            // A double-faced card has back-face image
-            IsDoubleFaced = c.Scryfall?.BackImageSmallUrl != null,
+            // A double-faced card has a DISTINCT back-face image (different from the front-face image)
+            IsDoubleFaced = c.Scryfall?.BackImageSmallUrl != null && c.Scryfall?.BackImageSmallUrl != c.Scryfall?.ImageSmallUrl,
             LatestPrice = null,
             LatestPriceProvider = null
         };
@@ -608,8 +612,8 @@ public class CollectionTrackingService : ICollectionTrackingService
                 OracleText = w.Scryfall != null ? w.Scryfall.OracleText : null,
                 Colors = w.Scryfall != null ? w.Scryfall.Colors : null,
                 ColorIdentity = w.Scryfall != null ? w.Scryfall.ColorIdentity : null,
-                // A double-faced card has back-face image
-                IsDoubleFaced = w.Scryfall!.BackImageSmallUrl != null,
+                // A double-faced card has a DISTINCT back-face image (different from the front-face image)
+                IsDoubleFaced = w.Scryfall!.BackImageSmallUrl != null && w.Scryfall!.BackImageSmallUrl != w.Scryfall!.ImageSmallUrl,
                 Offers = w.OfferedPrices.Select(o => new VendorOfferModel
                 {
                     VendorId = o.VendorId,
@@ -816,7 +820,9 @@ public class CollectionTrackingService : ICollectionTrackingService
             ContainerName = d.Container?.Name,
             Format = d.Format,
             MaindeckTotal = d.Cards.Where(c => !c.IsSideboard).Sum(c => c.Quantity),
-            SideboardTotal = d.Cards.Where(c => c.IsSideboard).Sum(c => c.Quantity)
+            SideboardTotal = d.Cards.Where(c => c.IsSideboard).Sum(c => c.Quantity),
+            BannerCardId = d.BannerCardId,
+            BannerScryfallId = null
         };
     }
 
@@ -845,6 +851,7 @@ public class CollectionTrackingService : ICollectionTrackingService
 
         await db.Value.SaveChangesAsync();
         await db.Value.Entry(d).Collection(nameof(d.Cards)).LoadAsync();
+        await db.Value.Entry(d).Reference(nameof(d.BannerCard)).LoadAsync();
 
         return new DeckSummaryModel
         {
@@ -854,7 +861,43 @@ public class CollectionTrackingService : ICollectionTrackingService
             ContainerName = d.Container?.Name,
             Format = d.Format,
             MaindeckTotal = d.Cards.Where(c => !c.IsSideboard).Sum(c => c.Quantity),
-            SideboardTotal = d.Cards.Where(c => c.IsSideboard).Sum(c => c.Quantity)
+            SideboardTotal = d.Cards.Where(c => c.IsSideboard).Sum(c => c.Quantity),
+            BannerCardId = d.BannerCardId,
+            BannerScryfallId = d.BannerCard?.ScryfallId
+        };
+    }
+
+    public async ValueTask<DeckSummaryModel> SetDeckBannerAsync(int deckId, Guid? cardSkuId)
+    {
+        using var db = _db.Invoke();
+        var deck = await db.Value.Decks
+            .Include(d => d.Cards)
+            .Include(d => d.Container)
+            .FirstOrDefaultAsync(d => d.Id == deckId);
+        if (deck == null)
+            throw new Exception("Deck not found");
+
+        if (cardSkuId.HasValue && !deck.Cards.Any(c => c.Id == cardSkuId.Value))
+            throw new Exception("Card is not in this deck");
+
+        deck.BannerCardId = cardSkuId;
+        await db.Value.SaveChangesAsync();
+
+        CardSku? bannerCard = cardSkuId.HasValue
+            ? deck.Cards.FirstOrDefault(c => c.Id == cardSkuId.Value)
+            : null;
+
+        return new DeckSummaryModel
+        {
+            Id = deck.Id,
+            DeckName = deck.Name,
+            Name = "[" + deck.Format + "] " + deck.Name,
+            ContainerName = deck.Container?.Name,
+            Format = deck.Format,
+            MaindeckTotal = deck.Cards.Where(c => !c.IsSideboard).Sum(c => c.Quantity),
+            SideboardTotal = deck.Cards.Where(c => c.IsSideboard).Sum(c => c.Quantity),
+            BannerCardId = deck.BannerCardId,
+            BannerScryfallId = bannerCard?.ScryfallId
         };
     }
 
@@ -1358,8 +1401,8 @@ public class CollectionTrackingService : ICollectionTrackingService
                     OracleText = sku.Scryfall != null ? sku.Scryfall.OracleText : null,
                     Colors = sku.Scryfall != null ? sku.Scryfall.Colors : null,
                     ColorIdentity = sku.Scryfall != null ? sku.Scryfall.ColorIdentity : null,
-                    // A double-faced card has back-face image
-                    IsDoubleFaced = sku.Scryfall?.BackImageSmallUrl != null,
+                    // A double-faced card has a DISTINCT back-face image (different from the front-face image)
+                    IsDoubleFaced = sku.Scryfall?.BackImageSmallUrl != null && sku.Scryfall?.BackImageSmallUrl != sku.Scryfall?.ImageSmallUrl,
                     IsLand = sku.IsLand,
                     Edition = sku.Edition
                 };
@@ -1375,7 +1418,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             await db.Value.SaveChangesAsync(cancel);
         }
 
-        return new DeckModel { Name = deck.Name, Id = deck.Id, MainDeck = mainDeck, Sideboard = sideboard };
+        return new DeckModel { Name = deck.Name, Id = deck.Id, MainDeck = mainDeck, Sideboard = sideboard, BannerCardId = deck.BannerCardId };
     }
 
     static bool IsIncompleteForDeckDisplay(CardSku sku)

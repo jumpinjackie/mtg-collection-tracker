@@ -29,6 +29,12 @@ public class CardsDbContext : DbContext
         modelBuilder.Entity<CardSku>().HasIndex(nameof(CardSku.CardName));
         modelBuilder.Entity<Container>().HasIndex(nameof(Container.Name)).IsUnique();
         modelBuilder.Entity<Deck>().HasIndex(nameof(Deck.Name)).IsUnique();
+        modelBuilder.Entity<Deck>()
+            .HasOne(d => d.BannerCard)
+            .WithMany()
+            .HasForeignKey(d => d.BannerCardId)
+            .OnDelete(DeleteBehavior.SetNull)
+            .IsRequired(false);
         modelBuilder.Entity<Tag>().HasIndex(nameof(Tag.Name)).IsUnique();
         modelBuilder.Entity<CardSku>()
             .OwnsMany(c => c.Tags, cb =>

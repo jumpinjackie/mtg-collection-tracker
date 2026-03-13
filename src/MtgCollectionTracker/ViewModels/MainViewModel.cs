@@ -27,6 +27,7 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
         this.Notes = new();
         this.CanIBuild = new();
         this.Settings = new();
+        this.Playtesting = new();
         this.IsActive = true;
     }
 
@@ -37,6 +38,7 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
                          Func<NotesViewModel> notes,
                          Func<CanIBuildThisDeckViewModel> canIBuild,
                          Func<SettingsViewModel> settings,
+                         Func<PlaytestingViewModel> playtesting,
                          ICollectionTrackingService service,
                          Func<DialogViewModel> dialog,
                          Func<ImportCardIdentifiersViewModel> importCardIdentifiers)
@@ -48,6 +50,7 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
         this.Notes = notes();
         this.CanIBuild = canIBuild();
         this.Settings = settings();
+        this.Playtesting = playtesting();
         _service = service;
         _dialog = dialog;
         _importCardIdentifiers = importCardIdentifiers;
@@ -96,6 +99,8 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
     public NotesViewModel Notes { get; }
 
     public SettingsViewModel Settings { get; }
+
+    public PlaytestingViewModel Playtesting { get; }
 
     private Stack<DialogViewModel> _dialogStack = new();
 

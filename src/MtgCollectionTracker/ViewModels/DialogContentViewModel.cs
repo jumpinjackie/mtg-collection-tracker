@@ -35,6 +35,9 @@ public partial class DialogViewModel : ViewModelBase, IRecipient<GlobalBusyMessa
     [ObservableProperty]
     private bool _isBusy;
 
+    [ObservableProperty]
+    private bool _canClose = true;
+
     public DialogViewModel WithConfirmation(
         string title,
         string message,
@@ -43,6 +46,7 @@ public partial class DialogViewModel : ViewModelBase, IRecipient<GlobalBusyMessa
         string noLabel = "No")
     {
         this.Title = title;
+        this.CanClose = true;
         this.ContentDataContext = new ConfirmViewModel()
             .WithMessage(message)
             .WithActionLabels(yesLabel, noLabel)
@@ -53,6 +57,7 @@ public partial class DialogViewModel : ViewModelBase, IRecipient<GlobalBusyMessa
     public DialogViewModel WithContent(string title, DialogContentViewModel dataContext)
     {
         this.Title = title;
+        this.CanClose = true;
         this.ContentDataContext = dataContext;
         return this;
     }

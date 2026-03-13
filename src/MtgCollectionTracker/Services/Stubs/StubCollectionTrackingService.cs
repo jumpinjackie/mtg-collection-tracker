@@ -266,6 +266,11 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
+    public ValueTask<DeckSummaryModel> SetDeckBannerAsync(int deckId, Guid? cardSkuId)
+    {
+        throw new System.NotImplementedException();
+    }
+
     public string PrintContainer(int containerId, ContainerPrintOptions options)
     {
         throw new System.NotImplementedException();

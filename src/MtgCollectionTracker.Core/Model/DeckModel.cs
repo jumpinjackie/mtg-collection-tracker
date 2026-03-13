@@ -79,6 +79,11 @@ public class DeckModel
 
     public string? Format { get; set; }
 
+    /// <summary>
+    /// The ID of the banner card SKU, if one has been designated for this deck
+    /// </summary>
+    public Guid? BannerCardId { get; set; }
+
     public List<DeckCardModel> MainDeck { get; set; }
 
     public List<DeckCardModel> Sideboard { get; set; }

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MtgCollectionTracker.Data;
 
@@ -10,9 +11,11 @@ using MtgCollectionTracker.Data;
 namespace MtgCollectionTracker.Data.Migrations
 {
     [DbContext(typeof(CardsDbContext))]
-    partial class CardsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260313110956_AddDeckBannerCard")]
+    partial class AddDeckBannerCard
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.14");
@@ -133,74 +136,6 @@ namespace MtgCollectionTracker.Data.Migrations
                             Name = "Phyrexian",
                             PrintedCode = "ph"
                         });
-                });
-
-            modelBuilder.Entity("MtgCollectionTracker.Data.CardPricingDownloadHistory", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Sha256")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("CardPricingDownloadHistory");
-                });
-
-            modelBuilder.Entity("MtgCollectionTracker.Data.CardPricingEntry", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
-
-                    b.Property<string>("CardFinish")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Currency")
-                        .IsRequired()
-                        .HasMaxLength(3)
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("GameAvailability")
-                        .HasMaxLength(20)
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("PriceProvider")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ProviderListing")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("Uuid")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Uuid");
-
-                    b.HasIndex("Uuid", "CardFinish", "Currency", "ProviderListing");
-
-                    b.ToTable("CardPricingEntries");
                 });
 
             modelBuilder.Entity("MtgCollectionTracker.Data.CardSku", b =>
@@ -438,24 +373,6 @@ namespace MtgCollectionTracker.Data.Migrations
                     b.HasIndex("CardName", "Edition", "Language", "CollectorNumber");
 
                     b.ToTable("ScryfallCardMetadata");
-                });
-
-            modelBuilder.Entity("MtgCollectionTracker.Data.ScryfallIdMapping", b =>
-                {
-                    b.Property<string>("ScryfallId")
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("MtgJsonUuid")
-                        .IsRequired()
-                        .HasMaxLength(36)
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("ScryfallId");
-
-                    b.HasIndex("MtgJsonUuid");
-
-                    b.ToTable("ScryfallIdMappings");
                 });
 
             modelBuilder.Entity("MtgCollectionTracker.Data.Tag", b =>

@@ -1,0 +1,713 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="800"
+             x:Class="MtgCollectionTracker.Views.PlaytestingView"
+             x:DataType="vm:PlaytestingViewModel">
+	<Design.DataContext>
+		<vm:PlaytestingViewModel />
+	</Design.DataContext>
+
+	<Grid>
+		<!-- Deck Selection View -->
+		<Border IsVisible="{Binding !IsInGame}"
+		        Padding="40"
+		        HorizontalAlignment="Center"
+		        VerticalAlignment="Center">
+			<StackPanel Spacing="20" MinWidth="400">
+				<TextBlock Text="Select a deck to playtest:"
+				           FontSize="24"
+				           FontWeight="Bold"
+				           HorizontalAlignment="Center" />
+
+				<ListBox ItemsSource="{Binding AvailableDecks}"
+				         SelectedItem="{Binding SelectedDeck}"
+				         Height="300"
+				         ScrollViewer.VerticalScrollBarVisibility="Auto">
+					<ListBox.ItemTemplate>
+						<DataTemplate>
+							<StackPanel Spacing="4" Margin="8">
+								<TextBlock Text="{Binding Name}" FontWeight="Bold" FontSize="16" />
+								<TextBlock Text="{Binding Format}" FontSize="12" Opacity="0.7" />
+								<StackPanel Orientation="Horizontal" Spacing="8">
+									<TextBlock Text="{Binding MaindeckTotal, StringFormat='Main: {0}'}" FontSize="12" />
+									<TextBlock Text="{Binding SideboardTotal, StringFormat='Sideboard: {0}'}" FontSize="12" />
+								</StackPanel>
+							</StackPanel>
+						</DataTemplate>
+					</ListBox.ItemTemplate>
+				</ListBox>
+
+				<StackPanel Orientation="Horizontal" Spacing="10" HorizontalAlignment="Center">
+					<Button Content="Begin"
+					        Command="{Binding BeginPlaytestCommand}"
+					        IsEnabled="{Binding IsDeckSelected}"
+					        MinWidth="100"
+					        Padding="12,8" />
+					<Button Content="Refresh"
+					        Command="{Binding RefreshDecksCommand}"
+					        MinWidth="100"
+					        Padding="12,8" />
+				</StackPanel>
+
+				<TextBlock Text="No decks available. Create a deck first."
+				           IsVisible="{Binding !AvailableDecks.Count}"
+				           HorizontalAlignment="Center"
+				           Opacity="0.6" />
+			</StackPanel>
+		</Border>
+
+		<!-- Game View -->
+		<Grid IsVisible="{Binding IsInGame}" RowDefinitions="*,Auto" ColumnDefinitions="*">
+			<!-- Top Game Area: Library | Stack | Battlefield | Details/Actions -->
+			<Grid Grid.Row="0" Margin="10" ColumnDefinitions="100,100,*,500" RowDefinitions="*,Auto,*,Auto">
+				
+				<!-- Column 0: Left sidebar (Library, Life, Graveyard, Exile, Counters) -->
+				<DockPanel Grid.Column="0" Grid.Row="0" Grid.RowSpan="4" Margin="0,0,5,0" LastChildFill="True">
+					
+					<!-- (1) Library -->
+					<Border DockPanel.Dock="Top" BorderBrush="Gray" BorderThickness="2" Padding="5" Margin="0,0,0,5"
+					        PointerMoved="OnDropZonePointerMoved"
+					        PointerExited="OnDropZonePointerExited">
+						<StackPanel Spacing="5" DoubleTapped="OnLibraryDoubleTapped">
+							<TextBlock Text="Library" FontWeight="Bold" HorizontalAlignment="Center" FontSize="12" />
+							<Border Width="60" Height="85" Background="#7B4F2B" CornerRadius="3" BorderBrush="Black" BorderThickness="1">
+								<Border.ContextMenu>
+									<ContextMenu>
+										<MenuItem Header="Shuffle Library" Click="OnShuffleLibraryClick" />
+										<MenuItem Header="Draw X..." Click="OnDrawXClick" />
+										<MenuItem Header="Mill X..." Click="OnMillXClick" />
+										<MenuItem Header="View Top X Cards..." Click="OnLibraryViewTopXClick" />
+										<MenuItem Header="View Contents..." Click="OnLibraryViewContentsClick" />
+										<MenuItem Header="Exile Top X..." Click="OnExileTopXClick" />
+									</ContextMenu>
+								</Border.ContextMenu>
+								<TextBlock Text="{Binding GameState.LibraryCount}"
+								           FontSize="20"
+								           FontWeight="Bold"
+								           Foreground="White"
+								           HorizontalAlignment="Center"
+								           VerticalAlignment="Center" />
+							</Border>
+						</StackPanel>
+					</Border>
+
+					<!-- (2) Life Total -->
+					<Border DockPanel.Dock="Top" BorderBrush="Gray" BorderThickness="2" Padding="5" Margin="0,0,0,5">
+						<StackPanel Spacing="5">
+							<TextBlock Text="Life" FontWeight="Bold" HorizontalAlignment="Center" FontSize="12" />
+							<TextBlock Text="{Binding GameState.LifeTotal}"
+							           FontSize="28"
+							           FontWeight="Bold"
+							           HorizontalAlignment="Center" />
+							<StackPanel Orientation="Horizontal" Spacing="3" HorizontalAlignment="Center">
+								<Button Content="+" Command="{Binding GameState.IncrementLifeCommand}" Width="32" Height="28" FontSize="10" Padding="0"
+								        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+								<Button Content="-" Command="{Binding GameState.DecrementLifeCommand}" Width="32" Height="28" FontSize="10" Padding="0"
+								        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+							</StackPanel>
+						</StackPanel>
+					</Border>
+
+					<!-- (3) Graveyard -->
+					<Border DockPanel.Dock="Top" BorderBrush="Gray" BorderThickness="2" Padding="5" Margin="0,0,0,5"
+					        PointerReleased="OnDropToGraveyard"
+					        PointerMoved="OnDropZonePointerMoved"
+					        PointerExited="OnDropZonePointerExited">
+						<StackPanel Spacing="5">
+							<TextBlock Text="Graveyard" FontWeight="Bold" HorizontalAlignment="Center" FontSize="12" />
+							<Border Width="60" Height="85" Background="DarkGray" CornerRadius="3" BorderBrush="Black" BorderThickness="1">
+								<Border.ContextMenu>
+									<ContextMenu>
+										<MenuItem Header="View Contents..." Click="OnGraveyardViewContentsClick" />
+									</ContextMenu>
+								</Border.ContextMenu>
+								<Grid>
+									<Image Source="{Binding GameState.TopGraveyardCard.CardImage^}" Stretch="UniformToFill"
+									       IsVisible="{Binding GameState.TopGraveyardCard, Converter={x:Static ObjectConverters.IsNotNull}}" />
+									<TextBlock Text="{Binding GameState.Graveyard.Count}"
+									           FontSize="16"
+									           Foreground="White"
+									           HorizontalAlignment="Center"
+									           VerticalAlignment="Center"
+									           IsVisible="{Binding GameState.TopGraveyardCard, Converter={x:Static ObjectConverters.IsNull}}" />
+								</Grid>
+							</Border>
+						</StackPanel>
+					</Border>
+
+					<!-- (4) Exile -->
+					<Border DockPanel.Dock="Top" BorderBrush="Gray" BorderThickness="2" Padding="5" Margin="0,0,0,5"
+					        PointerReleased="OnDropToExile"
+					        PointerMoved="OnDropZonePointerMoved"
+					        PointerExited="OnDropZonePointerExited">
+						<StackPanel Spacing="5">
+							<TextBlock Text="Exile" FontWeight="Bold" HorizontalAlignment="Center" FontSize="12" />
+							<Border Width="60" Height="85" Background="DarkSlateGray" CornerRadius="3" BorderBrush="Black" BorderThickness="1">
+								<Border.ContextMenu>
+									<ContextMenu>
+										<MenuItem Header="View Contents..." Click="OnExileViewContentsClick" />
+									</ContextMenu>
+								</Border.ContextMenu>
+								<Grid>
+									<Image Source="{Binding GameState.TopExileCard.CardImage^}" Stretch="UniformToFill"
+									       IsVisible="{Binding GameState.TopExileCard, Converter={x:Static ObjectConverters.IsNotNull}}" />
+									<TextBlock Text="{Binding GameState.Exile.Count}"
+									           FontSize="16"
+									           Foreground="White"
+									           HorizontalAlignment="Center"
+									           VerticalAlignment="Center"
+									           IsVisible="{Binding GameState.TopExileCard, Converter={x:Static ObjectConverters.IsNull}}" />
+								</Grid>
+							</Border>
+						</StackPanel>
+					</Border>
+
+					<!-- (5) Counters -->
+					<Border BorderBrush="Gray" BorderThickness="2" Padding="5">
+						<ScrollViewer VerticalScrollBarVisibility="Auto">
+							<StackPanel Spacing="6">
+								<TextBlock Text="Counters" FontWeight="Bold" HorizontalAlignment="Center" FontSize="11" />
+								
+								<!-- Mana Counters -->
+								<StackPanel Spacing="2">
+									<TextBlock Text="White" FontSize="10" />
+									<StackPanel Orientation="Horizontal" Spacing="2">
+										<Button Content="-" Width="24" Height="22" FontSize="9" Padding="0" Command="{Binding GameState.DecrementWhiteManaCommand}"
+										        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+										<TextBlock Text="{Binding GameState.WhiteMana}" Width="20" TextAlignment="Center" VerticalAlignment="Center" FontSize="11" />
+										<Button Content="+" Width="24" Height="22" FontSize="9" Padding="0" Command="{Binding GameState.IncrementWhiteManaCommand}"
+										        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+									</StackPanel>
+								</StackPanel>
+
+								<StackPanel Spacing="2">
+									<TextBlock Text="Blue" FontSize="10" />
+									<StackPanel Orientation="Horizontal" Spacing="2">
+										<Button Content="-" Width="24" Height="22" FontSize="9" Padding="0" Command="{Binding GameState.DecrementBlueManaCommand}"
+										        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+										<TextBlock Text="{Binding GameState.BlueMana}" Width="20" TextAlignment="Center" VerticalAlignment="Center" FontSize="11" />
+										<Button Content="+" Width="24" Height="22" FontSize="9" Padding="0" Command="{Binding GameState.IncrementBlueManaCommand}"
+										        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+									</StackPanel>
+								</StackPanel>
+
+								<StackPanel Spacing="2">
+									<TextBlock Text="Black" FontSize="10" />
+									<StackPanel Orientation="Horizontal" Spacing="2">
+										<Button Content="-" Width="24" Height="22" FontSize="9" Padding="0" Command="{Binding GameState.DecrementBlackManaCommand}"
+										        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+										<TextBlock Text="{Binding GameState.BlackMana}" Width="20" TextAlignment="Center" VerticalAlignment="Center" FontSize="11" />
+										<Button Content="+" Width="24" Height="22" FontSize="9" Padding="0" Command="{Binding GameState.IncrementBlackManaCommand}"
+										        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+									</StackPanel>
+								</StackPanel>
+
+								<StackPanel Spacing="2">
+									<TextBlock Text="Red" FontSize="10" />
+									<StackPanel Orientation="Horizontal" Spacing="2">
+										<Button Content="-" Width="24" Height="22" FontSize="9" Padding="0" Command="{Binding GameState.DecrementRedManaCommand}"
+										        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+										<TextBlock Text="{Binding GameState.RedMana}" Width="20" TextAlignment="Center" VerticalAlignment="Center" FontSize="11" />
+										<Button Content="+" Width="24" Height="22" FontSize="9" Padding="0" Command="{Binding GameState.IncrementRedManaCommand}"
+										        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+									</StackPanel>
+								</StackPanel>
+
+								<StackPanel Spacing="2">
+									<TextBlock Text="Green" FontSize="10" />
+									<StackPanel Orientation="Horizontal" Spacing="2">
+										<Button Content="-" Width="24" Height="22" FontSize="9" Padding="0" Command="{Binding GameState.DecrementGreenManaCommand}"
+										        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+										<TextBlock Text="{Binding GameState.GreenMana}" Width="20" TextAlignment="Center" VerticalAlignment="Center" FontSize="11" />
+										<Button Content="+" Width="24" Height="22" FontSize="9" Padding="0" Command="{Binding GameState.IncrementGreenManaCommand}"
+										        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+									</StackPanel>
+								</StackPanel>
+
+								<StackPanel Spacing="2">
+									<TextBlock Text="Colorless" FontSize="10" />
+									<StackPanel Orientation="Horizontal" Spacing="2">
+										<Button Content="-" Width="24" Height="22" FontSize="9" Padding="0" Command="{Binding GameState.DecrementColorlessManaCommand}"
+										        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+										<TextBlock Text="{Binding GameState.ColorlessMana}" Width="20" TextAlignment="Center" VerticalAlignment="Center" FontSize="11" />
+										<Button Content="+" Width="24" Height="22" FontSize="9" Padding="0" Command="{Binding GameState.IncrementColorlessManaCommand}"
+										        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+									</StackPanel>
+								</StackPanel>
+
+								<StackPanel Spacing="2">
+									<TextBlock Text="Storm" FontSize="10" />
+									<StackPanel Orientation="Horizontal" Spacing="2">
+										<Button Content="-" Width="24" Height="22" FontSize="9" Padding="0" Command="{Binding GameState.DecrementStormCommand}"
+										        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+										<TextBlock Text="{Binding GameState.StormCount}" Width="20" TextAlignment="Center" VerticalAlignment="Center" FontSize="11" />
+										<Button Content="+" Width="24" Height="22" FontSize="9" Padding="0" Command="{Binding GameState.IncrementStormCommand}"
+										        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+									</StackPanel>
+								</StackPanel>
+
+								<StackPanel Spacing="2">
+									<TextBlock Text="Energy" FontSize="10" />
+									<StackPanel Orientation="Horizontal" Spacing="2">
+										<Button Content="-" Width="24" Height="22" FontSize="9" Padding="0" Command="{Binding GameState.DecrementEnergyCommand}"
+										        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+										<TextBlock Text="{Binding GameState.EnergyCount}" Width="20" TextAlignment="Center" VerticalAlignment="Center" FontSize="11" />
+										<Button Content="+" Width="24" Height="22" FontSize="9" Padding="0" Command="{Binding GameState.IncrementEnergyCommand}"
+										        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+									</StackPanel>
+								</StackPanel>
+
+								<StackPanel Spacing="2">
+									<TextBlock Text="Poison" FontSize="10" />
+									<StackPanel Orientation="Horizontal" Spacing="2">
+										<Button Content="-" Width="24" Height="22" FontSize="9" Padding="0" Command="{Binding GameState.DecrementPoisonCommand}"
+										        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+										<TextBlock Text="{Binding GameState.PoisonCount}" Width="20" TextAlignment="Center" VerticalAlignment="Center" FontSize="11" />
+										<Button Content="+" Width="24" Height="22" FontSize="9" Padding="0" Command="{Binding GameState.IncrementPoisonCommand}"
+										        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+									</StackPanel>
+								</StackPanel>
+							</StackPanel>
+						</ScrollViewer>
+					</Border>
+				</DockPanel>
+
+				<!-- Column 1: Stack and Phase Tracker -->
+				<Grid Grid.Column="1" Grid.Row="0" Grid.RowSpan="4" ColumnDefinitions="*" RowDefinitions="*,*">
+					<!-- Stack -->
+					<Border Grid.Row="0" BorderBrush="Gray" BorderThickness="2" Padding="5" Margin="5,0,5,5"
+					        PointerReleased="OnDropToStack"
+					        PointerMoved="OnDropZonePointerMoved"
+					        PointerExited="OnDropZonePointerExited">
+						<StackPanel Spacing="5">
+							<TextBlock Text="Stack" FontWeight="Bold" HorizontalAlignment="Center" FontSize="12" />
+							<TextBlock Text="(Empty)" Opacity="0.5" HorizontalAlignment="Center" FontSize="10"
+							           IsVisible="{Binding !GameState.Stack.Count}" />
+							<ItemsControl ItemsSource="{Binding GameState.Stack}">
+								<ItemsControl.ItemTemplate>
+									<DataTemplate>
+									<Border Width="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.StackCardWidth}" Height="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.StackCardHeight}" Margin="2" CornerRadius="3" BorderBrush="DarkGray" BorderThickness="1" Background="#1E1E1E"
+									        PointerEntered="OnCardPointerEntered"
+									        PointerPressed="OnCardPointerPressed"
+									        DoubleTapped="OnStackCardDoubleTapped">
+										<Border.ContextMenu>
+											<ContextMenu>
+												<MenuItem Header="Put onto battlefield" Click="OnResolveStackClick" />
+												<MenuItem Header="Return to hand" Click="OnStackReturnToHandClick" />
+												<MenuItem Header="Put into graveyard" Click="OnCounterStackClick" />
+												<MenuItem Header="Exile" Click="OnStackExileClick" />
+											</ContextMenu>
+										</Border.ContextMenu>
+										<Grid>
+											<Image Source="{Binding CardImage^}" Stretch="UniformToFill" />
+											<Border Background="#66000000" VerticalAlignment="Top" Padding="2,1">
+												<TextBlock Text="{Binding CardName}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizeName}" Foreground="White" TextTrimming="CharacterEllipsis" />
+											</Border>
+											<Border Background="#66000000" VerticalAlignment="Bottom" HorizontalAlignment="Right" Padding="2,1"
+											        IsVisible="{Binding PT, Converter={x:Static ObjectConverters.IsNotNull}}">
+												<TextBlock Text="{Binding PT}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizePT}" Foreground="White" />
+											</Border>
+										</Grid>
+										</Border>
+									</DataTemplate>
+								</ItemsControl.ItemTemplate>
+							</ItemsControl>
+						</StackPanel>
+					</Border>
+
+					<!-- Phase Tracker -->
+					<Border Grid.Row="1" BorderBrush="Gray" BorderThickness="2" Padding="5" Margin="5,5,5,0">
+						<ScrollViewer VerticalScrollBarVisibility="Auto">
+							<StackPanel Spacing="3">
+								<TextBlock Text="Phase" FontWeight="Bold" HorizontalAlignment="Center" FontSize="11" Margin="0,0,0,5" />
+								<TextBlock Text="{Binding GameState.PhaseDisplayName}"
+								           HorizontalAlignment="Center"
+								           FontSize="10"
+								           FontWeight="Bold"
+								           Foreground="OrangeRed"
+								           Margin="0,0,0,8" />
+								
+								<!-- All Phases -->
+								<Button Content="Untap" HorizontalAlignment="Stretch" FontSize="9" Padding="2,3" Background="{Binding GameState.CurrentPhaseIndex, Converter={StaticResource PhaseIndexToBrushConverter}, ConverterParameter=0}" />
+								<Button Content="Upkeep" HorizontalAlignment="Stretch" FontSize="9" Padding="2,3" Background="{Binding GameState.CurrentPhaseIndex, Converter={StaticResource PhaseIndexToBrushConverter}, ConverterParameter=1}" />
+								<Button Content="Draw" HorizontalAlignment="Stretch" FontSize="9" Padding="2,3" Background="{Binding GameState.CurrentPhaseIndex, Converter={StaticResource PhaseIndexToBrushConverter}, ConverterParameter=2}" />
+								<Button Content="Main 1" HorizontalAlignment="Stretch" FontSize="9" Padding="2,3" Background="{Binding GameState.CurrentPhaseIndex, Converter={StaticResource PhaseIndexToBrushConverter}, ConverterParameter=3}" />
+								<Button Content="Begin Cbt" HorizontalAlignment="Stretch" FontSize="9" Padding="2,3" Background="{Binding GameState.CurrentPhaseIndex, Converter={StaticResource PhaseIndexToBrushConverter}, ConverterParameter=4}" />
+								<Button Content="Declare Atk" HorizontalAlignment="Stretch" FontSize="9" Padding="2,3" Background="{Binding GameState.CurrentPhaseIndex, Converter={StaticResource PhaseIndexToBrushConverter}, ConverterParameter=5}" />
+								<Button Content="Declare Blk" HorizontalAlignment="Stretch" FontSize="9" Padding="2,3" Background="{Binding GameState.CurrentPhaseIndex, Converter={StaticResource PhaseIndexToBrushConverter}, ConverterParameter=6}" />
+								<Button Content="Combat Dmg" HorizontalAlignment="Stretch" FontSize="9" Padding="2,3" Background="{Binding GameState.CurrentPhaseIndex, Converter={StaticResource PhaseIndexToBrushConverter}, ConverterParameter=7}" />
+								<Button Content="End Combat" HorizontalAlignment="Stretch" FontSize="9" Padding="2,3" Background="{Binding GameState.CurrentPhaseIndex, Converter={StaticResource PhaseIndexToBrushConverter}, ConverterParameter=8}" />
+								<Button Content="Main 2" HorizontalAlignment="Stretch" FontSize="9" Padding="2,3" Background="{Binding GameState.CurrentPhaseIndex, Converter={StaticResource PhaseIndexToBrushConverter}, ConverterParameter=9}" />
+								<Button Content="End Step" HorizontalAlignment="Stretch" FontSize="9" Padding="2,3" Background="{Binding GameState.CurrentPhaseIndex, Converter={StaticResource PhaseIndexToBrushConverter}, ConverterParameter=10}" />
+								<Button Content="Cleanup" HorizontalAlignment="Stretch" FontSize="9" Padding="2,3" Background="{Binding GameState.CurrentPhaseIndex, Converter={StaticResource PhaseIndexToBrushConverter}, ConverterParameter=11}" />
+								
+								<Button Content="Next Phase"
+								        Command="{Binding GameState.AdvancePhaseCommand}"
+								        HorizontalAlignment="Stretch"
+								        FontSize="10"
+								        Padding="2,4"
+								        Margin="0,8,0,0"
+								        FontWeight="Bold" />
+								<Button Content="End Turn"
+								        Command="{Binding GameState.EndTurnCommand}"
+								        HorizontalAlignment="Stretch"
+								        FontSize="10"
+								        Padding="2,4"
+								        Margin="0,4,0,0" />
+							</StackPanel>
+						</ScrollViewer>
+					</Border>
+				</Grid>
+
+				<!-- Column 2: Battlefield (non-lands, lands, hand) -->
+			<Grid Grid.Column="2" Grid.Row="0" Grid.RowSpan="4" RowDefinitions="2*,Auto,*,*" Margin="5,0,5,0">
+					<!-- Battlefield Non-lands -->
+					<Border Grid.Row="0" BorderBrush="Gray" BorderThickness="2" Padding="5"
+					        PointerReleased="OnDropToBattlefield"
+					        PointerMoved="OnDropZonePointerMoved"
+					        PointerExited="OnDropZonePointerExited">
+						<StackPanel Spacing="5">
+							<TextBlock Text="Battlefield" FontWeight="Bold" HorizontalAlignment="Center" FontSize="12" />
+							<TextBlock Text="(Empty)" Opacity="0.5" HorizontalAlignment="Center" FontSize="10"
+							           IsVisible="{Binding !GameState.BattlefieldNonlands.Count}" />
+							<ItemsControl ItemsSource="{Binding GameState.BattlefieldNonlands}">
+								<ItemsControl.ItemsPanel>
+									<ItemsPanelTemplate>
+									<WrapPanel ItemSpacing="40" LineSpacing="24" />
+								</ItemsPanelTemplate>
+							</ItemsControl.ItemsPanel>
+							<ItemsControl.ItemTemplate>
+								<DataTemplate>
+								<Border Width="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardWidth}" Height="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardHeight}" Margin="6" CornerRadius="6" BorderBrush="Black" BorderThickness="1" Background="#1E1E1E"
+									        PointerEntered="OnCardPointerEntered"
+									        PointerPressed="OnCardPointerPressed"
+									        DoubleTapped="OnBattlefieldCardDoubleTapped">
+										<ToolTip.Tip>
+											<StackPanel Spacing="2">
+												<TextBlock Text="{Binding DisplayName}" FontWeight="Bold" />
+												<ItemsControl ItemsSource="{Binding Counters}" IsVisible="{Binding HasCounters}">
+													<ItemsControl.ItemTemplate>
+														<DataTemplate>
+															<TextBlock Text="{Binding CounterTooltipText}" FontSize="11" />
+														</DataTemplate>
+													</ItemsControl.ItemTemplate>
+												</ItemsControl>
+											</StackPanel>
+										</ToolTip.Tip>
+										<Border.ContextMenu>
+											<ContextMenu>
+												<MenuItem Header="Return to Hand" Click="OnBattlefieldReturnToHandClick" />
+												<MenuItem Header="Send to Graveyard" Click="OnBattlefieldSendToGraveyardClick" />
+												<MenuItem Header="Exile" Click="OnBattlefieldSendToExileClick" />
+												<MenuItem Header="Transform" Click="OnBattlefieldTransformClick" IsVisible="{Binding IsDoubleFaced}" />
+												<MenuItem Header="Add Counter..." Click="OnAddCounterClick" />
+											</ContextMenu>
+										</Border.ContextMenu>
+										<Border.RenderTransform>
+											<RotateTransform Angle="{Binding IsTapped, Converter={StaticResource BoolToRotationConverter}}" />
+										</Border.RenderTransform>
+										<Grid>
+											<Image Source="{Binding CardImage^}" Stretch="UniformToFill" IsVisible="{Binding !IsToken}" />
+											<Border Background="#2A2A2A" IsVisible="{Binding IsToken}">
+												<Grid RowDefinitions="Auto,*,Auto">
+													<TextBlock Grid.Row="0" Text="{Binding DisplayName}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizeName}" FontWeight="Bold" Foreground="#F5F5F5" Margin="8,6,8,4" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" />
+													<TextBlock Grid.Row="1" Text="{Binding OracleText}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizeText}" Foreground="#E0E0E0" Margin="10,8" TextWrapping="Wrap" VerticalAlignment="Center" TextAlignment="Center" />
+													<TextBlock Grid.Row="2" Text="{Binding PT}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizePT}" FontWeight="Bold" Foreground="#F5F5F5" Margin="8,4,8,6" HorizontalAlignment="Right" />
+												</Grid>
+											</Border>
+											<Border Background="#66000000" VerticalAlignment="Top" Padding="6,2" IsVisible="{Binding !IsToken}">
+												<TextBlock Text="{Binding DisplayName}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizeName}" Foreground="White" TextTrimming="CharacterEllipsis" />
+											</Border>
+											<Border Background="#66000000" VerticalAlignment="Bottom" HorizontalAlignment="Right" Padding="6,2"
+											        IsVisible="{Binding !IsToken}">
+												<TextBlock Text="{Binding PT}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizePT}" Foreground="White" />
+											</Border>
+											<!-- Counter circles row, just above center -->
+											<ItemsControl ItemsSource="{Binding Counters}"
+											              VerticalAlignment="Center" HorizontalAlignment="Center"
+											              Margin="0,-24,0,0"
+											              IsVisible="{Binding HasCounters}">
+												<ItemsControl.ItemsPanel>
+													<ItemsPanelTemplate>
+														<StackPanel Orientation="Horizontal" Spacing="3" />
+													</ItemsPanelTemplate>
+												</ItemsControl.ItemsPanel>
+												<ItemsControl.ItemTemplate>
+													<DataTemplate>
+														<Grid Width="22" Height="22">
+															<Ellipse Fill="{Binding DisplayColor}" />
+															<Ellipse Fill="#55FFFFFF" Margin="3,3,3,11" />
+															<TextBlock Text="{Binding Quantity}" HorizontalAlignment="Center" VerticalAlignment="Center"
+															           Foreground="{Binding LabelForeground}" FontWeight="Bold" FontSize="9" />
+														</Grid>
+													</DataTemplate>
+												</ItemsControl.ItemTemplate>
+											</ItemsControl>
+										</Grid>
+										</Border>
+									</DataTemplate>
+								</ItemsControl.ItemTemplate>
+							</ItemsControl>
+						</StackPanel>
+					</Border>
+
+					<!-- Splitter -->
+					<GridSplitter Grid.Row="1" Height="5" HorizontalAlignment="Stretch" Background="LightGray" />
+
+					<!-- Battlefield Lands -->
+					<Border Grid.Row="2" BorderBrush="Gray" BorderThickness="2" Padding="5"
+					        PointerReleased="OnDropToBattlefieldLands"
+					        PointerMoved="OnDropZonePointerMoved"
+					        PointerExited="OnDropZonePointerExited">
+						<StackPanel Spacing="5">
+							<TextBlock Text="Lands" FontWeight="Bold" HorizontalAlignment="Center" FontSize="12" />
+							<TextBlock Text="(Empty)" Opacity="0.5" HorizontalAlignment="Center" FontSize="10"
+							           IsVisible="{Binding !GameState.BattlefieldLands.Count}" />
+							<ItemsControl ItemsSource="{Binding GameState.BattlefieldLands}">
+								<ItemsControl.ItemsPanel>
+									<ItemsPanelTemplate>
+									<WrapPanel ItemSpacing="40" LineSpacing="24" />
+								</ItemsPanelTemplate>
+							</ItemsControl.ItemsPanel>
+							<ItemsControl.ItemTemplate>
+								<DataTemplate>
+									<Border Width="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardWidth}" Height="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardHeight}" Margin="6" CornerRadius="6" BorderBrush="Black" BorderThickness="1" Background="#1E1E1E"
+										        PointerEntered="OnCardPointerEntered"
+										        PointerPressed="OnCardPointerPressed"
+										        DoubleTapped="OnBattlefieldCardDoubleTapped">
+											<ToolTip.Tip>
+												<StackPanel Spacing="2">
+													<TextBlock Text="{Binding DisplayName}" FontWeight="Bold" />
+													<ItemsControl ItemsSource="{Binding Counters}" IsVisible="{Binding HasCounters}">
+														<ItemsControl.ItemTemplate>
+															<DataTemplate>
+																<TextBlock Text="{Binding CounterTooltipText}" FontSize="11" />
+															</DataTemplate>
+														</ItemsControl.ItemTemplate>
+													</ItemsControl>
+												</StackPanel>
+											</ToolTip.Tip>
+											<Border.ContextMenu>
+												<ContextMenu>
+													<MenuItem Header="Return to Hand" Click="OnBattlefieldReturnToHandClick" />
+													<MenuItem Header="Send to Graveyard" Click="OnBattlefieldSendToGraveyardClick" />
+													<MenuItem Header="Exile" Click="OnBattlefieldSendToExileClick" />
+													<MenuItem Header="Transform" Click="OnBattlefieldTransformClick" IsVisible="{Binding IsDoubleFaced}" />
+													<MenuItem Header="Add Counter..." Click="OnAddCounterClick" />
+												</ContextMenu>
+											</Border.ContextMenu>
+											<Border.RenderTransform>
+												<RotateTransform Angle="{Binding IsTapped, Converter={StaticResource BoolToRotationConverter}}" />
+											</Border.RenderTransform>
+											<Grid>
+												<Image Source="{Binding CardImage^}" Stretch="UniformToFill" IsVisible="{Binding !IsToken}" />
+												<Border Background="#2A2A2A" IsVisible="{Binding IsToken}">
+													<Grid RowDefinitions="Auto,*,Auto">
+														<TextBlock Grid.Row="0" Text="{Binding DisplayName}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizeName}" FontWeight="Bold" Foreground="#F5F5F5" Margin="8,6,8,4" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" />
+														<TextBlock Grid.Row="1" Text="{Binding OracleText}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizeText}" Foreground="#E0E0E0" Margin="10,8" TextWrapping="Wrap" VerticalAlignment="Center" TextAlignment="Center" />
+														<TextBlock Grid.Row="2" Text="{Binding PT}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizePT}" FontWeight="Bold" Foreground="#F5F5F5" Margin="8,4,8,6" HorizontalAlignment="Right" />
+													</Grid>
+												</Border>
+												<Border Background="#66000000" VerticalAlignment="Top" Padding="6,2" IsVisible="{Binding !IsToken}">
+													<TextBlock Text="{Binding DisplayName}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizeName}" Foreground="White" TextTrimming="CharacterEllipsis" />
+												</Border>
+												<Border Background="#66000000" VerticalAlignment="Bottom" HorizontalAlignment="Right" Padding="6,2"
+												        IsVisible="{Binding !IsToken}">
+													<TextBlock Text="{Binding PT}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizePT}" Foreground="White" />
+												</Border>
+												<!-- Counter circles row, just above center -->
+												<ItemsControl ItemsSource="{Binding Counters}"
+												              VerticalAlignment="Center" HorizontalAlignment="Center"
+												              Margin="0,-24,0,0"
+												              IsVisible="{Binding HasCounters}">
+													<ItemsControl.ItemsPanel>
+														<ItemsPanelTemplate>
+															<StackPanel Orientation="Horizontal" Spacing="3" />
+														</ItemsPanelTemplate>
+													</ItemsControl.ItemsPanel>
+													<ItemsControl.ItemTemplate>
+														<DataTemplate>
+															<Grid Width="22" Height="22">
+																<Ellipse Fill="{Binding DisplayColor}" />
+																<Ellipse Fill="#55FFFFFF" Margin="3,3,3,11" />
+																<TextBlock Text="{Binding Quantity}" HorizontalAlignment="Center" VerticalAlignment="Center"
+																           Foreground="{Binding LabelForeground}" FontWeight="Bold" FontSize="9" />
+															</Grid>
+														</DataTemplate>
+													</ItemsControl.ItemTemplate>
+												</ItemsControl>
+											</Grid>
+										</Border>
+									</DataTemplate>
+								</ItemsControl.ItemTemplate>
+							</ItemsControl>
+						</StackPanel>
+					</Border>
+
+					<!-- Hand -->
+					<Border Grid.Row="3" BorderBrush="Gray" BorderThickness="2" Padding="5" Margin="0,5,0,0"
+					        PointerReleased="OnDropToHand"
+					        PointerMoved="OnDropZonePointerMoved"
+					        PointerExited="OnDropZonePointerExited">
+						<ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+							<StackPanel Spacing="5">
+								<TextBlock Text="Hand" FontWeight="Bold" HorizontalAlignment="Left" FontSize="12" />
+								<TextBlock Text="(Empty hand)" Opacity="0.5" HorizontalAlignment="Left" FontSize="10"
+								           IsVisible="{Binding !GameState.Hand.Count}" />
+								<ItemsControl ItemsSource="{Binding GameState.Hand}">
+									<ItemsControl.ItemsPanel>
+										<ItemsPanelTemplate>
+											<StackPanel Orientation="Horizontal" Spacing="5" />
+										</ItemsPanelTemplate>
+									</ItemsControl.ItemsPanel>
+									<ItemsControl.ItemTemplate>
+										<DataTemplate>
+										<Border Width="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardWidth}" Height="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardHeight}" Margin="3" CornerRadius="5" BorderBrush="Black" BorderThickness="1" Background="#1E1E1E"
+												PointerEntered="OnCardPointerEntered"
+												PointerPressed="OnCardPointerPressed"
+												DoubleTapped="OnHandCardDoubleTapped">
+											<Border.ContextMenu>
+												<ContextMenu>
+													<MenuItem Header="Send to Top of Library" Click="OnHandSendToTopClick" />
+													<MenuItem Header="Send to Bottom" Click="OnHandSendToBottomClick" />
+													<MenuItem Header="Discard" Click="OnHandDiscardClick" />
+													<MenuItem Header="Exile" Click="OnHandExileClick" />
+												</ContextMenu>
+											</Border.ContextMenu>
+											<Grid>
+												<Image Source="{Binding CardImage^}" Stretch="UniformToFill" />
+												<Border Background="#66000000" VerticalAlignment="Top" Padding="6,2">
+													<TextBlock Text="{Binding CardName}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizeName}" Foreground="White" TextTrimming="CharacterEllipsis" />
+												</Border>
+												<Border Background="#66000000" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="6,2"
+												        IsVisible="{Binding HasManaCost}">
+													<TextBlock Text="{Binding ManaCost}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizeMana}" Foreground="White" />
+												</Border>
+												<Border Background="#66000000" VerticalAlignment="Bottom" HorizontalAlignment="Right" Padding="6,2"
+												        IsVisible="{Binding PT, Converter={x:Static ObjectConverters.IsNotNull}}">
+													<TextBlock Text="{Binding PT}" FontSize="{Binding $parent[UserControl].((vm:PlaytestingViewModel)DataContext).GameState.CardFontSizePT}" Foreground="White" />
+												</Border>
+											</Grid>
+											</Border>
+										</DataTemplate>
+									</ItemsControl.ItemTemplate>
+								</ItemsControl>
+							</StackPanel>
+						</ScrollViewer>
+					</Border>
+				</Grid>
+
+				<!-- Column 3: Details Panel (top) and Actions Panel (bottom) -->
+				<Grid Grid.Column="3" Grid.Row="0" Grid.RowSpan="4" RowDefinitions="*,Auto" Margin="5,0,0,0">
+					<!-- (11) Details Panel -->
+					<Border Grid.Row="0" BorderBrush="Gray" BorderThickness="2" Padding="8" Margin="0,0,0,5">
+						<ScrollViewer VerticalScrollBarVisibility="Auto">
+							<StackPanel Spacing="8">
+								<TextBlock Text="Details" FontWeight="Bold" HorizontalAlignment="Center" FontSize="12" />
+								<StackPanel IsVisible="{Binding GameState.SelectedCard, Converter={x:Static ObjectConverters.IsNotNull}}" Spacing="5">
+										<TextBlock Text="{Binding GameState.SelectedCard.CardName}"
+										           FontSize="28"
+									           FontWeight="Bold"
+									           TextWrapping="Wrap" />
+										<TextBlock Text="{Binding GameState.SelectedCard.ManaCost}"
+										           FontSize="20" />
+										<TextBlock Text="{Binding GameState.SelectedCard.CardType}"
+										           FontSize="18"
+									           TextWrapping="Wrap" />
+										<TextBlock Text="{Binding GameState.SelectedCard.OracleText}"
+										           FontSize="18"
+									           TextWrapping="Wrap" />
+										<TextBlock Text="{Binding GameState.SelectedCard.PT}"
+										           FontSize="22"
+									           FontWeight="Bold"
+									           IsVisible="{Binding GameState.SelectedCard.PT, Converter={x:Static ObjectConverters.IsNotNull}}" />
+										<Image Source="{Binding GameState.SelectedCard.CardImageLarge^}"
+										       Stretch="Uniform"
+									       MaxHeight="{Binding GameState.DetailsImageMaxHeight}" />
+								</StackPanel>
+								<TextBlock Text="No card selected" Opacity="0.5" HorizontalAlignment="Center" FontSize="10"
+								           IsVisible="{Binding GameState.SelectedCard, Converter={x:Static ObjectConverters.IsNull}}" />
+							</StackPanel>
+						</ScrollViewer>
+					</Border>
+
+					<!-- (12) Actions Panel -->
+					<Border Grid.Row="1" BorderBrush="Gray" BorderThickness="2" Padding="8">
+						<StackPanel Spacing="5">
+							<TextBlock Text="Actions" FontWeight="Bold" HorizontalAlignment="Center" FontSize="12" />
+							<Button Content="Create Token"
+							        Click="OnBattlefieldCreateTokenClick"
+							        HorizontalAlignment="Stretch"
+							        FontSize="10"
+							        Padding="4,3" />
+							<Button Content="Draw Card"
+							        Command="{Binding GameState.DrawCardCommand}"
+							        HorizontalAlignment="Stretch"
+							        FontSize="10"
+							        Padding="4,3" />
+							<Button Content="Shuffle"
+							        Command="{Binding GameState.ShuffleLibraryCommand}"
+							        HorizontalAlignment="Stretch"
+							        FontSize="10"
+							        Padding="4,3" />
+							<Button Content="Mulligan"
+							        Command="{Binding GameState.MulliganCommand}"
+							        HorizontalAlignment="Stretch"
+							        FontSize="10"
+							        Padding="4,3" />
+							<Button Content="Next Phase"
+							        Command="{Binding GameState.AdvancePhaseCommand}"
+							        HorizontalAlignment="Stretch"
+							        FontSize="10"
+							        Padding="4,3" />
+							<Button Content="Reset Game"
+							        Command="{Binding GameState.ResetGameCommand}"
+							        HorizontalAlignment="Stretch"
+							        FontSize="10"
+							        Padding="4,3" />
+							<Button Content="Select Deck"
+							        Command="{Binding SelectDeckCommand}"
+							        HorizontalAlignment="Stretch"
+							        FontSize="10"
+							        Padding="4,3" />
+						</StackPanel>
+					</Border>
+				</Grid>
+			</Grid>
+
+			<!-- Status Bar -->
+			<Border Grid.Row="1" BorderBrush="Gray" BorderThickness="2" Padding="8,6" Margin="10,5,10,10">
+				<Grid ColumnDefinitions="*,Auto,Auto,120">
+					<TextBlock Grid.Column="0" 
+					           Text="{Binding SelectedDeck.Name, StringFormat='Playtesting: {0}'}"
+					           FontSize="12"
+					           FontWeight="Bold"
+					           VerticalAlignment="Center"
+					           HorizontalAlignment="Left" />
+					<TextBlock Grid.Column="1" 
+					           Text="Card Scale:"
+					           FontSize="11"
+					           VerticalAlignment="Center"
+					           Margin="0,0,8,0" />
+					<TextBlock Grid.Column="2" 
+					           Text="{Binding GameState.CardScale, StringFormat='{}{0:P0}'}"
+					           FontSize="11"
+					           VerticalAlignment="Center"
+					           MinWidth="40"
+					           TextAlignment="Right"
+					           Margin="0,0,8,0" />
+					<Slider Grid.Column="3" 
+					        Value="{Binding GameState.CardScale}"
+					        Minimum="0.5"
+					        Maximum="2.5"
+					        TickFrequency="0.1"
+					        IsSnapToTickEnabled="True"
+					        VerticalAlignment="Center" />
+				</Grid>
+			</Border>
+		</Grid>
+	</Grid>
+</UserControl>

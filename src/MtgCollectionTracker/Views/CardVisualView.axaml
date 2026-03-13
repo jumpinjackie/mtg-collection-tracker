@@ -33,6 +33,10 @@
 						<TextBlock Text="{Binding LatestPrice}" FontSize="11" />
 					</StackPanel>
 				</Border>
+				<!-- Banner indicator: shown in the bottom-right corner when this card is the deck banner -->
+				<Border IsVisible="{Binding IsBanner}" Canvas.Bottom="4" Canvas.Right="4" CornerRadius="3" Background="Gold" Padding="4" Opacity="0.9" ToolTip.Tip="Deck Banner">
+					<PathIcon Height="16" Width="16" Data="{StaticResource star_regular}" Foreground="Black" />
+				</Border>
 			</Canvas>
 		</Border>
 	</StackPanel>

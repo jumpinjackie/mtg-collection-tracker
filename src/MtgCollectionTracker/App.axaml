@@ -9,6 +9,8 @@
 		<ResourceDictionary>
 			<svc:EnumToBooleanConverter x:Key="EnumToBoolConverter" />
 			<svc:CollectionNotEmptyConverter x:Key="CollectionNotEmpty" />
+			<svc:BoolToRotationConverter x:Key="BoolToRotationConverter" />
+			<svc:PhaseIndexToBrushConverter x:Key="PhaseIndexToBrushConverter" />
 			<ResourceDictionary.MergedDictionaries>
 				<ResourceInclude Source="/Assets/VectorIcons.axaml" />
 			</ResourceDictionary.MergedDictionaries>
