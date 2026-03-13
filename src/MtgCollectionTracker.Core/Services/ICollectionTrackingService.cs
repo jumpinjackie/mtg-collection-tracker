@@ -66,6 +66,7 @@ namespace MtgCollectionTracker.Core.Services
         ValueTask<ContainerSummaryModel> UpdateContainerAsync(int id, string name, string? description);
         ValueTask<DeckSummaryModel> CreateDeckAsync(string name, string? format, int? containerId);
         ValueTask<DeckSummaryModel> UpdateDeckAsync(int id, string name, string? format, int? containerId);
+        ValueTask<DeckSummaryModel> SetDeckBannerAsync(int deckId, Guid? cardSkuId);
         ValueTask<CardSkuModel> DeleteCardSkuAsync(Guid skuId);
         ValueTask<DismantleDeckResult> DismantleDeckAsync(DismantleDeckInputModel model);
         ValueTask<IEnumerable<CardSkuModel>> UpdateCardMetadataAsync(ICollection<Guid> ids, IScryfallApiClient scryfallApiClient, UpdateCardMetadataProgressCallback? callback, CancellationToken cancel);
