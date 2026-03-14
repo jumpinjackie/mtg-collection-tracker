@@ -54,10 +54,10 @@ public partial class DialogViewModel : ViewModelBase, IRecipient<GlobalBusyMessa
         return this;
     }
 
-    public DialogViewModel WithContent(string title, DialogContentViewModel dataContext)
+    public DialogViewModel WithContent(string title, DialogContentViewModel dataContext, bool canClose = true)
     {
         this.Title = title;
-        this.CanClose = true;
+        this.CanClose = canClose;
         this.ContentDataContext = dataContext;
         return this;
     }

@@ -68,7 +68,7 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
                     Messenger.Send(new OpenDialogMessage
                     {
                         DrawerWidth = 500,
-                        ViewModel = _dialog().WithContent("Import Card Identifiers", vm)
+                        ViewModel = _dialog().WithContent("Import Card Identifiers", vm, canClose: false)
                     });
                 }
             }

@@ -1818,6 +1818,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             int count = 0;
             const int batchSize = 1000;
             var batch = new List<ScryfallIdMapping>();
+            var seenScryfallIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
 
             using var reader = new StreamReader(csvPath);
             // Skip header line
@@ -1842,6 +1843,8 @@ public class CollectionTrackingService : ICollectionTrackingService
                 var uuid = fields[uuidIdx].Trim('"');
                 if (string.IsNullOrEmpty(scryfallId) || string.IsNullOrEmpty(uuid))
                     continue;
+                if (!seenScryfallIds.Add(scryfallId))
+                    continue; // skip duplicate scryfallId entries
 
                 batch.Add(new ScryfallIdMapping { ScryfallId = scryfallId, MtgJsonUuid = uuid });
                 count++;

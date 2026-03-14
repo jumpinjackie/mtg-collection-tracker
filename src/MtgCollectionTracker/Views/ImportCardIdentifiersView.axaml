@@ -9,11 +9,15 @@
     <Design.DataContext>
         <vm:ImportCardIdentifiersViewModel />
     </Design.DataContext>
-    <StackPanel Margin="16" Spacing="12">
-        <TextBlock TextWrapping="WrapWithOverflow" Text="{Binding StatusMessage}" />
-        <ProgressBar IsVisible="{Binding IsBusy}" IsIndeterminate="True" />
-        <TextBlock IsVisible="{Binding IsBusy}" Text="{Binding Completed, StringFormat='Imported {0} identifiers...'}" />
-        <Button IsEnabled="{Binding !IsBusy}" IsVisible="{Binding !IsDone}" Command="{Binding BeginCommand}">Begin</Button>
-        <Button IsVisible="{Binding IsDone}" Command="{Binding DoneCommand}">Done</Button>
-    </StackPanel>
+    <DockPanel Margin="16">
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" Spacing="8" Margin="0,16,0,0">
+            <Button IsEnabled="{Binding !IsBusy}" IsVisible="{Binding !IsDone}" Command="{Binding BeginCommand}">Begin</Button>
+            <Button IsVisible="{Binding IsDone}" Command="{Binding DoneCommand}">Done</Button>
+        </StackPanel>
+        <StackPanel Spacing="12">
+            <TextBlock TextWrapping="WrapWithOverflow" Text="{Binding StatusMessage}" />
+            <ProgressBar IsVisible="{Binding IsBusy}" IsIndeterminate="True" />
+            <TextBlock IsVisible="{Binding IsBusy}" Text="{Binding Completed, StringFormat='Imported {0} identifiers...'}" />
+        </StackPanel>
+    </DockPanel>
 </UserControl>
