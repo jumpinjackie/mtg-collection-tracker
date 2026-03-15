@@ -1818,7 +1818,8 @@ public class CollectionTrackingService : ICollectionTrackingService
             int count = 0;
             const int batchSize = 1000;
             var batch = new List<ScryfallIdMapping>();
-            var seenScryfallIds = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            // Maps scryfallId -> first-seen uuid so we can log the conflicting pair on a duplicate
+            var seenScryfallIds = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
 
             using var reader = new StreamReader(csvPath);
             // Skip header line
@@ -1843,8 +1844,13 @@ public class CollectionTrackingService : ICollectionTrackingService
                 var uuid = fields[uuidIdx].Trim('"');
                 if (string.IsNullOrEmpty(scryfallId) || string.IsNullOrEmpty(uuid))
                     continue;
-                if (!seenScryfallIds.Add(scryfallId))
-                    continue; // skip duplicate scryfallId entries
+                if (!seenScryfallIds.TryAdd(scryfallId, uuid))
+                {
+                    // Duplicate scryfallId: log both the previously-recorded uuid and this new one
+                    System.Diagnostics.Debug.WriteLine(
+                        $"Duplicate scryfallId '{scryfallId}': keeping uuid '{seenScryfallIds[scryfallId]}', skipping uuid '{uuid}'");
+                    continue;
+                }
 
                 batch.Add(new ScryfallIdMapping { ScryfallId = scryfallId, MtgJsonUuid = uuid });
                 count++;
