@@ -122,7 +122,7 @@ namespace MtgCollectionTracker.Core.Services
         ValueTask<bool> ImportPriceDataAsync(UpdateCardMetadataProgressCallback callback, CancellationToken cancel);
 
         /// <summary>Gets the latest price for a card SKU by its ID.</summary>
-        ValueTask<(decimal? price, string? provider)> GetLatestPriceForSkuAsync(Guid skuId, string currency, CancellationToken cancel);
+        ValueTask<(double? price, string? provider)> GetLatestPriceForSkuAsync(Guid skuId, string currency, CancellationToken cancel);
     }
 
     public static class CollectionTrackingServiceExtensions

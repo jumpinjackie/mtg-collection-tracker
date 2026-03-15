@@ -23,7 +23,7 @@ public class CardPricingEntry
     [MaxLength(20)]
     public string? GameAvailability { get; set; }
 
-    public decimal Price { get; set; }
+    public double Price { get; set; }
 
     [MaxLength(50)]
     public required string PriceProvider { get; set; }

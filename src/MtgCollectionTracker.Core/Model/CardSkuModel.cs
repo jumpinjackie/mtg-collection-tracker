@@ -63,7 +63,7 @@ public class CardSkuModel
     public string[]? ColorIdentity { get; set; }
 
     /// <summary>The retail price for this card in the configured currency, from MTG JSON price data.</summary>
-    public decimal? LatestPrice { get; set; }
+    public double? LatestPrice { get; set; }
 
     /// <summary>The price provider listing (e.g. "cardmarket", "tcgplayer") for this price entry.</summary>
     public string? LatestPriceProvider { get; set; }

@@ -197,7 +197,7 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(LatestPrice))]
     [NotifyPropertyChangedFor(nameof(HasLatestPrice))]
-    private decimal? _latestPriceValue;
+    private double? _latestPriceValue;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(LatestPrice))]

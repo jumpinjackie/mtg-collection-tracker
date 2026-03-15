@@ -21,6 +21,8 @@ public class CollectionTrackingService : ICollectionTrackingService
 
     private readonly PriceCache _priceCache;
 
+    private const string DefaultPriceCurrency = "usd";
+
     public CollectionTrackingService(Func<Owned<CardsDbContext>> db, CardImageCache cache, PriceCache priceCache)
     {
         _db = db;
@@ -228,7 +230,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         if (query.IncludeScryfallMetadata || query.Colors?.Any() == true || query.CardTypes?.Any() == true)
             bq = queryable.Include(c => c.Scryfall);
 
-        var results = ToCardSkuModel(bq.OrderBy(c => c.CardName)).ToList();
+        var results = ToCardSkuModel(bq.OrderBy(c => c.CardName), db.Value).ToList();
 
         if (query.Colors?.Any() == true)
         {
@@ -256,7 +258,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         return false;
     }
 
-    private IQueryable<CardSkuModel> ToCardSkuModel(IQueryable<CardSku> skus)
+    private IQueryable<CardSkuModel> ToCardSkuModel(IQueryable<CardSku> skus, CardsDbContext db, string currency = DefaultPriceCurrency)
     {
         return skus.Select(c => new CardSkuModel
         {
@@ -294,8 +296,31 @@ public class CollectionTrackingService : ICollectionTrackingService
             IsDoubleFaced = c.Scryfall != null
                 ? c.Scryfall.BackImageSmallUrl != null && c.Scryfall.BackImageSmallUrl != c.Scryfall.ImageSmallUrl
                 : c.CardName.Contains(" // "),
-            LatestPrice = null,
-            LatestPriceProvider = null
+            // Look up the cheapest retail price for this card's UUID via the ScryfallId → MtgJsonUuid mapping.
+            LatestPrice = c.ScryfallId != null
+                ? db.ScryfallIdMappings
+                    .Where(m => m.ScryfallId == c.ScryfallId)
+                    .SelectMany(m => db.CardPricingEntries
+                        .Where(e => e.Uuid == m.MtgJsonUuid
+                            && e.Currency == currency
+                            && e.ProviderListing == "retail"
+                            && e.CardFinish == (c.IsFoil ? "foil" : "normal")))
+                    .OrderBy(e => e.Price)
+                    .Select(e => (double?)e.Price)
+                    .FirstOrDefault()
+                : null,
+            LatestPriceProvider = c.ScryfallId != null
+                ? db.ScryfallIdMappings
+                    .Where(m => m.ScryfallId == c.ScryfallId)
+                    .SelectMany(m => db.CardPricingEntries
+                        .Where(e => e.Uuid == m.MtgJsonUuid
+                            && e.Currency == currency
+                            && e.ProviderListing == "retail"
+                            && e.CardFinish == (c.IsFoil ? "foil" : "normal")))
+                    .OrderBy(e => e.Price)
+                    .Select(e => e.PriceProvider)
+                    .FirstOrDefault()
+                : null
         });
     }
 
@@ -325,7 +350,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             PageNumber = options.PageNumber,
             PageSize = size,
             Total = total,
-            Items = ToCardSkuModel(queryable.OrderBy(c => c.CardName).Skip(skip).Take(size)).ToList()
+            Items = ToCardSkuModel(queryable.OrderBy(c => c.CardName).Skip(skip).Take(size), db.Value).ToList()
         };
     }
 
@@ -1936,20 +1961,23 @@ public class CollectionTrackingService : ICollectionTrackingService
                 if (fields.Length <= maxRequiredIdx)
                     continue;
 
+                // Skip non-paper entries early to avoid unnecessary parsing
+                var gameAvailability = gameAvailabilityIdx >= 0 && gameAvailabilityIdx < fields.Length
+                    ? fields[gameAvailabilityIdx].Trim('"')
+                    : null;
+                if (!string.Equals(gameAvailability, "paper", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
                 var uuidStr = fields[uuidIdx].Trim('"');
                 var priceStr = fields[priceIdx].Trim('"');
                 var dateStr = fields[dateIdx].Trim('"');
 
                 if (string.IsNullOrEmpty(uuidStr))
                     continue;
-                if (!decimal.TryParse(priceStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var price))
+                if (!double.TryParse(priceStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var price))
                     continue;
                 if (!DateOnly.TryParse(dateStr, out var date))
                     continue;
-
-                var gameAvailability = gameAvailabilityIdx >= 0 && gameAvailabilityIdx < fields.Length
-                    ? fields[gameAvailabilityIdx].Trim('"')
-                    : null;
 
                 batch.Add(new CardPricingEntry
                 {
@@ -1960,7 +1988,7 @@ public class CollectionTrackingService : ICollectionTrackingService
                     Price = price,
                     PriceProvider = fields[priceProviderIdx].Trim('"') is { Length: > 0 } pp ? pp : string.Empty,
                     ProviderListing = fields[providerListingIdx].Trim('"') is { Length: > 0 } pl ? pl : string.Empty,
-                    GameAvailability = string.IsNullOrEmpty(gameAvailability) ? null : gameAvailability
+                    GameAvailability = gameAvailability
                 });
                 count++;
 
@@ -1995,7 +2023,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         }
     }
 
-    public async ValueTask<(decimal? price, string? provider)> GetLatestPriceForSkuAsync(Guid skuId, string currency, CancellationToken cancel)
+    public async ValueTask<(double? price, string? provider)> GetLatestPriceForSkuAsync(Guid skuId, string currency, CancellationToken cancel)
     {
         using var db = _db.Invoke();
         var sku = await db.Value.Cards.FirstOrDefaultAsync(c => c.Id == skuId, cancel);

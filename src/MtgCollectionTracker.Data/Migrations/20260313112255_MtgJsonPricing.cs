@@ -36,7 +36,7 @@ namespace MtgCollectionTracker.Data.Migrations
                     Currency = table.Column<string>(type: "TEXT", maxLength: 3, nullable: false),
                     Date = table.Column<DateOnly>(type: "TEXT", nullable: false),
                     GameAvailability = table.Column<string>(type: "TEXT", maxLength: 20, nullable: true),
-                    Price = table.Column<decimal>(type: "TEXT", nullable: false),
+                    Price = table.Column<double>(type: "REAL", nullable: false),
                     PriceProvider = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
                     ProviderListing = table.Column<string>(type: "TEXT", maxLength: 20, nullable: false)
                 },

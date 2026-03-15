@@ -164,7 +164,7 @@ public partial class CardVisualViewModel : ViewModelBase, ICardSkuItem, ISendabl
 
     public string[]? ColorIdentity { get; set; }
 
-    public decimal? LatestPriceValue { get; set; }
+    public double? LatestPriceValue { get; set; }
 
     public string? LatestPriceProvider { get; set; }
 
