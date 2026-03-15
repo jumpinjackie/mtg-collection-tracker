@@ -194,6 +194,26 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
 
     public string[] TagList { get; set; }
 
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(LatestPrice))]
+    [NotifyPropertyChangedFor(nameof(HasLatestPrice))]
+    private decimal? _latestPriceValue;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(LatestPrice))]
+    [NotifyPropertyChangedFor(nameof(HasLatestPrice))]
+    private string? _latestPriceProvider;
+
+    /// <summary>
+    /// Formatted display string for the most recent tracked price.
+    /// Shows "N/A" for proxies, "$X.XX (provider)" when a price exists, or "None" otherwise.
+    /// </summary>
+    public string? LatestPrice => OriginalEdition == "PROXY"
+        ? "N/A"
+        : (LatestPriceValue.HasValue ? $"${LatestPriceValue:F2} ({LatestPriceProvider})" : "None");
+
+    public bool HasLatestPrice => OriginalEdition != "PROXY" && LatestPriceValue != null;
+
     int ISendableCardItem.Quantity => CardListPrinter.IsProxyEdition(this.OriginalEdition ?? string.Empty) ? this.ProxyQty : this.RealQty;
 
     private async Task<Bitmap?> GetLargeFrontFaceImageAsync()
@@ -260,6 +280,8 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
         this.TagList = sku.Tags;
         this.Tags = string.Join(Environment.NewLine, this.TagList);
         this.TagsText = $"{this.TagList.Length} tag(s)";
+        this.LatestPriceValue = sku.LatestPrice;
+        this.LatestPriceProvider = sku.LatestPriceProvider;
         this.SwitchToFront();
         return this;
     }

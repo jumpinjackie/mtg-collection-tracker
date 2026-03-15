@@ -62,6 +62,12 @@ public class CardSkuModel
 
     public string[]? ColorIdentity { get; set; }
 
+    /// <summary>The retail price for this card in the configured currency, from MTG JSON price data.</summary>
+    public decimal? LatestPrice { get; set; }
+
+    /// <summary>The price provider listing (e.g. "cardmarket", "tcgplayer") for this price entry.</summary>
+    public string? LatestPriceProvider { get; set; }
+
     public string GetDescription(bool withId = true) => withId
         ? $"({Quantity}x {CardName}, {Edition}, id: {Id})"
         : $"({Quantity}x {CardName}, {Edition})";

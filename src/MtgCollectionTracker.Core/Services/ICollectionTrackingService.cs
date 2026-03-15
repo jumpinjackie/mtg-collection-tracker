@@ -110,6 +110,19 @@ namespace MtgCollectionTracker.Core.Services
         ValueTask RebuildAllMetadataAsync(UpdateCardMetadataProgressCallback callback, IScryfallApiClient scryfallApiClient, CancellationToken cancel);
         ValueTask NormalizeCardNamesAsync(UpdateCardMetadataProgressCallback callback, CancellationToken cancel);
         ValueTask<List<LowestPriceCheckItem>> GetLowestPricesAsync(LowestPriceCheckOptions options, IScryfallApiClient client, CancellationToken cancel);
+
+        /// <summary>Checks if the ScryfallIdMapping table is empty (i.e., card identifiers have not been imported).</summary>
+        ValueTask<bool> IsScryfallIdMappingEmptyAsync(CancellationToken cancel);
+
+        /// <summary>Downloads and imports card identifiers from MTG JSON. Clears existing data first on re-import.</summary>
+        ValueTask ImportCardIdentifiersAsync(UpdateCardMetadataProgressCallback callback, CancellationToken cancel);
+
+        /// <summary>Downloads and imports the latest price data from MTG JSON. Skips if the latest sha256 matches what's already been imported.</summary>
+        /// <returns>True if new data was imported, false if already up-to-date.</returns>
+        ValueTask<bool> ImportPriceDataAsync(UpdateCardMetadataProgressCallback callback, CancellationToken cancel);
+
+        /// <summary>Gets the latest price for a card SKU by its ID.</summary>
+        ValueTask<(decimal? price, string? provider)> GetLatestPriceForSkuAsync(Guid skuId, string currency, CancellationToken cancel);
     }
 
     public static class CollectionTrackingServiceExtensions

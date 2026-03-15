@@ -280,4 +280,25 @@ public class StubCollectionTrackingService : ICollectionTrackingService
     {
         throw new System.NotImplementedException();
     }
+
+    public ValueTask<bool> IsScryfallIdMappingEmptyAsync(CancellationToken cancel)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public ValueTask ImportCardIdentifiersAsync(UpdateCardMetadataProgressCallback callback, CancellationToken cancel)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public ValueTask<bool> ImportPriceDataAsync(UpdateCardMetadataProgressCallback callback, CancellationToken cancel)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public ValueTask<(decimal? price, string? provider)> GetLatestPriceForSkuAsync(Guid skuId, string currency, CancellationToken cancel)
+    {
+        throw new System.NotImplementedException();
+    }
 }
+

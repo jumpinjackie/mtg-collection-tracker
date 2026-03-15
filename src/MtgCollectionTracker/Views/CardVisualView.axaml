@@ -27,6 +27,12 @@
 				<Border IsVisible="{Binding IsGrouped}" Canvas.Top="4" Canvas.Left="4" CornerRadius="3" Background="{Binding CardNameBgColor}" Padding="6" Opacity="0.8">
 					<TextBlock Text="{Binding CardName}" />
 				</Border>
+				<Border IsVisible="{Binding HasLatestPrice}" Canvas.Bottom="4" Canvas.Right="4" CornerRadius="3" Background="DarkGreen" Padding="4" Opacity="0.9" ToolTip.Tip="Latest price">
+					<StackPanel Orientation="Horizontal" Spacing="2">
+						<PathIcon Height="12" Width="12" Data="{StaticResource money_regular}" />
+						<TextBlock Text="{Binding LatestPrice}" FontSize="11" />
+					</StackPanel>
+				</Border>
 				<!-- Banner indicator: shown in the bottom-right corner when this card is the deck banner -->
 				<Border IsVisible="{Binding IsBanner}" Canvas.Bottom="4" Canvas.Right="4" CornerRadius="3" Background="Gold" Padding="4" Opacity="0.9" ToolTip.Tip="Deck Banner">
 					<PathIcon Height="16" Width="16" Data="{StaticResource star_regular}" Foreground="Black" />

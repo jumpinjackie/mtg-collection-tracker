@@ -164,6 +164,20 @@ public partial class CardVisualViewModel : ViewModelBase, ICardSkuItem, ISendabl
 
     public string[]? ColorIdentity { get; set; }
 
+    public decimal? LatestPriceValue { get; set; }
+
+    public string? LatestPriceProvider { get; set; }
+
+    /// <summary>
+    /// Formatted display string for the most recent tracked price.
+    /// Shows "N/A" for proxies, "$X.XX (provider)" when a price exists, or "None" otherwise.
+    /// </summary>
+    public string? LatestPrice => IsProxy
+        ? "N/A"
+        : (LatestPriceValue.HasValue ? $"${LatestPriceValue:F2} ({LatestPriceProvider})" : "None");
+
+    public bool HasLatestPrice => !IsProxy && LatestPriceValue != null;
+
     public CardVisualViewModel ApplyQuantities()
     {
         if (IsProxy)

@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MtgCollectionTracker.Data;
 
@@ -10,9 +11,11 @@ using MtgCollectionTracker.Data;
 namespace MtgCollectionTracker.Data.Migrations
 {
     [DbContext(typeof(CardsDbContext))]
-    partial class CardsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260313112255_MtgJsonPricing")]
+    partial class MtgJsonPricing
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.14");
@@ -303,9 +306,6 @@ namespace MtgCollectionTracker.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<Guid?>("BannerCardId")
-                        .HasColumnType("TEXT");
-
                     b.Property<int?>("ContainerId")
                         .HasColumnType("INTEGER");
 
@@ -319,8 +319,6 @@ namespace MtgCollectionTracker.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("BannerCardId");
 
                     b.HasIndex("ContainerId");
 
@@ -627,16 +625,9 @@ namespace MtgCollectionTracker.Data.Migrations
 
             modelBuilder.Entity("MtgCollectionTracker.Data.Deck", b =>
                 {
-                    b.HasOne("MtgCollectionTracker.Data.CardSku", "BannerCard")
-                        .WithMany()
-                        .HasForeignKey("BannerCardId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("MtgCollectionTracker.Data.Container", "Container")
                         .WithMany("Decks")
                         .HasForeignKey("ContainerId");
-
-                    b.Navigation("BannerCard");
 
                     b.Navigation("Container");
                 });
