@@ -40,6 +40,9 @@ public partial class DatabaseMaintenanceViewModel : RecipientViewModelBase, IVie
     [ObservableProperty]
     private bool _isBusy;
 
+    [ObservableProperty]
+    private string? _downloadStatus;
+
     [RelayCommand]
     private void CancelUpdateMissingMetdata()
     {
@@ -133,9 +136,11 @@ public partial class DatabaseMaintenanceViewModel : RecipientViewModelBase, IVie
                 {
                     this.Completed = processed;
                     if (total > 0) this.Total = total;
-                }
+                },
+                OnDownloadStatus = msg => this.DownloadStatus = msg
             };
             await _service.ImportCardIdentifiersAsync(cb, cancel);
+            DownloadStatus = null;
             Messenger.ToastNotify("Card identifiers imported", Avalonia.Controls.Notifications.NotificationType.Success);
         }
     }
@@ -152,9 +157,11 @@ public partial class DatabaseMaintenanceViewModel : RecipientViewModelBase, IVie
                 {
                     this.Completed = processed;
                     if (total > 0) this.Total = total;
-                }
+                },
+                OnDownloadStatus = msg => this.DownloadStatus = msg
             };
             var imported = await _service.ImportPriceDataAsync(cb, cancel);
+            DownloadStatus = null;
             if (imported)
                 Messenger.ToastNotify("Price data imported successfully", Avalonia.Controls.Notifications.NotificationType.Success);
             else

@@ -50,7 +50,8 @@ public partial class ImportCardIdentifiersViewModel : DialogContentViewModel, IV
                 OnProgress = (processed, total) =>
                 {
                     Completed = processed;
-                }
+                },
+                OnDownloadStatus = msg => StatusMessage = msg
             };
             await _service.ImportCardIdentifiersAsync(cb, cancel);
             StatusMessage = $"Done! Imported {Completed} card identifiers.";

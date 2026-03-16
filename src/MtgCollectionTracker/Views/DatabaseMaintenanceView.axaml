@@ -34,12 +34,14 @@
 			<TextBlock TextWrapping="WrapWithOverflow">To re-download and re-import the card identifier mappings from MTG JSON (needed for price lookups), click the button below.</TextBlock>
 			<Button IsEnabled="{Binding !IsBusy}" Command="{Binding ImportCardIdentifiersCommand}">Re-import Card Identifiers</Button>
 			<ProgressBar IsVisible="{Binding ImportCardIdentifiersCommand.IsRunning}" IsIndeterminate="True" />
+			<TextBlock IsVisible="{Binding ImportCardIdentifiersCommand.IsRunning}" Text="{Binding DownloadStatus}" />
 			<TextBlock IsVisible="{Binding ImportCardIdentifiersCommand.IsRunning}" Text="{Binding Completed, StringFormat='Imported {0} identifier(s)...'}" />
 		</StackPanel>
 		<StackPanel Margin="10" Spacing="10">
 			<TextBlock TextWrapping="WrapWithOverflow">To download and import the latest pricing data from MTG JSON, click the button below. If the data is already up to date, no download will occur.</TextBlock>
 			<Button IsEnabled="{Binding !IsBusy}" Command="{Binding ImportPriceDataCommand}">Import Latest Price Data</Button>
 			<ProgressBar IsVisible="{Binding ImportPriceDataCommand.IsRunning}" IsIndeterminate="True" />
+			<TextBlock IsVisible="{Binding ImportPriceDataCommand.IsRunning}" Text="{Binding DownloadStatus}" />
 			<TextBlock IsVisible="{Binding ImportPriceDataCommand.IsRunning}" Text="{Binding Completed, StringFormat='Imported {0} price entries...'}" />
 		</StackPanel>
 	</StackPanel>

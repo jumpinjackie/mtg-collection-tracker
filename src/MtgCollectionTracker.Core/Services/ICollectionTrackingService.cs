@@ -8,6 +8,9 @@ namespace MtgCollectionTracker.Core.Services
         public int ReportFrequency { get; set; } = 10;
 
         public Action<int, int>? OnProgress { get; set; }
+
+        /// <summary>Fires during the download phase with a human-readable status string (e.g. "Downloading … 12 MB / 45 MB").</summary>
+        public Action<string>? OnDownloadStatus { get; set; }
     }
 
     public record WishlistItemFilter(IEnumerable<string>? Tags);

@@ -1819,6 +1819,52 @@ public class CollectionTrackingService : ICollectionTrackingService
         return !await db.Value.ScryfallIdMappings.AnyAsync(cancel);
     }
 
+    /// <summary>
+    /// Downloads a zip file from <paramref name="url"/> to <paramref name="destPath"/> using HTTP streaming.
+    /// Reports download progress via <paramref name="onDownloadStatus"/> if provided.
+    /// </summary>
+    private static async Task StreamDownloadZipAsync(
+        System.Net.Http.HttpClient http,
+        string url,
+        string destPath,
+        Action<string>? onDownloadStatus,
+        CancellationToken cancel)
+    {
+        using var response = await http.GetAsync(url, System.Net.Http.HttpCompletionOption.ResponseHeadersRead, cancel);
+        response.EnsureSuccessStatusCode();
+        long? totalBytes = response.Content.Headers.ContentLength;
+
+        using var netStream = await response.Content.ReadAsStreamAsync(cancel);
+        const int DownloadBufferSize = 81920; // 80 KB read/write chunks
+        using var fileStream = new FileStream(destPath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: DownloadBufferSize, useAsync: true);
+
+        var buffer = new byte[DownloadBufferSize];
+        long bytesRead = 0;
+        int read;
+        while ((read = await netStream.ReadAsync(buffer, cancel)) > 0)
+        {
+            await fileStream.WriteAsync(buffer.AsMemory(0, read), cancel);
+            bytesRead += read;
+            if (onDownloadStatus != null)
+            {
+                var downloaded = FormatBytes(bytesRead);
+                var status = totalBytes.HasValue
+                    ? $"Downloading… {downloaded} / {FormatBytes(totalBytes.Value)}"
+                    : $"Downloading… {downloaded}";
+                onDownloadStatus(status);
+            }
+        }
+    }
+
+    private static string FormatBytes(long bytes)
+    {
+        if (bytes >= 1_048_576)
+            return $"{bytes / 1_048_576.0:F1} MB";
+        if (bytes >= 1024)
+            return $"{bytes / 1024.0:F1} KB";
+        return $"{bytes} B";
+    }
+
     public async ValueTask ImportCardIdentifiersAsync(UpdateCardMetadataProgressCallback callback, CancellationToken cancel)
     {
         const string url = "https://mtgjson.com/api/v5/csv/cardIdentifiers.csv.zip";
@@ -1826,37 +1872,59 @@ public class CollectionTrackingService : ICollectionTrackingService
         Directory.CreateDirectory(tmpDir);
         try
         {
-            callback.OnProgress?.Invoke(0, -1);
             var zipPath = Path.Combine(tmpDir, "cardIdentifiers.csv.zip");
             using (var http = new System.Net.Http.HttpClient())
             {
-                var bytes = await http.GetByteArrayAsync(url, cancel);
-                await File.WriteAllBytesAsync(zipPath, bytes, cancel);
+                await StreamDownloadZipAsync(http, url, zipPath, callback.OnDownloadStatus, cancel);
             }
 
+            callback.OnDownloadStatus?.Invoke("Extracting archive…");
             System.IO.Compression.ZipFile.ExtractToDirectory(zipPath, tmpDir);
             var csvPath = Path.Combine(tmpDir, "cardIdentifiers.csv");
 
             using var db = _db.Invoke();
-            await db.Value.ScryfallIdMappings.ExecuteDeleteAsync(cancel);
 
-            int count = 0;
-            const int batchSize = 1000;
-            var batch = new List<ScryfallIdMapping>();
-            // Maps scryfallId -> first-seen uuid so we can log the conflicting pair on a duplicate
-            var seenScryfallIds = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+            // Record how many rows exist before the import so we can report how many were added
+            int countBefore = await db.Value.ScryfallIdMappings.CountAsync(cancel);
+
+            // Use INSERT OR IGNORE so that:
+            //  1. Duplicate scryfallIds (split-card faces share one Scryfall ID) are silently ignored.
+            //  2. Re-running this method adds only new rows rather than wiping the table.
+            // SQLite's SQLITE_MAX_VARIABLE_NUMBER is 999; with 2 params/row we use at most 400 rows per
+            // batch to stay comfortably within the limit (400 × 2 = 800 params per statement).
+            const int insertBatchSize = 400;
 
             using var reader = new StreamReader(csvPath);
-            // Skip header line
             var header = await reader.ReadLineAsync(cancel);
             if (header == null) return;
 
-            // Find scryfallId and uuid column indices
             var headers = header.Split(',');
             int scryfallIdIdx = Array.IndexOf(headers, "scryfallId");
             int uuidIdx = Array.IndexOf(headers, "uuid");
             if (scryfallIdIdx < 0 || uuidIdx < 0)
                 throw new InvalidOperationException("cardIdentifiers.csv is missing expected columns (scryfallId, uuid)");
+
+            int rowsRead = 0;
+            var rowBuf = new List<(string ScryfallId, string Uuid)>(insertBatchSize);
+
+            async Task FlushIdentifierBatchAsync()
+            {
+                if (rowBuf.Count == 0) return;
+
+                // Build: INSERT OR IGNORE INTO ScryfallIdMappings (ScryfallId, MtgJsonUuid) VALUES (@p0,@p1),(@p2,@p3),...
+                var sb = new System.Text.StringBuilder(
+                    "INSERT OR IGNORE INTO ScryfallIdMappings (ScryfallId, MtgJsonUuid) VALUES ");
+                var args = new object[rowBuf.Count * 2];
+                for (int i = 0; i < rowBuf.Count; i++)
+                {
+                    if (i > 0) sb.Append(',');
+                    sb.Append($"({{{i * 2}}},{{{i * 2 + 1}}})");
+                    args[i * 2] = rowBuf[i].ScryfallId;
+                    args[i * 2 + 1] = rowBuf[i].Uuid;
+                }
+                await db.Value.Database.ExecuteSqlRawAsync(sb.ToString(), args, cancel);
+                rowBuf.Clear();
+            }
 
             string? line;
             while ((line = await reader.ReadLineAsync(cancel)) != null)
@@ -1869,32 +1937,22 @@ public class CollectionTrackingService : ICollectionTrackingService
                 var uuid = fields[uuidIdx].Trim('"');
                 if (string.IsNullOrEmpty(scryfallId) || string.IsNullOrEmpty(uuid))
                     continue;
-                if (!seenScryfallIds.TryAdd(scryfallId, uuid))
-                {
-                    // Duplicate scryfallId: log both the previously-recorded uuid and this new one
-                    System.Diagnostics.Debug.WriteLine(
-                        $"Duplicate scryfallId '{scryfallId}': keeping uuid '{seenScryfallIds[scryfallId]}', skipping uuid '{uuid}'");
-                    continue;
-                }
 
-                batch.Add(new ScryfallIdMapping { ScryfallId = scryfallId, MtgJsonUuid = uuid });
-                count++;
+                rowBuf.Add((scryfallId, uuid));
+                rowsRead++;
 
-                if (batch.Count >= batchSize)
+                if (rowBuf.Count >= insertBatchSize)
                 {
-                    await db.Value.ScryfallIdMappings.AddRangeAsync(batch, cancel);
-                    await db.Value.SaveChangesAsync(cancel);
-                    batch.Clear();
-                    callback.OnProgress?.Invoke(count, -1);
+                    await FlushIdentifierBatchAsync();
+                    callback.OnProgress?.Invoke(rowsRead, -1);
                 }
             }
 
-            if (batch.Count > 0)
-            {
-                await db.Value.ScryfallIdMappings.AddRangeAsync(batch, cancel);
-                await db.Value.SaveChangesAsync(cancel);
-            }
-            callback.OnProgress?.Invoke(count, count);
+            await FlushIdentifierBatchAsync();
+
+            int countAfter = await db.Value.ScryfallIdMappings.CountAsync(cancel);
+            int added = countAfter - countBefore;
+            callback.OnProgress?.Invoke(added, added);
         }
         finally
         {
@@ -1923,15 +1981,21 @@ public class CollectionTrackingService : ICollectionTrackingService
         Directory.CreateDirectory(tmpDir);
         try
         {
-            callback.OnProgress?.Invoke(0, -1);
             var zipPath = Path.Combine(tmpDir, "cardPrices.csv.zip");
-            var bytes = await http.GetByteArrayAsync(zipUrl, cancel);
-            await File.WriteAllBytesAsync(zipPath, bytes, cancel);
+            await StreamDownloadZipAsync(http, zipUrl, zipPath, callback.OnDownloadStatus, cancel);
 
+            callback.OnDownloadStatus?.Invoke("Extracting archive…");
             System.IO.Compression.ZipFile.ExtractToDirectory(zipPath, tmpDir);
             var csvPath = Path.Combine(tmpDir, "cardPrices.csv");
 
             using var db = _db.Invoke();
+
+            // Load all known MTG JSON UUIDs into a HashSet so we can filter price rows cheaply
+            callback.OnDownloadStatus?.Invoke("Loading known card UUIDs…");
+            var knownUuids = new HashSet<string>(
+                await db.Value.ScryfallIdMappings.Select(m => m.MtgJsonUuid).ToListAsync(cancel),
+                StringComparer.OrdinalIgnoreCase);
+
             await db.Value.CardPricingEntries.ExecuteDeleteAsync(cancel);
 
             int count = 0;
@@ -1961,19 +2025,24 @@ public class CollectionTrackingService : ICollectionTrackingService
                 if (fields.Length <= maxRequiredIdx)
                     continue;
 
-                // Skip non-paper entries early to avoid unnecessary parsing
+                // Only import paper retail entries whose uuid is in the known-card mapping
                 var gameAvailability = gameAvailabilityIdx >= 0 && gameAvailabilityIdx < fields.Length
                     ? fields[gameAvailabilityIdx].Trim('"')
                     : null;
                 if (!string.Equals(gameAvailability, "paper", StringComparison.OrdinalIgnoreCase))
                     continue;
 
+                var providerListing = fields[providerListingIdx].Trim('"');
+                if (!string.Equals(providerListing, "retail", StringComparison.OrdinalIgnoreCase))
+                    continue;
+
                 var uuidStr = fields[uuidIdx].Trim('"');
+                if (string.IsNullOrEmpty(uuidStr) || !knownUuids.Contains(uuidStr))
+                    continue;
+
                 var priceStr = fields[priceIdx].Trim('"');
                 var dateStr = fields[dateIdx].Trim('"');
 
-                if (string.IsNullOrEmpty(uuidStr))
-                    continue;
                 if (!double.TryParse(priceStr, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var price))
                     continue;
                 if (!DateOnly.TryParse(dateStr, out var date))
@@ -1987,7 +2056,7 @@ public class CollectionTrackingService : ICollectionTrackingService
                     Date = date,
                     Price = price,
                     PriceProvider = fields[priceProviderIdx].Trim('"') is { Length: > 0 } pp ? pp : string.Empty,
-                    ProviderListing = fields[providerListingIdx].Trim('"') is { Length: > 0 } pl ? pl : string.Empty,
+                    ProviderListing = providerListing,
                     GameAvailability = gameAvailability
                 });
                 count++;
