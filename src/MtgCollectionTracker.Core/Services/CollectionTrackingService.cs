@@ -2005,8 +2005,11 @@ public class CollectionTrackingService : ICollectionTrackingService
             // Load all known MTG JSON UUIDs into a HashSet so we can filter price rows cheaply
             callback.OnDownloadStatus?.Invoke("Loading known card UUIDs…");
             var knownUuids = new HashSet<string>(
-                db.Value.Set<ScryfallCardMetadata>().Include(sf => sf.ScryfallIdMapping).Select(sf => sf.ScryfallIdMapping!.MtgJsonUuid),
-                //db.Value.ScryfallIdMappings.Where(m => m.sc).Select(m => m.MtgJsonUuid),
+                db.Value.Set<ScryfallCardMetadata>()
+                    .Join(db.Value.ScryfallIdMappings,
+                        sf => sf.Id,
+                        map => map.ScryfallId,
+                        (_, map) => map.MtgJsonUuid),
                 StringComparer.OrdinalIgnoreCase);
 
             int count = 0;

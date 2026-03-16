@@ -55,12 +55,11 @@ public class CardsDbContext : DbContext
         modelBuilder.Entity<ScryfallIdMapping>().HasKey(s => s.ScryfallId);
         modelBuilder.Entity<ScryfallIdMapping>().HasIndex(s => s.MtgJsonUuid).IsUnique();
 
-        modelBuilder.Entity<ScryfallCardMetadata>()
-            .HasOne(m => m.ScryfallIdMapping)
-            .WithOne(m => m.ScryfallCardMetadata)
-            .HasForeignKey<ScryfallCardMetadata>(m => m.Id)
-            .HasPrincipalKey<ScryfallIdMapping>(m => m.ScryfallId)
-            .OnDelete(DeleteBehavior.NoAction);
+        // Keep these as POCO navigation properties only and avoid a hard FK between
+        // Scryfall metadata and identifier mappings. Existing databases may contain
+        // metadata before mappings are imported.
+        modelBuilder.Entity<ScryfallCardMetadata>().Ignore(m => m.ScryfallIdMapping);
+        modelBuilder.Entity<ScryfallIdMapping>().Ignore(m => m.ScryfallCardMetadata);
 
         modelBuilder.Entity<CardPricingEntry>().HasIndex(e => e.Uuid);
         modelBuilder.Entity<CardPricingEntry>().HasIndex(e => new { e.Uuid, e.CardFinish, e.Currency, e.ProviderListing });
