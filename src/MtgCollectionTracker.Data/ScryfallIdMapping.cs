@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 
 namespace MtgCollectionTracker.Data;
@@ -12,4 +13,8 @@ public class ScryfallIdMapping
 
     [MaxLength(36)]
     public required string MtgJsonUuid { get; set; }
+
+    public virtual ScryfallCardMetadata? ScryfallCardMetadata { get; set; }
+
+    public virtual ICollection<CardPricingEntry> CardPricingEntries { get; set; } = new List<CardPricingEntry>();
 }

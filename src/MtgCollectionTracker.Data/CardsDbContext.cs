@@ -53,10 +53,23 @@ public class CardsDbContext : DbContext
         modelBuilder.Entity<ScryfallCardMetadata>().HasIndex(nameof(ScryfallCardMetadata.CardName), nameof(ScryfallCardMetadata.Edition), nameof(ScryfallCardMetadata.Language), nameof(ScryfallCardMetadata.CollectorNumber));
 
         modelBuilder.Entity<ScryfallIdMapping>().HasKey(s => s.ScryfallId);
-        modelBuilder.Entity<ScryfallIdMapping>().HasIndex(s => s.MtgJsonUuid);
+        modelBuilder.Entity<ScryfallIdMapping>().HasIndex(s => s.MtgJsonUuid).IsUnique();
+
+        modelBuilder.Entity<ScryfallCardMetadata>()
+            .HasOne(m => m.ScryfallIdMapping)
+            .WithOne(m => m.ScryfallCardMetadata)
+            .HasForeignKey<ScryfallCardMetadata>(m => m.Id)
+            .HasPrincipalKey<ScryfallIdMapping>(m => m.ScryfallId)
+            .OnDelete(DeleteBehavior.NoAction);
 
         modelBuilder.Entity<CardPricingEntry>().HasIndex(e => e.Uuid);
         modelBuilder.Entity<CardPricingEntry>().HasIndex(e => new { e.Uuid, e.CardFinish, e.Currency, e.ProviderListing });
+        modelBuilder.Entity<CardPricingEntry>()
+            .HasOne(e => e.ScryfallIdMapping)
+            .WithMany(m => m.CardPricingEntries)
+            .HasForeignKey(e => e.Uuid)
+            .HasPrincipalKey(m => m.MtgJsonUuid)
+            .OnDelete(DeleteBehavior.NoAction);
 
         modelBuilder.Entity<CardLanguage>().HasData(
             new CardLanguage { Code = "en", PrintedCode = "en", Name = "English" },

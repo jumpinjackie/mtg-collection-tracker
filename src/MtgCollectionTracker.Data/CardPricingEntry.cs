@@ -30,4 +30,9 @@ public class CardPricingEntry
 
     [MaxLength(20)]
     public required string ProviderListing { get; set; }
+
+    /// <summary>
+    /// Mapping record for the MTG JSON UUID associated with this price entry.
+    /// </summary>
+    public virtual ScryfallIdMapping? ScryfallIdMapping { get; set; }
 }

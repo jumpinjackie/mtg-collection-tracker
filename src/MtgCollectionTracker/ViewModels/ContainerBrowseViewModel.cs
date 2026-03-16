@@ -196,7 +196,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 800,
-            ViewModel = _dialog().WithContent("Add Cards", vm)
+            ViewModel = _dialog().WithContent("Add Cards", vm, canClose: false)
         });
     }
 

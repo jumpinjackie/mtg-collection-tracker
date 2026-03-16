@@ -21,7 +21,7 @@ public class CollectionTrackingService : ICollectionTrackingService
 
     private readonly PriceCache _priceCache;
 
-    private const string DefaultPriceCurrency = "usd";
+    private const string DefaultPriceCurrency = "USD";
 
     public CollectionTrackingService(Func<Owned<CardsDbContext>> db, CardImageCache cache, PriceCache priceCache)
     {
@@ -69,7 +69,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             .Where(s => s.CardName.ToLower() == searchName.ToLower() || s.NormalizedCardName == searchName.ToLower());
         if (noProxies)
             skus = skus.Where(s => s.Edition.ToLower() != "proxy");
-            //skus = skus.Where(s => !CardListPrinter.IsProxyEdition(s.Edition));
+        //skus = skus.Where(s => !CardListPrinter.IsProxyEdition(s.Edition));
         if (sparesOnly) // A spare is any sku not belonging to an existing deck
             skus = skus.Where(s => s.DeckId == null);
 
@@ -121,7 +121,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             .Sum(w => w.Quantity);
 
         var availableTotal = matchingSkus.Sum(s => s.Quantity);
-        return new (wantQty - availableTotal, fromDeckNames, fromContainerNames, suggestedName, wishlistTotal);
+        return new(wantQty - availableTotal, fromDeckNames, fromContainerNames, suggestedName, wishlistTotal);
     }
 
     public IEnumerable<ContainerSummaryModel> GetContainers()
@@ -230,7 +230,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         if (query.IncludeScryfallMetadata || query.Colors?.Any() == true || query.CardTypes?.Any() == true)
             bq = queryable.Include(c => c.Scryfall);
 
-        var results = ToCardSkuModel(bq.OrderBy(c => c.CardName), db.Value).ToList();
+        var results = ToCardSkuModel(bq.OrderBy(c => c.CardName), db.Value);
 
         if (query.Colors?.Any() == true)
         {
@@ -258,9 +258,11 @@ public class CollectionTrackingService : ICollectionTrackingService
         return false;
     }
 
-    private IQueryable<CardSkuModel> ToCardSkuModel(IQueryable<CardSku> skus, CardsDbContext db, string currency = DefaultPriceCurrency)
+    private static List<CardSkuModel> ToCardSkuModel(IQueryable<CardSku> skus, CardsDbContext db, string currency = DefaultPriceCurrency)
     {
-        return skus.Select(c => new CardSkuModel
+        // Phase 1: materialize the main card data. Projecting a composite object inside a correlated
+        // subquery requires SQL APPLY, which SQLite does not support, so prices are populated separately.
+        var results = skus.Select(c => new CardSkuModel
         {
             CardName = c.CardName,
             Comments = c.Comments,
@@ -296,32 +298,43 @@ public class CollectionTrackingService : ICollectionTrackingService
             IsDoubleFaced = c.Scryfall != null
                 ? c.Scryfall.BackImageSmallUrl != null && c.Scryfall.BackImageSmallUrl != c.Scryfall.ImageSmallUrl
                 : c.CardName.Contains(" // "),
-            // Look up the cheapest retail price for this card's UUID via the ScryfallId → MtgJsonUuid mapping.
-            LatestPrice = c.ScryfallId != null
-                ? db.ScryfallIdMappings
-                    .Where(m => m.ScryfallId == c.ScryfallId)
-                    .SelectMany(m => db.CardPricingEntries
-                        .Where(e => e.Uuid == m.MtgJsonUuid
-                            && e.Currency == currency
-                            && e.ProviderListing == "retail"
-                            && e.CardFinish == (c.IsFoil ? "foil" : "normal")))
-                    .OrderBy(e => e.Price)
-                    .Select(e => (double?)e.Price)
-                    .FirstOrDefault()
-                : null,
-            LatestPriceProvider = c.ScryfallId != null
-                ? db.ScryfallIdMappings
-                    .Where(m => m.ScryfallId == c.ScryfallId)
-                    .SelectMany(m => db.CardPricingEntries
-                        .Where(e => e.Uuid == m.MtgJsonUuid
-                            && e.Currency == currency
-                            && e.ProviderListing == "retail"
-                            && e.CardFinish == (c.IsFoil ? "foil" : "normal")))
-                    .OrderBy(e => e.Price)
-                    .Select(e => e.PriceProvider)
-                    .FirstOrDefault()
-                : null
-        });
+            LatestPrice = null
+        }).ToList();
+
+        // Phase 2: batch-fetch all retail prices for the ScryfallIds present in the result set via a
+        // plain JOIN (no correlated subquery / APPLY), then select the cheapest entry per (id, finish) in memory.
+        var scryfallIds = results
+            .Where(r => r.ScryfallId != null)
+            .Select(r => r.ScryfallId!)
+            .Distinct()
+            .ToHashSet();
+
+        if (scryfallIds.Count > 0)
+        {
+            var priceRows = db.CardPricingEntries
+                .Where(e => e.Currency == currency && e.ProviderListing == "retail")
+                .Join(db.ScryfallIdMappings.Where(m => scryfallIds.Contains(m.ScryfallId)),
+                    e => e.Uuid,
+                    m => m.MtgJsonUuid,
+                    (e, m) => new { m.ScryfallId, e.CardFinish, e.Price, e.PriceProvider })
+                .ToList();
+
+            var priceMap = priceRows
+                .GroupBy(p => (p.ScryfallId, p.CardFinish))
+                .ToDictionary(g => g.Key, g => g.MinBy(p => p.Price)!);
+
+            foreach (var result in results)
+            {
+                if (result.ScryfallId != null)
+                {
+                    var finish = result.IsFoil ? "foil" : "normal";
+                    if (priceMap.TryGetValue((result.ScryfallId, finish), out var row))
+                        result.LatestPrice = new CardSkuPriceModel { Price = row.Price, Provider = row.PriceProvider };
+                }
+            }
+        }
+
+        return results;
     }
 
     public PaginatedCardSkuModel GetCardsForContainer(int containerId, FetchContainerPageModel options)
@@ -350,7 +363,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             PageNumber = options.PageNumber,
             PageSize = size,
             Total = total,
-            Items = ToCardSkuModel(queryable.OrderBy(c => c.CardName).Skip(skip).Take(size), db.Value).ToList()
+            Items = ToCardSkuModel(queryable.OrderBy(c => c.CardName).Skip(skip).Take(size), db.Value)
         };
     }
 
@@ -597,8 +610,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             ColorIdentity = c.Scryfall != null ? c.Scryfall.ColorIdentity : null,
             // A double-faced card has a DISTINCT back-face image (different from the front-face image)
             IsDoubleFaced = c.Scryfall?.BackImageSmallUrl != null && c.Scryfall?.BackImageSmallUrl != c.Scryfall?.ImageSmallUrl,
-            LatestPrice = null,
-            LatestPriceProvider = null
+            LatestPrice = null
         };
     }
 
@@ -1498,7 +1510,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             n.Title = title;
             n.Text = notes;
         }
-        else 
+        else
         {
             n = new Notes() { Title = title, Text = notes };
             await db.Value.Notes.AddAsync(n);
@@ -1993,10 +2005,9 @@ public class CollectionTrackingService : ICollectionTrackingService
             // Load all known MTG JSON UUIDs into a HashSet so we can filter price rows cheaply
             callback.OnDownloadStatus?.Invoke("Loading known card UUIDs…");
             var knownUuids = new HashSet<string>(
-                await db.Value.ScryfallIdMappings.Select(m => m.MtgJsonUuid).ToListAsync(cancel),
+                db.Value.Set<ScryfallCardMetadata>().Include(sf => sf.ScryfallIdMapping).Select(sf => sf.ScryfallIdMapping!.MtgJsonUuid),
+                //db.Value.ScryfallIdMappings.Where(m => m.sc).Select(m => m.MtgJsonUuid),
                 StringComparer.OrdinalIgnoreCase);
-
-            await db.Value.CardPricingEntries.ExecuteDeleteAsync(cancel);
 
             int count = 0;
             const int batchSize = 5000;

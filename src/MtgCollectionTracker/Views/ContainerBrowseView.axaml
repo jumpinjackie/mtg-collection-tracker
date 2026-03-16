@@ -41,10 +41,10 @@
 					<RadioButton GroupName="View Mode" IsChecked="{Binding Behavior.ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:CardItemViewMode.VisualList}}" Content="Visual List"/>
 					<RadioButton GroupName="View Mode" IsChecked="{Binding Behavior.ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:CardItemViewMode.Table}}" Content="Table"/>
 				</StackPanel>
-				<ListBox IsEnabled="{Binding !Behavior.IsBusy}" IsVisible="{Binding Behavior.IsListMode}" ItemsSource="{Binding CurrentPage}" SelectionMode="Multiple" SelectedItems="{Binding Behavior.SelectedItems}" Background="Transparent" Margin="0 20">
+				<ListBox IsEnabled="{Binding !Behavior.IsBusy}" IsVisible="{Binding Behavior.IsListMode}" ItemsSource="{Binding CurrentPage}" SelectionMode="Multiple" SelectedItems="{Binding Behavior.SelectedItems}" Background="Transparent" Margin="0 20" Padding="0 0 0 40">
 					<ListBox.ItemsPanel>
 						<ItemsPanelTemplate>
-							<WrapPanel />
+							<WrapPanel ItemSpacing="6" />
 						</ItemsPanelTemplate>
 					</ListBox.ItemsPanel>
 				</ListBox>

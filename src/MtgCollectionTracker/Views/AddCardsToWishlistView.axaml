@@ -11,29 +11,27 @@
          to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
 		<vm:AddCardsToWishlistViewModel />
 	</Design.DataContext>
-	<DockPanel>
-		<StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="10" Spacing="10">
-			<Button Command="{Binding AddCardsCommand}">Add Cards</Button>
-			<Button Command="{Binding CancelCommand}">Cancel</Button>
-		</StackPanel>
-		<StackPanel>
-			<TextBlock Margin="6" LineSpacing="6" TextWrapping="WrapWithOverflow">
-				Add cards to your wishlist by filling in the card SKUs in the grid below.<LineBreak />
-				The following columns must always be filled in: Qty, Card Name, Edition.<LineBreak />
-				Edition must be the code for the relevant set. Consult Scryfall for the proper codes.<LineBreak />
-				If language is not specified, English (en) is assumed.<LineBreak />
-				If you're unsure about the card name, or the card name has hard-to-type accented characters, click "Check/Fix Card Names" button
-			</TextBlock>
-			<DataGrid Name="AddCardsDataGrid"
+	<Grid Name="RootLayout" RowDefinitions="Auto,*,Auto" Margin="0">
+		<TextBlock Name="IntroTextBlock" Grid.Row="0" Margin="6" LineSpacing="6" TextWrapping="WrapWithOverflow">
+			Add cards to your wishlist by filling in the card SKUs in the grid below.<LineBreak />
+			The following columns must always be filled in: Qty, Card Name, Edition.<LineBreak />
+			Edition must be the code for the relevant set. Consult Scryfall for the proper codes.<LineBreak />
+			If language is not specified, English (en) is assumed.<LineBreak />
+			If you're unsure about the card name, or the card name has hard-to-type accented characters, click "Check/Fix Card Names" button
+		</TextBlock>
+
+		<Grid Grid.Row="1" RowDefinitions="*" Margin="6,0,6,0">
+			<DataGrid Grid.Row="0"
+				      Name="AddCardsDataGrid"
 				      ItemsSource="{Binding Cards}"
+			      	  IsEnabled="{Binding !IsDialogBusy}"
 					  CanUserReorderColumns="True"
 					  CanUserResizeColumns="True"
 					  CanUserSortColumns="False"
 					  GridLinesVisibility="All"
 					  BorderThickness="1"
-					  MinHeight="300"
-					  MaxHeight="600"
-					  BorderBrush="Gray">
+					  BorderBrush="Gray"
+					  VerticalAlignment="Stretch">
 				<DataGrid.Columns>
 					<DataGridTextColumn Header="Qty" Binding="{Binding Qty}"/>
 					<DataGridTextColumn Header="Card Name" Binding="{Binding CardName}"/>
@@ -77,11 +75,32 @@
 					</DataGridTemplateColumn>
 				</DataGrid.Columns>
 			</DataGrid>
-			<StackPanel Orientation="Horizontal">
-				<Button Command="{Binding AddRowCommand}">Add Row</Button>
-				<Button Command="{Binding ImportCommand}">Import Rows</Button>
-				<Button Command="{Binding CheckCardNamesCommand}">Check/Fix Card Names</Button>
+
+		</Grid>
+
+		<Grid Name="BottomActionsGrid" Grid.Row="2" ColumnDefinitions="*,Auto" Margin="10">
+			<StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Left" Spacing="0">
+				<Button Command="{Binding AddRowCommand}" IsEnabled="{Binding !IsDialogBusy}">Add Row</Button>
+				<Button Command="{Binding ImportCommand}" IsEnabled="{Binding !IsDialogBusy}">Import Rows</Button>
+				<Button Command="{Binding CheckCardNamesCommand}" IsEnabled="{Binding !IsDialogBusy}">
+					<StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+						<ProgressBar IsVisible="{Binding IsCheckingCardNames}" IsIndeterminate="True" Width="16" Height="16" />
+						<TextBlock IsVisible="{Binding !IsCheckingCardNames}" Text="Check/Fix Card Names" />
+						<TextBlock IsVisible="{Binding IsCheckingCardNames}" Text="Checking..." />
+					</StackPanel>
+				</Button>
 			</StackPanel>
-		</StackPanel>
-	</DockPanel>
+
+			<StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+				<Button Command="{Binding AddCardsCommand}" IsEnabled="{Binding !IsDialogBusy}">
+					<StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+						<ProgressBar IsVisible="{Binding IsAddingCards}" IsIndeterminate="True" Width="16" Height="16" />
+						<TextBlock IsVisible="{Binding !IsAddingCards}" Text="Add Cards" />
+						<TextBlock IsVisible="{Binding IsAddingCards}" Text="Adding..." />
+					</StackPanel>
+				</Button>
+				<Button Command="{Binding CancelCommand}" IsEnabled="{Binding !IsDialogBusy}">Cancel</Button>
+			</StackPanel>
+		</Grid>
+	</Grid>
 </UserControl>

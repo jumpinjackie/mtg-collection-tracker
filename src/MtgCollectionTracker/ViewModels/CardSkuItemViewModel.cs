@@ -280,8 +280,8 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
         this.TagList = sku.Tags;
         this.Tags = string.Join(Environment.NewLine, this.TagList);
         this.TagsText = $"{this.TagList.Length} tag(s)";
-        this.LatestPriceValue = sku.LatestPrice;
-        this.LatestPriceProvider = sku.LatestPriceProvider;
+        this.LatestPriceValue = sku.LatestPrice?.Price;
+        this.LatestPriceProvider = sku.LatestPrice?.Provider;
         this.SwitchToFront();
         return this;
     }

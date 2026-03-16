@@ -96,9 +96,35 @@ public partial class AddCardsToWishlistViewModel : DialogContentViewModel
 
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(ImportCommand))]
+    [NotifyCanExecuteChangedFor(nameof(AddRowCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RemoveCardCommand))]
+    [NotifyCanExecuteChangedFor(nameof(AddCardsCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CheckCardNamesCommand))]
     private bool _isImporting;
 
-    private bool CanImport => !IsImporting;
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ImportCommand))]
+    [NotifyCanExecuteChangedFor(nameof(AddRowCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RemoveCardCommand))]
+    [NotifyCanExecuteChangedFor(nameof(AddCardsCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CheckCardNamesCommand))]
+    private bool _isAddingCards;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(ImportCommand))]
+    [NotifyCanExecuteChangedFor(nameof(AddRowCommand))]
+    [NotifyCanExecuteChangedFor(nameof(RemoveCardCommand))]
+    [NotifyCanExecuteChangedFor(nameof(AddCardsCommand))]
+    [NotifyCanExecuteChangedFor(nameof(CheckCardNamesCommand))]
+    private bool _isCheckingCardNames;
+
+    public bool IsDialogBusy => IsAddingCards || IsCheckingCardNames;
+
+    partial void OnIsAddingCardsChanged(bool value) => OnPropertyChanged(nameof(IsDialogBusy));
+
+    partial void OnIsCheckingCardNamesChanged(bool value) => OnPropertyChanged(nameof(IsDialogBusy));
+
+    private bool CanImport => !IsImporting && !IsDialogBusy;
 
     [RelayCommand(CanExecute = nameof(CanImport))]
     private async Task Import()
@@ -152,7 +178,7 @@ public partial class AddCardsToWishlistViewModel : DialogContentViewModel
         }
     }
 
-    private bool CanAddRow => !IsImporting;
+    private bool CanAddRow => !IsImporting && !IsDialogBusy;
 
     [RelayCommand(CanExecute = nameof(CanAddRow))]
     private void AddRow()
@@ -161,7 +187,7 @@ public partial class AddCardsToWishlistViewModel : DialogContentViewModel
         AddCardsCommand.NotifyCanExecuteChanged();
     }
 
-    private bool CanRemoveCard => !IsImporting;
+    private bool CanRemoveCard => !IsImporting && !IsDialogBusy;
 
     [RelayCommand(CanExecute = nameof(CanRemoveCard))]
     private void RemoveCard(AddCardSkuViewModel item)
@@ -170,26 +196,34 @@ public partial class AddCardsToWishlistViewModel : DialogContentViewModel
         AddCardsCommand.NotifyCanExecuteChanged();
     }
 
-    private bool CanAddCards() => !IsImporting && Cards.Count > 0 && Cards.All(c => c.IsValid);
+    private bool CanAddCards() => !IsImporting && !IsDialogBusy && Cards.Count > 0 && Cards.All(c => c.IsValid);
 
     [RelayCommand(CanExecute = nameof(CanAddCards))]
     private async Task AddCards()
     {
-        var adds = this.Cards.Select(c => new AddToWishlistInputModel
+        IsAddingCards = true;
+        try
         {
-            CardName = c.CardName,
-            Comments = c.Comments,
-            Condition = c.Condition,
-            IsFoil = c.IsFoil,
-            Language = c.Language?.Code ?? "en",
-            CollectorNumber = c.CollectorNumber,
-            Quantity = c.Qty,
-            Edition = c.Edition
-        });
+            var adds = this.Cards.Select(c => new AddToWishlistInputModel
+            {
+                CardName = c.CardName,
+                Comments = c.Comments,
+                Condition = c.Condition,
+                IsFoil = c.IsFoil,
+                Language = c.Language?.Code ?? "en",
+                CollectorNumber = c.CollectorNumber,
+                Quantity = c.Qty,
+                Edition = c.Edition
+            });
 
-        var added = await _service.AddMultipleToWishlistAsync(adds, _scryfallApiClient);
-        Messenger.Send(new CardsAddedToWishlistMessage { Added = added });
-        Messenger.Send(new CloseDialogMessage());
+            var added = await _service.AddMultipleToWishlistAsync(adds, _scryfallApiClient);
+            Messenger.Send(new CardsAddedToWishlistMessage { Added = added });
+            Messenger.Send(new CloseDialogMessage());
+        }
+        finally
+        {
+            IsAddingCards = false;
+        }
     }
 
     [RelayCommand]
@@ -198,10 +232,16 @@ public partial class AddCardsToWishlistViewModel : DialogContentViewModel
         Messenger.Send(new CloseDialogMessage());
     }
 
-    [RelayCommand]
+    private bool CanCheckCardNames() => _scryfallApiClient != null && !IsImporting && !IsDialogBusy;
+
+    [RelayCommand(CanExecute = nameof(CanCheckCardNames))]
     private async Task CheckCardNames()
     {
-        if (_scryfallApiClient != null)
+        if (_scryfallApiClient == null)
+            return;
+
+        IsCheckingCardNames = true;
+        try
         {
             int cardsFixed = 0;
             int editionsFixed = 0;
@@ -225,6 +265,10 @@ public partial class AddCardsToWishlistViewModel : DialogContentViewModel
                 }
             }
             Messenger.ToastNotify($"{cardsFixed} card name(s) and {editionsFixed} edition(s) fixed up", Avalonia.Controls.Notifications.NotificationType.Success);
+        }
+        finally
+        {
+            IsCheckingCardNames = false;
         }
     }
 }
