@@ -20,6 +20,10 @@ public class CardsDbContext : DbContext
 
     public DbSet<Notes> Notes { get; set; }
 
+    public DbSet<ScryfallIdMapping> ScryfallIdMappings { get; set; }
+    public DbSet<CardPricingEntry> CardPricingEntries { get; set; }
+    public DbSet<CardPricingDownloadHistory> CardPricingDownloadHistory { get; set; }
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         modelBuilder.Entity<CardSku>().HasIndex(nameof(CardSku.CardName));
@@ -47,6 +51,24 @@ public class CardsDbContext : DbContext
                 cb.Property(t => t.Name).IsRequired();
             });
         modelBuilder.Entity<ScryfallCardMetadata>().HasIndex(nameof(ScryfallCardMetadata.CardName), nameof(ScryfallCardMetadata.Edition), nameof(ScryfallCardMetadata.Language), nameof(ScryfallCardMetadata.CollectorNumber));
+
+        modelBuilder.Entity<ScryfallIdMapping>().HasKey(s => s.ScryfallId);
+        modelBuilder.Entity<ScryfallIdMapping>().HasIndex(s => s.MtgJsonUuid).IsUnique();
+
+        // Keep these as POCO navigation properties only and avoid a hard FK between
+        // Scryfall metadata and identifier mappings. Existing databases may contain
+        // metadata before mappings are imported.
+        modelBuilder.Entity<ScryfallCardMetadata>().Ignore(m => m.ScryfallIdMapping);
+        modelBuilder.Entity<ScryfallIdMapping>().Ignore(m => m.ScryfallCardMetadata);
+
+        modelBuilder.Entity<CardPricingEntry>().HasIndex(e => e.Uuid);
+        modelBuilder.Entity<CardPricingEntry>().HasIndex(e => new { e.Uuid, e.CardFinish, e.Currency, e.ProviderListing });
+        modelBuilder.Entity<CardPricingEntry>()
+            .HasOne(e => e.ScryfallIdMapping)
+            .WithMany(m => m.CardPricingEntries)
+            .HasForeignKey(e => e.Uuid)
+            .HasPrincipalKey(m => m.MtgJsonUuid)
+            .OnDelete(DeleteBehavior.NoAction);
 
         modelBuilder.Entity<CardLanguage>().HasData(
             new CardLanguage { Code = "en", PrintedCode = "en", Name = "English" },

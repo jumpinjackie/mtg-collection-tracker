@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MtgCollectionTracker.Data;
 
@@ -10,9 +11,11 @@ using MtgCollectionTracker.Data;
 namespace MtgCollectionTracker.Data.Migrations
 {
     [DbContext(typeof(CardsDbContext))]
-    partial class CardsDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260313112255_MtgJsonPricing")]
+    partial class MtgJsonPricing
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "8.0.14");
@@ -303,9 +306,6 @@ namespace MtgCollectionTracker.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<Guid?>("BannerCardId")
-                        .HasColumnType("TEXT");
-
                     b.Property<int?>("ContainerId")
                         .HasColumnType("INTEGER");
 
@@ -319,8 +319,6 @@ namespace MtgCollectionTracker.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("BannerCardId");
 
                     b.HasIndex("ContainerId");
 
@@ -453,8 +451,7 @@ namespace MtgCollectionTracker.Data.Migrations
 
                     b.HasKey("ScryfallId");
 
-                    b.HasIndex("MtgJsonUuid")
-                        .IsUnique();
+                    b.HasIndex("MtgJsonUuid");
 
                     b.ToTable("ScryfallIdMappings");
                 });
@@ -571,18 +568,6 @@ namespace MtgCollectionTracker.Data.Migrations
                     b.ToTable("WishlistItems");
                 });
 
-            modelBuilder.Entity("MtgCollectionTracker.Data.CardPricingEntry", b =>
-                {
-                    b.HasOne("MtgCollectionTracker.Data.ScryfallIdMapping", "ScryfallIdMapping")
-                        .WithMany("CardPricingEntries")
-                        .HasForeignKey("Uuid")
-                        .HasPrincipalKey("MtgJsonUuid")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("ScryfallIdMapping");
-                });
-
             modelBuilder.Entity("MtgCollectionTracker.Data.CardSku", b =>
                 {
                     b.HasOne("MtgCollectionTracker.Data.Container", "Container")
@@ -640,29 +625,11 @@ namespace MtgCollectionTracker.Data.Migrations
 
             modelBuilder.Entity("MtgCollectionTracker.Data.Deck", b =>
                 {
-                    b.HasOne("MtgCollectionTracker.Data.CardSku", "BannerCard")
-                        .WithMany()
-                        .HasForeignKey("BannerCardId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
                     b.HasOne("MtgCollectionTracker.Data.Container", "Container")
                         .WithMany("Decks")
                         .HasForeignKey("ContainerId");
 
-                    b.Navigation("BannerCard");
-
                     b.Navigation("Container");
-                });
-
-            modelBuilder.Entity("MtgCollectionTracker.Data.ScryfallCardMetadata", b =>
-                {
-                    b.HasOne("MtgCollectionTracker.Data.ScryfallIdMapping", "ScryfallIdMapping")
-                        .WithOne("ScryfallCardMetadata")
-                        .HasForeignKey("MtgCollectionTracker.Data.ScryfallCardMetadata", "Id")
-                        .OnDelete(DeleteBehavior.NoAction)
-                        .IsRequired();
-
-                    b.Navigation("ScryfallIdMapping");
                 });
 
             modelBuilder.Entity("MtgCollectionTracker.Data.VendorPrice", b =>
@@ -737,13 +704,6 @@ namespace MtgCollectionTracker.Data.Migrations
             modelBuilder.Entity("MtgCollectionTracker.Data.Deck", b =>
                 {
                     b.Navigation("Cards");
-                });
-
-            modelBuilder.Entity("MtgCollectionTracker.Data.ScryfallIdMapping", b =>
-                {
-                    b.Navigation("CardPricingEntries");
-
-                    b.Navigation("ScryfallCardMetadata");
                 });
 
             modelBuilder.Entity("MtgCollectionTracker.Data.Vendor", b =>

@@ -295,7 +295,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 800,
-            ViewModel = _dialog().WithContent("Add Cards", _addCards())
+            ViewModel = _dialog().WithContent("Add Cards", _addCards(), canClose: false)
         });
     }
 

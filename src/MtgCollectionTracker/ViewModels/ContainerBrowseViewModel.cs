@@ -1,6 +1,7 @@
 ﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Data;
 using MtgCollectionTracker.Services;
@@ -195,7 +196,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 800,
-            ViewModel = _dialog().WithContent("Add Cards", vm)
+            ViewModel = _dialog().WithContent("Add Cards", vm, canClose: false)
         });
     }
 

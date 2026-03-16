@@ -40,7 +40,22 @@
 				</Border>
 			</Canvas>
 		</Border>
-		<TextBlock Grid.Column="0" Text="{Binding CardName}" ToolTip.Tip="{Binding CardName}" HorizontalAlignment="Center" />
+		<Grid ColumnDefinitions="24,*,24">
+			<PathIcon Grid.Column="0"
+			          IsVisible="{Binding HasTags}"
+			          Data="{StaticResource tag_regular}"
+			          ToolTip.Tip="{Binding Tags}"
+			          VerticalAlignment="Center" />
+			<TextBlock Grid.Column="1"
+			           Text="{Binding CardName}"
+			           ToolTip.Tip="{Binding CardName}"
+			           HorizontalAlignment="Center" />
+			<PathIcon Grid.Column="2"
+			          IsVisible="{Binding HasComments}"
+			          Data="{StaticResource comment_regular}"
+			          ToolTip.Tip="{Binding Comments}"
+			          VerticalAlignment="Center" />
+		</Grid>
 		<Grid IsVisible="{Binding ShowContainerName}" ColumnDefinitions="30, *" ToolTip.Tip="{Binding ContainerName}">
 			<PathIcon Grid.Column="0" Data="{StaticResource container}" />
 			<TextBlock Grid.Column="1" Text="{Binding ContainerName}" VerticalAlignment="Center" />
@@ -49,18 +64,9 @@
 			<PathIcon Grid.Column="0" Data="{StaticResource deckbox}" />
 			<TextBlock Grid.Column="1" Text="{Binding DeckName}" VerticalAlignment="Center" />
 		</Grid>
-		<Grid ColumnDefinitions="*, 30">
-			<Grid.IsVisible>
-				<MultiBinding Converter="{x:Static BoolConverters.Or}">
-					<Binding Path="HasTags" />
-					<Binding Path="HasComments" />
-				</MultiBinding>
-			</Grid.IsVisible>
-			<Grid ColumnDefinitions="30, *" Grid.Column="0" IsVisible="{Binding HasTags}" ToolTip.Tip="{Binding Tags}">
-				<PathIcon Grid.Column="0" Data="{StaticResource tag_regular}" />
-				<TextBlock Grid.Column="1" Text="{Binding TagsText}" VerticalAlignment="Center" />
-			</Grid>
-			<PathIcon Grid.Column="2" IsVisible="{Binding HasComments}" Data="{StaticResource comment_regular}" ToolTip.Tip="{Binding Comments}" />
+		<Grid IsVisible="{Binding HasLatestPrice}" ColumnDefinitions="30, *" ToolTip.Tip="Latest price">
+			<PathIcon Grid.Column="0" Data="{StaticResource money_regular}" />
+			<TextBlock Grid.Column="1" Text="{Binding LatestPrice}" VerticalAlignment="Center" />
 		</Grid>
 		<Button IsVisible="{Binding IsDoubleFaced}" Grid.Column="0" HorizontalAlignment="Center" Content="{Binding SwitchLabel}" Command="{Binding SwitchFaceCommand}" />
 	</StackPanel>

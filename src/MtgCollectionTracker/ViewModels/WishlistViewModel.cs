@@ -131,7 +131,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 800,
-            ViewModel = _dialog().WithContent("Add Cards to Wishlist", _addCardsToWishlist())
+            ViewModel = _dialog().WithContent("Add Cards to Wishlist", _addCardsToWishlist(), canClose: false)
         });
     }
 

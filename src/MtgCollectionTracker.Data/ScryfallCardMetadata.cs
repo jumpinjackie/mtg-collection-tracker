@@ -122,4 +122,9 @@ public class ScryfallCardMetadata
     /// Large back face card image URL (JPG format)
     /// </summary>
     public string? BackImageLargeUrl { get; set; }
+
+    /// <summary>
+    /// Mapping between this Scryfall card id and MTG JSON UUID.
+    /// </summary>
+    public virtual ScryfallIdMapping? ScryfallIdMapping { get; set; }
 }

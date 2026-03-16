@@ -117,30 +117,42 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
     [ObservableProperty]
     private bool _hasShort;
 
+    [ObservableProperty]
+    private bool _isPreparingWishlistDialog;
+
     [RelayCommand]
     private async Task AddToWishlist()
     {
         var shortOnly = _deckListCardItems.Where(d => d.Short > 0 && d.Short > d.WishlistTotal).ToList();
         if (shortOnly.Count > 0)
         {
-            var wishlistItems = new List<(int qty, string cardName, string edition)>();
-            var resolved = await _service.ResolveEditionsForCardsAsync(shortOnly.Select(c => c.CardName), _client!);
-            foreach (var c in shortOnly)
+            IsPreparingWishlistDialog = true;
+            try
             {
-                var deficit = c.Short - c.WishlistTotal;
-                if (resolved.TryGetValue(c.CardName, out var ed))
-                    wishlistItems.Add((deficit, ed.CardName ?? c.CardName, ed.Edition ?? string.Empty));
-                else
-                    wishlistItems.Add((deficit, c.CardName, string.Empty));
-            }
+                var wishlistItems = new List<(int qty, string cardName, string edition)>();
+                var resolved = await _service.ResolveEditionsForCardsAsync(shortOnly.Select(c => c.CardName), _client!);
+                foreach (var c in shortOnly)
+                {
+                    var deficit = c.Short - c.WishlistTotal;
+                    if (resolved.TryGetValue(c.CardName, out var ed))
+                        wishlistItems.Add((deficit, ed.CardName ?? c.CardName, ed.Edition ?? string.Empty));
+                    else
+                        wishlistItems.Add((deficit, c.CardName, string.Empty));
+                }
 
-            Messenger.Send(new OpenDialogMessage
+                Messenger.Send(new OpenDialogMessage
+                {
+                    DrawerWidth = 800,
+                    ViewModel = _dialog().WithContent("Add Cards to Wishlist",
+                        _addToWishlist()
+                            .WithCards(wishlistItems),
+                        canClose: false)
+                });
+            }
+            finally
             {
-                DrawerWidth = 800,
-                ViewModel = _dialog().WithContent("Add Cards to Wishlist", 
-                    _addToWishlist()
-                        .WithCards(wishlistItems))
-            });
+                IsPreparingWishlistDialog = false;
+            }
         }
     }
 

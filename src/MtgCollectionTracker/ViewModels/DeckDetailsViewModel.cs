@@ -377,7 +377,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 800,
-            ViewModel = _dialog().WithContent("Add New Cards to Deck", vm)
+            ViewModel = _dialog().WithContent("Add New Cards to Deck", vm, canClose: false)
         });
     }
 
