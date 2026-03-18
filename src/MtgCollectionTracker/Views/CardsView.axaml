@@ -178,8 +178,36 @@
 								<DataGridTextColumn Header="OracleText" Binding="{Binding OracleText}"/>
 								
 								<DataGridTextColumn Header="Collector #" Binding="{Binding CollectorNumber}"/>
-								<DataGridTextColumn Header="Container" Binding="{Binding ContainerName}"/>
-								<DataGridTextColumn Header="Deck" Binding="{Binding DeckName}"/>
+								<DataGridTemplateColumn Header="Container">
+									<DataGridTemplateColumn.CellTemplate>
+										<DataTemplate x:DataType="vm:CardSkuItemViewModel">
+											<Button Command="{Binding OpenContainerCommand}" IsVisible="{Binding HasContainer}" Background="Transparent" BorderThickness="0" Padding="0" HorizontalAlignment="Left">
+												<Button.Styles>
+													<Style Selector="Button:pointerover TextBlock">
+														<Setter Property="TextDecorations" Value="Underline" />
+														<Setter Property="Foreground" Value="DodgerBlue" />
+													</Style>
+												</Button.Styles>
+												<TextBlock Text="{Binding ContainerName}" />
+											</Button>
+										</DataTemplate>
+									</DataGridTemplateColumn.CellTemplate>
+								</DataGridTemplateColumn>
+								<DataGridTemplateColumn Header="Deck">
+									<DataGridTemplateColumn.CellTemplate>
+										<DataTemplate x:DataType="vm:CardSkuItemViewModel">
+											<Button Command="{Binding OpenDeckCommand}" IsVisible="{Binding HasDeck}" Background="Transparent" BorderThickness="0" Padding="0" HorizontalAlignment="Left">
+												<Button.Styles>
+													<Style Selector="Button:pointerover TextBlock">
+														<Setter Property="TextDecorations" Value="Underline" />
+														<Setter Property="Foreground" Value="DodgerBlue" />
+													</Style>
+												</Button.Styles>
+												<TextBlock Text="{Binding DeckName}" />
+											</Button>
+										</DataTemplate>
+									</DataGridTemplateColumn.CellTemplate>
+								</DataGridTemplateColumn>
 								<DataGridTextColumn Header="Foil?" Binding="{Binding IsFoil}"/>
 								<DataGridTextColumn Header="Sideboard?" Binding="{Binding IsSideboard}"/>
 								<DataGridTextColumn Header="Comments" Binding="{Binding Comments}"/>

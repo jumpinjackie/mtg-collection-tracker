@@ -67,11 +67,27 @@
 		</Grid>
 		<Grid IsVisible="{Binding ShowContainerName}" ColumnDefinitions="30, *" ToolTip.Tip="{Binding ContainerName}">
 			<PathIcon Grid.Column="0" Data="{StaticResource container}" />
-			<TextBlock Grid.Column="1" Text="{Binding ContainerName}" VerticalAlignment="Center" />
+			<Button Grid.Column="1" Command="{Binding OpenContainerCommand}" Background="Transparent" BorderThickness="0" Padding="0" HorizontalAlignment="Left">
+				<Button.Styles>
+					<Style Selector="Button:pointerover TextBlock">
+						<Setter Property="TextDecorations" Value="Underline" />
+						<Setter Property="Foreground" Value="DodgerBlue" />
+					</Style>
+				</Button.Styles>
+				<TextBlock Text="{Binding ContainerName}" VerticalAlignment="Center" />
+			</Button>
 		</Grid>
 		<Grid IsVisible="{Binding HasDeck}" ColumnDefinitions="30, *" ToolTip.Tip="{Binding DeckName}">
 			<PathIcon Grid.Column="0" Data="{StaticResource deckbox}" />
-			<TextBlock Grid.Column="1" Text="{Binding DeckName}" VerticalAlignment="Center" />
+			<Button Grid.Column="1" Command="{Binding OpenDeckCommand}" Background="Transparent" BorderThickness="0" Padding="0" HorizontalAlignment="Left">
+				<Button.Styles>
+					<Style Selector="Button:pointerover TextBlock">
+						<Setter Property="TextDecorations" Value="Underline" />
+						<Setter Property="Foreground" Value="DodgerBlue" />
+					</Style>
+				</Button.Styles>
+				<TextBlock Grid.Column="1" Text="{Binding DeckName}" VerticalAlignment="Center" />
+			</Button>
 		</Grid>
 		<Grid IsVisible="{Binding HasLatestPrice}" ColumnDefinitions="30, *" ToolTip.Tip="Latest price">
 			<PathIcon Grid.Column="0" Data="{StaticResource money_regular}" />

@@ -1,11 +1,15 @@
 ﻿using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Data;
+using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
+using ScryfallApi.Client;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
@@ -19,20 +23,42 @@ public enum CardItemViewMode
 public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendableCardItem
 {
     readonly ICollectionTrackingService _service;
+    readonly IMessenger _messenger;
+    readonly Func<DialogViewModel> _dialog;
+    readonly Func<DeckDetailsViewModel> _deckDetails;
+    readonly Func<ContainerBrowseViewModel> _browseContainer;
+    readonly IScryfallApiClient? _scryfallApiClient;
     int _smallImageLoadVersion;
     int _largeImageLoadVersion;
 
-    public CardSkuItemViewModel(ICollectionTrackingService service)
+    public CardSkuItemViewModel(ICollectionTrackingService service,
+                                IMessenger messenger,
+                                Func<DialogViewModel> dialog,
+                                Func<DeckDetailsViewModel> deckDetails,
+                                Func<ContainerBrowseViewModel> browseContainer,
+                                IScryfallApiClient scryfallApiClient)
     {
         _service = service;
+        _messenger = messenger;
+        _dialog = dialog;
+        _deckDetails = deckDetails;
+        _browseContainer = browseContainer;
+        _scryfallApiClient = scryfallApiClient;
     }
 
     public CardSkuItemViewModel()
     {
         this.ThrowIfNotDesignMode();
         _service = new StubCollectionTrackingService();
+        _messenger = WeakReferenceMessenger.Default;
+        _dialog = () => new();
+        _deckDetails = () => new();
+        _browseContainer = () => new();
+        _scryfallApiClient = null;
         _deckName = "Some Deck";
         _containerName = "Some Container";
+        DeckId = 1;
+        ContainerId = 1;
         this.Comments = "Some comments";
         this.TagList = ["foo", "bar"];
         this.Tags = string.Join(Environment.NewLine, this.TagList);
@@ -96,10 +122,12 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasContainer))]
     [NotifyPropertyChangedFor(nameof(ShowContainerName))]
+    [NotifyCanExecuteChangedFor(nameof(OpenContainerCommand))]
     private string? _containerName;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(HasDeck))]
+    [NotifyCanExecuteChangedFor(nameof(OpenDeckCommand))]
     private string? _deckName;
 
     [ObservableProperty]
@@ -152,6 +180,10 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
 
     public string? CollectorNumber { get; set; }
 
+    public int? DeckId { get; private set; }
+
+    public int? ContainerId { get; private set; }
+
     public string? OriginalCardName { get; set; }
 
     public string? OriginalEdition { get; set; }
@@ -167,6 +199,41 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
     public string? Loyalty { get; set; }
 
     public string[]? Colors { get; set; }
+
+    private bool CanOpenDeck() => this.DeckId != null;
+
+    [RelayCommand(CanExecute = nameof(CanOpenDeck))]
+    private async Task OpenDeck()
+    {
+        if (this.DeckId == null)
+        {
+            return;
+        }
+
+        var deck = await _service.GetDeckAsync(this.DeckId.Value, _scryfallApiClient, CancellationToken.None);
+        _messenger.Send(new OpenDialogMessage
+        {
+            DrawerWidth = 1280,
+            ViewModel = _dialog().WithContent(deck.Name, _deckDetails().WithDeck(deck))
+        });
+    }
+
+    private bool CanOpenContainer() => this.ContainerId != null;
+
+    [RelayCommand(CanExecute = nameof(CanOpenContainer))]
+    private void OpenContainer()
+    {
+        if (this.ContainerId == null)
+        {
+            return;
+        }
+
+        _messenger.Send(new OpenDialogMessage
+        {
+            DrawerWidth = 1000,
+            ViewModel = _dialog().WithContent(this.ContainerName ?? "Container", _browseContainer().WithContainerId(this.ContainerId.Value))
+        });
+    }
 
     public string[]? ColorIdentity { get; set; }
 
@@ -298,6 +365,8 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
     {
         this.Id = sku.Id;
         this.ScryfallId = sku.ScryfallId;
+        this.DeckId = sku.DeckId;
+        this.ContainerId = sku.ContainerId;
 
         this.CastingCost = sku.CastingCost;
         this.ColorIdentity = sku.ColorIdentity;
@@ -338,6 +407,8 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
         this.TagsText = $"{this.TagList.Length} tag(s)";
         this.LatestPriceValue = sku.LatestPrice?.Price;
         this.LatestPriceProvider = sku.LatestPrice?.Provider;
+        this.OpenDeckCommand.NotifyCanExecuteChanged();
+        this.OpenContainerCommand.NotifyCanExecuteChanged();
         this.SwitchToFront();
         return this;
     }
