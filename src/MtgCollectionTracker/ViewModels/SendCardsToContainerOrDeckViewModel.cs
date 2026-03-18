@@ -31,6 +31,7 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
 {
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
+    readonly SendCardsToContainerOrDeckSelectionState _selectionState;
 
     readonly Func<ContainerViewModel> _container;
     readonly Func<DeckViewModel> _deck;
@@ -40,12 +41,14 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
     public SendCardsToContainerOrDeckViewModel(IMessenger messenger,
                                                Func<ContainerViewModel> container,
                                                Func<DeckViewModel> deck,
+                                               SendCardsToContainerOrDeckSelectionState selectionState,
                                                ICollectionTrackingService service,
                                                IScryfallApiClient scryfallApiClient)
         : base(messenger)
     {
         _service = service;
         _scryfallApiClient = scryfallApiClient;
+        _selectionState = selectionState;
         _container = container;
         _deck = deck;
     }
@@ -54,6 +57,7 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
     {
         this.ThrowIfNotDesignMode();
         _service = new StubCollectionTrackingService();
+        _selectionState = new();
         _container = () => new();
         _deck = () => new();
         this.AvailableContainers = [
@@ -128,8 +132,17 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
     public SendCardsToContainerOrDeckViewModel WithCards(IEnumerable<ISendableCardItem> cards)
     {
         this.Cards = cards;
-        this.AvailableContainers = _service.GetContainers().Select(c => _container().WithData(c)).ToList();
-        this.AvailableDecks = _service.GetDecks(null).Select(d => _deck().WithData(d)).ToList();
+        var availableContainers = _service.GetContainers().Select(c => _container().WithData(c)).ToList();
+        var availableDecks = _service.GetDecks(null).Select(d => _deck().WithData(d)).ToList();
+
+        this.AvailableContainers = availableContainers;
+        this.AvailableDecks = availableDecks;
+        this.SelectedContainer = _selectionState.LastContainerId.HasValue
+            ? availableContainers.FirstOrDefault(c => c.Id == _selectionState.LastContainerId.Value)
+            : null;
+        this.SelectedDeck = _selectionState.LastDeckId.HasValue
+            ? availableDecks.FirstOrDefault(d => d.DeckId == _selectionState.LastDeckId.Value)
+            : null;
         return this;
     }
 
@@ -138,6 +151,9 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
     {
         if (CanSendCards())
         {
+            _selectionState.LastContainerId = this.SelectedContainer?.Id;
+            _selectionState.LastDeckId = this.SelectedDeck?.DeckId;
+
             var skuIds = this.Cards.Select(c => c.Id).ToList();
             var res = await _service.UpdateCardSkuAsync(new()
             {

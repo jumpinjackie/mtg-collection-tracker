@@ -104,6 +104,15 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
 
     private Stack<DialogViewModel> _dialogStack = new();
 
+    private void CloseTopDialogAndRestorePrevious()
+    {
+        _dialogStack.Pop();
+        DialogHostAvalonia.DialogHost.Close(null);
+
+        if (_dialogStack.Count > 0)
+            DialogHostAvalonia.DialogHost.Show(_dialogStack.Peek());
+    }
+
     void IRecipient<OpenDialogMessage>.Receive(OpenDialogMessage message)
     {
         // HACK: Cannot figure out if/how DialogHost can have multiple dialogs open at once but
@@ -126,12 +135,25 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
         // right now is a safe assumption to make
         if (_dialogStack.Count > 0)
         {
-            _dialogStack.Pop();
-            DialogHostAvalonia.DialogHost.Close(null);
-
-            if (_dialogStack.Count > 0)
-                DialogHostAvalonia.DialogHost.Show(_dialogStack.Peek());
+            CloseTopDialogAndRestorePrevious();
         }
+    }
+
+    public bool TryHandleEscapeForDialog()
+    {
+        if (_dialogStack.Count == 0)
+        {
+            return false;
+        }
+
+        var topDialog = _dialogStack.Peek();
+        if (!topDialog.CanClose)
+        {
+            return true;
+        }
+
+        CloseTopDialogAndRestorePrevious();
+        return true;
     }
 
     void IRecipient<NotificationMessage>.Receive(NotificationMessage message)

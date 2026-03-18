@@ -15,9 +15,16 @@ public partial class DialogView : UserControl
 
     private void OnDialogKeyDown(object? sender, KeyEventArgs e)
     {
-        if (e.Key == Key.Escape && DataContext is DialogViewModel vm && !vm.CanClose)
+        if (e.Key != Key.Escape || DataContext is not DialogViewModel vm)
         {
-            e.Handled = true;
+            return;
+        }
+
+        e.Handled = true;
+
+        if (vm.CanClose)
+        {
+            vm.CloseCommand.Execute(null);
         }
     }
 }
