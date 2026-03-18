@@ -216,7 +216,7 @@ internal class ScryfallMetadataResolver
 
             if (sfMeta != null)
             {
-                _dict.Add(key, sfMeta);
+                _dict[key] = sfMeta;
             }
         }
 
@@ -354,7 +354,7 @@ internal class ScryfallMetadataResolver
                     }
                 }
 
-                _dict.Add(key, sfMeta);
+                _dict[key] = sfMeta;
             }
         }
 
