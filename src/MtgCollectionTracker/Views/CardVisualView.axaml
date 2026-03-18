@@ -17,7 +17,16 @@
 				<Panel Canvas.Left="0" Canvas.Top="0" Canvas.Bottom="0" Canvas.Right="0"  Background="#7FFF22DD">
 					<!-- TODO: If this is even possible, do a flip animation for double-faced cards -->
 					<Image Width="160" Stretch="Uniform" Source="{Binding CardImage^}" />
-					<Panel Height="220" IsVisible="{Binding CardImage, Converter={x:Static ObjectConverters.IsNull}}">
+					<Panel Height="220" IsVisible="{Binding IsCardImageLoading}">
+						<ProgressBar Width="72" IsIndeterminate="True" VerticalAlignment="Center" />
+					</Panel>
+					<Panel Height="220">
+						<Panel.IsVisible>
+							<MultiBinding Converter="{x:Static BoolConverters.And}">
+								<Binding Path="!IsCardImageLoading" />
+								<Binding Path="CardImage^" Converter="{x:Static ObjectConverters.IsNull}" />
+							</MultiBinding>
+						</Panel.IsVisible>
 						<PathIcon Height="75" Width="75" Data="{StaticResource card}" />
 					</Panel>
 				</Panel>

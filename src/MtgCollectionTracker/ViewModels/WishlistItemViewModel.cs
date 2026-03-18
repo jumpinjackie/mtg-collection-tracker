@@ -17,6 +17,8 @@ namespace MtgCollectionTracker.ViewModels;
 public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
 {
     readonly ICollectionTrackingService _service;
+    int _smallImageLoadVersion;
+    int _largeImageLoadVersion;
 
     public WishlistItemViewModel(ICollectionTrackingService service)
     {
@@ -55,7 +57,10 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
     private string _condition = CardCondition.NearMint.ToString();
 
     [ObservableProperty]
-    private Task<Bitmap?> _cardImage;
+    private Task<Bitmap?> _cardImage = Task.FromResult<Bitmap?>(null);
+
+    [ObservableProperty]
+    private bool _isCardImageLoading;
 
     public Task<Bitmap?> FrontFaceImageSmall => GetSmallFrontFaceImageAsync();
 
@@ -84,7 +89,10 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
     }
 
     [ObservableProperty]
-    private Task<Bitmap?> _cardImageLarge;
+    private Task<Bitmap?> _cardImageLarge = Task.FromResult<Bitmap?>(null);
+
+    [ObservableProperty]
+    private bool _isCardImageLargeLoading;
 
     public Task<Bitmap?> FrontFaceImageLarge => GetLargeFrontFaceImageAsync();
 
@@ -201,6 +209,54 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
 
     [ObservableProperty]
     private string? _vendorExplanation;
+
+    partial void OnCardImageChanged(Task<Bitmap?> value)
+    {
+        TrackSmallImageLoading(value);
+    }
+
+    partial void OnCardImageLargeChanged(Task<Bitmap?> value)
+    {
+        TrackLargeImageLoading(value);
+    }
+
+    private async void TrackSmallImageLoading(Task<Bitmap?> imageTask)
+    {
+        var loadVersion = ++_smallImageLoadVersion;
+        this.IsCardImageLoading = true;
+        try
+        {
+            await imageTask;
+        }
+        catch
+        {
+            // Keep failures non-fatal; view will show fallback icon.
+        }
+
+        if (loadVersion == _smallImageLoadVersion)
+        {
+            this.IsCardImageLoading = false;
+        }
+    }
+
+    private async void TrackLargeImageLoading(Task<Bitmap?> imageTask)
+    {
+        var loadVersion = ++_largeImageLoadVersion;
+        this.IsCardImageLargeLoading = true;
+        try
+        {
+            await imageTask;
+        }
+        catch
+        {
+            // Keep failures non-fatal; view will show fallback icon.
+        }
+
+        if (loadVersion == _largeImageLoadVersion)
+        {
+            this.IsCardImageLargeLoading = false;
+        }
+    }
 
     public WishlistItemViewModel WithData(WishlistItemModel item)
     {

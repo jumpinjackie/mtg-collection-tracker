@@ -1,6 +1,7 @@
 ﻿using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
+using System.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 
@@ -23,6 +24,8 @@ public interface ICardSkuItem
 
     Task<Bitmap?> CardImageLarge { get; }
 
+    bool IsCardImageLargeLoading { get; }
+
     bool IsDoubleFaced { get; }
 
     string CardName { get; }
@@ -41,6 +44,7 @@ public interface ICardSkuItem
 public partial class MultiModeCardListBehavior<T> : ObservableObject where T : class, ICardSkuItem
 {
     readonly IMultiModeCardListBehaviorHost _parent;
+    INotifyPropertyChanged? _selectedItemNotifier;
 
     public MultiModeCardListBehavior(IMultiModeCardListBehaviorHost parent)
     {
@@ -50,6 +54,9 @@ public partial class MultiModeCardListBehavior<T> : ObservableObject where T : c
 
     public Task<Bitmap?> SelectedCardImageLarge => this.SelectedItems.Count > 0
         ? this.SelectedItems[0].CardImageLarge : Task.FromResult<Bitmap?>(null);
+
+    public bool SelectedCardImageLargeLoading => this.SelectedItems.Count > 0
+        && this.SelectedItems[0].IsCardImageLargeLoading;
 
     public bool SelectedIsDoubleFaced => this.SelectedItems.Count > 0
         ? this.SelectedItems[0].IsDoubleFaced : false;
@@ -80,8 +87,33 @@ public partial class MultiModeCardListBehavior<T> : ObservableObject where T : c
 
     private void SelectedCardSkus_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
+        RefreshSelectedItemSubscription();
         this.HasSelectedCardSku = this.SelectedItems.Count == 1;
         this.HasAtLeastOneSelectedCardSku = this.SelectedItems.Count > 0;
+        OnPropertyChanged(nameof(SelectedCardImageLargeLoading));
+    }
+
+    private void RefreshSelectedItemSubscription()
+    {
+        if (_selectedItemNotifier != null)
+        {
+            _selectedItemNotifier.PropertyChanged -= OnSelectedItemPropertyChanged;
+            _selectedItemNotifier = null;
+        }
+
+        if (this.SelectedItems.Count > 0 && this.SelectedItems[0] is INotifyPropertyChanged notifier)
+        {
+            _selectedItemNotifier = notifier;
+            _selectedItemNotifier.PropertyChanged += OnSelectedItemPropertyChanged;
+        }
+    }
+
+    private void OnSelectedItemPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(ICardSkuItem.IsCardImageLargeLoading))
+        {
+            OnPropertyChanged(nameof(SelectedCardImageLargeLoading));
+        }
     }
 
     [ObservableProperty]
@@ -115,6 +147,7 @@ public partial class MultiModeCardListBehavior<T> : ObservableObject where T : c
     [NotifyPropertyChangedFor(nameof(SelectedOracleText))]
     [NotifyPropertyChangedFor(nameof(SelectedCardType))]
     [NotifyPropertyChangedFor(nameof(SelectedPT))]
+    [NotifyPropertyChangedFor(nameof(SelectedCardImageLargeLoading))]
     private bool _hasSelectedCardSku;
 
     public bool IsItemMergeable => !this.IsBusy && this.HasMultipleSelectedCardSkus;
