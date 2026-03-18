@@ -110,6 +110,7 @@
 			</StackPanel>
 
 			<StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="10">
+				<CheckBox VerticalAlignment="Center" IsVisible="{Binding ShowAddToSideboardOption}" IsChecked="{Binding AddToSideboard}">Add to sideboard</CheckBox>
 				<Button Command="{Binding AddCardsCommand}" IsEnabled="{Binding !IsDialogBusy}">
 					<StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
 						<ProgressBar IsVisible="{Binding IsAddingCards}" IsIndeterminate="True" Width="16" Height="16" />

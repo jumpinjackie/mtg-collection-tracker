@@ -66,6 +66,9 @@ public partial class AddExistingCardsToDeckViewModel : DialogContentViewModel
     [NotifyCanExecuteChangedFor(nameof(AddToDeckCommand))]
     private bool _hasPendingItems;
 
+    [ObservableProperty]
+    private bool _addToSideboard;
+
     public ObservableCollection<SearchResultViewModel> SearchResults { get; } = new();
 
     public ObservableCollection<PendingItemViewModel> PendingItems { get; } = new();
@@ -165,7 +168,8 @@ public partial class AddExistingCardsToDeckViewModel : DialogContentViewModel
             var res = await _service.UpdateCardSkuAsync(new UpdateCardSkuInputModel
             {
                 Ids = [transferSkuId],
-                DeckId = _deckId
+                DeckId = _deckId,
+                IsSideboard = this.AddToSideboard
             }, null, cancel);
 
             Messenger.HandleSkuUpdate(res);

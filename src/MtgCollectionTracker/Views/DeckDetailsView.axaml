@@ -28,6 +28,10 @@
 			<Button IsEnabled="{Binding Behavior.HasAtLeastOneSelectedItem}" Command="{Binding UpdateSkuMetadataCommand}" Content="Update Metadata" HorizontalAlignment="Center" />
 			<Button IsVisible="{Binding IsVisualSkuMode}" IsEnabled="{Binding Behavior.HasOneSelectedItem}" Command="{Binding SetAsBannerCommand}" Content="Set as Banner" HorizontalAlignment="Center" />
 		</StackPanel>
+		<StackPanel IsVisible="{Binding !IsSkuBasedMode}" DockPanel.Dock="Bottom" Margin="8" Orientation="Horizontal">
+			<Button Command="{Binding AddNewCardsCommand}" Content="Add New" HorizontalAlignment="Center" />
+			<Button Command="{Binding AddExistingCardsCommand}" Content="Add Existing" HorizontalAlignment="Center" />
+		</StackPanel>
 		<Grid>
 			<!-- By Text -->
 			<DockPanel IsVisible="{Binding Mode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:DeckViewMode.Text}}">

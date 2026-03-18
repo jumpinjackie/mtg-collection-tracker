@@ -219,11 +219,17 @@ public partial class AddCardsViewModel : DialogContentViewModel
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(ShowContainerSelector))]
+    [NotifyPropertyChangedFor(nameof(ShowAddToSideboardOption))]
     private bool _lockedTargetDeck = false;
 
     public string? TargetDeckName => _targetDeckName;
 
     public bool ShowContainerSelector => !LockedTargetContainer && !LockedTargetDeck;
+
+    public bool ShowAddToSideboardOption => LockedTargetDeck;
+
+    [ObservableProperty]
+    private bool _addToSideboard;
 
     [RelayCommand(CanExecute = nameof(CanAddCards))]
     private async Task AddCards()
@@ -231,18 +237,6 @@ public partial class AddCardsViewModel : DialogContentViewModel
         IsAddingCards = true;
         try
         {
-        var adds = this.Cards.Select(c => new AddToDeckOrContainerInputModel
-        {
-            CardName = c.CardName,
-            Comments = c.Comments,
-            Condition = c.Condition,
-            IsFoil = c.IsFoil,
-            Language = c.Language?.Code ?? "en",
-            CollectorNumber = c.CollectorNumber,
-            Quantity = c.Qty,
-            Edition = c.Edition
-        });
-
         int? containerId = null;
         int? deckId = null;
 
@@ -255,6 +249,21 @@ public partial class AddCardsViewModel : DialogContentViewModel
         {
             deckId = _targetDeckId.Value;
         }
+
+        var addToSideboard = deckId.HasValue && this.AddToSideboard;
+
+        var adds = this.Cards.Select(c => new AddToDeckOrContainerInputModel
+        {
+            CardName = c.CardName,
+            Comments = c.Comments,
+            Condition = c.Condition,
+            IsFoil = c.IsFoil,
+            Language = c.Language?.Code ?? "en",
+            CollectorNumber = c.CollectorNumber,
+            Quantity = c.Qty,
+            Edition = c.Edition,
+            IsSideboard = addToSideboard
+        });
 
         var (total, proxyTotal, rows) = await _service.AddMultipleToContainerOrDeckAsync(containerId, deckId, adds, _scryfallApiClient);
         Messenger.Send(new CardsAddedMessage { CardsTotal = total, ProxyTotal = proxyTotal, SkuTotal = rows });

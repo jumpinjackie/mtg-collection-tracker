@@ -13,6 +13,7 @@
     <DockPanel>
         <!-- Bottom action bar -->
         <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Right" Margin="10" Spacing="10">
+            <CheckBox VerticalAlignment="Center" IsChecked="{Binding AddToSideboard}">Add to sideboard</CheckBox>
             <Button Command="{Binding AddToDeckCommand}">Add to Deck</Button>
             <Button Command="{Binding CancelCommand}">Cancel</Button>
         </StackPanel>
