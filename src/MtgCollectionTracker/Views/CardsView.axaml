@@ -189,7 +189,16 @@
 					</Grid>
 				</SplitView>
 			</DockPanel>
-			<TextBlock IsVisible="{Binding HasNoResults}" VerticalAlignment="Center" HorizontalAlignment="Center" Text="No results found :(" />
+			<StackPanel IsVisible="{Binding HasNoResults}" VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="8">
+				<TextBlock HorizontalAlignment="Center" Text="No results found :(" />
+				<Button Command="{Binding AddSearchToWishlistCommand}">
+					<TextBlock>
+						<Run Text="Add &quot;" />
+						<Run Text="{Binding SearchText}" />
+						<Run Text="&quot; to Wishlist" />
+					</TextBlock>
+				</Button>
+			</StackPanel>
 			<TextBlock IsVisible="{Binding ShowFirstTimeMessage}" VerticalAlignment="Center" HorizontalAlignment="Center" Text="Start searching for cards in your collection" />
 			<TextBlock IsVisible="{Binding IsEmptyCollection}" VerticalAlignment="Center" HorizontalAlignment="Center" Text="Your collection is empty. Add cards to your collection below" />
 		</Panel>

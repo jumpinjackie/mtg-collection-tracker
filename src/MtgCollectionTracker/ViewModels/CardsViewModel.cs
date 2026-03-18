@@ -46,6 +46,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     readonly Func<CardSkuItemViewModel> _cardSku;
     readonly Func<DialogViewModel> _dialog;
     readonly Func<AddCardsViewModel> _addCards;
+    readonly Func<AddCardsToWishlistViewModel> _addCardsToWishlist;
     readonly Func<EditCardSkuViewModel> _editCardSku;
     readonly Func<SplitCardSkuViewModel> _splitCardSku;
     readonly Func<SendCardsToContainerOrDeckViewModel> _sendToContainer;
@@ -58,6 +59,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
         _cardSku = () => new();
         _dialog = () => new();
         _addCards = () => new();
+        _addCardsToWishlist = () => new();
         _editCardSku = () => new();
         _splitCardSku = () => new();
         _sendToContainer = () => new();
@@ -73,6 +75,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
                           Func<CardSkuItemViewModel> cardSku,
                           Func<DialogViewModel> dialog,
                           Func<AddCardsViewModel> addCards,
+                          Func<AddCardsToWishlistViewModel> addCardsToWishlist,
                           Func<EditCardSkuViewModel> editCardSku,
                           Func<SplitCardSkuViewModel> splitCardSku,
                           Func<SendCardsToContainerOrDeckViewModel> sendToContainer,
@@ -85,6 +88,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
         _cardSku = cardSku;
         _dialog = dialog;
         _addCards = addCards;
+        _addCardsToWishlist = addCardsToWishlist;
         _editCardSku = editCardSku;
         _splitCardSku = splitCardSku;
         _sendToContainer = sendToContainer;
@@ -299,6 +303,28 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
         });
     }
 
+    private bool CanAddSearchToWishlist()
+        => !string.IsNullOrWhiteSpace(this.SearchText) && !Behavior.IsBusy;
+
+    [RelayCommand(CanExecute = nameof(CanAddSearchToWishlist))]
+    private void AddSearchToWishlist()
+    {
+        var cardName = this.SearchText?.Trim();
+        if (string.IsNullOrWhiteSpace(cardName))
+            return;
+
+        Messenger.Send(new OpenDialogMessage
+        {
+            DrawerWidth = 800,
+            ViewModel = _dialog().WithContent(
+                "Add Cards to Wishlist",
+                _addCardsToWishlist()
+                    .WithCards([(1, cardName, string.Empty)])
+                    .WithAutoCheckCardNamesOnOpen(),
+                canClose: false)
+        });
+    }
+
     partial void OnNoProxiesChanged(bool value)
     {
         this.PerformSearchCommand.Execute(null);
@@ -320,8 +346,14 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     }
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(AddSearchToWishlistCommand))]
     [NotifyPropertyChangedFor(nameof(CanSearch))]
     private string? _searchText;
+
+    partial void OnSearchTextChanged(string? value)
+    {
+        this.HasNoResults = false;
+    }
 
     [ObservableProperty]
     private bool _unParented;
@@ -543,6 +575,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     void IMultiModeCardListBehaviorHost.HandleBusyChanged(bool oldValue, bool newValue)
     {
         this.OnPropertyChanged(nameof(CanSearch));
+        this.AddSearchToWishlistCommand.NotifyCanExecuteChanged();
     }
 
     void IRecipient<TagsAppliedMessage>.Receive(TagsAppliedMessage message)

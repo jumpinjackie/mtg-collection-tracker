@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using MtgCollectionTracker.ViewModels;
 using System;
 
 namespace MtgCollectionTracker.Views
@@ -9,16 +10,44 @@ namespace MtgCollectionTracker.Views
     public partial class AddCardsToWishlistView : UserControl
     {
         private bool _isGridEditing;
+        private bool _autoCheckTriggered;
 
         public AddCardsToWishlistView()
         {
             InitializeComponent();
-            this.AttachedToVisualTree += (_, _) => UpdateGridMaxHeight();
+            this.AttachedToVisualTree += (_, _) =>
+            {
+                UpdateGridMaxHeight();
+                TryAutoCheckCardNamesOnOpen();
+            };
             this.SizeChanged += (_, _) => UpdateGridMaxHeight();
+            this.DataContextChanged += (_, _) => TryAutoCheckCardNamesOnOpen();
             AddCardsDataGrid.PreparingCellForEdit += OnPreparingCellForEdit;
             AddCardsDataGrid.CellEditEnded += OnCellEditEnded;
             AddCardsDataGrid.AddHandler(InputElement.TextInputEvent, OnDataGridTextInput, RoutingStrategies.Bubble);
             AddCardsDataGrid.AddHandler(InputElement.KeyDownEvent, OnDataGridKeyDown, RoutingStrategies.Tunnel);
+        }
+
+        private void TryAutoCheckCardNamesOnOpen()
+        {
+            if (_autoCheckTriggered || DataContext is not AddCardsToWishlistViewModel vm)
+            {
+                return;
+            }
+
+            if (!vm.TryConsumeAutoCheckCardNamesOnOpen())
+            {
+                return;
+            }
+
+            _autoCheckTriggered = true;
+            Dispatcher.UIThread.Post(() =>
+            {
+                if (vm.CheckCardNamesCommand.CanExecute(null))
+                {
+                    vm.CheckCardNamesCommand.Execute(null);
+                }
+            }, DispatcherPriority.Background);
         }
 
         private void UpdateGridMaxHeight()

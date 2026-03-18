@@ -27,6 +27,7 @@ public partial class AddCardsToWishlistViewModel : DialogContentViewModel
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
     readonly LanguageViewModel[] _languages;
+    bool _autoCheckCardNamesOnOpen;
 
     public AddCardsToWishlistViewModel()
     {
@@ -74,6 +75,21 @@ public partial class AddCardsToWishlistViewModel : DialogContentViewModel
             });
         }
         return this;
+    }
+
+    public AddCardsToWishlistViewModel WithAutoCheckCardNamesOnOpen()
+    {
+        _autoCheckCardNamesOnOpen = true;
+        return this;
+    }
+
+    public bool TryConsumeAutoCheckCardNamesOnOpen()
+    {
+        if (!_autoCheckCardNamesOnOpen)
+            return false;
+
+        _autoCheckCardNamesOnOpen = false;
+        return true;
     }
 
     public ObservableCollection<AddCardSkuViewModel> Cards { get; } = new();
