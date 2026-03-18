@@ -259,11 +259,18 @@ public class CardSkuItemViewModelTests
     private static CardSkuItemViewModel CreateViewModel()
     {
         var mockService = new Mock<ICollectionTrackingService>();
+        var messenger = new WeakReferenceMessenger();
         mockService.Setup(s => s.GetSmallFrontFaceImageAsync(It.IsAny<string>())).ReturnsAsync(System.IO.Stream.Null);
         mockService.Setup(s => s.GetSmallBackFaceImageAsync(It.IsAny<string>())).ReturnsAsync(System.IO.Stream.Null);
         mockService.Setup(s => s.GetLargeFrontFaceImageAsync(It.IsAny<string>())).ReturnsAsync(System.IO.Stream.Null);
         mockService.Setup(s => s.GetLargeBackFaceImageAsync(It.IsAny<string>())).ReturnsAsync(System.IO.Stream.Null);
-        return new CardSkuItemViewModel(mockService.Object);
+        return new CardSkuItemViewModel(
+            mockService.Object,
+            messenger,
+            () => throw new InvalidOperationException(),
+            () => throw new InvalidOperationException(),
+            () => throw new InvalidOperationException(),
+            new Mock<ScryfallApi.Client.IScryfallApiClient>().Object);
     }
 
     [Fact]
@@ -319,6 +326,7 @@ public class SendCardsToContainerOrDeckViewModelTests
             messenger,
             () => new ContainerViewModel(),
             () => new DeckViewModel(),
+            new SendCardsToContainerOrDeckSelectionState(),
             mockService.Object,
             mockClient.Object);
     }
