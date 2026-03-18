@@ -85,6 +85,7 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SendCardsCommand))]
     [NotifyPropertyChangedFor(nameof(IsUnSetContainerEnabled))]
+    [NotifyCanExecuteChangedFor(nameof(ClearSelectedContainerCommand))]
     private ContainerViewModel? _selectedContainer;
 
     partial void OnSelectedContainerChanged(ContainerViewModel? value)
@@ -96,6 +97,7 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
     [ObservableProperty]
     [NotifyCanExecuteChangedFor(nameof(SendCardsCommand))]
     [NotifyPropertyChangedFor(nameof(IsUnSetDeckEnabled))]
+    [NotifyCanExecuteChangedFor(nameof(ClearSelectedDeckCommand))]
     private DeckViewModel? _selectedDeck;
 
     partial void OnSelectedDeckChanged(DeckViewModel? value)
@@ -144,6 +146,24 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
             ? availableDecks.FirstOrDefault(d => d.DeckId == _selectionState.LastDeckId.Value)
             : null;
         return this;
+    }
+
+    private bool CanClearSelectedContainer() => this.SelectedContainer != null;
+
+    [RelayCommand(CanExecute = nameof(CanClearSelectedContainer))]
+    private void ClearSelectedContainer()
+    {
+        this.SelectedContainer = null;
+        this.UnSetContainer = true;
+    }
+
+    private bool CanClearSelectedDeck() => this.SelectedDeck != null;
+
+    [RelayCommand(CanExecute = nameof(CanClearSelectedDeck))]
+    private void ClearSelectedDeck()
+    {
+        this.SelectedDeck = null;
+        this.UnSetDeck = true;
     }
 
     [RelayCommand(CanExecute = nameof(CanSendCards))]

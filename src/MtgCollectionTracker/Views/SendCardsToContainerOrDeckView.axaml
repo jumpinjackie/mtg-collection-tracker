@@ -18,21 +18,27 @@
 		<ScrollViewer Margin="10">
 			<StackPanel>
 				<TextBlock Margin="6">Container</TextBlock>
-				<ComboBox Margin="6" SelectedItem="{Binding SelectedContainer}" ItemsSource="{Binding AvailableContainers}">
-					<ComboBox.ItemTemplate>
-						<DataTemplate x:DataType="vm:ContainerViewModel">
-							<TextBlock Text="{Binding Name}" />
-						</DataTemplate>
-					</ComboBox.ItemTemplate>
-				</ComboBox>
+				<StackPanel Margin="6" Orientation="Horizontal" Spacing="6" HorizontalAlignment="Left">
+					<ComboBox Width="320" SelectedItem="{Binding SelectedContainer}" ItemsSource="{Binding AvailableContainers}">
+						<ComboBox.ItemTemplate>
+							<DataTemplate x:DataType="vm:ContainerViewModel">
+								<TextBlock Text="{Binding Name}" />
+							</DataTemplate>
+						</ComboBox.ItemTemplate>
+					</ComboBox>
+					<Button Command="{Binding ClearSelectedContainerCommand}">Clear</Button>
+				</StackPanel>
 				<TextBlock Margin="6">Deck</TextBlock>
-				<ComboBox Margin="6" SelectedItem="{Binding SelectedDeck}" ItemsSource="{Binding AvailableDecks}">
-					<ComboBox.ItemTemplate>
-						<DataTemplate x:DataType="vm:DeckViewModel">
-							<TextBlock Text="{Binding Name}" />
-						</DataTemplate>
-					</ComboBox.ItemTemplate>
-				</ComboBox>
+				<StackPanel Margin="6" Orientation="Horizontal" Spacing="6" HorizontalAlignment="Left">
+					<ComboBox Width="320" SelectedItem="{Binding SelectedDeck}" ItemsSource="{Binding AvailableDecks}">
+						<ComboBox.ItemTemplate>
+							<DataTemplate x:DataType="vm:DeckViewModel">
+								<TextBlock Text="{Binding Name}" />
+							</DataTemplate>
+						</ComboBox.ItemTemplate>
+					</ComboBox>
+					<Button Command="{Binding ClearSelectedDeckCommand}">Clear</Button>
+				</StackPanel>
 				<CheckBox IsChecked="{Binding UnSetDeck}" IsEnabled="{Binding IsUnSetDeckEnabled}">Un-set currently assigned deck</CheckBox>
 				<CheckBox IsChecked="{Binding UnSetContainer}" IsEnabled="{Binding IsUnSetContainerEnabled}">Un-set currently assigned container</CheckBox>
 				<CheckBox IsThreeState="True" IsChecked="{Binding MarkAsSideboard}">Mark as sideboard card</CheckBox>
