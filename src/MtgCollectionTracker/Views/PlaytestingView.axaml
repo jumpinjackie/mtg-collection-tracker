@@ -22,6 +22,11 @@
 				           FontWeight="Bold"
 				           HorizontalAlignment="Center" />
 
+				<TextBox Text="{Binding DeckSearchText}"
+				         Watermark="Search decks..."
+				         Width="320"
+				         HorizontalAlignment="Center" />
+
 				<ListBox ItemsSource="{Binding AvailableDecks}"
 				         SelectedItem="{Binding SelectedDeck}"
 				         Height="300"

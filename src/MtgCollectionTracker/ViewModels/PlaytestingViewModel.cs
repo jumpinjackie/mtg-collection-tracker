@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
@@ -22,6 +23,7 @@ public partial class PlaytestingViewModel : RecipientViewModelBase, IViewModelWi
     private readonly ICollectionTrackingService _service;
     private readonly IScryfallApiClient _scryfallClient;
     private readonly Func<PlaytestGameStateViewModel> _gameStateFactory;
+    private readonly List<DeckSummaryModel> _allDecks = new();
 
     public PlaytestingViewModel(
         ICollectionTrackingService service,
@@ -56,6 +58,14 @@ public partial class PlaytestingViewModel : RecipientViewModelBase, IViewModelWi
     private DeckSummaryModel? _selectedDeck;
 
     [ObservableProperty]
+    private string _deckSearchText = string.Empty;
+
+    partial void OnDeckSearchTextChanged(string value)
+    {
+        ApplyDeckFilter();
+    }
+
+    [ObservableProperty]
     private bool _isInGame = false;
 
     [ObservableProperty]
@@ -85,11 +95,30 @@ public partial class PlaytestingViewModel : RecipientViewModelBase, IViewModelWi
     [RelayCommand]
     private void RefreshDecks()
     {
+        _allDecks.Clear();
+        _allDecks.AddRange(_service.GetDecks(null).OrderBy(d => d.Name));
+        ApplyDeckFilter();
+    }
+
+    private void ApplyDeckFilter()
+    {
+        var search = this.DeckSearchText?.Trim();
+        var filtered = string.IsNullOrWhiteSpace(search)
+            ? _allDecks
+            : _allDecks.Where(d =>
+                d.Name.Contains(search, StringComparison.OrdinalIgnoreCase)
+                || (d.Format?.Contains(search, StringComparison.OrdinalIgnoreCase) ?? false)
+                || d.DeckName.Contains(search, StringComparison.OrdinalIgnoreCase)).ToList();
+
         AvailableDecks.Clear();
-        var decks = _service.GetDecks(null);
-        foreach (var deck in decks.OrderBy(d => d.Name))
+        foreach (var deck in filtered)
         {
             AvailableDecks.Add(deck);
+        }
+
+        if (this.SelectedDeck != null && !AvailableDecks.Any(d => d.Id == this.SelectedDeck.Id))
+        {
+            this.SelectedDeck = null;
         }
     }
 
