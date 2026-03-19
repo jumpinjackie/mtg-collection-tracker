@@ -50,6 +50,7 @@ namespace MtgCollectionTracker;
 [Register(typeof(DismantleDeckViewModel), Scope.InstancePerResolution)]
 [Register(typeof(AddExistingCardsToDeckViewModel), Scope.InstancePerResolution)]
 [Register(typeof(ImportCardIdentifiersViewModel), Scope.InstancePerResolution)]
+[Register(typeof(CardPriceHistoryViewModel), Scope.InstancePerResolution)]
 [Register(typeof(CardsDbContext), Scope.InstancePerResolution)]
 [Register(typeof(CollectionTrackingService), Scope.InstancePerResolution, typeof(ICollectionTrackingService))]
 [Register(typeof(CardImageCache), Scope.InstancePerResolution)]

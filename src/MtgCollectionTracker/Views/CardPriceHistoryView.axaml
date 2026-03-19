@@ -1,0 +1,102 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="700" d:DesignHeight="450"
+             x:Class="MtgCollectionTracker.Views.CardPriceHistoryView"
+             x:DataType="vm:CardPriceHistoryViewModel">
+    <Design.DataContext>
+        <vm:CardPriceHistoryViewModel />
+    </Design.DataContext>
+    <DockPanel>
+        <ProgressBar DockPanel.Dock="Top" IsIndeterminate="True" IsVisible="{Binding IsBusy}" />
+
+        <!-- No data message -->
+        <TextBlock DockPanel.Dock="Top"
+                   IsVisible="{Binding HasNoData}"
+                   Text="{Binding NoDataMessage}"
+                   HorizontalAlignment="Center"
+                   VerticalAlignment="Center"
+                   Margin="16"
+                   FontSize="14" />
+
+        <!-- Legend (must come before the fill child in DockPanel order) -->
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Center" Margin="8" Spacing="16">
+            <StackPanel Orientation="Horizontal" Spacing="4">
+                <Border Width="14" Height="14" Background="#4CAF50" CornerRadius="2" />
+                <TextBlock Text="Lowest" VerticalAlignment="Center" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="4">
+                <Border Width="14" Height="14" Background="#FFC107" CornerRadius="2" />
+                <TextBlock Text="Median" VerticalAlignment="Center" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="4">
+                <Border Width="14" Height="14" Background="#F44336" CornerRadius="2" />
+                <TextBlock Text="Highest" VerticalAlignment="Center" />
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Chart area (fill child — must be last in DockPanel) -->
+        <ScrollViewer IsVisible="{Binding !HasNoData}" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+            <StackPanel Orientation="Horizontal" Margin="8">
+                <!-- Y-axis labels -->
+                <StackPanel Width="55" Margin="0 0 4 20" VerticalAlignment="Bottom">
+                    <ItemsControl ItemsSource="{Binding YAxisLabels}">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding}" FontSize="10" HorizontalAlignment="Right" Margin="0 0 4 0" Height="40" VerticalAlignment="Top" />
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <!-- Bar groups -->
+                <ItemsControl ItemsSource="{Binding BarGroups}">
+                    <ItemsControl.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <StackPanel Orientation="Horizontal" />
+                        </ItemsPanelTemplate>
+                    </ItemsControl.ItemsPanel>
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="vm:PriceBarGroupViewModel">
+                            <StackPanel Width="72" Margin="4 0" VerticalAlignment="Bottom">
+                                <!-- The three bars, aligned to the bottom -->
+                                <Grid Height="200" VerticalAlignment="Bottom">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+                                    <!-- Low bar (green) -->
+                                    <Panel Grid.Column="0" VerticalAlignment="Bottom" IsVisible="{Binding LowBar, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                        <Border Background="{Binding LowBar.Color}"
+                                                Height="{Binding LowBar.HeightRatio, Converter={StaticResource RatioToHeightConverter}, ConverterParameter=200}"
+                                                ToolTip.Tip="{Binding LowBar.Tooltip}"
+                                                Margin="1 0" CornerRadius="2 2 0 0" />
+                                    </Panel>
+                                    <!-- Median bar (gold) -->
+                                    <Panel Grid.Column="1" VerticalAlignment="Bottom" IsVisible="{Binding MedianBar, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                        <Border Background="{Binding MedianBar.Color}"
+                                                Height="{Binding MedianBar.HeightRatio, Converter={StaticResource RatioToHeightConverter}, ConverterParameter=200}"
+                                                ToolTip.Tip="{Binding MedianBar.Tooltip}"
+                                                Margin="1 0" CornerRadius="2 2 0 0" />
+                                    </Panel>
+                                    <!-- High bar (red) -->
+                                    <Panel Grid.Column="2" VerticalAlignment="Bottom" IsVisible="{Binding HighBar, Converter={x:Static ObjectConverters.IsNotNull}}">
+                                        <Border Background="{Binding HighBar.Color}"
+                                                Height="{Binding HighBar.HeightRatio, Converter={StaticResource RatioToHeightConverter}, ConverterParameter=200}"
+                                                ToolTip.Tip="{Binding HighBar.Tooltip}"
+                                                Margin="1 0" CornerRadius="2 2 0 0" />
+                                    </Panel>
+                                </Grid>
+                                <!-- Date label below bars -->
+                                <TextBlock Text="{Binding DateLabel}" FontSize="10" HorizontalAlignment="Center" Margin="0 4 0 0" />
+                            </StackPanel>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+            </StackPanel>
+        </ScrollViewer>
+    </DockPanel>
+</UserControl>

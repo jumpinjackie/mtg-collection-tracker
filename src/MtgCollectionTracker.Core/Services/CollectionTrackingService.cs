@@ -2324,6 +2324,77 @@ public class CollectionTrackingService : ICollectionTrackingService
         return (entry?.Price, entry?.PriceProvider);
     }
 
+    public async ValueTask<CardPriceHistoryModel?> GetPriceHistoryForSkuAsync(Guid skuId, string currency, CancellationToken cancel)
+    {
+        using var db = _db.Invoke();
+        var sku = await db.Value.Cards.FirstOrDefaultAsync(c => c.Id == skuId, cancel);
+        if (sku == null || sku.ScryfallId == null)
+            return null;
+
+        var finish = sku.IsFoil ? "foil" : "normal";
+        var mapping = await db.Value.ScryfallIdMappings.FirstOrDefaultAsync(m => m.ScryfallId == sku.ScryfallId, cancel);
+        if (mapping == null)
+            return null;
+
+        // Get all retail entries for this card ordered by date descending, take 10 distinct dates
+        var allEntries = await db.Value.CardPricingEntries
+            .Where(e => e.Uuid == mapping.MtgJsonUuid
+                && e.CardFinish == finish
+                && e.Currency == currency
+                && e.ProviderListing == "retail")
+            .OrderByDescending(e => e.Date)
+            .ToListAsync(cancel);
+
+        var top10Dates = allEntries
+            .Select(e => e.Date)
+            .Distinct()
+            .Take(10)
+            .OrderBy(d => d)
+            .ToList();
+
+        if (top10Dates.Count == 0)
+            return null;
+
+        var datePoints = new List<CardPriceDatePoint>();
+        foreach (var date in top10Dates)
+        {
+            var dayEntries = allEntries
+                .Where(e => e.Date == date)
+                .OrderBy(e => e.Price)
+                .ToList();
+
+            if (dayEntries.Count == 0)
+                continue;
+
+            var lowest = dayEntries[0];
+            var highest = dayEntries[dayEntries.Count - 1];
+
+            // Compute median price
+            double medianPrice;
+            int count = dayEntries.Count;
+            if (count % 2 == 0)
+                medianPrice = (dayEntries[count / 2 - 1].Price + dayEntries[count / 2].Price) / 2.0;
+            else
+                medianPrice = dayEntries[count / 2].Price;
+
+            datePoints.Add(new CardPriceDatePoint
+            {
+                Date = date,
+                Lowest = new CardPricePoint { Price = lowest.Price, Provider = lowest.PriceProvider },
+                Highest = new CardPricePoint { Price = highest.Price, Provider = highest.PriceProvider },
+                Median = medianPrice
+            });
+        }
+
+        return new CardPriceHistoryModel
+        {
+            CardName = sku.CardName,
+            Edition = sku.Edition,
+            IsFoil = sku.IsFoil,
+            DatePoints = datePoints
+        };
+    }
+
     private static string[] ParseCsvLine(string line)
     {
         // RFC 4180-compliant CSV parser: handles quoted fields and escaped double-quotes ("")

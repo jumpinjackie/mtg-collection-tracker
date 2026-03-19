@@ -310,5 +310,10 @@ public class StubCollectionTrackingService : ICollectionTrackingService
     {
         throw new System.NotImplementedException();
     }
+
+    public ValueTask<CardPriceHistoryModel?> GetPriceHistoryForSkuAsync(Guid skuId, string currency, CancellationToken cancel)
+    {
+        throw new System.NotImplementedException();
+    }
 }
 
