@@ -140,7 +140,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
     {
         if (this.SelectedDeck is not null)
         {
-            var priceList = await _service.GetLowestPricesForDeckAsync(new(this.SelectedDeck.DeckId, true, false), _scryfallApiClient!, cancel);
+            var priceList = await _service.GetLowestPricesForDeckAsync(new(this.SelectedDeck.DeckId, true, false), _scryfallApiClient, cancel);
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 800,

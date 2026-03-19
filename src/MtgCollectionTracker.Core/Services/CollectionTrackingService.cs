@@ -1912,10 +1912,9 @@ public class CollectionTrackingService : ICollectionTrackingService
         await this.AddMissingMetadataAsync(callback, scryfallApiClient, cancel);
     }
 
-    public async ValueTask<List<LowestPriceCheckItem>> GetLowestPricesAsync(LowestPriceCheckOptions options, IScryfallApiClient client, CancellationToken cancel)
+    public async ValueTask<List<LowestPriceCheckItem>> GetLowestPricesAsync(LowestPriceCheckOptions options, CancellationToken cancel)
     {
         using var db = _db.Invoke();
-        var resolver = new ScryfallMetadataResolver(db.Value, client);
         var results = new List<LowestPriceCheckItem>();
         foreach (var item in options.Items)
         {
@@ -1936,7 +1935,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             }
             else
             {
-                meta = await resolver.GetLowestPriceAsync(item.CardName, cancel);
+                meta = await GetLowestPriceFromLocalDataAsync(db.Value, item.CardName, cancel);
                 _priceCache.Set(item.CardName, meta);
             }
             var (edition, price) = meta;
@@ -1950,6 +1949,33 @@ public class CollectionTrackingService : ICollectionTrackingService
             }
         }
         return results;
+    }
+
+    private async ValueTask<(string? edition, decimal? price)> GetLowestPriceFromLocalDataAsync(CardsDbContext db, string cardName, CancellationToken cancel)
+    {
+        var cardNameLower = cardName.ToLower();
+
+        // Find all Scryfall IDs for this card name (case-insensitive), joined through to price entries in a single query
+        var cheapestResult = await db.Set<ScryfallCardMetadata>()
+            .Where(m => m.CardName.ToLower() == cardNameLower)
+            .Join(db.Set<ScryfallIdMapping>(),
+                m => m.Id,
+                s => s.ScryfallId,
+                (m, s) => new { Metadata = m, Mapping = s })
+            .Join(db.Set<CardPricingEntry>()
+                    .Where(e => e.CardFinish == "normal"
+                        && e.Currency == "USD"
+                        && e.ProviderListing == "retail"),
+                ms => ms.Mapping.MtgJsonUuid,
+                e => e.Uuid,
+                (ms, e) => new { ms.Metadata.Edition, e.Price })
+            .OrderBy(x => x.Price)
+            .FirstOrDefaultAsync(cancel);
+
+        if (cheapestResult == null)
+            return (null, null);
+
+        return (cheapestResult.Edition?.ToUpperInvariant(), (decimal?)cheapestResult.Price);
     }
 
     public async ValueTask NormalizeCardNamesAsync(UpdateCardMetadataProgressCallback callback, CancellationToken cancel)

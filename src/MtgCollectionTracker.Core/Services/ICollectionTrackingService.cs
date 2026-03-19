@@ -112,7 +112,7 @@ namespace MtgCollectionTracker.Core.Services
         ValueTask AddMissingMetadataAsync(UpdateCardMetadataProgressCallback callback, IScryfallApiClient scryfallApiClient, CancellationToken cancel);
         ValueTask RebuildAllMetadataAsync(UpdateCardMetadataProgressCallback callback, IScryfallApiClient scryfallApiClient, CancellationToken cancel);
         ValueTask NormalizeCardNamesAsync(UpdateCardMetadataProgressCallback callback, CancellationToken cancel);
-        ValueTask<List<LowestPriceCheckItem>> GetLowestPricesAsync(LowestPriceCheckOptions options, IScryfallApiClient client, CancellationToken cancel);
+        ValueTask<List<LowestPriceCheckItem>> GetLowestPricesAsync(LowestPriceCheckOptions options, CancellationToken cancel);
 
         /// <summary>Checks if the ScryfallIdMapping table is empty (i.e., card identifiers have not been imported).</summary>
         ValueTask<bool> IsScryfallIdMappingEmptyAsync(CancellationToken cancel);
@@ -139,7 +139,7 @@ namespace MtgCollectionTracker.Core.Services
 
     public static class CollectionTrackingServiceExtensions
     {
-        public static async ValueTask<List<LowestPriceCheckItem>> GetLowestPricesForDeckAsync(this ICollectionTrackingService service, LowestPriceCheckForDeckOptions options, IScryfallApiClient client, CancellationToken cancel)
+        public static async ValueTask<List<LowestPriceCheckItem>> GetLowestPricesForDeckAsync(this ICollectionTrackingService service, LowestPriceCheckForDeckOptions options, IScryfallApiClient? client, CancellationToken cancel)
         {
             var deck = await service.GetDeckAsync(options.DeckId, client, cancel);
             
@@ -150,7 +150,7 @@ namespace MtgCollectionTracker.Core.Services
 
             var checkOpts = new LowestPriceCheckOptions(items, options.SkipBasicLands, options.SkipSnowBasicLands);
 
-            var res = await service.GetLowestPricesAsync(checkOpts, client, cancel);
+            var res = await service.GetLowestPricesAsync(checkOpts, cancel);
             return res;
         }
     }
