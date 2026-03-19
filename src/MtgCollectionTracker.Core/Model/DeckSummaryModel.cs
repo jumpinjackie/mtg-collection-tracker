@@ -32,4 +32,9 @@ public class DeckSummaryModel : DeckModelBase
     /// The validation status of the commander deck (null if not a commander deck or validation not yet run)
     /// </summary>
     public bool? IsCommanderValid { get; set; }
+
+    /// <summary>
+    /// Tooltip text describing commander validation status/reasons.
+    /// </summary>
+    public string? CommanderValidationMessage { get; set; }
 }

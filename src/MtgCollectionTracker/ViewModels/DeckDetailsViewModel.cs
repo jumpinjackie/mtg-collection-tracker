@@ -11,6 +11,7 @@ using ScryfallApi.Client;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq;
@@ -68,6 +69,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
         _addCards = () => new();
         _addExistingCards = () => new();
         this.Behavior = new(this);
+        this.Behavior.PropertyChanged += OnBehaviorPropertyChanged;
         this.IsActive = true;
         this.Name = "Test Deck";
     }
@@ -90,6 +92,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
         _addCards = addCards;
         _addExistingCards = addExistingCards;
         this.Behavior = new(this);
+        this.Behavior.PropertyChanged += OnBehaviorPropertyChanged;
         this.IsActive = true;
     }
 
@@ -104,6 +107,9 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
     [NotifyPropertyChangedFor(nameof(IsVisualMode))]
     [NotifyPropertyChangedFor(nameof(IsSkuBasedMode))]
     [NotifyPropertyChangedFor(nameof(IsVisualSkuMode))]
+    [NotifyPropertyChangedFor(nameof(SetPrimaryActionLabel))]
+    [NotifyPropertyChangedFor(nameof(CanSetPrimaryAction))]
+    [NotifyCanExecuteChangedFor(nameof(SetAsBannerCommand))]
     private DeckViewMode _mode = DeckViewMode.Text;
 
     IMessenger IViewModelWithBusyState.Messenger => this.Messenger;
@@ -145,6 +151,24 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
     public bool IsVisualMode => this.Mode == DeckViewMode.VisualByCardName || this.Mode == DeckViewMode.VisualBySku;
 
     public bool IsTableMode => this.Mode == DeckViewMode.TableByCardName || this.Mode == DeckViewMode.TableBySku;
+
+    public bool IsCommanderDeck => _origDeck?.IsCommander == true;
+
+    public string SetPrimaryActionLabel => IsCommanderDeck ? "Set as Commander" : "Set as Banner";
+
+    public bool CanSetPrimaryAction
+    {
+        get
+        {
+            if (!IsVisualSkuMode || !Behavior.HasOneSelectedItem)
+                return false;
+
+            if (!IsCommanderDeck)
+                return true;
+
+            return IsSelectedLegendaryCreature();
+        }
+    }
 
     [ObservableProperty]
     private bool _reportProxyUsage = false;
@@ -287,6 +311,10 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
 
         _origDeck = deck;
         _bannerCardId = deck.BannerCardId;
+        SetAsBannerCommand.NotifyCanExecuteChanged();
+        OnPropertyChanged(nameof(IsCommanderDeck));
+        OnPropertyChanged(nameof(SetPrimaryActionLabel));
+        OnPropertyChanged(nameof(CanSetPrimaryAction));
 
         this.MainDeckSize = _origDeck.MainDeck.Count;
         this.SideboardSize = _origDeck.Sideboard.Count;
@@ -296,19 +324,36 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
         return this;
     }
 
-    [RelayCommand]
+    [RelayCommand(CanExecute = nameof(CanSetPrimaryAction))]
     private async Task SetAsBanner()
     {
         if (Behavior.SelectedItems.Count == 1)
         {
             var selected = Behavior.SelectedItems[0];
-            // Toggle: if this card is already the banner, clear it; otherwise set it
-            var newBannerId = selected.Id == _bannerCardId ? (Guid?)null : selected.Id;
             using (((IViewModelWithBusyState)this).StartBusyState())
             {
-                var updatedDeck = await _service.SetDeckBannerAsync(_origDeck.Id, newBannerId);
-                _bannerCardId = newBannerId;
-                _origDeck.BannerCardId = newBannerId;
+                DeckSummaryModel updatedDeck;
+                if (IsCommanderDeck)
+                {
+                    _bannerCardId = selected.Id;
+                    _origDeck.BannerCardId = selected.Id;
+
+                    await _service.SetDeckBannerAsync(_origDeck.Id, selected.Id);
+                    updatedDeck = await _service.SetDeckCommanderAsync(_origDeck.Id, selected.Id);
+
+                    var selectedCommander = _origDeck.MainDeck.FirstOrDefault(c => c.SkuId == selected.Id)
+                        ?? _origDeck.Sideboard.FirstOrDefault(c => c.SkuId == selected.Id);
+                    _origDeck.Commander = selectedCommander;
+                }
+                else
+                {
+                    // Toggle: if this card is already the banner, clear it; otherwise set it
+                    var newBannerId = selected.Id == _bannerCardId ? (Guid?)null : selected.Id;
+                    updatedDeck = await _service.SetDeckBannerAsync(_origDeck.Id, newBannerId);
+                    _bannerCardId = newBannerId;
+                    _origDeck.BannerCardId = newBannerId;
+                }
+
                 // Update IsBanner flags on all loaded card view models
                 UpdateBannerFlags();
                 // Notify the deck collection view to update the banner image
@@ -432,6 +477,25 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
     }
 
     public void HandleBusyChanged(bool oldValue, bool newValue) { }
+
+    private void OnBehaviorPropertyChanged(object? sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(MultiModeCardListBehavior<CardVisualViewModel>.HasOneSelectedItem)
+            || e.PropertyName == nameof(MultiModeCardListBehavior<CardVisualViewModel>.SelectedCardType)
+            || e.PropertyName == nameof(MultiModeCardListBehavior<CardVisualViewModel>.IsBusy))
+        {
+            SetAsBannerCommand.NotifyCanExecuteChanged();
+            OnPropertyChanged(nameof(CanSetPrimaryAction));
+        }
+    }
+
+    private bool IsSelectedLegendaryCreature()
+    {
+        var type = Behavior.SelectedCardType;
+        return !string.IsNullOrWhiteSpace(type)
+            && type.Contains("Legendary", StringComparison.OrdinalIgnoreCase)
+            && type.Contains("Creature", StringComparison.OrdinalIgnoreCase);
+    }
 
     private void RefreshDeckView()
     {

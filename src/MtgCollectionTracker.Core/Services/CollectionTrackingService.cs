@@ -43,6 +43,79 @@ public class CollectionTrackingService : ICollectionTrackingService
         return name.Trim();
     }
 
+    private static int GetCommanderCopiesInMainDeck(Deck deck)
+    {
+        if (!deck.CommanderId.HasValue)
+            return 0;
+
+        return deck.Cards
+            .Where(c => !c.IsSideboard && c.Id == deck.CommanderId.Value)
+            .Sum(c => c.Quantity);
+    }
+
+    private static List<string> GetCommanderValidationErrors(Deck deck)
+    {
+        var errors = new List<string>();
+        if (!deck.IsCommander)
+            return errors;
+
+        // Rule 1: Commander must be set and must be a legendary creature
+        if (deck.Commander == null)
+        {
+            errors.Add("No commander has been designated for this deck");
+        }
+        else
+        {
+            var cmdCardType = deck.Commander.Scryfall?.CardType ?? string.Empty;
+            if (!cmdCardType.Contains("Legendary", StringComparison.OrdinalIgnoreCase) ||
+                !cmdCardType.Contains("Creature", StringComparison.OrdinalIgnoreCase))
+            {
+                errors.Add($"Commander '{deck.Commander.CardName}' is not a Legendary Creature");
+            }
+        }
+
+        var commanderCopiesInMainDeck = GetCommanderCopiesInMainDeck(deck);
+        if (commanderCopiesInMainDeck != 1)
+        {
+            errors.Add($"Commander must be exactly 1 card in the main deck (currently has {commanderCopiesInMainDeck})");
+        }
+
+        // Rule 2: Main deck must be 99 cards (excluding the commander itself)
+        var mainDeckCount = deck.Cards
+            .Where(c => !c.IsSideboard && c.Id != deck.CommanderId)
+            .Sum(c => c.Quantity);
+        if (mainDeckCount != 99)
+        {
+            errors.Add($"Main deck must have exactly 99 cards (currently has {mainDeckCount})");
+        }
+
+        // Rule 3: Color identity check
+        if (deck.Commander?.Scryfall?.ColorIdentity != null)
+        {
+            var commanderColorIdentity = new HashSet<string>(
+                deck.Commander.Scryfall.ColorIdentity,
+                StringComparer.OrdinalIgnoreCase);
+
+            foreach (var sku in deck.Cards.Where(c => !c.IsSideboard && c.Id != deck.CommanderId))
+            {
+                var cardIdentity = sku.Scryfall?.ColorIdentity;
+                if (cardIdentity == null || cardIdentity.Length == 0)
+                    continue; // Colorless cards are always legal
+
+                foreach (var color in cardIdentity)
+                {
+                    if (!commanderColorIdentity.Contains(color))
+                    {
+                        errors.Add($"'{sku.CardName}' has color identity [{string.Join(", ", cardIdentity)}] which is not within the commander's color identity [{string.Join(", ", commanderColorIdentity)}]");
+                        break;
+                    }
+                }
+            }
+        }
+
+        return errors;
+    }
+
     public IEnumerable<CardLanguageModel> GetLanguages()
     {
         using var db = _db.Invoke();
@@ -165,25 +238,15 @@ public class CollectionTrackingService : ICollectionTrackingService
         return decks.Select(d =>
         {
             bool? isCommanderValid = null;
+            List<string>? commanderValidationErrors = null;
             if (d.IsCommander)
             {
-                // Basic validation: commander must be set and be a legendary creature
-                var cmdCardType = d.Commander?.Scryfall?.CardType ?? string.Empty;
-                var hasValidCommander = d.Commander != null
-                    && cmdCardType.Contains("Legendary", StringComparison.OrdinalIgnoreCase)
-                    && cmdCardType.Contains("Creature", StringComparison.OrdinalIgnoreCase);
-
-                // Main deck must be 99 cards (excluding the commander itself)
-                var mainDeckCount = d.Cards
-                    .Where(c => !c.IsSideboard && c.Id != d.CommanderId)
-                    .Sum(c => c.Quantity);
-                isCommanderValid = hasValidCommander && mainDeckCount == 99;
+                commanderValidationErrors = GetCommanderValidationErrors(d);
+                isCommanderValid = commanderValidationErrors.Count == 0;
             }
 
-            // For display purposes, MaindeckTotal includes the commander if it's a commander deck
-            var mainTotal = d.IsCommander
-                ? d.Cards.Where(c => !c.IsSideboard && c.Id != d.CommanderId).Sum(c => c.Quantity)
-                : d.Cards.Where(c => !c.IsSideboard).Sum(c => c.Quantity);
+            // For display purposes, MaindeckTotal includes the commander card for commander decks.
+            var mainTotal = d.Cards.Where(c => !c.IsSideboard).Sum(c => c.Quantity);
 
             return new DeckSummaryModel
             {
@@ -198,7 +261,12 @@ public class CollectionTrackingService : ICollectionTrackingService
                 BannerScryfallId = d.BannerCard?.ScryfallId,
                 IsCommander = d.IsCommander,
                 CommanderName = d.Commander?.CardName,
-                IsCommanderValid = isCommanderValid
+                IsCommanderValid = isCommanderValid,
+                CommanderValidationMessage = d.IsCommander
+                    ? (isCommanderValid == true
+                        ? (d.Commander?.CardName ?? "Commander deck is valid")
+                        : $"Invalid commander deck:{Environment.NewLine}- {string.Join(Environment.NewLine + "- ", commanderValidationErrors!)}")
+                    : null
             };
         }).ToList();
     }
@@ -890,21 +958,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         await db.Value.Decks.AddAsync(d);
         await db.Value.SaveChangesAsync();
 
-        await db.Value.Entry(d).Collection(nameof(d.Cards)).LoadAsync();
-
-        return new DeckSummaryModel
-        {
-            Id = d.Id,
-            DeckName = d.Name,
-            Name = "[" + d.Format + "] " + d.Name,
-            ContainerName = d.Container?.Name,
-            Format = d.Format,
-            MaindeckTotal = d.Cards.Where(c => !c.IsSideboard).Sum(c => c.Quantity),
-            SideboardTotal = d.Cards.Where(c => c.IsSideboard).Sum(c => c.Quantity),
-            BannerCardId = d.BannerCardId,
-            BannerScryfallId = null,
-            IsCommander = d.IsCommander
-        };
+        return this.GetDecks(new DeckFilterModel { Ids = [d.Id], Formats = [] }).Single();
     }
 
     public async ValueTask<DeckSummaryModel> UpdateDeckAsync(int id, string name, string? format, int? containerId, bool isCommander = false)
@@ -950,24 +1004,8 @@ public class CollectionTrackingService : ICollectionTrackingService
         }
 
         await db.Value.SaveChangesAsync();
-        await db.Value.Entry(d).Collection(nameof(d.Cards)).LoadAsync();
-        await db.Value.Entry(d).Reference(nameof(d.BannerCard)).LoadAsync();
-        await db.Value.Entry(d).Reference(nameof(d.Commander)).LoadAsync();
 
-        return new DeckSummaryModel
-        {
-            Id = d.Id,
-            DeckName = d.Name,
-            Name = "[" + d.Format + "] " + d.Name,
-            ContainerName = d.Container?.Name,
-            Format = d.Format,
-            MaindeckTotal = d.Cards.Where(c => !c.IsSideboard).Sum(c => c.Quantity),
-            SideboardTotal = d.Cards.Where(c => c.IsSideboard).Sum(c => c.Quantity),
-            BannerCardId = d.BannerCardId,
-            BannerScryfallId = d.BannerCard?.ScryfallId,
-            IsCommander = d.IsCommander,
-            CommanderName = d.Commander?.CardName
-        };
+        return this.GetDecks(new DeckFilterModel { Ids = [d.Id], Formats = [] }).Single();
     }
 
     public async ValueTask<DeckSummaryModel> SetDeckBannerAsync(int deckId, Guid? cardSkuId)
@@ -986,23 +1024,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         deck.BannerCardId = cardSkuId;
         await db.Value.SaveChangesAsync();
 
-        CardSku? bannerCard = cardSkuId.HasValue
-            ? deck.Cards.FirstOrDefault(c => c.Id == cardSkuId.Value)
-            : null;
-
-        return new DeckSummaryModel
-        {
-            Id = deck.Id,
-            DeckName = deck.Name,
-            Name = "[" + deck.Format + "] " + deck.Name,
-            ContainerName = deck.Container?.Name,
-            Format = deck.Format,
-            MaindeckTotal = deck.Cards.Where(c => !c.IsSideboard).Sum(c => c.Quantity),
-            SideboardTotal = deck.Cards.Where(c => c.IsSideboard).Sum(c => c.Quantity),
-            BannerCardId = deck.BannerCardId,
-            BannerScryfallId = bannerCard?.ScryfallId,
-            IsCommander = deck.IsCommander
-        };
+        return this.GetDecks(new DeckFilterModel { Ids = [deck.Id], Formats = [] }).Single();
     }
 
     public async ValueTask<DeckSummaryModel> SetDeckCommanderAsync(int deckId, Guid? commanderSkuId)
@@ -1035,23 +1057,8 @@ public class CollectionTrackingService : ICollectionTrackingService
 
         deck.CommanderId = commanderSkuId;
         await db.Value.SaveChangesAsync();
-        await db.Value.Entry(deck).Reference(nameof(deck.BannerCard)).LoadAsync();
-        await db.Value.Entry(deck).Reference(nameof(deck.Commander)).LoadAsync();
 
-        return new DeckSummaryModel
-        {
-            Id = deck.Id,
-            DeckName = deck.Name,
-            Name = "[" + deck.Format + "] " + deck.Name,
-            ContainerName = deck.Container?.Name,
-            Format = deck.Format,
-            MaindeckTotal = deck.Cards.Where(c => !c.IsSideboard).Sum(c => c.Quantity),
-            SideboardTotal = deck.Cards.Where(c => c.IsSideboard).Sum(c => c.Quantity),
-            BannerCardId = deck.BannerCardId,
-            BannerScryfallId = deck.BannerCard?.ScryfallId,
-            IsCommander = deck.IsCommander,
-            CommanderName = deck.Commander?.CardName
-        };
+        return this.GetDecks(new DeckFilterModel { Ids = [deck.Id], Formats = [] }).Single();
     }
 
     public async ValueTask<CommanderValidationResult> ValidateCommanderDeckAsync(int deckId, CancellationToken cancel)
@@ -1078,53 +1085,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             return result;
         }
 
-        // Rule 1: Commander must be set and must be a legendary creature
-        if (deck.Commander == null)
-        {
-            result.Errors.Add("No commander has been designated for this deck");
-        }
-        else
-        {
-            var cmdCardType = deck.Commander.Scryfall?.CardType ?? string.Empty;
-            if (!cmdCardType.Contains("Legendary", StringComparison.OrdinalIgnoreCase) ||
-                !cmdCardType.Contains("Creature", StringComparison.OrdinalIgnoreCase))
-            {
-                result.Errors.Add($"Commander '{deck.Commander.CardName}' is not a Legendary Creature");
-            }
-        }
-
-        // Rule 2: Main deck must be 99 cards (excluding the commander itself)
-        var mainDeckCount = deck.Cards
-            .Where(c => !c.IsSideboard && c.Id != deck.CommanderId)
-            .Sum(c => c.Quantity);
-        if (mainDeckCount != 99)
-        {
-            result.Errors.Add($"Main deck must have exactly 99 cards (currently has {mainDeckCount})");
-        }
-
-        // Rule 3: Color identity check
-        if (deck.Commander?.Scryfall?.ColorIdentity != null)
-        {
-            var commanderColorIdentity = new HashSet<string>(
-                deck.Commander.Scryfall.ColorIdentity,
-                StringComparer.OrdinalIgnoreCase);
-
-            foreach (var sku in deck.Cards.Where(c => !c.IsSideboard && c.Id != deck.CommanderId))
-            {
-                var cardIdentity = sku.Scryfall?.ColorIdentity;
-                if (cardIdentity == null || cardIdentity.Length == 0)
-                    continue; // Colorless cards are always legal
-
-                foreach (var color in cardIdentity)
-                {
-                    if (!commanderColorIdentity.Contains(color))
-                    {
-                        result.Errors.Add($"'{sku.CardName}' has color identity [{string.Join(", ", cardIdentity)}] which is not within the commander's color identity [{string.Join(", ", commanderColorIdentity)}]");
-                        break;
-                    }
-                }
-            }
-        }
+        result.Errors.AddRange(GetCommanderValidationErrors(deck));
 
         return result;
     }

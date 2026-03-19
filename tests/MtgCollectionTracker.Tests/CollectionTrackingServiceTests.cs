@@ -440,6 +440,126 @@ public class CollectionTrackingServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task ValidateCommanderDeckAsync_ReturnsError_WhenCommanderCopiesNotOne()
+    {
+        int deckId;
+        using (var ctx = new CardsDbContext(_dbOptions))
+        {
+            var deck = new Deck
+            {
+                Name = "Simic Commander",
+                Format = "Commander",
+                IsCommander = true,
+                Cards = new List<CardSku>()
+            };
+
+            var commanderMeta = new ScryfallCardMetadata
+            {
+                Id = "cmd-1",
+                CardName = "Legendary Commander",
+                Edition = "LCC",
+                CardType = "Legendary Creature — Merfolk",
+                Rarity = "mythic"
+            };
+
+            var commanderSku = new CardSku
+            {
+                CardName = "Legendary Commander",
+                Edition = "LCC",
+                Quantity = 2,
+                ScryfallId = commanderMeta.Id,
+                Scryfall = commanderMeta,
+                Deck = deck
+            };
+
+            var mainDeckSku = new CardSku
+            {
+                CardName = "Forest",
+                Edition = "LCC",
+                Quantity = 99,
+                Deck = deck
+            };
+
+            ctx.Decks.Add(deck);
+            ctx.Cards.AddRange(commanderSku, mainDeckSku);
+            await ctx.SaveChangesAsync();
+
+            deck.CommanderId = commanderSku.Id;
+            await ctx.SaveChangesAsync();
+
+            deckId = deck.Id;
+        }
+
+        var service = CreateService();
+        var result = await service.ValidateCommanderDeckAsync(deckId, CancellationToken.None);
+
+        Assert.Contains(result.Errors, e => e.Contains("Commander must be exactly 1 card in the main deck", StringComparison.Ordinal));
+
+        var summary = service.GetDecks(new DeckFilterModel { Ids = [deckId], Formats = [] }).Single();
+        Assert.False(summary.IsCommanderValid);
+    }
+
+    [Fact]
+    public async Task ValidateCommanderDeckAsync_ReturnsError_WhenMainDeckCountIsNotNinetyNine()
+    {
+        int deckId;
+        using (var ctx = new CardsDbContext(_dbOptions))
+        {
+            var deck = new Deck
+            {
+                Name = "Simic Commander",
+                Format = "Commander",
+                IsCommander = true,
+                Cards = new List<CardSku>()
+            };
+
+            var commanderMeta = new ScryfallCardMetadata
+            {
+                Id = "cmd-2",
+                CardName = "Legendary Commander",
+                Edition = "LCC",
+                CardType = "Legendary Creature — Merfolk",
+                Rarity = "mythic"
+            };
+
+            var commanderSku = new CardSku
+            {
+                CardName = "Legendary Commander",
+                Edition = "LCC",
+                Quantity = 1,
+                ScryfallId = commanderMeta.Id,
+                Scryfall = commanderMeta,
+                Deck = deck
+            };
+
+            var mainDeckSku = new CardSku
+            {
+                CardName = "Forest",
+                Edition = "LCC",
+                Quantity = 98,
+                Deck = deck
+            };
+
+            ctx.Decks.Add(deck);
+            ctx.Cards.AddRange(commanderSku, mainDeckSku);
+            await ctx.SaveChangesAsync();
+
+            deck.CommanderId = commanderSku.Id;
+            await ctx.SaveChangesAsync();
+
+            deckId = deck.Id;
+        }
+
+        var service = CreateService();
+        var result = await service.ValidateCommanderDeckAsync(deckId, CancellationToken.None);
+
+        Assert.Contains(result.Errors, e => e.Contains("Main deck must have exactly 99 cards", StringComparison.Ordinal));
+
+        var summary = service.GetDecks(new DeckFilterModel { Ids = [deckId], Formats = [] }).Single();
+        Assert.False(summary.IsCommanderValid);
+    }
+
+    [Fact]
     public async Task UpdateWishlistItemAsync_RetainsExistingOffers_WhenVendorOffersIsNull()
     {
         // Arrange: seed a vendor and wishlist item with an offer
@@ -1030,5 +1150,140 @@ public class CollectionTrackingServiceTests : IDisposable
 
         Assert.False(result.IsValid);
         Assert.Contains(result.Errors, e => e.Contains("99"));
+    }
+
+    [Fact]
+    public void GetDecks_CommanderDeck_MaindeckTotalIncludesCommander()
+    {
+        using var ctx = new CardsDbContext(_dbOptions);
+        var deck = new Deck { Name = "Hakbal EDH", Format = "Commander", IsCommander = true };
+        ctx.Decks.Add(deck);
+        ctx.SaveChanges();
+
+        var commanderMeta = new ScryfallCardMetadata
+        {
+            Id = Guid.NewGuid().ToString(),
+            CardName = "Hakbal of the Surging Soul",
+            Edition = "LCC",
+            CardType = "Legendary Creature — Merfolk Scout",
+            Type = "Creature",
+            Rarity = "mythic"
+        };
+
+        var commanderSku = new CardSku
+        {
+            CardName = "Hakbal of the Surging Soul",
+            Edition = "LCC",
+            Quantity = 1,
+            ScryfallId = commanderMeta.Id,
+            Scryfall = commanderMeta,
+            Deck = deck,
+            IsSideboard = false,
+        };
+
+        var mainDeckSku = new CardSku
+        {
+            CardName = "Forest",
+            Edition = "M21",
+            Quantity = 99,
+            Deck = deck,
+            IsSideboard = false,
+        };
+
+        ctx.Cards.AddRange(commanderSku, mainDeckSku);
+        ctx.SaveChanges();
+
+        deck.CommanderId = commanderSku.Id;
+        ctx.SaveChanges();
+
+        var service = CreateService();
+        var summary = service.GetDecks(new DeckFilterModel { Ids = [deck.Id], Formats = [] }).Single();
+
+        Assert.Equal(100, summary.MaindeckTotal);
+        Assert.True(summary.IsCommanderValid);
+    }
+
+    [Fact]
+    public async Task SetDeckCommanderAsync_ReevaluatesCommanderValidationInSummary()
+    {
+        int deckId;
+        Guid alternateCommanderSkuId;
+
+        using (var ctx = new CardsDbContext(_dbOptions))
+        {
+            var deck = new Deck
+            {
+                Name = "Simic Commander",
+                Format = "Commander",
+                IsCommander = true,
+                Cards = new List<CardSku>()
+            };
+
+            var validCommanderMeta = new ScryfallCardMetadata
+            {
+                Id = "cmd-valid",
+                CardName = "Legendary Commander A",
+                Edition = "LCC",
+                CardType = "Legendary Creature — Merfolk",
+                Rarity = "mythic"
+            };
+
+            var altCommanderMeta = new ScryfallCardMetadata
+            {
+                Id = "cmd-alt",
+                CardName = "Legendary Commander B",
+                Edition = "LCC",
+                CardType = "Legendary Creature — Merfolk",
+                Rarity = "mythic"
+            };
+
+            var validCommanderSku = new CardSku
+            {
+                CardName = "Legendary Commander A",
+                Edition = "LCC",
+                Quantity = 1,
+                ScryfallId = validCommanderMeta.Id,
+                Scryfall = validCommanderMeta,
+                Deck = deck,
+                IsSideboard = false,
+            };
+
+            // Intentionally 2 copies so selecting this as commander should invalidate commander-copy rule.
+            var alternateCommanderSku = new CardSku
+            {
+                CardName = "Legendary Commander B",
+                Edition = "LCC",
+                Quantity = 2,
+                ScryfallId = altCommanderMeta.Id,
+                Scryfall = altCommanderMeta,
+                Deck = deck,
+                IsSideboard = false,
+            };
+
+            var mainDeckSku = new CardSku
+            {
+                CardName = "Forest",
+                Edition = "M21",
+                Quantity = 98,
+                Deck = deck,
+                IsSideboard = false,
+            };
+
+            ctx.Decks.Add(deck);
+            ctx.Cards.AddRange(validCommanderSku, alternateCommanderSku, mainDeckSku);
+            await ctx.SaveChangesAsync();
+
+            deck.CommanderId = validCommanderSku.Id;
+            await ctx.SaveChangesAsync();
+
+            deckId = deck.Id;
+            alternateCommanderSkuId = alternateCommanderSku.Id;
+        }
+
+        var service = CreateService();
+        var updated = await service.SetDeckCommanderAsync(deckId, alternateCommanderSkuId);
+
+        Assert.False(updated.IsCommanderValid);
+        Assert.Contains("Commander must be exactly 1 card in the main deck", updated.CommanderValidationMessage, StringComparison.Ordinal);
     }
 }

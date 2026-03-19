@@ -66,7 +66,12 @@ public partial class DeckViewModel : ViewModelBase
     /// </summary>
     public bool? IsCommanderValid { get; private set; }
 
-    public bool HasCommanderValid => IsCommander && IsCommanderValid.HasValue;
+    /// <summary>
+    /// Tooltip content for the commander badge.
+    /// </summary>
+    public string CommanderTooltip { get; private set; } = string.Empty;
+
+    public bool HasCommanderValid => IsCommander && IsCommanderValid == true;
 
     public bool HasCommanderInvalid => IsCommander && IsCommanderValid == false;
 
@@ -85,6 +90,19 @@ public partial class DeckViewModel : ViewModelBase
         this.IsCommander = deck.IsCommander;
         this.CommanderName = deck.CommanderName;
         this.IsCommanderValid = deck.IsCommanderValid;
+        this.CommanderTooltip = deck.CommanderValidationMessage
+            ?? deck.CommanderName
+            ?? this.Name;
+
+        // These are plain properties (not ObservableProperty), so notify bindings explicitly
+        // when a deck summary update arrives for an existing tile view model.
+        OnPropertyChanged(nameof(IsCommander));
+        OnPropertyChanged(nameof(CommanderName));
+        OnPropertyChanged(nameof(IsCommanderValid));
+        OnPropertyChanged(nameof(CommanderTooltip));
+        OnPropertyChanged(nameof(HasCommanderValid));
+        OnPropertyChanged(nameof(HasCommanderInvalid));
+
         return this;
     }
 

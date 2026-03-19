@@ -12,6 +12,7 @@ using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using ScryfallApi.Client;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
@@ -28,6 +29,8 @@ public partial class AddCardsViewModel : DialogContentViewModel
     readonly IStorageProvider? _storage;
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
+    readonly Func<DialogViewModel>? _dialog;
+    readonly Func<LoadCardsViewModel>? _loadCardsDialog;
     readonly LanguageViewModel[] _languages;
 
     public AddCardsViewModel()
@@ -53,12 +56,20 @@ public partial class AddCardsViewModel : DialogContentViewModel
         this.Cards.Add(new() { Languages = _languages, AddCardsCommand = this.AddCardsCommand, Qty = 1, CardName = "Timetwister", Edition = "LEB" });
     }
 
-    public AddCardsViewModel(IStorageProvider storage, IMessenger messenger, ICollectionTrackingService service, IScryfallApiClient scryfallApiClient)
+    public AddCardsViewModel(
+        IStorageProvider storage,
+        IMessenger messenger,
+        ICollectionTrackingService service,
+        IScryfallApiClient scryfallApiClient,
+        Func<DialogViewModel> dialog,
+        Func<LoadCardsViewModel> loadCardsDialog)
         : base(messenger)
     {
         _storage = storage;
         _service = service;
         _scryfallApiClient = scryfallApiClient;
+        _dialog = dialog;
+        _loadCardsDialog = loadCardsDialog;
         _languages = service.GetLanguages().Select(lang => new LanguageViewModel(lang.Code, lang.PrintedCode, lang.Name)).ToArray();
 
         this.AvailableContainers = service.GetContainers().Select(c => new ContainerViewModel().WithData(c));
@@ -88,6 +99,7 @@ public partial class AddCardsViewModel : DialogContentViewModel
     [NotifyCanExecuteChangedFor(nameof(RemoveCardCommand))]
     [NotifyCanExecuteChangedFor(nameof(AddCardsCommand))]
     [NotifyCanExecuteChangedFor(nameof(CheckCardNamesCommand))]
+    [NotifyCanExecuteChangedFor(nameof(OpenLoadCardsDialogCommand))]
     private bool _isImporting;
 
     [ObservableProperty]
@@ -96,6 +108,7 @@ public partial class AddCardsViewModel : DialogContentViewModel
     [NotifyCanExecuteChangedFor(nameof(RemoveCardCommand))]
     [NotifyCanExecuteChangedFor(nameof(AddCardsCommand))]
     [NotifyCanExecuteChangedFor(nameof(CheckCardNamesCommand))]
+    [NotifyCanExecuteChangedFor(nameof(OpenLoadCardsDialogCommand))]
     private bool _isAddingCards;
 
     [ObservableProperty]
@@ -104,6 +117,7 @@ public partial class AddCardsViewModel : DialogContentViewModel
     [NotifyCanExecuteChangedFor(nameof(RemoveCardCommand))]
     [NotifyCanExecuteChangedFor(nameof(AddCardsCommand))]
     [NotifyCanExecuteChangedFor(nameof(CheckCardNamesCommand))]
+    [NotifyCanExecuteChangedFor(nameof(OpenLoadCardsDialogCommand))]
     private bool _isCheckingCardNames;
 
     public bool IsDialogBusy => IsAddingCards || IsCheckingCardNames;
@@ -194,6 +208,40 @@ public partial class AddCardsViewModel : DialogContentViewModel
     private void AddRow()
     {
         Cards.Add(new AddCardSkuViewModel { AddCardsCommand = this.AddCardsCommand, Qty = 1, CardName = "", Edition = "", Languages = _languages });
+        AddCardsCommand.NotifyCanExecuteChanged();
+    }
+
+    private bool CanOpenLoadCardsDialog => _dialog != null && _loadCardsDialog != null && !IsImporting && !IsDialogBusy;
+
+    [RelayCommand(CanExecute = nameof(CanOpenLoadCardsDialog))]
+    private void OpenLoadCardsDialog()
+    {
+        if (_dialog == null || _loadCardsDialog == null)
+            return;
+
+        Messenger.Send(new OpenDialogMessage
+        {
+            DrawerWidth = 700,
+            ViewModel = _dialog().WithContent("Load Cards", _loadCardsDialog().WithOnLoadCompleted(AppendLoadedCards))
+        });
+    }
+
+    private void AppendLoadedCards(IReadOnlyCollection<LoadCardsInputItem> loadedCards)
+    {
+        foreach (var item in loadedCards)
+        {
+            Cards.Add(new AddCardSkuViewModel
+            {
+                AddCardsCommand = this.AddCardsCommand,
+                Languages = _languages,
+                Qty = item.Qty,
+                CardName = item.CardName,
+                Edition = item.Edition ?? string.Empty,
+                CollectorNumber = item.CollectorNumber,
+                IsFoil = item.IsFoil
+            });
+        }
+
         AddCardsCommand.NotifyCanExecuteChanged();
     }
 

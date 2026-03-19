@@ -61,12 +61,12 @@ namespace MtgCollectionTracker.Data.Migrations
                 name: "IsCommander",
                 table: "Decks");
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_ScryfallCardMetadata_ScryfallIdMappings_Id",
-                table: "ScryfallCardMetadata",
-                column: "Id",
-                principalTable: "ScryfallIdMappings",
-                principalColumn: "ScryfallId");
+            //migrationBuilder.AddForeignKey(
+            //    name: "FK_ScryfallCardMetadata_ScryfallIdMappings_Id",
+            //    table: "ScryfallCardMetadata",
+            //    column: "Id",
+            //    principalTable: "ScryfallIdMappings",
+            //    principalColumn: "ScryfallId");
         }
     }
 }

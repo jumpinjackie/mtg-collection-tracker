@@ -112,6 +112,42 @@ public class ViewModelTests
     }
 
     [Fact]
+    public void DeckViewModel_WithData_SecondUpdate_RefreshesCommanderStatusAndTooltip()
+    {
+        var vm = new DeckViewModel().WithData(new DeckSummaryModel
+        {
+            Id = 10,
+            DeckName = "Hakbal",
+            Name = "[Commander] Hakbal",
+            Format = "Commander",
+            IsCommander = true,
+            CommanderName = "Hakbal of the Surging Soul",
+            IsCommanderValid = false,
+            CommanderValidationMessage = "Invalid commander deck: main deck has 98"
+        });
+
+        Assert.True(vm.HasCommanderInvalid);
+        Assert.False(vm.HasCommanderValid);
+        Assert.Equal("Invalid commander deck: main deck has 98", vm.CommanderTooltip);
+
+        vm.WithData(new DeckSummaryModel
+        {
+            Id = 10,
+            DeckName = "Hakbal",
+            Name = "[Commander] Hakbal",
+            Format = "Commander",
+            IsCommander = true,
+            CommanderName = "Hakbal of the Surging Soul",
+            IsCommanderValid = true,
+            CommanderValidationMessage = "Hakbal of the Surging Soul"
+        });
+
+        Assert.False(vm.HasCommanderInvalid);
+        Assert.True(vm.HasCommanderValid);
+        Assert.Equal("Hakbal of the Surging Soul", vm.CommanderTooltip);
+    }
+
+    [Fact]
     public void DismantleDeckViewModel_WithDeck_SetsMessageAndLoadsContainers()
     {
         var mockService = new Mock<ICollectionTrackingService>();
