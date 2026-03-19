@@ -11,13 +11,16 @@ namespace MtgCollectionTracker.ViewModels;
 
 /// <summary>
 /// ViewModel for displaying and interacting with the Command Zone in Commander games.
-/// The commander can be moved to the Stack, Hand, Battlefield, Graveyard, or Library.
+/// The commander can be moved to the Stack, Hand, Battlefield, Graveyard, or Library (top/bottom/random+shuffle).
 /// </summary>
 public partial class CommandZoneViewModel : DialogContentViewModel
 {
     private readonly IMessenger _messenger;
     private ObservableCollection<PlaytestCardViewModel>? _commandZoneCards;
     private Action<PlaytestCardViewModel, GameZone>? _moveCard;
+    private Action<PlaytestCardViewModel>? _moveToTopOfLibrary;
+    private Action<PlaytestCardViewModel>? _moveToBottomOfLibrary;
+    private Action<PlaytestCardViewModel>? _moveToLibraryAndShuffle;
 
     public CommandZoneViewModel()
         : this(WeakReferenceMessenger.Default) { }
@@ -37,10 +40,16 @@ public partial class CommandZoneViewModel : DialogContentViewModel
 
     public CommandZoneViewModel Configure(
         ObservableCollection<PlaytestCardViewModel> commandZoneCards,
-        Action<PlaytestCardViewModel, GameZone> moveCard)
+        Action<PlaytestCardViewModel, GameZone> moveCard,
+        Action<PlaytestCardViewModel>? moveToTopOfLibrary = null,
+        Action<PlaytestCardViewModel>? moveToBottomOfLibrary = null,
+        Action<PlaytestCardViewModel>? moveToLibraryAndShuffle = null)
     {
         _commandZoneCards = commandZoneCards;
         _moveCard = moveCard;
+        _moveToTopOfLibrary = moveToTopOfLibrary;
+        _moveToBottomOfLibrary = moveToBottomOfLibrary;
+        _moveToLibraryAndShuffle = moveToLibraryAndShuffle;
 
         Cards.Clear();
         foreach (var card in commandZoneCards)
@@ -79,7 +88,31 @@ public partial class CommandZoneViewModel : DialogContentViewModel
     [RelayCommand(CanExecute = nameof(CanMove))]
     private void MoveToTopOfLibrary()
     {
-        MoveSelectedTo(GameZone.Library);
+        if (_moveToTopOfLibrary is null || SelectedCard is null)
+            return;
+
+        _moveToTopOfLibrary(SelectedCard);
+        _messenger.Send(new CloseDialogMessage());
+    }
+
+    [RelayCommand(CanExecute = nameof(CanMove))]
+    private void MoveToBottomOfLibrary()
+    {
+        if (_moveToBottomOfLibrary is null || SelectedCard is null)
+            return;
+
+        _moveToBottomOfLibrary(SelectedCard);
+        _messenger.Send(new CloseDialogMessage());
+    }
+
+    [RelayCommand(CanExecute = nameof(CanMove))]
+    private void MoveToLibraryAndShuffle()
+    {
+        if (_moveToLibraryAndShuffle is null || SelectedCard is null)
+            return;
+
+        _moveToLibraryAndShuffle(SelectedCard);
+        _messenger.Send(new CloseDialogMessage());
     }
 
     [RelayCommand]

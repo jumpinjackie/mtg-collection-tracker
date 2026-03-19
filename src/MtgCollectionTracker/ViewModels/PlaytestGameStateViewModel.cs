@@ -531,7 +531,29 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
 
         var viewModel = new CommandZoneViewModel(_messenger).Configure(
             CommandZone,
-            (card, targetZone) => MoveCard(card, targetZone));
+            (card, targetZone) => MoveCard(card, targetZone),
+            moveToTopOfLibrary: card =>
+            {
+                RemoveFromZone(card, GameZone.CommandZone);
+                card.Zone = GameZone.Library;
+                Library.Insert(0, card);
+                OnPropertyChanged(nameof(LibraryCount));
+            },
+            moveToBottomOfLibrary: card =>
+            {
+                RemoveFromZone(card, GameZone.CommandZone);
+                card.Zone = GameZone.Library;
+                Library.Add(card);
+                OnPropertyChanged(nameof(LibraryCount));
+            },
+            moveToLibraryAndShuffle: card =>
+            {
+                RemoveFromZone(card, GameZone.CommandZone);
+                card.Zone = GameZone.Library;
+                Library.Add(card);
+                OnPropertyChanged(nameof(LibraryCount));
+                ShuffleLibrary();
+            });
 
         var dialog = new DialogViewModel(_messenger).WithContent(
             "Command Zone",
