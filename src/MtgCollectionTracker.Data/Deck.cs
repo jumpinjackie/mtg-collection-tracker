@@ -45,4 +45,19 @@ public class Deck
     /// The optional banner card SKU for this deck
     /// </summary>
     public virtual CardSku? BannerCard { get; set; }
+
+    /// <summary>
+    /// Indicates whether this is a Commander deck
+    /// </summary>
+    public bool IsCommander { get; set; }
+
+    /// <summary>
+    /// The SKU id of the commander card for this deck (only valid when <see cref="IsCommander"/> is true)
+    /// </summary>
+    public Guid? CommanderId { get; set; }
+
+    /// <summary>
+    /// The commander card SKU for this deck (only valid when <see cref="IsCommander"/> is true)
+    /// </summary>
+    public virtual CardSku? Commander { get; set; }
 }

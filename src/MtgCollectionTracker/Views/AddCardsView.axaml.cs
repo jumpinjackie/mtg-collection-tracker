@@ -2,6 +2,7 @@ using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using System;
 
 namespace MtgCollectionTracker.Views;
 
@@ -12,11 +13,14 @@ public partial class AddCardsView : UserControl
     public AddCardsView()
     {
         InitializeComponent();
+        this.AttachedToVisualTree += (_, _) => UpdateGridMaxHeight();
+        this.SizeChanged += (_, _) => UpdateGridMaxHeight();
     }
 
     protected override void OnLoaded(RoutedEventArgs e)
     {
         base.OnLoaded(e);
+        UpdateGridMaxHeight();
         AddCardsDataGrid.PreparingCellForEdit += OnPreparingCellForEdit;
         AddCardsDataGrid.CellEditEnded += OnCellEditEnded;
         AddCardsDataGrid.AddHandler(InputElement.TextInputEvent, OnDataGridTextInput, RoutingStrategies.Bubble);
@@ -35,6 +39,16 @@ public partial class AddCardsView : UserControl
 
     private void OnCellEditEnded(object? sender, DataGridCellEditEndedEventArgs e)
         => _isGridEditing = false;
+
+    private void UpdateGridMaxHeight()
+    {
+        var availableHeight = this.Bounds.Height
+            - IntroTextBlock.Bounds.Height
+            - BottomActionsGrid.Bounds.Height
+            - 24;
+
+        AddCardsDataGrid.MaxHeight = Math.Max(180, availableHeight);
+    }
 
     private void OnDataGridTextInput(object? sender, TextInputEventArgs e)
     {

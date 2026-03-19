@@ -35,6 +35,12 @@ public class CardsDbContext : DbContext
             .HasForeignKey(d => d.BannerCardId)
             .OnDelete(DeleteBehavior.SetNull)
             .IsRequired(false);
+        modelBuilder.Entity<Deck>()
+            .HasOne(d => d.Commander)
+            .WithMany()
+            .HasForeignKey(d => d.CommanderId)
+            .OnDelete(DeleteBehavior.SetNull)
+            .IsRequired(false);
         modelBuilder.Entity<Tag>().HasIndex(nameof(Tag.Name)).IsUnique();
         modelBuilder.Entity<CardSku>()
             .OwnsMany(c => c.Tags, cb =>

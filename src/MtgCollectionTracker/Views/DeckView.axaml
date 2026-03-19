@@ -32,6 +32,17 @@
 				<Border Canvas.Bottom="4" Canvas.Right="4" CornerRadius="3" Background="Gray" Padding="6" Opacity="0.8">
 					<TextBlock Text="{Binding Sideboard}" />
 				</Border>
+				<!-- Commander validation status badge -->
+				<Border Canvas.Top="4" Canvas.Right="4" CornerRadius="3" Padding="4" Opacity="0.9"
+				        IsVisible="{Binding IsCommander}"
+				        Background="DarkSlateBlue"
+				        ToolTip.Tip="{Binding CommanderTooltip}">
+					<StackPanel Orientation="Horizontal" Spacing="4">
+						<PathIcon IsVisible="{Binding HasCommanderValid}" Height="12" Width="12" Data="{StaticResource checkmark_regular}" Foreground="LightGreen" />
+						<PathIcon IsVisible="{Binding HasCommanderInvalid}" Height="12" Width="12" Data="{StaticResource warning_regular}" Foreground="OrangeRed" />
+						<TextBlock FontSize="10" VerticalAlignment="Center" Foreground="White">CMD</TextBlock>
+					</StackPanel>
+				</Border>
 			</Canvas>
 		</Border>
 		<TextBlock Text="{Binding Name}" ToolTip.Tip="{Binding Name}" HorizontalAlignment="Center" />

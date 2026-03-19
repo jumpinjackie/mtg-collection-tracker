@@ -38,7 +38,24 @@ public partial class NewDeckOrContainerViewModel : DialogContentViewModel
     private string _name;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsFormatEditable))]
+    private bool _isCommander;
+
+    [ObservableProperty]
     private string? _deckFormat;
+
+    /// <summary>
+    /// The format field is editable only for non-commander decks. Commander decks always use "Commander" format.
+    /// </summary>
+    public bool IsFormatEditable => !IsCommander;
+
+    partial void OnIsCommanderChanged(bool value)
+    {
+        if (value)
+        {
+            DeckFormat = "Commander";
+        }
+    }
 
     [ObservableProperty]
     private string? _containerDescription;
@@ -63,7 +80,7 @@ public partial class NewDeckOrContainerViewModel : DialogContentViewModel
         switch (this.Type)
         {
             case DeckOrContainer.Deck:
-                var di = await _service.CreateDeckAsync(this.Name, this.DeckFormat, null);
+                var di = await _service.CreateDeckAsync(this.Name, this.DeckFormat, null, this.IsCommander);
                 this.Messenger.Send(new DeckCreatedMessage(di));
                 this.Messenger.ToastNotify($"Deck created ({this.Name})", Avalonia.Controls.Notifications.NotificationType.Success);
                 this.Messenger.Send(new CloseDialogMessage());

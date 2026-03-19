@@ -1,0 +1,70 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="520" d:DesignHeight="420"
+             x:Class="MtgCollectionTracker.Views.CommandZoneView"
+             x:DataType="vm:CommandZoneViewModel">
+    <Grid RowDefinitions="Auto,*,Auto,Auto" RowSpacing="0">
+
+        <!-- Row 0: Header label -->
+        <TextBlock Grid.Row="0"
+                   Text="Select a card to move it to another zone"
+                   FontSize="12" Opacity="0.75" Margin="0,0,0,8" />
+
+        <!-- Row 1: Card list + preview -->
+        <Grid Grid.Row="1" ColumnDefinitions="*,220" ColumnSpacing="8">
+            <!-- Card list -->
+            <ListBox Grid.Column="0"
+                     ItemsSource="{Binding Cards}"
+                     SelectedItem="{Binding SelectedCard, Mode=TwoWay}"
+                     BorderThickness="1">
+                <ListBox.ItemTemplate>
+                    <DataTemplate x:DataType="vm:PlaytestCardViewModel">
+                        <StackPanel Spacing="2">
+                            <TextBlock Text="{Binding CardName}" FontWeight="Bold" />
+                            <TextBlock Text="{Binding ManaCost}" FontSize="11" Opacity="0.8"
+                                       IsVisible="{Binding HasManaCost}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
+
+            <!-- Card preview -->
+            <Border Grid.Column="1" Padding="8" Background="{DynamicResource SystemChromeLowColor}"
+                    IsVisible="{Binding SelectedCard, Converter={x:Static ObjectConverters.IsNotNull}}">
+                <ScrollViewer>
+                    <StackPanel Spacing="6">
+                        <TextBlock Text="{Binding SelectedCard.CardName}"
+                                   FontSize="14" FontWeight="Bold" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding SelectedCard.ManaCost}" FontSize="12"
+                                   IsVisible="{Binding SelectedCard.HasManaCost}" />
+                        <TextBlock Text="{Binding SelectedCard.CardType}" FontSize="11" TextWrapping="Wrap" Opacity="0.85" />
+                        <TextBlock Text="{Binding SelectedCard.OracleText}" FontSize="11" TextWrapping="Wrap" />
+                        <Image Source="{Binding SelectedCard.CardImageLarge^}" Stretch="Uniform" MaxHeight="280" Margin="0,4,0,0" />
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+
+            <TextBlock Grid.Column="1" Text="No card selected"
+                       Opacity="0.5" HorizontalAlignment="Center" VerticalAlignment="Center"
+                       IsVisible="{Binding SelectedCard, Converter={x:Static ObjectConverters.IsNull}}" />
+        </Grid>
+
+        <!-- Row 2: Separator -->
+        <Border Grid.Row="2" Height="1" Background="{DynamicResource SystemChromeLowColor}" Margin="0,8,0,8" />
+
+        <!-- Row 3: Action buttons -->
+        <WrapPanel Grid.Row="3" HorizontalAlignment="Left" ItemSpacing="6" LineSpacing="6" Margin="0,0,0,4">
+            <Button Content="To Stack" Command="{Binding MoveToStackCommand}" />
+            <Button Content="To Hand" Command="{Binding MoveToHandCommand}" />
+            <Button Content="To Battlefield" Command="{Binding MoveToBattlefieldCommand}" />
+            <Button Content="To Graveyard" Command="{Binding MoveToGraveyardCommand}" />
+            <Button Content="Top of Library" Command="{Binding MoveToTopOfLibraryCommand}" />
+            <Button Content="Bottom of Library" Command="{Binding MoveToBottomOfLibraryCommand}" />
+            <Button Content="Shuffle into Library" Command="{Binding MoveToLibraryAndShuffleCommand}" />
+            <Button Content="Close" Command="{Binding CloseCommand}" />
+        </WrapPanel>
+    </Grid>
+</UserControl>

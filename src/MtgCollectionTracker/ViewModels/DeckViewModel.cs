@@ -51,6 +51,30 @@ public partial class DeckViewModel : ViewModelBase
 
     public bool HasContainer => !string.IsNullOrEmpty(this.ContainerName);
 
+    /// <summary>
+    /// Whether this is a Commander deck
+    /// </summary>
+    public bool IsCommander { get; private set; }
+
+    /// <summary>
+    /// The name of the commander card (null if not a commander deck or no commander assigned)
+    /// </summary>
+    public string? CommanderName { get; private set; }
+
+    /// <summary>
+    /// The commander validation status (null if not a commander deck)
+    /// </summary>
+    public bool? IsCommanderValid { get; private set; }
+
+    /// <summary>
+    /// Tooltip content for the commander badge.
+    /// </summary>
+    public string CommanderTooltip { get; private set; } = string.Empty;
+
+    public bool HasCommanderValid => IsCommander && IsCommanderValid == true;
+
+    public bool HasCommanderInvalid => IsCommander && IsCommanderValid == false;
+
     public DeckViewModel WithData(DeckSummaryModel deck)
     {
         this.DeckId = deck.Id;
@@ -63,6 +87,22 @@ public partial class DeckViewModel : ViewModelBase
         this.Banner = (deck.BannerScryfallId != null && _service != null)
             ? LoadBannerImageAsync(deck.BannerScryfallId)
             : null;
+        this.IsCommander = deck.IsCommander;
+        this.CommanderName = deck.CommanderName;
+        this.IsCommanderValid = deck.IsCommanderValid;
+        this.CommanderTooltip = deck.CommanderValidationMessage
+            ?? deck.CommanderName
+            ?? this.Name;
+
+        // These are plain properties (not ObservableProperty), so notify bindings explicitly
+        // when a deck summary update arrives for an existing tile view model.
+        OnPropertyChanged(nameof(IsCommander));
+        OnPropertyChanged(nameof(CommanderName));
+        OnPropertyChanged(nameof(IsCommanderValid));
+        OnPropertyChanged(nameof(CommanderTooltip));
+        OnPropertyChanged(nameof(HasCommanderValid));
+        OnPropertyChanged(nameof(HasCommanderInvalid));
+
         return this;
     }
 

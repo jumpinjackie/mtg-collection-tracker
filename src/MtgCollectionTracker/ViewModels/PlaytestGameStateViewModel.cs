@@ -46,6 +46,7 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
     public ObservableCollection<PlaytestCardViewModel> Stack { get; } = new();
     public ObservableCollection<PlaytestCardViewModel> BattlefieldLands { get; } = new();
     public ObservableCollection<PlaytestCardViewModel> BattlefieldNonlands { get; } = new();
+    public ObservableCollection<PlaytestCardViewModel> CommandZone { get; } = new();
 
     // Counters
     [ObservableProperty]
@@ -78,6 +79,19 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
     [ObservableProperty]
     private int _poisonCount = 0;
 
+    [ObservableProperty]
+    private int _commanderTax = 0;
+
+    [ObservableProperty]
+    private int _commanderDamage = 0;
+
+    /// <summary>
+    /// Whether this game was started with a Commander deck
+    /// </summary>
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HasCommandZone))]
+    private bool _isCommanderGame;
+
     // Phase tracking
     [ObservableProperty]
     private GamePhase _currentPhase = GamePhase.Untap;
@@ -85,6 +99,8 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(PhaseDisplayName))]
     private int _currentPhaseIndex = 0;
+
+    public bool HasCommandZone => IsCommanderGame;
 
     public string PhaseDisplayName => CurrentPhase switch
     {
@@ -195,6 +211,18 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
     [RelayCommand]
     private void DecrementPoison() => PoisonCount = Math.Max(0, PoisonCount - 1);
 
+    [RelayCommand]
+    private void IncrementCommanderTax() => CommanderTax++;
+
+    [RelayCommand]
+    private void DecrementCommanderTax() => CommanderTax = Math.Max(0, CommanderTax - 1);
+
+    [RelayCommand]
+    private void IncrementCommanderDamage() => CommanderDamage++;
+
+    [RelayCommand]
+    private void DecrementCommanderDamage() => CommanderDamage = Math.Max(0, CommanderDamage - 1);
+
     /// <summary>
     /// Initialize the game with a deck
     /// </summary>
@@ -202,6 +230,7 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
     {
         ResetGame();
         MulliganCount = 0;
+        IsCommanderGame = deck.IsCommander;
 
         // Load all cards from main deck
         var allCards = new List<PlaytestCard>();
@@ -238,6 +267,31 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
             Library.Add(vm);
         }
 
+        // If this is a commander deck and has a commander, place it in the command zone
+        if (deck.IsCommander && deck.Commander != null)
+        {
+            var cmdCard = new PlaytestCard
+            {
+                CardName = deck.Commander.CardName,
+                ScryfallId = deck.Commander.ScryfallId,
+                ScryfallIdBack = deck.Commander.IsDoubleFaced ? deck.Commander.ScryfallId : null,
+                ManaCost = deck.Commander.CastingCost,
+                CardType = deck.Commander.CardType,
+                Power = deck.Commander.Power,
+                Toughness = deck.Commander.Toughness,
+                OracleText = deck.Commander.OracleText,
+                IsLand = deck.Commander.IsLand,
+                IsDoubleFaced = deck.Commander.IsDoubleFaced,
+                Zone = GameZone.CommandZone,
+                IsTapped = false,
+                IsFrontFace = true,
+                IsCommanderCard = true
+            };
+            var cmdVm = _cardVmFactory();
+            cmdVm.InitializeFrom(cmdCard);
+            CommandZone.Add(cmdVm);
+        }
+
         OnPropertyChanged(nameof(LibraryCount));
     }
 
@@ -256,6 +310,7 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
         allCards.AddRange(Stack);
         allCards.AddRange(BattlefieldLands);
         allCards.AddRange(BattlefieldNonlands);
+        allCards.AddRange(CommandZone);
 
         // Clear all zones
         Library.Clear();
@@ -265,8 +320,9 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
         Stack.Clear();
         BattlefieldLands.Clear();
         BattlefieldNonlands.Clear();
+        CommandZone.Clear();
 
-        // Return all cards to library, reset tapped state
+        // Sort cards: commander cards go to Command Zone, others go to library (tokens are discarded)
         foreach (var card in allCards)
         {
             if (card.IsToken)
@@ -276,9 +332,18 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
 
             card.IsTapped = false;
             card.IsFrontFace = true;
-            card.Zone = GameZone.Library;
             card.LoadCardImages();
-            Library.Add(card);
+
+            if (card.IsCommanderCard)
+            {
+                card.Zone = GameZone.CommandZone;
+                CommandZone.Add(card);
+            }
+            else
+            {
+                card.Zone = GameZone.Library;
+                Library.Add(card);
+            }
         }
 
         // Shuffle library
@@ -295,6 +360,8 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
         StormCount = 0;
         EnergyCount = 0;
         PoisonCount = 0;
+        CommanderTax = 0;
+        CommanderDamage = 0;
 
         // Reset phase
         CurrentPhase = GamePhase.Untap;
@@ -450,6 +517,53 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
         _messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 620,
+            ViewModel = dialog,
+        });
+    }
+
+    /// <summary>
+    /// Opens a dialog showing the command zone. The commander can be moved to the Stack, Hand, Battlefield, Graveyard, or Library.
+    /// </summary>
+    public void OpenCommandZoneDialog()
+    {
+        if (CommandZone.Count == 0)
+            return;
+
+        var viewModel = new CommandZoneViewModel(_messenger).Configure(
+            CommandZone,
+            (card, targetZone) => MoveCard(card, targetZone),
+            moveToTopOfLibrary: card =>
+            {
+                RemoveFromZone(card, GameZone.CommandZone);
+                card.Zone = GameZone.Library;
+                Library.Insert(0, card);
+                OnPropertyChanged(nameof(LibraryCount));
+            },
+            moveToBottomOfLibrary: card =>
+            {
+                RemoveFromZone(card, GameZone.CommandZone);
+                card.Zone = GameZone.Library;
+                Library.Add(card);
+                OnPropertyChanged(nameof(LibraryCount));
+            },
+            moveToLibraryAndShuffle: card =>
+            {
+                RemoveFromZone(card, GameZone.CommandZone);
+                card.Zone = GameZone.Library;
+                Library.Add(card);
+                OnPropertyChanged(nameof(LibraryCount));
+                ShuffleLibrary();
+            });
+
+        var dialog = new DialogViewModel(_messenger).WithContent(
+            "Command Zone",
+            viewModel);
+
+        dialog.CanClose = true;
+
+        _messenger.Send(new OpenDialogMessage
+        {
+            DrawerWidth = 520,
             ViewModel = dialog,
         });
     }
@@ -866,6 +980,9 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
             case GameZone.Battlefield:
                 BattlefieldNonlands.Remove(card);
                 break;
+            case GameZone.CommandZone:
+                CommandZone.Remove(card);
+                break;
         }
     }
 
@@ -894,6 +1011,9 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
                 break;
             case GameZone.Battlefield:
                 BattlefieldNonlands.Add(card);
+                break;
+            case GameZone.CommandZone:
+                CommandZone.Add(card);
                 break;
         }
     }

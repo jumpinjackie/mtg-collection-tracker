@@ -1019,4 +1019,329 @@ public class PlaytestGameStateViewModelTests
         Assert.Equal(20, game.LifeTotal);
         Assert.Equal(0, game.StormCount);
     }
+
+    // ─── Commander Support ────────────────────────────────────────────────────
+
+    [Fact]
+    public void CommanderTaxCounter_IncrementAndDecrement()
+    {
+        var game = CreateGameState();
+
+        game.IncrementCommanderTaxCommand.Execute(null);
+        game.IncrementCommanderTaxCommand.Execute(null);
+        Assert.Equal(2, game.CommanderTax);
+
+        game.DecrementCommanderTaxCommand.Execute(null);
+        Assert.Equal(1, game.CommanderTax);
+    }
+
+    [Fact]
+    public void CommanderTaxCounter_DoesNotGoBelowZero()
+    {
+        var game = CreateGameState();
+
+        game.DecrementCommanderTaxCommand.Execute(null);
+
+        Assert.Equal(0, game.CommanderTax);
+    }
+
+    [Fact]
+    public void CommanderDamageCounter_IncrementAndDecrement()
+    {
+        var game = CreateGameState();
+
+        game.IncrementCommanderDamageCommand.Execute(null);
+        game.IncrementCommanderDamageCommand.Execute(null);
+        Assert.Equal(2, game.CommanderDamage);
+
+        game.DecrementCommanderDamageCommand.Execute(null);
+        Assert.Equal(1, game.CommanderDamage);
+    }
+
+    [Fact]
+    public void CommanderDamageCounter_DoesNotGoBelowZero()
+    {
+        var game = CreateGameState();
+
+        game.DecrementCommanderDamageCommand.Execute(null);
+
+        Assert.Equal(0, game.CommanderDamage);
+    }
+
+    [Fact]
+    public void ResetGameCommand_ResetsCommanderCounters()
+    {
+        var game = CreateGameState();
+        game.CommanderTax = 4;
+        game.CommanderDamage = 7;
+
+        game.ResetGameCommand.Execute(null);
+
+        Assert.Equal(0, game.CommanderTax);
+        Assert.Equal(0, game.CommanderDamage);
+    }
+
+    [Fact]
+    public async Task InitializeWithDeck_CommanderDeck_PlacesCommanderInCommandZone()
+    {
+        var game = CreateGameState();
+        var mockService = new Mock<ICollectionTrackingService>();
+
+        var commanderCard = new DeckCardModel
+        {
+            CardName = "Atraxa, Praetors' Voice",
+            IsLand = false,
+            CardType = "Legendary Creature",
+            Edition = "C16",
+            Power = "4",
+            Toughness = "4",
+        };
+
+        var deck = new DeckModel
+        {
+            Id = 1,
+            Name = "Atraxa Commander",
+            IsCommander = true,
+            Commander = commanderCard,
+            MainDeck =
+            [
+                new DeckCardModel { CardName = "Forest", IsLand = true, CardType = "Basic Land", Edition = "M21" },
+                new DeckCardModel { CardName = "Lightning Bolt", IsLand = false, CardType = "Instant", Edition = "M21" },
+            ],
+            Sideboard = [],
+        };
+
+        await game.InitializeWithDeck(deck, mockService.Object);
+
+        Assert.True(game.IsCommanderGame);
+        Assert.True(game.HasCommandZone);
+        Assert.Single(game.CommandZone);
+        Assert.Equal("Atraxa, Praetors' Voice", game.CommandZone[0].CardName);
+        Assert.Equal(GameZone.CommandZone, game.CommandZone[0].Zone);
+
+        // Commander should NOT be in the library
+        Assert.Equal(2, game.Library.Count);
+    }
+
+    [Fact]
+    public async Task InitializeWithDeck_NonCommanderDeck_HasEmptyCommandZone()
+    {
+        var game = CreateGameState();
+        var mockService = new Mock<ICollectionTrackingService>();
+
+        var deck = new DeckModel
+        {
+            Id = 1,
+            Name = "Regular Deck",
+            IsCommander = false,
+            Commander = null,
+            MainDeck =
+            [
+                new DeckCardModel { CardName = "Forest", IsLand = true, CardType = "Basic Land", Edition = "M21" },
+            ],
+            Sideboard = [],
+        };
+
+        await game.InitializeWithDeck(deck, mockService.Object);
+
+        Assert.False(game.IsCommanderGame);
+        Assert.False(game.HasCommandZone);
+        Assert.Empty(game.CommandZone);
+    }
+
+    [Fact]
+    public async Task ResetGameCommand_CommanderReturnsToCommandZone()
+    {
+        var game = CreateGameState();
+        var mockService = new Mock<ICollectionTrackingService>();
+
+        var commanderCard = new DeckCardModel
+        {
+            CardName = "Atraxa, Praetors' Voice",
+            IsLand = false,
+            CardType = "Legendary Creature",
+            Edition = "C16",
+        };
+
+        var deck = new DeckModel
+        {
+            Id = 1,
+            Name = "Atraxa Commander",
+            IsCommander = true,
+            Commander = commanderCard,
+            MainDeck =
+            [
+                new DeckCardModel { CardName = "Forest", IsLand = true, CardType = "Basic Land", Edition = "M21" },
+            ],
+            Sideboard = [],
+        };
+
+        await game.InitializeWithDeck(deck, mockService.Object);
+
+        // Move commander from command zone to battlefield
+        var commander = game.CommandZone.First();
+        game.MoveCard(commander, GameZone.Battlefield);
+        Assert.Empty(game.CommandZone);
+        Assert.Single(game.BattlefieldNonlands);
+
+        // Reset should return commander to command zone
+        game.ResetGameCommand.Execute(null);
+
+        Assert.Single(game.CommandZone);
+        Assert.Equal("Atraxa, Praetors' Voice", game.CommandZone[0].CardName);
+        Assert.Equal(GameZone.CommandZone, game.CommandZone[0].Zone);
+        Assert.Empty(game.BattlefieldNonlands);
+    }
+
+    [Fact]
+    public void MoveCard_FromCommandZone_ToHand_Works()
+    {
+        var game = CreateGameState();
+
+        var commander = CreateCardVm();
+        commander.InitializeFrom(new PlaytestCard
+        {
+            CardName = "Atraxa, Praetors' Voice",
+            IsLand = false,
+            CardType = "Legendary Creature",
+            Zone = GameZone.CommandZone,
+            IsFrontFace = true,
+        });
+        game.CommandZone.Add(commander);
+
+        game.MoveCard(commander, GameZone.Hand);
+
+        Assert.Empty(game.CommandZone);
+        Assert.Single(game.Hand);
+        Assert.Equal(GameZone.Hand, commander.Zone);
+    }
+
+    [Fact]
+    public void CommandZoneViewModel_MoveToTopOfLibrary_InvokesTopLibraryAction()
+    {
+        var messenger = new WeakReferenceMessenger();
+        var commandZone = new System.Collections.ObjectModel.ObservableCollection<PlaytestCardViewModel>();
+        var card = CreateCardVm();
+        card.InitializeFrom(new PlaytestCard
+        {
+            CardName = "Atraxa, Praetors' Voice",
+            IsLand = false,
+            CardType = "Legendary Creature",
+            Zone = GameZone.CommandZone,
+            IsFrontFace = true,
+        });
+        commandZone.Add(card);
+
+        PlaytestCardViewModel? receivedCard = null;
+        var vm = new CommandZoneViewModel(messenger).Configure(
+            commandZone,
+            moveCard: (c, z) => { },
+            moveToTopOfLibrary: c => receivedCard = c,
+            moveToBottomOfLibrary: c => { },
+            moveToLibraryAndShuffle: c => { });
+
+        vm.MoveToTopOfLibraryCommand.Execute(null);
+
+        Assert.NotNull(receivedCard);
+        Assert.Equal("Atraxa, Praetors' Voice", receivedCard!.CardName);
+    }
+
+    [Fact]
+    public void CommandZoneViewModel_MoveToBottomOfLibrary_InvokesBottomLibraryAction()
+    {
+        var messenger = new WeakReferenceMessenger();
+        var commandZone = new System.Collections.ObjectModel.ObservableCollection<PlaytestCardViewModel>();
+        var card = CreateCardVm();
+        card.InitializeFrom(new PlaytestCard
+        {
+            CardName = "Atraxa, Praetors' Voice",
+            IsLand = false,
+            CardType = "Legendary Creature",
+            Zone = GameZone.CommandZone,
+            IsFrontFace = true,
+        });
+        commandZone.Add(card);
+
+        PlaytestCardViewModel? receivedCard = null;
+        var vm = new CommandZoneViewModel(messenger).Configure(
+            commandZone,
+            moveCard: (c, z) => { },
+            moveToTopOfLibrary: c => { },
+            moveToBottomOfLibrary: c => receivedCard = c,
+            moveToLibraryAndShuffle: c => { });
+
+        vm.MoveToBottomOfLibraryCommand.Execute(null);
+
+        Assert.NotNull(receivedCard);
+        Assert.Equal("Atraxa, Praetors' Voice", receivedCard!.CardName);
+    }
+
+    [Fact]
+    public void CommandZoneViewModel_MoveToLibraryAndShuffle_InvokesShuffleAction()
+    {
+        var messenger = new WeakReferenceMessenger();
+        var commandZone = new System.Collections.ObjectModel.ObservableCollection<PlaytestCardViewModel>();
+        var card = CreateCardVm();
+        card.InitializeFrom(new PlaytestCard
+        {
+            CardName = "Atraxa, Praetors' Voice",
+            IsLand = false,
+            CardType = "Legendary Creature",
+            Zone = GameZone.CommandZone,
+            IsFrontFace = true,
+        });
+        commandZone.Add(card);
+
+        PlaytestCardViewModel? receivedCard = null;
+        var vm = new CommandZoneViewModel(messenger).Configure(
+            commandZone,
+            moveCard: (c, z) => { },
+            moveToTopOfLibrary: c => { },
+            moveToBottomOfLibrary: c => { },
+            moveToLibraryAndShuffle: c => receivedCard = c);
+
+        vm.MoveToLibraryAndShuffleCommand.Execute(null);
+
+        Assert.NotNull(receivedCard);
+        Assert.Equal("Atraxa, Praetors' Voice", receivedCard!.CardName);
+    }
+
+    [Fact]
+    public async Task OpenCommandZoneDialog_MoveToBottomOfLibrary_AppendedAtEnd()
+    {
+        var mockService = new Mock<ICollectionTrackingService>();
+        var commanderCard = new DeckCardModel
+        {
+            CardName = "Atraxa, Praetors' Voice",
+            IsLand = false,
+            CardType = "Legendary Creature",
+            Edition = "C16",
+        };
+        var deck = new DeckModel
+        {
+            Name = "Atraxa Commander",
+            IsCommander = true,
+            Commander = commanderCard,
+            MainDeck =
+            [
+                new DeckCardModel { CardName = "Forest", IsLand = true, CardType = "Basic Land", Edition = "M21" },
+            ],
+            Sideboard = [],
+        };
+
+        var game = CreateGameState();
+        await game.InitializeWithDeck(deck, mockService.Object);
+
+        var commander = game.CommandZone.First();
+        int libraryCountBefore = game.Library.Count;
+
+        // MoveCard to Library uses AddToZone → Library.Add (bottom of library)
+        game.MoveCard(commander, GameZone.Library);
+
+        Assert.Empty(game.CommandZone);
+        Assert.Equal(libraryCountBefore + 1, game.Library.Count);
+        Assert.Equal(GameZone.Library, commander.Zone);
+        // Commander should be at the end (bottom of library since index 0 is top)
+        Assert.Same(commander, game.Library[^1]);
+    }
 }

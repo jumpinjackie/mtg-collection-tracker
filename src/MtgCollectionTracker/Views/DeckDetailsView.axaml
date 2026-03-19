@@ -26,7 +26,7 @@
 			<Button IsEnabled="{Binding Behavior.HasAtLeastOneSelectedItem}" Command="{Binding SendSkusToContainerCommand}" Content="Send to Deck/Container" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding Behavior.IsItemSplittable}" Command="{Binding SplitSelectedSkuCommand}" Content="Split" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding Behavior.HasAtLeastOneSelectedItem}" Command="{Binding UpdateSkuMetadataCommand}" Content="Update Metadata" HorizontalAlignment="Center" />
-			<Button IsVisible="{Binding IsVisualSkuMode}" IsEnabled="{Binding Behavior.HasOneSelectedItem}" Command="{Binding SetAsBannerCommand}" Content="Set as Banner" HorizontalAlignment="Center" />
+			<Button IsVisible="{Binding IsVisualSkuMode}" IsEnabled="{Binding CanSetPrimaryAction}" Command="{Binding SetAsBannerCommand}" Content="{Binding SetPrimaryActionLabel}" HorizontalAlignment="Center" />
 		</StackPanel>
 		<StackPanel IsVisible="{Binding !IsSkuBasedMode}" DockPanel.Dock="Bottom" Margin="8" Orientation="Horizontal">
 			<Button Command="{Binding AddNewCardsCommand}" Content="Add New" HorizontalAlignment="Center" />

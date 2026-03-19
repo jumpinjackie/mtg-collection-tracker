@@ -1,0 +1,45 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
+             mc:Ignorable="d"
+             d:DesignWidth="700"
+             d:DesignHeight="420"
+             x:Class="MtgCollectionTracker.Views.LoadCardsView"
+             x:DataType="vm:LoadCardsViewModel"
+             MinHeight="360"
+             MaxHeight="560"
+             VerticalAlignment="Stretch"
+             HorizontalAlignment="Stretch">
+    <Design.DataContext>
+        <vm:LoadCardsViewModel />
+    </Design.DataContext>
+
+    <DockPanel Name="RootLayout" Margin="16" LastChildFill="True">
+        <StackPanel Name="BottomActionsPanel" DockPanel.Dock="Bottom"
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Right"
+                    Spacing="8"
+                    Margin="0,12,0,0">
+            <Button Command="{Binding LoadCommand}">Load</Button>
+            <Button Command="{Binding CancelCommand}">Cancel</Button>
+        </StackPanel>
+
+        <Grid Name="ContentArea" RowDefinitions="Auto,*">
+            <TextBlock Name="IntroTextBlock" Grid.Row="0" TextWrapping="WrapWithOverflow" Margin="0,0,0,8">
+                Paste decklist rows using either &lt;Qty&gt; &lt;CardName&gt; or &lt;Qty&gt; &lt;CardName&gt; (&lt;Edition&gt;) &lt;CollectorNumber&gt; [*F*].
+            </TextBlock>
+
+            <TextBox Name="DecklistTextBox" Grid.Row="1"
+                     AcceptsReturn="True"
+                     TextWrapping="Wrap"
+                     VerticalContentAlignment="Top"
+                     VerticalAlignment="Stretch"
+                     HorizontalAlignment="Stretch"
+                     ScrollViewer.VerticalScrollBarVisibility="Auto"
+                     ScrollViewer.HorizontalScrollBarVisibility="Auto"
+                     Text="{Binding DecklistText}" />
+        </Grid>
+    </DockPanel>
+</UserControl>
