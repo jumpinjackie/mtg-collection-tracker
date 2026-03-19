@@ -88,9 +88,18 @@
 				<Button Command="{Binding ImportCommand}" IsEnabled="{Binding !IsDialogBusy}">Import Rows</Button>
 				<Button Command="{Binding CheckCardNamesCommand}" IsEnabled="{Binding !IsDialogBusy}">
 					<StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
-						<ProgressBar IsVisible="{Binding IsCheckingCardNames}" IsIndeterminate="True" Width="16" Height="16" />
+						<ProgressBar IsVisible="{Binding IsCheckingCardNames}" Value="{Binding CheckCardNamesCompleted}" Maximum="{Binding CheckCardNamesTotal}" Width="120" Height="16">
+							<ProgressBar.Transitions>
+								<Transitions>
+									<DoubleTransition Property="Value" Duration="0:0:0.20" />
+								</Transitions>
+							</ProgressBar.Transitions>
+						</ProgressBar>
+						<TextBlock IsVisible="{Binding IsCheckingCardNames}" Text="{Binding CheckCardNamesCompleted}" />
+						<TextBlock IsVisible="{Binding IsCheckingCardNames}" Text="/" />
+						<TextBlock IsVisible="{Binding IsCheckingCardNames}" Text="{Binding CheckCardNamesTotal}" />
 						<TextBlock IsVisible="{Binding !IsCheckingCardNames}" Text="Check/Fix Card Names" />
-						<TextBlock IsVisible="{Binding IsCheckingCardNames}" Text="Checking..." />
+						<TextBlock IsVisible="{Binding IsCheckingCardNames}" Text="Checking" />
 					</StackPanel>
 				</Button>
 			</StackPanel>
