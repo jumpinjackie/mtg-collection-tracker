@@ -120,6 +120,12 @@ public partial class AddCardsViewModel : DialogContentViewModel
     [NotifyCanExecuteChangedFor(nameof(OpenLoadCardsDialogCommand))]
     private bool _isCheckingCardNames;
 
+    [ObservableProperty]
+    private int _checkCardNamesTotal;
+
+    [ObservableProperty]
+    private int _checkCardNamesCompleted;
+
     public bool IsDialogBusy => IsAddingCards || IsCheckingCardNames;
 
     partial void OnIsAddingCardsChanged(bool value) => OnPropertyChanged(nameof(IsDialogBusy));
@@ -362,6 +368,8 @@ public partial class AddCardsViewModel : DialogContentViewModel
         if (_scryfallApiClient == null)
             return;
 
+        CheckCardNamesTotal = this.Cards.Count;
+        CheckCardNamesCompleted = 0;
         IsCheckingCardNames = true;
         try
         {
@@ -385,7 +393,10 @@ public partial class AddCardsViewModel : DialogContentViewModel
                     sku.Edition = correctEdition.ToUpper();
                     editionsFixed++;
                 }
+
+                CheckCardNamesCompleted++;
             }
+
             Messenger.ToastNotify($"{cardsFixed} card name(s) and {editionsFixed} edition(s) fixed up", Avalonia.Controls.Notifications.NotificationType.Success);
         }
         finally

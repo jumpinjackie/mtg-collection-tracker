@@ -31,8 +31,8 @@
 			<ProgressBar IsVisible="{Binding NormalizeCardNamesCommand.IsRunning}" ShowProgressText="True" Value="{Binding Completed}" Maximum="{Binding Total}" ProgressTextFormat="{}{0}/{3} metadata items processed ({1:0}%)" />
 		</StackPanel>
 		<StackPanel Margin="10" Spacing="10">
-			<TextBlock TextWrapping="WrapWithOverflow">To re-download and re-import the card identifier mappings from MTG JSON (needed for price lookups), click the button below.</TextBlock>
-			<Button IsEnabled="{Binding !IsBusy}" Command="{Binding ImportCardIdentifiersCommand}">Re-import Card Identifiers</Button>
+			<TextBlock TextWrapping="WrapWithOverflow">To import/update the card identifier mappings from MTG JSON (needed for price lookups), click the button below. Do this if new sets have been released and you want to start price tracking your cards from these newly released sets</TextBlock>
+			<Button IsEnabled="{Binding !IsBusy}" Command="{Binding ImportCardIdentifiersCommand}">Import/Update Card Identifiers</Button>
 			<ProgressBar IsVisible="{Binding ImportCardIdentifiersCommand.IsRunning}" IsIndeterminate="True" />
 			<TextBlock IsVisible="{Binding ImportCardIdentifiersCommand.IsRunning}" Text="{Binding DownloadStatus}" />
 			<TextBlock IsVisible="{Binding ImportCardIdentifiersCommand.IsRunning}" Text="{Binding Completed, StringFormat='Imported {0} identifier(s)...'}" />
