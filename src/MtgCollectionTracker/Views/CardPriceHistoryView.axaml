@@ -21,7 +21,23 @@
                    Margin="16"
                    FontSize="14" />
 
-        <!-- Chart area -->
+        <!-- Legend (must come before the fill child in DockPanel order) -->
+        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Center" Margin="8" Spacing="16">
+            <StackPanel Orientation="Horizontal" Spacing="4">
+                <Border Width="14" Height="14" Background="#4CAF50" CornerRadius="2" />
+                <TextBlock Text="Lowest" VerticalAlignment="Center" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="4">
+                <Border Width="14" Height="14" Background="#FFC107" CornerRadius="2" />
+                <TextBlock Text="Median" VerticalAlignment="Center" />
+            </StackPanel>
+            <StackPanel Orientation="Horizontal" Spacing="4">
+                <Border Width="14" Height="14" Background="#F44336" CornerRadius="2" />
+                <TextBlock Text="Highest" VerticalAlignment="Center" />
+            </StackPanel>
+        </StackPanel>
+
+        <!-- Chart area (fill child — must be last in DockPanel) -->
         <ScrollViewer IsVisible="{Binding !HasNoData}" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
             <StackPanel Orientation="Horizontal" Margin="8">
                 <!-- Y-axis labels -->
@@ -82,21 +98,5 @@
                 </ItemsControl>
             </StackPanel>
         </ScrollViewer>
-
-        <!-- Legend -->
-        <StackPanel DockPanel.Dock="Bottom" Orientation="Horizontal" HorizontalAlignment="Center" Margin="8" Spacing="16">
-            <StackPanel Orientation="Horizontal" Spacing="4">
-                <Border Width="14" Height="14" Background="#4CAF50" CornerRadius="2" />
-                <TextBlock Text="Lowest" VerticalAlignment="Center" />
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Spacing="4">
-                <Border Width="14" Height="14" Background="#FFC107" CornerRadius="2" />
-                <TextBlock Text="Median" VerticalAlignment="Center" />
-            </StackPanel>
-            <StackPanel Orientation="Horizontal" Spacing="4">
-                <Border Width="14" Height="14" Background="#F44336" CornerRadius="2" />
-                <TextBlock Text="Highest" VerticalAlignment="Center" />
-            </StackPanel>
-        </StackPanel>
     </DockPanel>
 </UserControl>
