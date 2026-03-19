@@ -126,6 +126,9 @@ namespace MtgCollectionTracker.Core.Services
 
         /// <summary>Gets the latest price for a card SKU by its ID.</summary>
         ValueTask<(double? price, string? provider)> GetLatestPriceForSkuAsync(Guid skuId, string currency, CancellationToken cancel);
+
+        /// <summary>Gets the price history for a card SKU for up to the 10 most recent dates.</summary>
+        ValueTask<CardPriceHistoryModel?> GetPriceHistoryForSkuAsync(Guid skuId, string currency, CancellationToken cancel);
     }
 
     public static class CollectionTrackingServiceExtensions

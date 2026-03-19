@@ -81,6 +81,7 @@
 			<Button IsEnabled="{Binding Behavior.HasSelectedCardSku}" Command="{Binding DeleteSkuCommand}" Content="Delete" />
 			<Button IsEnabled="{Binding Behavior.IsItemSplittable}" Command="{Binding SplitSelectedSkuCommand}" Content="Split" HorizontalAlignment="Center" />
 			<Button IsEnabled="{Binding Behavior.HasAtLeastOneSelectedItem}" Command="{Binding UpdateSkuMetadataCommand}" Content="Update Metadata" HorizontalAlignment="Center" />
+			<Button IsEnabled="{Binding Behavior.HasOneSelectedItem}" Command="{Binding ViewPriceHistoryCommand}" Content="Price History" HorizontalAlignment="Center" />
 			<TextBlock Margin="6" VerticalAlignment="Center" Text="{Binding CollectionSummary}" />
 		</StackPanel>
 		<Panel>

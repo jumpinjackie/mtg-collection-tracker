@@ -50,6 +50,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     readonly Func<EditCardSkuViewModel> _editCardSku;
     readonly Func<SplitCardSkuViewModel> _splitCardSku;
     readonly Func<SendCardsToContainerOrDeckViewModel> _sendToContainer;
+    readonly Func<CardPriceHistoryViewModel> _cardPriceHistory;
 
     public CardsViewModel()
     {
@@ -63,6 +64,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
         _editCardSku = () => new();
         _splitCardSku = () => new();
         _sendToContainer = () => new();
+        _cardPriceHistory = () => new();
 
         this.Behavior = new(this);
         this.SelectedTags.CollectionChanged += Tags_CollectionChanged;
@@ -79,6 +81,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
                           Func<EditCardSkuViewModel> editCardSku,
                           Func<SplitCardSkuViewModel> splitCardSku,
                           Func<SendCardsToContainerOrDeckViewModel> sendToContainer,
+                          Func<CardPriceHistoryViewModel> cardPriceHistory,
                           IScryfallApiClient scryfallApiClient)
         : base(messenger)
     {
@@ -92,6 +95,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
         _editCardSku = editCardSku;
         _splitCardSku = splitCardSku;
         _sendToContainer = sendToContainer;
+        _cardPriceHistory = cardPriceHistory;
 
         this.Behavior = new(this);
         this.SelectedTags.CollectionChanged += Tags_CollectionChanged;
@@ -381,6 +385,23 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     private void ViewSelectedSku()
     {
         Messenger.ToastNotify("Feature not implemented yet", Avalonia.Controls.Notifications.NotificationType.Error);
+    }
+
+    [RelayCommand]
+    private async Task ViewPriceHistory(CancellationToken cancel)
+    {
+        if (Behavior.SelectedItems.Count == 1)
+        {
+            var selected = Behavior.SelectedItems[0];
+            var vm = _cardPriceHistory();
+            var title = $"Price History: {selected.CardName} ({selected.Edition})";
+            Messenger.Send(new OpenDialogMessage
+            {
+                DrawerWidth = 800,
+                ViewModel = _dialog().WithContent(title, vm)
+            });
+            await vm.LoadAsync(selected.Id, cancel);
+        }
     }
 
     [RelayCommand]
