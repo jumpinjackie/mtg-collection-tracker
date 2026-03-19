@@ -67,8 +67,8 @@ namespace MtgCollectionTracker.Core.Services
         ValueTask<(int skusUpdated, int skusRemoved)> ConsolidateCardSkusAsync(ConsolidateCardSkusInputModel model);
         ValueTask<ContainerSummaryModel> CreateContainerAsync(string name, string? description);
         ValueTask<ContainerSummaryModel> UpdateContainerAsync(int id, string name, string? description);
-        ValueTask<DeckSummaryModel> CreateDeckAsync(string name, string? format, int? containerId);
-        ValueTask<DeckSummaryModel> UpdateDeckAsync(int id, string name, string? format, int? containerId);
+        ValueTask<DeckSummaryModel> CreateDeckAsync(string name, string? format, int? containerId, bool isCommander = false);
+        ValueTask<DeckSummaryModel> UpdateDeckAsync(int id, string name, string? format, int? containerId, bool isCommander = false);
         ValueTask<DeckSummaryModel> SetDeckBannerAsync(int deckId, Guid? cardSkuId);
         ValueTask<CardSkuModel> DeleteCardSkuAsync(Guid skuId);
         ValueTask<DismantleDeckResult> DismantleDeckAsync(DismantleDeckInputModel model);
@@ -129,6 +129,12 @@ namespace MtgCollectionTracker.Core.Services
 
         /// <summary>Gets the price history for a card SKU for up to the 10 most recent dates.</summary>
         ValueTask<CardPriceHistoryModel?> GetPriceHistoryForSkuAsync(Guid skuId, string currency, CancellationToken cancel);
+
+        /// <summary>Validates a commander deck against commander rules. Returns a validation result with any errors.</summary>
+        ValueTask<CommanderValidationResult> ValidateCommanderDeckAsync(int deckId, CancellationToken cancel);
+
+        /// <summary>Sets the commander card for a commander deck.</summary>
+        ValueTask<DeckSummaryModel> SetDeckCommanderAsync(int deckId, Guid? commanderSkuId);
     }
 
     public static class CollectionTrackingServiceExtensions

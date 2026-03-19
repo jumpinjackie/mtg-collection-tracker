@@ -51,7 +51,7 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<DeckSummaryModel> CreateDeckAsync(string name, string? format, int? containerId)
+    public ValueTask<DeckSummaryModel> CreateDeckAsync(string name, string? format, int? containerId, bool isCommander = false)
     {
         throw new System.NotImplementedException();
     }
@@ -261,7 +261,17 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<DeckSummaryModel> UpdateDeckAsync(int id, string name, string? format, int? containerId)
+    public ValueTask<DeckSummaryModel> UpdateDeckAsync(int id, string name, string? format, int? containerId, bool isCommander = false)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public ValueTask<DeckSummaryModel> SetDeckCommanderAsync(int deckId, Guid? commanderSkuId)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public ValueTask<CommanderValidationResult> ValidateCommanderDeckAsync(int deckId, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }

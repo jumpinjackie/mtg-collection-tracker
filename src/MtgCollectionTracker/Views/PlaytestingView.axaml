@@ -275,6 +275,27 @@
 										        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
 									</StackPanel>
 								</StackPanel>
+								<!-- Commander-specific counters (only shown for Commander games) -->
+								<StackPanel Spacing="2" IsVisible="{Binding GameState.HasCommandZone}">
+									<TextBlock Text="Cmd Tax" FontSize="10" />
+									<StackPanel Orientation="Horizontal" Spacing="2">
+										<Button Content="-" Width="24" Height="22" FontSize="9" Padding="0" Command="{Binding GameState.DecrementCommanderTaxCommand}"
+										        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+										<TextBlock Text="{Binding GameState.CommanderTax}" Width="20" TextAlignment="Center" VerticalAlignment="Center" FontSize="11" />
+										<Button Content="+" Width="24" Height="22" FontSize="9" Padding="0" Command="{Binding GameState.IncrementCommanderTaxCommand}"
+										        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+									</StackPanel>
+								</StackPanel>
+								<StackPanel Spacing="2" IsVisible="{Binding GameState.HasCommandZone}">
+									<TextBlock Text="Cmd Dmg" FontSize="10" />
+									<StackPanel Orientation="Horizontal" Spacing="2">
+										<Button Content="-" Width="24" Height="22" FontSize="9" Padding="0" Command="{Binding GameState.DecrementCommanderDamageCommand}"
+										        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+										<TextBlock Text="{Binding GameState.CommanderDamage}" Width="20" TextAlignment="Center" VerticalAlignment="Center" FontSize="11" />
+										<Button Content="+" Width="24" Height="22" FontSize="9" Padding="0" Command="{Binding GameState.IncrementCommanderDamageCommand}"
+										        HorizontalContentAlignment="Center" VerticalContentAlignment="Center" />
+									</StackPanel>
+								</StackPanel>
 							</StackPanel>
 						</ScrollViewer>
 					</Border>
@@ -645,6 +666,12 @@
 							<TextBlock Text="Actions" FontWeight="Bold" HorizontalAlignment="Center" FontSize="12" />
 							<Button Content="Create Token"
 							        Click="OnBattlefieldCreateTokenClick"
+							        HorizontalAlignment="Stretch"
+							        FontSize="10"
+							        Padding="4,3" />
+							<Button Content="Command Zone"
+							        Click="OnCommandZoneClick"
+							        IsVisible="{Binding GameState.HasCommandZone}"
 							        HorizontalAlignment="Stretch"
 							        FontSize="10"
 							        Padding="4,3" />

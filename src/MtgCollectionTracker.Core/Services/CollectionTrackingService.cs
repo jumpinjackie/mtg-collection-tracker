@@ -43,6 +43,79 @@ public class CollectionTrackingService : ICollectionTrackingService
         return name.Trim();
     }
 
+    private static int GetCommanderCopiesInMainDeck(Deck deck)
+    {
+        if (!deck.CommanderId.HasValue)
+            return 0;
+
+        return deck.Cards
+            .Where(c => !c.IsSideboard && c.Id == deck.CommanderId.Value)
+            .Sum(c => c.Quantity);
+    }
+
+    private static List<string> GetCommanderValidationErrors(Deck deck)
+    {
+        var errors = new List<string>();
+        if (!deck.IsCommander)
+            return errors;
+
+        // Rule 1: Commander must be set and must be a legendary creature
+        if (deck.Commander == null)
+        {
+            errors.Add("No commander has been designated for this deck");
+        }
+        else
+        {
+            var cmdCardType = deck.Commander.Scryfall?.CardType ?? string.Empty;
+            if (!cmdCardType.Contains("Legendary", StringComparison.OrdinalIgnoreCase) ||
+                !cmdCardType.Contains("Creature", StringComparison.OrdinalIgnoreCase))
+            {
+                errors.Add($"Commander '{deck.Commander.CardName}' is not a Legendary Creature");
+            }
+        }
+
+        var commanderCopiesInMainDeck = GetCommanderCopiesInMainDeck(deck);
+        if (commanderCopiesInMainDeck != 1)
+        {
+            errors.Add($"Commander must be exactly 1 card in the main deck (currently has {commanderCopiesInMainDeck})");
+        }
+
+        // Rule 2: Main deck must be 99 cards (excluding the commander itself)
+        var mainDeckCount = deck.Cards
+            .Where(c => !c.IsSideboard && c.Id != deck.CommanderId)
+            .Sum(c => c.Quantity);
+        if (mainDeckCount != 99)
+        {
+            errors.Add($"Main deck must have exactly 99 cards (currently has {mainDeckCount})");
+        }
+
+        // Rule 3: Color identity check
+        if (deck.Commander?.Scryfall?.ColorIdentity != null)
+        {
+            var commanderColorIdentity = new HashSet<string>(
+                deck.Commander.Scryfall.ColorIdentity,
+                StringComparer.OrdinalIgnoreCase);
+
+            foreach (var sku in deck.Cards.Where(c => !c.IsSideboard && c.Id != deck.CommanderId))
+            {
+                var cardIdentity = sku.Scryfall?.ColorIdentity;
+                if (cardIdentity == null || cardIdentity.Length == 0)
+                    continue; // Colorless cards are always legal
+
+                foreach (var color in cardIdentity)
+                {
+                    if (!commanderColorIdentity.Contains(color))
+                    {
+                        errors.Add($"'{sku.CardName}' has color identity [{string.Join(", ", cardIdentity)}] which is not within the commander's color identity [{string.Join(", ", commanderColorIdentity)}]");
+                        break;
+                    }
+                }
+            }
+        }
+
+        return errors;
+    }
+
     public IEnumerable<CardLanguageModel> GetLanguages()
     {
         using var db = _db.Invoke();
@@ -150,26 +223,52 @@ public class CollectionTrackingService : ICollectionTrackingService
             : d => filter.Ids.Contains(d.Id);
 
         using var db = _db.Invoke();
-        return db.Value
+        var decks = db.Value
             .Decks
             .Include(d => d.Container)
             .Include(d => d.BannerCard)
+            .Include(d => d.Cards)
+            .Include(d => d.Commander)
+                .ThenInclude(c => c!.Scryfall)
             .Where(predicate)
             .Where(predicate2)
             .OrderBy(d => d.Name)
-            .Select(d => new DeckSummaryModel
+            .ToList();
+
+        return decks.Select(d =>
+        {
+            bool? isCommanderValid = null;
+            List<string>? commanderValidationErrors = null;
+            if (d.IsCommander)
+            {
+                commanderValidationErrors = GetCommanderValidationErrors(d);
+                isCommanderValid = commanderValidationErrors.Count == 0;
+            }
+
+            // For display purposes, MaindeckTotal includes the commander card for commander decks.
+            var mainTotal = d.Cards.Where(c => !c.IsSideboard).Sum(c => c.Quantity);
+
+            return new DeckSummaryModel
             {
                 Id = d.Id,
                 DeckName = d.Name,
                 Name = "[" + d.Format + "] " + d.Name,
-                ContainerName = d.Container!.Name,
+                ContainerName = d.Container?.Name,
                 Format = d.Format,
-                MaindeckTotal = d.Cards.Where(c => !c.IsSideboard).Sum(c => c.Quantity),
+                MaindeckTotal = mainTotal,
                 SideboardTotal = d.Cards.Where(c => c.IsSideboard).Sum(c => c.Quantity),
                 BannerCardId = d.BannerCardId,
-                BannerScryfallId = d.BannerCard != null ? d.BannerCard.ScryfallId : null
-            })
-            .ToList();
+                BannerScryfallId = d.BannerCard?.ScryfallId,
+                IsCommander = d.IsCommander,
+                CommanderName = d.Commander?.CardName,
+                IsCommanderValid = isCommanderValid,
+                CommanderValidationMessage = d.IsCommander
+                    ? (isCommanderValid == true
+                        ? (d.Commander?.CardName ?? "Commander deck is valid")
+                        : $"Invalid commander deck:{Environment.NewLine}- {string.Join(Environment.NewLine + "- ", commanderValidationErrors!)}")
+                    : null
+            };
+        }).ToList();
     }
 
     public async ValueTask<CardSkuModel> GetCardSkuByIdAsync(Guid id, CancellationToken cancel)
@@ -828,7 +927,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         };
     }
 
-    public async ValueTask<DeckSummaryModel> CreateDeckAsync(string name, string? format, int? containerId)
+    public async ValueTask<DeckSummaryModel> CreateDeckAsync(string name, string? format, int? containerId, bool isCommander = false)
     {
         Container? cnt = null;
         using var db = _db.Invoke();
@@ -843,27 +942,26 @@ public class CollectionTrackingService : ICollectionTrackingService
             throw new Exception($"Another deck with the name ({name}) already exists");
         }
 
-        var d = new Deck { Name = name, Format = format, Container = cnt };
+        // "Commander" is a reserved format name for commander decks only
+        if (!isCommander && string.Equals(format, "Commander", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new Exception("\"Commander\" is a reserved format name. Enable \"Is Commander\" to create a Commander deck.");
+        }
+
+        // Commander decks always use the "Commander" format
+        if (isCommander)
+        {
+            format = "Commander";
+        }
+
+        var d = new Deck { Name = name, Format = format, Container = cnt, IsCommander = isCommander };
         await db.Value.Decks.AddAsync(d);
         await db.Value.SaveChangesAsync();
 
-        await db.Value.Entry(d).Collection(nameof(d.Cards)).LoadAsync();
-
-        return new DeckSummaryModel
-        {
-            Id = d.Id,
-            DeckName = d.Name,
-            Name = "[" + d.Format + "] " + d.Name,
-            ContainerName = d.Container?.Name,
-            Format = d.Format,
-            MaindeckTotal = d.Cards.Where(c => !c.IsSideboard).Sum(c => c.Quantity),
-            SideboardTotal = d.Cards.Where(c => c.IsSideboard).Sum(c => c.Quantity),
-            BannerCardId = d.BannerCardId,
-            BannerScryfallId = null
-        };
+        return this.GetDecks(new DeckFilterModel { Ids = [d.Id], Formats = [] }).Single();
     }
 
-    public async ValueTask<DeckSummaryModel> UpdateDeckAsync(int id, string name, string? format, int? containerId)
+    public async ValueTask<DeckSummaryModel> UpdateDeckAsync(int id, string name, string? format, int? containerId, bool isCommander = false)
     {
         Container? cnt = null;
         using var db = _db.Invoke();
@@ -882,26 +980,32 @@ public class CollectionTrackingService : ICollectionTrackingService
         if (d == null)
             throw new Exception("Deck not found");
 
+        // "Commander" is a reserved format name for commander decks only
+        if (!isCommander && string.Equals(format, "Commander", StringComparison.OrdinalIgnoreCase))
+        {
+            throw new Exception("\"Commander\" is a reserved format name. Enable \"Is Commander\" to create a Commander deck.");
+        }
+
+        // Commander decks always use the "Commander" format
+        if (isCommander)
+        {
+            format = "Commander";
+        }
+
         d.Name = name;
         d.Format = format;
         d.Container = cnt;
+        d.IsCommander = isCommander;
+
+        // If switching away from commander, clear the commander card
+        if (!isCommander)
+        {
+            d.CommanderId = null;
+        }
 
         await db.Value.SaveChangesAsync();
-        await db.Value.Entry(d).Collection(nameof(d.Cards)).LoadAsync();
-        await db.Value.Entry(d).Reference(nameof(d.BannerCard)).LoadAsync();
 
-        return new DeckSummaryModel
-        {
-            Id = d.Id,
-            DeckName = d.Name,
-            Name = "[" + d.Format + "] " + d.Name,
-            ContainerName = d.Container?.Name,
-            Format = d.Format,
-            MaindeckTotal = d.Cards.Where(c => !c.IsSideboard).Sum(c => c.Quantity),
-            SideboardTotal = d.Cards.Where(c => c.IsSideboard).Sum(c => c.Quantity),
-            BannerCardId = d.BannerCardId,
-            BannerScryfallId = d.BannerCard?.ScryfallId
-        };
+        return this.GetDecks(new DeckFilterModel { Ids = [d.Id], Formats = [] }).Single();
     }
 
     public async ValueTask<DeckSummaryModel> SetDeckBannerAsync(int deckId, Guid? cardSkuId)
@@ -920,22 +1024,70 @@ public class CollectionTrackingService : ICollectionTrackingService
         deck.BannerCardId = cardSkuId;
         await db.Value.SaveChangesAsync();
 
-        CardSku? bannerCard = cardSkuId.HasValue
-            ? deck.Cards.FirstOrDefault(c => c.Id == cardSkuId.Value)
-            : null;
+        return this.GetDecks(new DeckFilterModel { Ids = [deck.Id], Formats = [] }).Single();
+    }
 
-        return new DeckSummaryModel
+    public async ValueTask<DeckSummaryModel> SetDeckCommanderAsync(int deckId, Guid? commanderSkuId)
+    {
+        using var db = _db.Invoke();
+        var deck = await db.Value.Decks
+            .Include(d => d.Cards)
+                .ThenInclude(c => c.Scryfall)
+            .Include(d => d.Container)
+            .Include(d => d.Commander)
+            .FirstOrDefaultAsync(d => d.Id == deckId);
+        if (deck == null)
+            throw new Exception("Deck not found");
+        if (!deck.IsCommander)
+            throw new Exception("This is not a Commander deck");
+
+        if (commanderSkuId.HasValue)
         {
-            Id = deck.Id,
-            DeckName = deck.Name,
-            Name = "[" + deck.Format + "] " + deck.Name,
-            ContainerName = deck.Container?.Name,
-            Format = deck.Format,
-            MaindeckTotal = deck.Cards.Where(c => !c.IsSideboard).Sum(c => c.Quantity),
-            SideboardTotal = deck.Cards.Where(c => c.IsSideboard).Sum(c => c.Quantity),
-            BannerCardId = deck.BannerCardId,
-            BannerScryfallId = bannerCard?.ScryfallId
-        };
+            if (!deck.Cards.Any(c => c.Id == commanderSkuId.Value))
+                throw new Exception("Card is not in this deck");
+
+            var cmdSku = deck.Cards.First(c => c.Id == commanderSkuId.Value);
+            var cardType = cmdSku.Scryfall?.CardType ?? string.Empty;
+            if (!cardType.Contains("Legendary", StringComparison.OrdinalIgnoreCase) ||
+                !cardType.Contains("Creature", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new Exception("The commander must be a Legendary Creature");
+            }
+        }
+
+        deck.CommanderId = commanderSkuId;
+        await db.Value.SaveChangesAsync();
+
+        return this.GetDecks(new DeckFilterModel { Ids = [deck.Id], Formats = [] }).Single();
+    }
+
+    public async ValueTask<CommanderValidationResult> ValidateCommanderDeckAsync(int deckId, CancellationToken cancel)
+    {
+        using var db = _db.Invoke();
+        var deck = await db.Value.Set<Deck>()
+            .Include(d => d.Cards)
+                .ThenInclude(c => c.Scryfall)
+            .Include(d => d.Commander)
+                .ThenInclude(c => c!.Scryfall)
+            .FirstOrDefaultAsync(d => d.Id == deckId, cancel);
+
+        var result = new CommanderValidationResult();
+
+        if (deck == null)
+        {
+            result.Errors.Add("Deck not found");
+            return result;
+        }
+
+        if (!deck.IsCommander)
+        {
+            result.Errors.Add("This is not a Commander deck");
+            return result;
+        }
+
+        result.Errors.AddRange(GetCommanderValidationErrors(deck));
+
+        return result;
     }
 
     public string PrintDeck(int deckId, DeckPrintOptions options)
@@ -1399,6 +1551,8 @@ public class CollectionTrackingService : ICollectionTrackingService
         var deck = await db.Value.Set<Deck>()
             .Include(d => d.Cards)
                 .ThenInclude(c => c.Scryfall)
+            .Include(d => d.Commander)
+                .ThenInclude(c => c!.Scryfall)
             .FirstOrDefaultAsync(d => d.Id == deckId);
 
         if (deck == null)
@@ -1412,6 +1566,10 @@ public class CollectionTrackingService : ICollectionTrackingService
 
         foreach (var sku in deck.Cards)
         {
+            // Skip the commander card - it's shown separately in the Commander property
+            if (deck.IsCommander && deck.CommanderId.HasValue && sku.Id == deck.CommanderId.Value)
+                continue;
+
             if (IsIncompleteForDeckDisplay(sku))
             {
                 await sku.ApplyScryfallMetadataAsync(resolver, true, cancel);
@@ -1455,7 +1613,44 @@ public class CollectionTrackingService : ICollectionTrackingService
             await db.Value.SaveChangesAsync(cancel);
         }
 
-        return new DeckModel { Name = deck.Name, Id = deck.Id, MainDeck = mainDeck, Sideboard = sideboard, BannerCardId = deck.BannerCardId };
+        DeckCardModel? commanderCard = null;
+        if (deck.IsCommander && deck.Commander != null)
+        {
+            var cmdSku = deck.Commander;
+            commanderCard = new DeckCardModel
+            {
+                SkuId = cmdSku.Id,
+                ScryfallId = cmdSku.ScryfallId,
+                CardName = cmdSku.CardName,
+                Type = cmdSku.Scryfall?.Type,
+                ManaValue = cmdSku.Scryfall?.ManaValue ?? -1,
+                CardType = cmdSku.Scryfall?.CardType,
+                Power = cmdSku.Scryfall?.Power,
+                Toughness = cmdSku.Scryfall?.Toughness,
+                BackPower = cmdSku.Scryfall?.BackPower,
+                BackToughness = cmdSku.Scryfall?.BackToughness,
+                Loyalty = cmdSku.Scryfall?.Loyalty,
+                BackLoyalty = cmdSku.Scryfall?.BackLoyalty,
+                CastingCost = cmdSku.Scryfall?.CastingCost,
+                OracleText = cmdSku.Scryfall?.OracleText,
+                Colors = cmdSku.Scryfall?.Colors,
+                ColorIdentity = cmdSku.Scryfall?.ColorIdentity,
+                IsDoubleFaced = cmdSku.Scryfall?.BackImageSmallUrl != null && cmdSku.Scryfall?.BackImageSmallUrl != cmdSku.Scryfall?.ImageSmallUrl,
+                IsLand = cmdSku.IsLand,
+                Edition = cmdSku.Edition
+            };
+        }
+
+        return new DeckModel
+        {
+            Name = deck.Name,
+            Id = deck.Id,
+            MainDeck = mainDeck,
+            Sideboard = sideboard,
+            BannerCardId = deck.BannerCardId,
+            IsCommander = deck.IsCommander,
+            Commander = commanderCard
+        };
     }
 
     static bool IsIncompleteForDeckDisplay(CardSku sku)

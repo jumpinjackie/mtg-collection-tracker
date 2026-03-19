@@ -11,5 +11,6 @@ public enum GameZone
     BattlefieldLands = 3,
     Graveyard = 4,
     Exile = 5,
-    Stack = 6
+    Stack = 6,
+    CommandZone = 7
 }

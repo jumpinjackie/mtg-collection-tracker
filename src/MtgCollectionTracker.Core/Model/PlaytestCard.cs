@@ -32,6 +32,11 @@ public class PlaytestCard
     public bool IsFrontFace { get; set; } = true;
     
     public GameZone Zone { get; set; }
+
+    /// <summary>
+    /// Whether this card is the commander in a Commander game (always returns to Command Zone on reset)
+    /// </summary>
+    public bool IsCommanderCard { get; set; }
     
     public string? PT
     {

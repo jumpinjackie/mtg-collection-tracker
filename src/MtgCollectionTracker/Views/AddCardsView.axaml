@@ -5,101 +5,22 @@
 			 xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="600"
              x:Class="MtgCollectionTracker.Views.AddCardsView"
-			 x:DataType="vm:AddCardsViewModel">
+			 x:DataType="vm:AddCardsViewModel"
+			 MinHeight="420"
+			 MaxHeight="760"
+			 VerticalAlignment="Stretch"
+			 HorizontalAlignment="Stretch">
 	<Design.DataContext>
 		<!-- This only sets the DataContext for the previewer in an IDE,
          to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
 		<vm:AddCardsViewModel />
 	</Design.DataContext>
-	<Grid Name="RootLayout" RowDefinitions="Auto,*,Auto,Auto" Margin="0">
-		<TextBlock Name="IntroTextBlock" Grid.Row="0" Margin="6" LineSpacing="6" TextWrapping="WrapWithOverflow">
-			Add cards to your collection by filling in the card SKUs in the grid below.<LineBreak />
-			The following columns must always be filled in: Qty, Card Name, Edition.<LineBreak />
-			Edition must be the code for the relevant set. Consult Scryfall for the proper codes.<LineBreak />
-			If language is not specified, English (en) is assumed.<LineBreak />
-			If you're unsure about the card name, or the card name has hard-to-type accented characters, click "Check/Fix Card Names" button
-		</TextBlock>
-
-		<Grid Grid.Row="1" RowDefinitions="*" Margin="6,0,6,0">
-			<DataGrid Grid.Row="0"
-				      Name="AddCardsDataGrid"
-				      ItemsSource="{Binding Cards}"
-				      IsEnabled="{Binding !IsDialogBusy}"
-					  CanUserReorderColumns="True"
-					  CanUserResizeColumns="True"
-					  CanUserSortColumns="False"
-					  GridLinesVisibility="All"
-					  BorderThickness="1"
-					  BorderBrush="Gray"
-					  VerticalAlignment="Stretch">
-				<DataGrid.Columns>
-					<DataGridTextColumn Header="Qty" Binding="{Binding Qty}"/>
-					<DataGridTextColumn Header="Card Name" Binding="{Binding CardName}"/>
-					<DataGridTextColumn Header="Edition" Binding="{Binding Edition}"/>
-					<DataGridTemplateColumn Header="Language">
-						<DataGridTemplateColumn.CellTemplate>
-							<DataTemplate>
-								<Panel>
-									<ComboBox MinWidth="100" ItemsSource="{Binding Languages}" SelectedItem="{Binding Language}">
-										<ComboBox.ItemTemplate>
-											<DataTemplate x:DataType="vm:LanguageViewModel">
-												<TextBlock Text="{Binding Name}" />
-											</DataTemplate>
-										</ComboBox.ItemTemplate>
-									</ComboBox>
-								</Panel>
-							</DataTemplate>
-						</DataGridTemplateColumn.CellTemplate>
-					</DataGridTemplateColumn>
-					<DataGridTextColumn Header="Collector #" Binding="{Binding CollectorNumber}"/>
-					<DataGridCheckBoxColumn Header="Foil" Binding="{Binding IsFoil}" />
-					<DataGridTextColumn Header="Comments" Binding="{Binding Comments}" />
-					<DataGridTemplateColumn Header="Valid?" Width="80">
-						<DataGridTemplateColumn.CellTemplate>
-							<DataTemplate>
-								<Panel>
-									<PathIcon IsVisible="{Binding !IsValid}" Data="{StaticResource warning_regular}" />
-									<TextBlock IsVisible="{Binding IsValid}" Text="OK" />
-								</Panel>
-							</DataTemplate>
-						</DataGridTemplateColumn.CellTemplate>
-					</DataGridTemplateColumn>
-					<DataGridTemplateColumn>
-						<DataGridTemplateColumn.CellTemplate>
-							<DataTemplate>
-								<Button Command="{Binding #AddCardsDataGrid.((vm:AddCardsViewModel)DataContext).RemoveCardCommand}" CommandParameter="{Binding}">Remove</Button>
-							</DataTemplate>
-						</DataGridTemplateColumn.CellTemplate>
-					</DataGridTemplateColumn>
-				</DataGrid.Columns>
-			</DataGrid>
-		</Grid>
-
-		<StackPanel Grid.Row="2" Margin="6,0,6,0">
-			<TextBlock Margin="6" IsVisible="{Binding LockedTargetContainer}">
-				<Run>These cards will be added to:</Run>
-				<Run Text="{Binding SelectedContainer.Name}" />
-			</TextBlock>
-			<TextBlock Margin="6" IsVisible="{Binding LockedTargetDeck}">
-				<Run>These cards will be added to deck:</Run>
-				<Run Text="{Binding TargetDeckName}" />
-			</TextBlock>
-			<StackPanel IsVisible="{Binding ShowContainerSelector}">
-				<TextBlock Margin="6">Add these cards to container</TextBlock>
-				<ComboBox Margin="6" SelectedItem="{Binding SelectedContainer}" ItemsSource="{Binding AvailableContainers}">
-					<ComboBox.ItemTemplate>
-						<DataTemplate x:DataType="vm:ContainerViewModel">
-							<TextBlock Text="{Binding Name}" />
-						</DataTemplate>
-					</ComboBox.ItemTemplate>
-				</ComboBox>
-			</StackPanel>
-		</StackPanel>
-
-		<Grid Name="BottomActionsGrid" Grid.Row="3" ColumnDefinitions="*,Auto" Margin="10">
+	<DockPanel Name="RootLayout" Margin="0" LastChildFill="True">
+		<Grid Name="BottomActionsGrid" DockPanel.Dock="Bottom" ColumnDefinitions="*,Auto" Margin="10">
 			<StackPanel Grid.Column="0" Orientation="Horizontal" HorizontalAlignment="Left" Spacing="0">
 				<Button Command="{Binding AddRowCommand}" IsEnabled="{Binding !IsDialogBusy}">Add Row</Button>
 				<Button Command="{Binding ImportCommand}" IsEnabled="{Binding !IsDialogBusy}">Import Rows</Button>
+				<Button Command="{Binding OpenLoadCardsDialogCommand}" IsEnabled="{Binding !IsDialogBusy}">Load Cards</Button>
 				<Button Command="{Binding CheckCardNamesCommand}" IsEnabled="{Binding !IsDialogBusy}">
 					<StackPanel Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
 						<ProgressBar IsVisible="{Binding IsCheckingCardNames}" IsIndeterminate="True" Width="16" Height="16" />
@@ -121,5 +42,91 @@
 				<Button Command="{Binding CancelCommand}" IsEnabled="{Binding !IsDialogBusy}">Cancel</Button>
 			</StackPanel>
 		</Grid>
-	</Grid>
+
+		<Grid Name="ContentArea" RowDefinitions="Auto,*,Auto" Margin="0">
+			<TextBlock Name="IntroTextBlock" Grid.Row="0" Margin="6" LineSpacing="6" TextWrapping="WrapWithOverflow">
+				Add cards to your collection by filling in the card SKUs in the grid below.<LineBreak />
+				The following columns must always be filled in: Qty, Card Name, Edition.<LineBreak />
+				Edition must be the code for the relevant set. Consult Scryfall for the proper codes.<LineBreak />
+				If language is not specified, English (en) is assumed.<LineBreak />
+				If you're unsure about the card name, or the card name has hard-to-type accented characters, click "Check/Fix Card Names" button
+			</TextBlock>
+
+			<Grid Grid.Row="1" RowDefinitions="*" Margin="6,0,6,0">
+				<DataGrid Grid.Row="0"
+					      Name="AddCardsDataGrid"
+					      ItemsSource="{Binding Cards}"
+					      IsEnabled="{Binding !IsDialogBusy}"
+						  CanUserReorderColumns="True"
+						  CanUserResizeColumns="True"
+						  CanUserSortColumns="False"
+						  GridLinesVisibility="All"
+						  BorderThickness="1"
+						  BorderBrush="Gray"
+						  VerticalAlignment="Stretch">
+					<DataGrid.Columns>
+						<DataGridTextColumn Header="Qty" Binding="{Binding Qty}"/>
+						<DataGridTextColumn Header="Card Name" Binding="{Binding CardName}"/>
+						<DataGridTextColumn Header="Edition" Binding="{Binding Edition}"/>
+						<DataGridTemplateColumn Header="Language">
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<Panel>
+										<ComboBox MinWidth="100" ItemsSource="{Binding Languages}" SelectedItem="{Binding Language}">
+											<ComboBox.ItemTemplate>
+												<DataTemplate x:DataType="vm:LanguageViewModel">
+													<TextBlock Text="{Binding Name}" />
+												</DataTemplate>
+											</ComboBox.ItemTemplate>
+										</ComboBox>
+									</Panel>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+						<DataGridTextColumn Header="Collector #" Binding="{Binding CollectorNumber}"/>
+						<DataGridCheckBoxColumn Header="Foil" Binding="{Binding IsFoil}" />
+						<DataGridTextColumn Header="Comments" Binding="{Binding Comments}" />
+						<DataGridTemplateColumn Header="Valid?" Width="80">
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<Panel>
+										<PathIcon IsVisible="{Binding !IsValid}" Data="{StaticResource warning_regular}" />
+										<TextBlock IsVisible="{Binding IsValid}" Text="OK" />
+									</Panel>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+						<DataGridTemplateColumn>
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate>
+									<Button Command="{Binding #AddCardsDataGrid.((vm:AddCardsViewModel)DataContext).RemoveCardCommand}" CommandParameter="{Binding}">Remove</Button>
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
+					</DataGrid.Columns>
+				</DataGrid>
+			</Grid>
+
+			<StackPanel Grid.Row="2" Margin="6,0,6,0">
+				<TextBlock Margin="6" IsVisible="{Binding LockedTargetContainer}">
+					<Run>These cards will be added to:</Run>
+					<Run Text="{Binding SelectedContainer.Name}" />
+				</TextBlock>
+				<TextBlock Margin="6" IsVisible="{Binding LockedTargetDeck}">
+					<Run>These cards will be added to deck:</Run>
+					<Run Text="{Binding TargetDeckName}" />
+				</TextBlock>
+				<StackPanel IsVisible="{Binding ShowContainerSelector}">
+					<TextBlock Margin="6">Add these cards to container</TextBlock>
+					<ComboBox Margin="6" SelectedItem="{Binding SelectedContainer}" ItemsSource="{Binding AvailableContainers}">
+						<ComboBox.ItemTemplate>
+							<DataTemplate x:DataType="vm:ContainerViewModel">
+								<TextBlock Text="{Binding Name}" />
+							</DataTemplate>
+						</ComboBox.ItemTemplate>
+					</ComboBox>
+				</StackPanel>
+			</StackPanel>
+		</Grid>
+	</DockPanel>
 </UserControl>
