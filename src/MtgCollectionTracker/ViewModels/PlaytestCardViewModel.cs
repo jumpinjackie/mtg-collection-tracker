@@ -104,6 +104,11 @@ public partial class PlaytestCardViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isToken;
 
+    /// <summary>
+    /// Whether this card is the commander in a Commander game (always returns to Command Zone on reset)
+    /// </summary>
+    public bool IsCommanderCard { get; set; }
+
     [ObservableProperty]
     private bool _isTapped;
 
@@ -154,6 +159,7 @@ public partial class PlaytestCardViewModel : ViewModelBase
         IsLand = card.IsLand;
         IsDoubleFaced = card.IsDoubleFaced;
         IsToken = card.IsToken;
+        IsCommanderCard = card.IsCommanderCard;
         IsTapped = card.IsTapped;
         IsFrontFace = card.IsFrontFace;
         Zone = card.Zone;

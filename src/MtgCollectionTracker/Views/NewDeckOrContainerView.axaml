@@ -19,8 +19,9 @@
 		<StackPanel Spacing="6">
 			<TextBlock>Name</TextBlock>
 			<TextBox Text="{Binding Name}" />
+			<CheckBox IsVisible="{Binding IsDeck}" IsChecked="{Binding IsCommander}">Is Commander Deck</CheckBox>
 			<TextBlock IsVisible="{Binding IsDeck}">Format</TextBlock>
-			<TextBox IsVisible="{Binding IsDeck}" Text="{Binding DeckFormat}" />
+			<TextBox IsVisible="{Binding IsDeck}" IsEnabled="{Binding IsFormatEditable}" Text="{Binding DeckFormat}" />
 			<TextBlock IsVisible="{Binding IsContainer}">Description</TextBlock>
 			<TextBox IsVisible="{Binding IsContainer}" Text="{Binding ContainerDescription}" />
 		</StackPanel>

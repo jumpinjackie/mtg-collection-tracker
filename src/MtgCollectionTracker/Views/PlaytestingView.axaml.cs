@@ -239,6 +239,13 @@ public partial class PlaytestingView : UserControl
         }
     }
 
+    private void OnCommandZoneClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is PlaytestingViewModel vm && vm.IsInGame)
+        {
+            vm.GameState.OpenCommandZoneDialog();
+        }
+    }
     private void OnAddCounterClick(object? sender, RoutedEventArgs e)
     {
         if (TryGetCardFromSender(sender, out var card) &&

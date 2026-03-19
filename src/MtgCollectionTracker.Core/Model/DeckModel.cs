@@ -88,6 +88,16 @@ public class DeckModel
 
     public List<DeckCardModel> Sideboard { get; set; }
 
+    /// <summary>
+    /// Indicates whether this is a Commander deck
+    /// </summary>
+    public bool IsCommander { get; set; }
+
+    /// <summary>
+    /// The commander card model (only valid when <see cref="IsCommander"/> is true)
+    /// </summary>
+    public DeckCardModel? Commander { get; set; }
+
     public IEnumerable<IDeckPrintableSlot> GetCards()
     {
         foreach (var grp in this.MainDeck.GroupBy(c => c.CardName))

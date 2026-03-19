@@ -51,6 +51,25 @@ public partial class DeckViewModel : ViewModelBase
 
     public bool HasContainer => !string.IsNullOrEmpty(this.ContainerName);
 
+    /// <summary>
+    /// Whether this is a Commander deck
+    /// </summary>
+    public bool IsCommander { get; private set; }
+
+    /// <summary>
+    /// The name of the commander card (null if not a commander deck or no commander assigned)
+    /// </summary>
+    public string? CommanderName { get; private set; }
+
+    /// <summary>
+    /// The commander validation status (null if not a commander deck)
+    /// </summary>
+    public bool? IsCommanderValid { get; private set; }
+
+    public bool HasCommanderValid => IsCommander && IsCommanderValid.HasValue;
+
+    public bool HasCommanderInvalid => IsCommander && IsCommanderValid == false;
+
     public DeckViewModel WithData(DeckSummaryModel deck)
     {
         this.DeckId = deck.Id;
@@ -63,6 +82,9 @@ public partial class DeckViewModel : ViewModelBase
         this.Banner = (deck.BannerScryfallId != null && _service != null)
             ? LoadBannerImageAsync(deck.BannerScryfallId)
             : null;
+        this.IsCommander = deck.IsCommander;
+        this.CommanderName = deck.CommanderName;
+        this.IsCommanderValid = deck.IsCommanderValid;
         return this;
     }
 

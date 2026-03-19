@@ -32,7 +32,24 @@ public partial class EditDeckOrContainerViewModel : DialogContentViewModel
     private string _name;
 
     [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(IsFormatEditable))]
+    private bool _isCommander;
+
+    [ObservableProperty]
     private string? _deckFormat;
+
+    /// <summary>
+    /// The format field is editable only for non-commander decks. Commander decks always use "Commander" format.
+    /// </summary>
+    public bool IsFormatEditable => !IsCommander;
+
+    partial void OnIsCommanderChanged(bool value)
+    {
+        if (value)
+        {
+            DeckFormat = "Commander";
+        }
+    }
 
     [ObservableProperty]
     private string? _containerDescription;
@@ -53,12 +70,13 @@ public partial class EditDeckOrContainerViewModel : DialogContentViewModel
 
     private int _deckOrContainerId;
 
-    public EditDeckOrContainerViewModel WithDeck(int id, string name, string format)
+    public EditDeckOrContainerViewModel WithDeck(int id, string name, string format, bool isCommander = false)
     {
         _deckOrContainerId = id;
         this.Type = DeckOrContainer.Deck;
         this.Name = name;
         this.DeckFormat = format;
+        this.IsCommander = isCommander;
         return this;
     }
 
@@ -77,7 +95,7 @@ public partial class EditDeckOrContainerViewModel : DialogContentViewModel
         switch (this.Type)
         {
             case DeckOrContainer.Deck:
-                var di = await _service.UpdateDeckAsync(_deckOrContainerId, this.Name, this.DeckFormat, null);
+                var di = await _service.UpdateDeckAsync(_deckOrContainerId, this.Name, this.DeckFormat, null, this.IsCommander);
                 this.Messenger.Send(new DeckUpdatedMessage(di));
                 this.Messenger.ToastNotify($"Deck updated ({this.Name})", Avalonia.Controls.Notifications.NotificationType.Success);
                 this.Messenger.Send(new CloseDialogMessage());

@@ -850,4 +850,185 @@ public class CollectionTrackingServiceTests : IDisposable
         Assert.Single(results);
         Assert.False(results[0].IsDoubleFaced);
     }
+
+    // ─── Commander Support ────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task CreateDeckAsync_CommanderDeck_SetsFormatToCommander()
+    {
+        var service = CreateService();
+
+        var deck = await service.CreateDeckAsync("Atraxa EDH", null, null, isCommander: true);
+
+        Assert.Equal("Commander", deck.Format);
+        Assert.True(deck.IsCommander);
+    }
+
+    [Fact]
+    public async Task CreateDeckAsync_CommanderDeck_OverridesFormat()
+    {
+        var service = CreateService();
+
+        var deck = await service.CreateDeckAsync("Atraxa EDH", "Legacy", null, isCommander: true);
+
+        // Format is always forced to "Commander" for commander decks
+        Assert.Equal("Commander", deck.Format);
+    }
+
+    [Fact]
+    public async Task CreateDeckAsync_NonCommanderDeck_WithCommanderFormatName_Throws()
+    {
+        var service = CreateService();
+
+        await Assert.ThrowsAsync<Exception>(async () =>
+            await service.CreateDeckAsync("My Deck", "Commander", null, isCommander: false));
+    }
+
+    [Fact]
+    public async Task UpdateDeckAsync_CommanderDeck_SetsFormatToCommander()
+    {
+        var service = CreateService();
+        var created = await service.CreateDeckAsync("Test Deck", "Legacy", null);
+
+        var updated = await service.UpdateDeckAsync(created.Id, "Test Deck", null, null, isCommander: true);
+
+        Assert.Equal("Commander", updated.Format);
+        Assert.True(updated.IsCommander);
+    }
+
+    [Fact]
+    public async Task ValidateCommanderDeckAsync_NoCommander_ReturnsError()
+    {
+        var service = CreateService();
+        var deck = await service.CreateDeckAsync("Atraxa EDH", null, null, isCommander: true);
+
+        var result = await service.ValidateCommanderDeckAsync(deck.Id, CancellationToken.None);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.Contains("No commander"));
+    }
+
+    [Fact]
+    public async Task ValidateCommanderDeckAsync_With99CardsAndLegendaryCreatureCommander_IsValid()
+    {
+        using var ctx = new CardsDbContext(_dbOptions);
+        var deck = new Deck { Name = "Atraxa EDH", Format = "Commander", IsCommander = true };
+        ctx.Decks.Add(deck);
+        ctx.SaveChanges();
+
+        var ataxaMetadata = new ScryfallCardMetadata
+        {
+            Id = Guid.NewGuid().ToString(),
+            CardName = "Atraxa, Praetors' Voice",
+            Edition = "C16",
+            CardType = "Legendary Creature — Phyrexian Angel Horror",
+            Type = "Creature",
+            Rarity = "mythic",
+            ColorIdentity = ["W", "U", "B", "G"]
+        };
+
+        // Add commander
+        var commanderSku = new CardSku
+        {
+            CardName = "Atraxa, Praetors' Voice",
+            Edition = "C16",
+            Quantity = 1,
+            ScryfallId = ataxaMetadata.Id,
+            Scryfall = ataxaMetadata,
+            Deck = deck,
+        };
+        ctx.Cards.Add(commanderSku);
+        ctx.SaveChanges();
+
+        deck.CommanderId = commanderSku.Id;
+        ctx.SaveChanges();
+
+        var forestMeta = new ScryfallCardMetadata
+        {
+            Id = Guid.NewGuid().ToString(),
+            CardName = "Forest",
+            Edition = "M21",
+            CardType = "Basic Land — Forest",
+            Type = "Land",
+            Rarity = "common",
+            ColorIdentity = []
+        };
+
+        // Add 99 main deck cards (basic lands = colorless identity)
+        for (int i = 0; i < 99; i++)
+        {
+            ctx.Cards.Add(new CardSku
+            {
+                CardName = "Forest",
+                Edition = "M21",
+                Quantity = 1,
+                ScryfallId = forestMeta.Id,
+                Scryfall = i == 0 ? forestMeta : null, // only need the metadata on the first one
+                Deck = deck,
+                IsSideboard = false,
+            });
+        }
+        ctx.SaveChanges();
+
+        var service = CreateService();
+        var result = await service.ValidateCommanderDeckAsync(deck.Id, CancellationToken.None);
+
+        Assert.True(result.IsValid, string.Join("; ", result.Errors));
+    }
+
+    [Fact]
+    public async Task ValidateCommanderDeckAsync_Wrong_MainDeckCount_ReturnsError()
+    {
+        using var ctx = new CardsDbContext(_dbOptions);
+        var deck = new Deck { Name = "Atraxa EDH", Format = "Commander", IsCommander = true };
+        ctx.Decks.Add(deck);
+        ctx.SaveChanges();
+
+        var ataxaMetadata = new ScryfallCardMetadata
+        {
+            Id = Guid.NewGuid().ToString(),
+            CardName = "Atraxa, Praetors' Voice",
+            Edition = "C16",
+            CardType = "Legendary Creature — Phyrexian Angel Horror",
+            Type = "Creature",
+            Rarity = "mythic",
+            ColorIdentity = ["W", "U", "B", "G"]
+        };
+
+        // Add commander
+        var commanderSku = new CardSku
+        {
+            CardName = "Atraxa, Praetors' Voice",
+            Edition = "C16",
+            Quantity = 1,
+            ScryfallId = ataxaMetadata.Id,
+            Scryfall = ataxaMetadata,
+            Deck = deck,
+        };
+        ctx.Cards.Add(commanderSku);
+        ctx.SaveChanges();
+
+        deck.CommanderId = commanderSku.Id;
+        ctx.SaveChanges();
+
+        // Add only 60 main deck cards (wrong count)
+        for (int i = 0; i < 60; i++)
+        {
+            ctx.Cards.Add(new CardSku
+            {
+                CardName = "Forest",
+                Edition = "M21",
+                Quantity = 1,
+                Deck = deck,
+                IsSideboard = false,
+            });
+        }
+        ctx.SaveChanges();
+
+        var service = CreateService();
+        var result = await service.ValidateCommanderDeckAsync(deck.Id, CancellationToken.None);
+
+        Assert.False(result.IsValid);
+        Assert.Contains(result.Errors, e => e.Contains("99"));
+    }
 }
