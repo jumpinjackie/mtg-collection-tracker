@@ -144,7 +144,7 @@ public partial class CardPriceHistoryViewModel : DialogContentViewModel
         {
             var group = new PriceBarGroupViewModel
             {
-                DateLabel = dp.Date.ToString("MM/dd/yy"),
+                DateLabel = dp.Date.ToString("dd MMM yy"),
                 LowBar = dp.Lowest != null ? new PriceBarViewModel
                 {
                     Color = "#4CAF50",
