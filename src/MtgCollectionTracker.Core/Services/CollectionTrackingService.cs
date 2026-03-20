@@ -2052,6 +2052,17 @@ public class CollectionTrackingService : ICollectionTrackingService
         return !await db.Value.ScryfallIdMappings.AnyAsync(cancel);
     }
 
+    public async ValueTask<bool> HasLocalPriceDataAsync(CancellationToken cancel)
+    {
+        using var db = _db.Invoke();
+        var hasPricingEntries = await db.Value.CardPricingEntries.AnyAsync(cancel);
+        if (!hasPricingEntries)
+            return false;
+
+        var hasDownloadHistory = await db.Value.CardPricingDownloadHistory.AnyAsync(cancel);
+        return hasDownloadHistory;
+    }
+
     /// <summary>
     /// Downloads a zip file from <paramref name="url"/> to <paramref name="destPath"/> using HTTP streaming.
     /// Reports download progress via <paramref name="onDownloadStatus"/> if provided.

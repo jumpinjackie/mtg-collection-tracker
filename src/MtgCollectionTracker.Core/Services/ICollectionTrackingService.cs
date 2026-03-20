@@ -124,6 +124,9 @@ namespace MtgCollectionTracker.Core.Services
         /// <returns>True if new data was imported, false if already up-to-date.</returns>
         ValueTask<bool> ImportPriceDataAsync(UpdateCardMetadataProgressCallback callback, CancellationToken cancel);
 
+        /// <summary>Checks whether local pricing data exists for lowest price checks.</summary>
+        ValueTask<bool> HasLocalPriceDataAsync(CancellationToken cancel);
+
         /// <summary>Gets the latest price for a card SKU by its ID.</summary>
         ValueTask<(double? price, string? provider)> GetLatestPriceForSkuAsync(Guid skuId, string currency, CancellationToken cancel);
 

@@ -140,6 +140,21 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
     {
         if (this.SelectedDeck is not null)
         {
+            if (!await _service.HasLocalPriceDataAsync(cancel))
+            {
+                Messenger.Send(new OpenDialogMessage
+                {
+                    DrawerWidth = 600,
+                    ViewModel = _dialog().WithContent(
+                        "Missing Local Price Data",
+                        new ContainerTextViewModel().WithText(
+                            "No local card price data was found.\n\n" +
+                            "To use Lowest Price Check, open Settings, go to the Database tab, and import card prices.\n\n" +
+                            "After importing price data, run Lowest Price Check again."))
+                });
+                return;
+            }
+
             var priceList = await _service.GetLowestPricesForDeckAsync(new(this.SelectedDeck.DeckId, true, false), _scryfallApiClient, cancel);
             Messenger.Send(new OpenDialogMessage
             {

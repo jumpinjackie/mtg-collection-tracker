@@ -161,6 +161,21 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
     [RelayCommand(CanExecute = nameof(CanPriceCheck))]
     private async Task LowestPriceCheck(CancellationToken cancel)
     {
+        if (!await _service.HasLocalPriceDataAsync(cancel))
+        {
+            Messenger.Send(new OpenDialogMessage
+            {
+                DrawerWidth = 600,
+                ViewModel = _dialog().WithContent(
+                    "Missing Local Price Data",
+                    new ContainerTextViewModel().WithText(
+                        "No local card price data was found.\n\n" +
+                        "To use Lowest Price Check, open Settings, go to the Database tab, and import card prices.\n\n" +
+                        "After importing price data, run Lowest Price Check again."))
+            });
+            return;
+        }
+
         var items = _deckListCardItems.Select(i => new PriceCheckItem(i.CardName, i.Requested));
         var priceList = await _service.GetLowestPricesAsync(new(items, true, false), cancel);
         
