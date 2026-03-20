@@ -20,6 +20,7 @@ public partial class PlaytestingView : UserControl
 
     // Card horizontal margin (left + right) used for hand reorder position calculation
     private const int HandCardTotalMargin = 6;
+    private const int HandCardInterItemSpacing = 5;
 
     private PlaytestCardViewModel? _draggedCard;
     private Border? _activeDropZone;
@@ -27,6 +28,7 @@ public partial class PlaytestingView : UserControl
     // For hand card reordering
     private bool _isDraggingHandCard;
     private int _handDragSourceIndex = -1;
+    private int _handDropTargetIndex = -1;
 
     public PlaytestingView()
     {
@@ -473,11 +475,14 @@ public partial class PlaytestingView : UserControl
         {
             _isDraggingHandCard = true;
             _handDragSourceIndex = vm.GameState.Hand.IndexOf(card);
+            _handDropTargetIndex = _handDragSourceIndex;
+            ShowHandDropIndicator(_handDropTargetIndex, vm);
         }
         else
         {
             _isDraggingHandCard = false;
             _handDragSourceIndex = -1;
+            ClearHandDropIndicator();
         }
     }
 
@@ -497,8 +502,13 @@ public partial class PlaytestingView : UserControl
             DataContext is PlaytestingViewModel vm && vm.IsInGame)
         {
             var pointerPos = e.GetPosition(HandItemsControl);
-            var targetIndex = GetHandDropIndex(pointerPos, vm);
+            var targetIndex = GetHandDropTargetIndex(pointerPos, vm);
             var sourceIndex = vm.GameState.Hand.IndexOf(_draggedCard);
+
+            if (targetIndex >= vm.GameState.Hand.Count)
+            {
+                targetIndex = vm.GameState.Hand.Count - 1;
+            }
 
             if (targetIndex >= 0 && sourceIndex >= 0 && targetIndex != sourceIndex)
             {
@@ -508,6 +518,8 @@ public partial class PlaytestingView : UserControl
             _draggedCard = null;
             _isDraggingHandCard = false;
             _handDragSourceIndex = -1;
+            _handDropTargetIndex = -1;
+            ClearHandDropIndicator();
             ClearDropZoneHighlight();
             return;
         }
@@ -515,16 +527,19 @@ public partial class PlaytestingView : UserControl
         MoveDraggedCardTo(GameZone.Hand);
     }
 
-    private int GetHandDropIndex(Avalonia.Point pointerPos, PlaytestingViewModel vm)
+    private int GetHandDropTargetIndex(Avalonia.Point pointerPos, PlaytestingViewModel vm)
     {
         var hand = vm.GameState.Hand;
         if (hand.Count == 0)
             return 0;
 
-        // Each card is approximately CardWidth + margin (HandCardTotalMargin = 3+3=6) wide
-        var cardWidth = vm.GameState.CardWidth + HandCardTotalMargin;
-        var index = (int)(pointerPos.X / cardWidth);
-        return Math.Max(0, Math.Min(index, hand.Count - 1));
+        // Each card occupies card width + horizontal margins + item spacing.
+        var stride = vm.GameState.CardWidth + HandCardTotalMargin + HandCardInterItemSpacing;
+        var hoveredIndex = Math.Max(0, Math.Min((int)(pointerPos.X / stride), hand.Count - 1));
+        var localX = pointerPos.X - (hoveredIndex * stride);
+        var isRightHalf = localX >= (stride / 2.0);
+
+        return isRightHalf ? hoveredIndex + 1 : hoveredIndex;
     }
 
     private void OnDropToStack(object? sender, PointerReleasedEventArgs e) => MoveDraggedCardTo(GameZone.Stack);
@@ -557,6 +572,8 @@ public partial class PlaytestingView : UserControl
         _draggedCard = null;
         _isDraggingHandCard = false;
         _handDragSourceIndex = -1;
+        _handDropTargetIndex = -1;
+        ClearHandDropIndicator();
         ClearDropZoneHighlight();
     }
 
@@ -565,6 +582,25 @@ public partial class PlaytestingView : UserControl
         if (_draggedCard is null || sender is not Border zone)
         {
             return;
+        }
+
+        if (ReferenceEquals(zone, HandDropZone) &&
+            _isDraggingHandCard &&
+            _draggedCard.Zone == GameZone.Hand &&
+            DataContext is PlaytestingViewModel vm &&
+            vm.IsInGame)
+        {
+            var pointerPos = e.GetPosition(HandItemsControl);
+            var targetIndex = GetHandDropTargetIndex(pointerPos, vm);
+            if (targetIndex != _handDropTargetIndex)
+            {
+                _handDropTargetIndex = targetIndex;
+                ShowHandDropIndicator(targetIndex, vm);
+            }
+        }
+        else
+        {
+            ClearHandDropIndicator();
         }
 
         if (!ReferenceEquals(_activeDropZone, zone))
@@ -580,6 +616,11 @@ public partial class PlaytestingView : UserControl
         if (sender is Border zone && ReferenceEquals(_activeDropZone, zone))
         {
             ClearDropZoneHighlight();
+        }
+
+        if (sender is Border handZone && ReferenceEquals(handZone, HandDropZone))
+        {
+            ClearHandDropIndicator();
         }
     }
 
@@ -637,6 +678,25 @@ public partial class PlaytestingView : UserControl
             _activeDropZone.BorderBrush = DefaultDropZoneBrush;
             _activeDropZone = null;
         }
+    }
+
+    private void ShowHandDropIndicator(int targetIndex, PlaytestingViewModel vm)
+    {
+        var stride = vm.GameState.CardWidth + HandCardTotalMargin + HandCardInterItemSpacing;
+        var safeIndex = Math.Max(0, Math.Min(targetIndex, vm.GameState.Hand.Count));
+
+        // Draw at left/right edge of the hovered card. End-of-hand draws at the right edge of the last card.
+        var indicatorX = (safeIndex == vm.GameState.Hand.Count)
+            ? ((safeIndex - 1) * stride) + 3 + vm.GameState.CardWidth
+            : (safeIndex * stride) + 3;
+
+        HandDropIndicator.Margin = new Thickness(indicatorX, 3, 0, 0);
+        HandDropIndicator.IsVisible = true;
+    }
+
+    private void ClearHandDropIndicator()
+    {
+        HandDropIndicator.IsVisible = false;
     }
 
     private static async Task AnimateCardFlipAsync(Border border)
