@@ -145,12 +145,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
                 Messenger.Send(new OpenDialogMessage
                 {
                     DrawerWidth = 600,
-                    ViewModel = _dialog().WithContent(
-                        "Missing Local Price Data",
-                        new ContainerTextViewModel().WithText(
-                            "No local card price data was found.\n\n" +
-                            "To use Lowest Price Check, open Settings, go to the Database tab, and import card prices.\n\n" +
-                            "After importing price data, run Lowest Price Check again."))
+                    ViewModel = _dialog().WithMissingLocalPriceDataContent()
                 });
                 return;
             }

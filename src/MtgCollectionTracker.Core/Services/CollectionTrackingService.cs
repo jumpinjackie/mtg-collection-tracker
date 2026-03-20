@@ -1953,19 +1953,24 @@ public class CollectionTrackingService : ICollectionTrackingService
 
     private async ValueTask<(string? edition, decimal? price)> GetLowestPriceFromLocalDataAsync(CardsDbContext db, string cardName, CancellationToken cancel)
     {
-        var cardNameLower = cardName.ToLower();
+        // Determine the most recent pricing date available so we only look at the latest snapshot
+        var latestDate = await db.Set<CardPricingEntry>().MaxAsync(e => (DateOnly?)e.Date, cancel);
+        if (latestDate == null)
+            return (null, null);
 
-        // Find all Scryfall IDs for this card name (case-insensitive), joined through to price entries in a single query
+        // Find the cheapest non-foil retail price for any printing of this card on the latest snapshot date.
+        // Use NOCASE collation to leverage the existing index on ScryfallCardMetadata(CardName, ...).
         var cheapestResult = await db.Set<ScryfallCardMetadata>()
-            .Where(m => m.CardName.ToLower() == cardNameLower)
+            .Where(m => EF.Functions.Collate(m.CardName, "NOCASE") == cardName)
             .Join(db.Set<ScryfallIdMapping>(),
                 m => m.Id,
                 s => s.ScryfallId,
                 (m, s) => new { Metadata = m, Mapping = s })
             .Join(db.Set<CardPricingEntry>()
                     .Where(e => e.CardFinish == "normal"
-                        && e.Currency == "USD"
-                        && e.ProviderListing == "retail"),
+                        && e.Currency == DefaultPriceCurrency
+                        && e.ProviderListing == "retail"
+                        && e.Date == latestDate),
                 ms => ms.Mapping.MtgJsonUuid,
                 e => e.Uuid,
                 (ms, e) => new { ms.Metadata.Edition, e.Price })
@@ -2060,7 +2065,15 @@ public class CollectionTrackingService : ICollectionTrackingService
             return false;
 
         var hasDownloadHistory = await db.Value.CardPricingDownloadHistory.AnyAsync(cancel);
-        return hasDownloadHistory;
+        if (!hasDownloadHistory)
+            return false;
+
+        // Lowest-price lookup also requires identifier/mapping and metadata tables
+        var hasIdMappings = await db.Value.ScryfallIdMappings.AnyAsync(cancel);
+        if (!hasIdMappings)
+            return false;
+
+        return await db.Value.Set<ScryfallCardMetadata>().AnyAsync(cancel);
     }
 
     /// <summary>

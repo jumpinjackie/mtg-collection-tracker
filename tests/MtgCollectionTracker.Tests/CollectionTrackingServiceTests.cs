@@ -1286,4 +1286,165 @@ public class CollectionTrackingServiceTests : IDisposable
         Assert.False(updated.IsCommanderValid);
         Assert.Contains("Commander must be exactly 1 card in the main deck", updated.CommanderValidationMessage, StringComparison.Ordinal);
     }
+
+    // -------------------------------------------------------------------------
+    // Tests for: GetLowestPricesAsync local data lookup
+    // -------------------------------------------------------------------------
+
+    private void SeedLocalPriceData(string scryfallId, string mtgJsonUuid, string edition, string cardName, double price, DateOnly date, string cardFinish = "normal", string currency = "USD", string providerListing = "retail", string provider = "tcgplayer")
+    {
+        using var ctx = new CardsDbContext(_dbOptions);
+        if (!ctx.Set<ScryfallCardMetadata>().Any(m => m.Id == scryfallId))
+        {
+            ctx.Set<ScryfallCardMetadata>().Add(new ScryfallCardMetadata
+            {
+                Id = scryfallId,
+                CardName = cardName,
+                Edition = edition,
+                CardType = "Instant",
+                Rarity = "common"
+            });
+        }
+        if (!ctx.ScryfallIdMappings.Any(m => m.ScryfallId == scryfallId))
+        {
+            ctx.ScryfallIdMappings.Add(new ScryfallIdMapping
+            {
+                ScryfallId = scryfallId,
+                MtgJsonUuid = mtgJsonUuid
+            });
+        }
+        ctx.CardPricingEntries.Add(new CardPricingEntry
+        {
+            Uuid = mtgJsonUuid,
+            CardFinish = cardFinish,
+            Currency = currency,
+            Date = date,
+            Price = price,
+            PriceProvider = provider,
+            ProviderListing = providerListing
+        });
+        ctx.CardPricingDownloadHistory.Add(new CardPricingDownloadHistory
+        {
+            Date = date,
+            Sha256 = Guid.NewGuid().ToString()
+        });
+        ctx.SaveChanges();
+    }
+
+    [Fact]
+    public async Task GetLowestPricesAsync_ReturnsLowestPrice_ForKnownCard()
+    {
+        var date = new DateOnly(2026, 3, 1);
+        SeedLocalPriceData("scryfall-lb-m10", "uuid-lb-m10", "m10", "Lightning Bolt", 1.50, date);
+        SeedLocalPriceData("scryfall-lb-lea", "uuid-lb-lea", "lea", "Lightning Bolt", 3.00, date);
+
+        var service = CreateService();
+        var results = await service.GetLowestPricesAsync(
+            new LowestPriceCheckOptions([new PriceCheckItem("Lightning Bolt", 4)], false, false),
+            CancellationToken.None);
+
+        Assert.Single(results);
+        var item = results[0];
+        Assert.Equal("Lightning Bolt", item.CardName);
+        Assert.Equal("M10", item.Edition);
+        Assert.Equal(1.50m, item.ItemTotal);
+        Assert.Equal(6.00m, item.QuantityTotal);
+    }
+
+    [Fact]
+    public async Task GetLowestPricesAsync_IsCaseInsensitive_ForCardName()
+    {
+        var date = new DateOnly(2026, 3, 1);
+        SeedLocalPriceData("scryfall-lb-m10", "uuid-lb-m10", "m10", "Lightning Bolt", 1.50, date);
+
+        var service = CreateService();
+        var results = await service.GetLowestPricesAsync(
+            new LowestPriceCheckOptions([new PriceCheckItem("lightning bolt", 1)], false, false),
+            CancellationToken.None);
+
+        Assert.Single(results);
+        Assert.NotNull(results[0].Edition);
+        Assert.Equal(1.50m, results[0].ItemTotal);
+    }
+
+    [Fact]
+    public async Task GetLowestPricesAsync_UsesLatestDateSnapshot()
+    {
+        var oldDate = new DateOnly(2026, 2, 1);
+        var newDate = new DateOnly(2026, 3, 1);
+        SeedLocalPriceData("scryfall-lb-m10", "uuid-lb-m10", "m10", "Lightning Bolt", 5.00, oldDate);
+        SeedLocalPriceData("scryfall-lb-lea", "uuid-lb-lea", "lea", "Lightning Bolt", 2.00, newDate);
+
+        var service = CreateService();
+        var results = await service.GetLowestPricesAsync(
+            new LowestPriceCheckOptions([new PriceCheckItem("Lightning Bolt", 1)], false, false),
+            CancellationToken.None);
+
+        Assert.Single(results);
+        // Only the newer date's entry (uuid-lb-lea at $2.00) should be used
+        Assert.Equal(2.00m, results[0].ItemTotal);
+    }
+
+    [Fact]
+    public async Task GetLowestPricesAsync_ReturnsNullPrice_WhenNoPricingDataExists()
+    {
+        var service = CreateService();
+        var results = await service.GetLowestPricesAsync(
+            new LowestPriceCheckOptions([new PriceCheckItem("Lightning Bolt", 4)], false, false),
+            CancellationToken.None);
+
+        Assert.Single(results);
+        Assert.Null(results[0].Edition);
+        Assert.Null(results[0].ItemTotal);
+        Assert.Null(results[0].QuantityTotal);
+    }
+
+    [Fact]
+    public async Task GetLowestPricesAsync_SkipsBasicLands_WhenOptionIsSet()
+    {
+        var date = new DateOnly(2026, 3, 1);
+        SeedLocalPriceData("scryfall-plains", "uuid-plains", "m10", "Plains", 0.10, date);
+
+        var service = CreateService();
+        var results = await service.GetLowestPricesAsync(
+            new LowestPriceCheckOptions([new PriceCheckItem("Plains", 24)], true, false),
+            CancellationToken.None);
+
+        Assert.Single(results);
+        // Basic land should be skipped — price recorded as zero
+        Assert.Equal(0m, results[0].ItemTotal);
+    }
+
+    [Fact]
+    public async Task GetLowestPricesAsync_FiltersToRetailNormalUsd()
+    {
+        var date = new DateOnly(2026, 3, 1);
+        using (var ctx = new CardsDbContext(_dbOptions))
+        {
+            ctx.Set<ScryfallCardMetadata>().Add(new ScryfallCardMetadata
+            {
+                Id = "scryfall-lb", CardName = "Lightning Bolt", Edition = "m10",
+                CardType = "Instant", Rarity = "common"
+            });
+            ctx.ScryfallIdMappings.Add(new ScryfallIdMapping { ScryfallId = "scryfall-lb", MtgJsonUuid = "uuid-lb" });
+            // foil entry — should be excluded
+            ctx.CardPricingEntries.Add(new CardPricingEntry { Uuid = "uuid-lb", CardFinish = "foil", Currency = "USD", Date = date, Price = 0.50, PriceProvider = "tcgplayer", ProviderListing = "retail" });
+            // buylist entry — should be excluded
+            ctx.CardPricingEntries.Add(new CardPricingEntry { Uuid = "uuid-lb", CardFinish = "normal", Currency = "USD", Date = date, Price = 0.30, PriceProvider = "tcgplayer", ProviderListing = "buylist" });
+            // EUR entry — should be excluded
+            ctx.CardPricingEntries.Add(new CardPricingEntry { Uuid = "uuid-lb", CardFinish = "normal", Currency = "EUR", Date = date, Price = 0.40, PriceProvider = "tcgplayer", ProviderListing = "retail" });
+            // This is the only valid entry
+            ctx.CardPricingEntries.Add(new CardPricingEntry { Uuid = "uuid-lb", CardFinish = "normal", Currency = "USD", Date = date, Price = 1.50, PriceProvider = "tcgplayer", ProviderListing = "retail" });
+            ctx.CardPricingDownloadHistory.Add(new CardPricingDownloadHistory { Date = date, Sha256 = "abc" });
+            await ctx.SaveChangesAsync();
+        }
+
+        var service = CreateService();
+        var results = await service.GetLowestPricesAsync(
+            new LowestPriceCheckOptions([new PriceCheckItem("Lightning Bolt", 1)], false, false),
+            CancellationToken.None);
+
+        Assert.Single(results);
+        Assert.Equal(1.50m, results[0].ItemTotal);
+    }
 }

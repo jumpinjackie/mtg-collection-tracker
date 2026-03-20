@@ -72,4 +72,17 @@ public partial class DialogViewModel : ViewModelBase, IRecipient<GlobalBusyMessa
     {
         this.IsBusy = message.IsBusy;
     }
+
+    /// <summary>
+    /// Configures this dialog to display the "Missing Local Price Data" notice.
+    /// </summary>
+    public DialogViewModel WithMissingLocalPriceDataContent()
+    {
+        return this.WithContent(
+            "Missing Local Price Data",
+            new ContainerTextViewModel().WithText(
+                "No local card price data was found.\n\n" +
+                "To use Lowest Price Check, open Settings, go to the Database tab, and import card prices.\n\n" +
+                "After importing price data, run Lowest Price Check again."));
+    }
 }
