@@ -23,8 +23,8 @@
                        FontSize="11" />
         </StackPanel>
 
-        <!-- Row 1: DataGrid (takes all remaining vertical space, scrolls internally) + card preview pane -->
-        <Grid Grid.Row="1" ColumnDefinitions="*,450" ColumnSpacing="8">
+        <!-- Row 1: DataGrid + card preview pane. Keep columns flexible so content fits narrow dialog widths. -->
+        <Grid Grid.Row="1" ColumnDefinitions="2*,*" ColumnSpacing="8">
             <DataGrid Grid.Column="0"
                       x:Name="CardDataGrid"
                       ItemsSource="{Binding Cards}"
@@ -44,7 +44,7 @@
             </DataGrid>
 
             <!-- Card preview (right pane) -->
-            <Border Grid.Column="1" Padding="12" Background="{DynamicResource SystemChromeLowColor}">
+            <Border Grid.Column="1" MinWidth="220" MaxWidth="450" Padding="12" Background="{DynamicResource SystemChromeLowColor}">
                 <ScrollViewer>
                     <StackPanel Spacing="8" IsVisible="{Binding SelectedCard, Converter={x:Static ObjectConverters.IsNotNull}}">
                         <TextBlock Text="{Binding SelectedCard.CardName}"
