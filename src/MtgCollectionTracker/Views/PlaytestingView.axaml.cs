@@ -1,4 +1,5 @@
 using Avalonia;
+using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -17,8 +18,15 @@ public partial class PlaytestingView : UserControl
     private static readonly IBrush DefaultDropZoneBrush = Brushes.Gray;
     private static readonly IBrush ActiveDropZoneBrush = Brushes.Gold;
 
+    // Card horizontal margin (left + right) used for hand reorder position calculation
+    private const int HandCardTotalMargin = 6;
+
     private PlaytestCardViewModel? _draggedCard;
     private Border? _activeDropZone;
+
+    // For hand card reordering
+    private bool _isDraggingHandCard;
+    private int _handDragSourceIndex = -1;
 
     public PlaytestingView()
     {
@@ -40,6 +48,8 @@ public partial class PlaytestingView : UserControl
         {
             vm.GameState.PlayCardFromHand(card);
             _draggedCard = null;
+            _isDraggingHandCard = false;
+            _handDragSourceIndex = -1;
             ClearDropZoneHighlight();
             e.Handled = true;
         }
@@ -141,6 +151,14 @@ public partial class PlaytestingView : UserControl
         if (DataContext is PlaytestingViewModel vm && vm.IsInGame)
         {
             vm.GameState.OpenZoneContentsDialog(GameZone.Exile);
+        }
+    }
+
+    private void OnViewSideboardClick(object? sender, RoutedEventArgs e)
+    {
+        if (DataContext is PlaytestingViewModel vm && vm.IsInGame)
+        {
+            vm.GameState.OpenSideboardDialog();
         }
     }
 
@@ -246,6 +264,7 @@ public partial class PlaytestingView : UserControl
             vm.GameState.OpenCommandZoneDialog();
         }
     }
+
     private void OnAddCounterClick(object? sender, RoutedEventArgs e)
     {
         if (TryGetCardFromSender(sender, out var card) &&
@@ -286,6 +305,137 @@ public partial class PlaytestingView : UserControl
         }
     }
 
+    /// <summary>
+    /// Handles the context menu opening for battlefield cards, adding:
+    /// - Per-counter-type increment/decrement items
+    /// - Multi-selection actions when multiple cards are selected
+    /// </summary>
+    private void OnBattlefieldCardContextMenuOpened(object? sender, RoutedEventArgs e)
+    {
+        if (sender is not ContextMenu menu)
+            return;
+
+        if (DataContext is not PlaytestingViewModel vm || !vm.IsInGame)
+            return;
+
+        var card = menu.PlacementTarget?.DataContext as PlaytestCardViewModel;
+        if (card is null)
+            return;
+
+        // Remove previously added dynamic items
+        var dynamicItems = menu.Items
+            .OfType<Control>()
+            .Where(i => i.Tag?.ToString() == "dynamic")
+            .ToList();
+        foreach (var item in dynamicItems)
+            menu.Items.Remove(item);
+
+        // Add per-counter increment/decrement items if card has counters
+        if (card.HasCounters)
+        {
+            var separator = new Separator { Tag = "dynamic" };
+            menu.Items.Add(separator);
+
+            foreach (var counter in card.Counters)
+            {
+                var counterName = counter.CounterName;
+                var addItem = new MenuItem
+                {
+                    Header = $"+1 {counterName} counter",
+                    Tag = "dynamic",
+                };
+                addItem.Click += (_, _) =>
+                {
+                    if (DataContext is PlaytestingViewModel v && v.IsInGame)
+                        v.GameState.AdjustCounter(card, counterName, 1);
+                };
+                menu.Items.Add(addItem);
+
+                var removeItem = new MenuItem
+                {
+                    Header = $"-1 {counterName} counter",
+                    Tag = "dynamic",
+                };
+                removeItem.Click += (_, _) =>
+                {
+                    if (DataContext is PlaytestingViewModel v && v.IsInGame)
+                        v.GameState.AdjustCounter(card, counterName, -1);
+                };
+                menu.Items.Add(removeItem);
+            }
+        }
+
+        // Add multi-selection actions when more than one card is selected
+        var selectedCards = vm.GameState.SelectedBattlefieldCards;
+        if (selectedCards.Count > 1 && selectedCards.Contains(card))
+        {
+            var multiSep = new Separator { Tag = "dynamic" };
+            menu.Items.Add(multiSep);
+
+            var count = selectedCards.Count;
+
+            var tapSelected = new MenuItem
+            {
+                Header = $"Tap {count} selected",
+                Tag = "dynamic",
+            };
+            tapSelected.Click += (_, _) =>
+            {
+                if (DataContext is PlaytestingViewModel v && v.IsInGame)
+                    v.GameState.TapSelectedCards();
+            };
+            menu.Items.Add(tapSelected);
+
+            var untapSelected = new MenuItem
+            {
+                Header = $"Untap {count} selected",
+                Tag = "dynamic",
+            };
+            untapSelected.Click += (_, _) =>
+            {
+                if (DataContext is PlaytestingViewModel v && v.IsInGame)
+                    v.GameState.UntapSelectedCards();
+            };
+            menu.Items.Add(untapSelected);
+
+            var graveyardSelected = new MenuItem
+            {
+                Header = $"Send {count} selected to Graveyard",
+                Tag = "dynamic",
+            };
+            graveyardSelected.Click += (_, _) =>
+            {
+                if (DataContext is PlaytestingViewModel v && v.IsInGame)
+                    v.GameState.MoveSelectedBattlefieldCardsTo(GameZone.Graveyard);
+            };
+            menu.Items.Add(graveyardSelected);
+
+            var handSelected = new MenuItem
+            {
+                Header = $"Return {count} selected to Hand",
+                Tag = "dynamic",
+            };
+            handSelected.Click += (_, _) =>
+            {
+                if (DataContext is PlaytestingViewModel v && v.IsInGame)
+                    v.GameState.MoveSelectedBattlefieldCardsTo(GameZone.Hand);
+            };
+            menu.Items.Add(handSelected);
+
+            var exileSelected = new MenuItem
+            {
+                Header = $"Exile {count} selected",
+                Tag = "dynamic",
+            };
+            exileSelected.Click += (_, _) =>
+            {
+                if (DataContext is PlaytestingViewModel v && v.IsInGame)
+                    v.GameState.MoveSelectedBattlefieldCardsTo(GameZone.Exile);
+            };
+            menu.Items.Add(exileSelected);
+        }
+    }
+
     private void OnCardPointerEntered(object? sender, PointerEventArgs e)
     {
         if (sender is Border border &&
@@ -299,20 +449,82 @@ public partial class PlaytestingView : UserControl
 
     private void OnCardPointerPressed(object? sender, PointerPressedEventArgs e)
     {
-        if (sender is Border border &&
-            border.DataContext is PlaytestCardViewModel card &&
-            DataContext is PlaytestingViewModel vm &&
-            vm.IsInGame)
+        if (sender is not Border border ||
+            border.DataContext is not PlaytestCardViewModel card ||
+            DataContext is not PlaytestingViewModel vm ||
+            !vm.IsInGame)
         {
-            _draggedCard = card;
+            return;
         }
+
+        _draggedCard = card;
+
+        // Handle battlefield card multi-selection via Ctrl+Click
+        if (IsBattlefieldCard(card))
+        {
+            var isCtrlHeld = e.KeyModifiers.HasFlag(KeyModifiers.Control) ||
+                             e.KeyModifiers.HasFlag(KeyModifiers.Meta);
+            vm.GameState.ToggleBattlefieldCardSelection(card, isCtrlHeld);
+        }
+
+        // Track hand card drag for reordering
+        if (card.Zone == GameZone.Hand)
+        {
+            _isDraggingHandCard = true;
+            _handDragSourceIndex = vm.GameState.Hand.IndexOf(card);
+        }
+        else
+        {
+            _isDraggingHandCard = false;
+            _handDragSourceIndex = -1;
+        }
+    }
+
+    private static bool IsBattlefieldCard(PlaytestCardViewModel card)
+    {
+        return card.Zone == GameZone.Battlefield || card.Zone == GameZone.BattlefieldLands;
     }
 
     private void OnDropToBattlefield(object? sender, PointerReleasedEventArgs e) => MoveDraggedCardTo(GameZone.Battlefield);
 
     private void OnDropToBattlefieldLands(object? sender, PointerReleasedEventArgs e) => MoveDraggedCardTo(GameZone.BattlefieldLands);
 
-    private void OnDropToHand(object? sender, PointerReleasedEventArgs e) => MoveDraggedCardTo(GameZone.Hand);
+    private void OnDropToHand(object? sender, PointerReleasedEventArgs e)
+    {
+        // If dragging a hand card within the hand zone, handle reordering
+        if (_isDraggingHandCard && _draggedCard is not null && _draggedCard.Zone == GameZone.Hand &&
+            DataContext is PlaytestingViewModel vm && vm.IsInGame)
+        {
+            var pointerPos = e.GetPosition(HandItemsControl);
+            var targetIndex = GetHandDropIndex(pointerPos, vm);
+            var sourceIndex = vm.GameState.Hand.IndexOf(_draggedCard);
+
+            if (targetIndex >= 0 && sourceIndex >= 0 && targetIndex != sourceIndex)
+            {
+                vm.GameState.Hand.Move(sourceIndex, targetIndex);
+            }
+
+            _draggedCard = null;
+            _isDraggingHandCard = false;
+            _handDragSourceIndex = -1;
+            ClearDropZoneHighlight();
+            return;
+        }
+
+        MoveDraggedCardTo(GameZone.Hand);
+    }
+
+    private int GetHandDropIndex(Avalonia.Point pointerPos, PlaytestingViewModel vm)
+    {
+        var hand = vm.GameState.Hand;
+        if (hand.Count == 0)
+            return 0;
+
+        // Each card is approximately CardWidth + margin (HandCardTotalMargin = 3+3=6) wide
+        var cardWidth = vm.GameState.CardWidth + HandCardTotalMargin;
+        var index = (int)(pointerPos.X / cardWidth);
+        return Math.Max(0, Math.Min(index, hand.Count - 1));
+    }
 
     private void OnDropToStack(object? sender, PointerReleasedEventArgs e) => MoveDraggedCardTo(GameZone.Stack);
 
@@ -332,6 +544,8 @@ public partial class PlaytestingView : UserControl
             if (_draggedCard.Zone == destination)
             {
                 _draggedCard = null;
+                _isDraggingHandCard = false;
+                _handDragSourceIndex = -1;
                 ClearDropZoneHighlight();
                 return;
             }
@@ -340,6 +554,8 @@ public partial class PlaytestingView : UserControl
         }
 
         _draggedCard = null;
+        _isDraggingHandCard = false;
+        _handDragSourceIndex = -1;
         ClearDropZoneHighlight();
     }
 

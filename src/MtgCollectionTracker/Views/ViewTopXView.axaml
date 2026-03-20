@@ -80,6 +80,8 @@
             <Button Content="Move to Exile" Command="{Binding MoveToExileCommand}" IsEnabled="{Binding HasSelection}" />
             <Button Content="To Bottom (random order)" Command="{Binding MoveToBottomRandomCommand}" IsEnabled="{Binding HasSelection}" />
             <Button Content="To Bottom (as selected)" Command="{Binding MoveToBottomAsSelectedCommand}" IsEnabled="{Binding HasSelection}" />
+            <Button Content="To Top (as selected)" Command="{Binding MoveToTopAsSelectedCommand}" IsEnabled="{Binding HasSelection}" />
+            <Button Content="To Top (random order)" Command="{Binding MoveToTopRandomCommand}" IsEnabled="{Binding HasSelection}" />
             <Button Content="Close" Command="{Binding CloseCommand}" />
         </WrapPanel>
     </Grid>

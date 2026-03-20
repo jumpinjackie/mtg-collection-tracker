@@ -424,7 +424,7 @@
 											</StackPanel>
 										</ToolTip.Tip>
 										<Border.ContextMenu>
-											<ContextMenu>
+											<ContextMenu Opened="OnBattlefieldCardContextMenuOpened">
 												<MenuItem Header="Return to Hand" Click="OnBattlefieldReturnToHandClick" />
 												<MenuItem Header="Send to Graveyard" Click="OnBattlefieldSendToGraveyardClick" />
 												<MenuItem Header="Exile" Click="OnBattlefieldSendToExileClick" />
@@ -472,6 +472,10 @@
 													</DataTemplate>
 												</ItemsControl.ItemTemplate>
 											</ItemsControl>
+											<!-- Selection halo overlay -->
+											<Border IsVisible="{Binding IsSelected}"
+											        BorderBrush="Cyan" BorderThickness="3"
+											        CornerRadius="6" IsHitTestVisible="False" />
 										</Grid>
 										</Border>
 									</DataTemplate>
@@ -517,7 +521,7 @@
 												</StackPanel>
 											</ToolTip.Tip>
 											<Border.ContextMenu>
-												<ContextMenu>
+												<ContextMenu Opened="OnBattlefieldCardContextMenuOpened">
 													<MenuItem Header="Return to Hand" Click="OnBattlefieldReturnToHandClick" />
 													<MenuItem Header="Send to Graveyard" Click="OnBattlefieldSendToGraveyardClick" />
 													<MenuItem Header="Exile" Click="OnBattlefieldSendToExileClick" />
@@ -565,6 +569,10 @@
 														</DataTemplate>
 													</ItemsControl.ItemTemplate>
 												</ItemsControl>
+												<!-- Selection halo overlay -->
+												<Border IsVisible="{Binding IsSelected}"
+												        BorderBrush="Cyan" BorderThickness="3"
+												        CornerRadius="6" IsHitTestVisible="False" />
 											</Grid>
 										</Border>
 									</DataTemplate>
@@ -583,7 +591,7 @@
 								<TextBlock Text="Hand" FontWeight="Bold" HorizontalAlignment="Left" FontSize="12" />
 								<TextBlock Text="(Empty hand)" Opacity="0.5" HorizontalAlignment="Left" FontSize="10"
 								           IsVisible="{Binding !GameState.Hand.Count}" />
-								<ItemsControl ItemsSource="{Binding GameState.Hand}">
+								<ItemsControl x:Name="HandItemsControl" ItemsSource="{Binding GameState.Hand}">
 									<ItemsControl.ItemsPanel>
 										<ItemsPanelTemplate>
 											<StackPanel Orientation="Horizontal" Spacing="5" />
@@ -672,6 +680,12 @@
 							<Button Content="Command Zone"
 							        Click="OnCommandZoneClick"
 							        IsVisible="{Binding GameState.HasCommandZone}"
+							        HorizontalAlignment="Stretch"
+							        FontSize="10"
+							        Padding="4,3" />
+							<Button Content="View Sideboard"
+							        Click="OnViewSideboardClick"
+							        IsVisible="{Binding GameState.HasSideboard}"
 							        HorizontalAlignment="Stretch"
 							        FontSize="10"
 							        Padding="4,3" />
