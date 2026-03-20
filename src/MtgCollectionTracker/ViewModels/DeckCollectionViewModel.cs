@@ -151,12 +151,13 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
             }
 
             var priceList = await _service.GetLowestPricesForDeckAsync(new(this.SelectedDeck.DeckId, true, false), _scryfallApiClient, cancel);
+            var pricingSnapshotDate = await _service.GetLatestPriceDataDateAsync(cancel);
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 800,
                 ViewModel = _dialog().WithContent("Lowest Price Check",
                     _lowestPriceCheck()
-                        .WithCards(priceList))
+                        .WithCards(priceList, pricingSnapshotDate))
             });
         }
     }

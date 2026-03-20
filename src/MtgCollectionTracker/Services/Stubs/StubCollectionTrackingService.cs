@@ -311,6 +311,11 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
+    public ValueTask<DateOnly?> GetLatestPriceDataDateAsync(CancellationToken cancel)
+    {
+        throw new System.NotImplementedException();
+    }
+
     public ValueTask<(double? price, string? provider)> GetLatestPriceForSkuAsync(Guid skuId, string currency, CancellationToken cancel)
     {
         throw new System.NotImplementedException();

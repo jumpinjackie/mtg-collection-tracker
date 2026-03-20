@@ -173,13 +173,14 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
 
         var items = _deckListCardItems.Select(i => new PriceCheckItem(i.CardName, i.Requested));
         var priceList = await _service.GetLowestPricesAsync(new(items, true, false), cancel);
-        
+        var pricingSnapshotDate = await _service.GetLatestPriceDataDateAsync(cancel);
+
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 800,
             ViewModel = _dialog().WithContent("Lowest Price Check", 
                 _lowestPriceCheck()
-                    .WithCards(priceList))
+                    .WithCards(priceList, pricingSnapshotDate))
         });
     }
 

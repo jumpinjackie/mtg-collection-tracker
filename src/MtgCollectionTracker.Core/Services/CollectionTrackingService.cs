@@ -1951,6 +1951,12 @@ public class CollectionTrackingService : ICollectionTrackingService
         return results;
     }
 
+    public async ValueTask<DateOnly?> GetLatestPriceDataDateAsync(CancellationToken cancel)
+    {
+        using var db = _db.Invoke();
+        return await db.Value.Set<CardPricingEntry>().MaxAsync(e => (DateOnly?)e.Date, cancel);
+    }
+
     private async ValueTask<(string? edition, decimal? price)> GetLowestPriceFromLocalDataAsync(CardsDbContext db, string cardName, CancellationToken cancel)
     {
         // Determine the most recent pricing date available so we only look at the latest snapshot
