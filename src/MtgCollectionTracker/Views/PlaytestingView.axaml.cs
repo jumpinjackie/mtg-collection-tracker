@@ -318,7 +318,8 @@ public partial class PlaytestingView : UserControl
         if (DataContext is not PlaytestingViewModel vm || !vm.IsInGame)
             return;
 
-        var card = menu.PlacementTarget?.DataContext as PlaytestCardViewModel;
+        var card = TryGetCardFromContextMenu(menu);
+
         if (card is null)
             return;
 
@@ -597,8 +598,36 @@ public partial class PlaytestingView : UserControl
             return true;
         }
 
-        card = (menuItem.Parent as ContextMenu)?.PlacementTarget?.DataContext as PlaytestCardViewModel;
+        card = TryGetCardFromContextMenu(menuItem.Parent as ContextMenu);
         return card is not null;
+    }
+
+    private static PlaytestCardViewModel? TryGetCardFromContextMenu(ContextMenu? menu)
+    {
+        if (menu is null)
+        {
+            return null;
+        }
+
+        // Fast path when Avalonia provides PlacementTarget.
+        if (menu.PlacementTarget?.DataContext is PlaytestCardViewModel cardFromPlacementTarget)
+        {
+            return cardFromPlacementTarget;
+        }
+
+        // Fallback: walk parent chain and stop at first matching DataContext.
+        var current = menu.Parent as StyledElement;
+        while (current is not null)
+        {
+            if (current.DataContext is PlaytestCardViewModel cardFromParent)
+            {
+                return cardFromParent;
+            }
+
+            current = current.Parent;
+        }
+
+        return null;
     }
 
     private void ClearDropZoneHighlight()
@@ -703,7 +732,7 @@ public partial class PlaytestingView : UserControl
         };
 
         window.Closed += (_, _) => tcs.TrySetResult(null);
-        
+
         window.Opened += (_, _) =>
         {
             // Auto-focus the text input and select all text
