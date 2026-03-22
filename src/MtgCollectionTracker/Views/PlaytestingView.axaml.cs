@@ -1,5 +1,6 @@
 using Avalonia;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
@@ -35,20 +36,40 @@ public partial class PlaytestingView : UserControl
         InitializeComponent();
     }
 
+    private PlaytestingViewModel? GetActiveViewModel()
+    {
+        return DataContext is PlaytestingViewModel { IsInGame: true } viewModel
+            ? viewModel
+            : null;
+    }
+
+    private PlaytestGameStateViewModel? GetActiveGameState()
+    {
+        return GetActiveViewModel()?.GameState;
+    }
+
+    private bool TryGetActiveGameState([NotNullWhen(true)] out PlaytestGameStateViewModel? gameState)
+    {
+        gameState = GetActiveGameState();
+        return gameState is not null;
+    }
+
     private void OnLibraryDoubleTapped(object? sender, TappedEventArgs e)
     {
-        if (DataContext is PlaytestingViewModel vm && vm.IsInGame)
+        var gameState = GetActiveGameState();
+        if (gameState is not null)
         {
-            vm.GameState.DrawCardCommand.Execute(null);
+            gameState.DrawCardCommand.Execute(null);
         }
     }
 
     private void OnHandCardDoubleTapped(object? sender, TappedEventArgs e)
     {
+        var gameState = GetActiveGameState();
         if (sender is Border border && border.DataContext is PlaytestCardViewModel card &&
-            DataContext is PlaytestingViewModel vm && vm.IsInGame)
+            gameState is not null)
         {
-            vm.GameState.PlayCardFromHand(card);
+            gameState.PlayCardFromHand(card);
             _draggedCard = null;
             _isDraggingHandCard = false;
             _handDragSourceIndex = -1;
@@ -67,9 +88,10 @@ public partial class PlaytestingView : UserControl
 
     private void OnStackCardDoubleTapped(object? sender, TappedEventArgs e)
     {
-        if (DataContext is PlaytestingViewModel vm && vm.IsInGame)
+        var gameState = GetActiveGameState();
+        if (gameState is not null)
         {
-            vm.GameState.ResolveStack();
+            gameState.ResolveStack();
             _draggedCard = null;
             ClearDropZoneHighlight();
             e.Handled = true;
@@ -78,161 +100,170 @@ public partial class PlaytestingView : UserControl
 
     private void OnShuffleLibraryClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is PlaytestingViewModel vm && vm.IsInGame)
+        var gameState = GetActiveGameState();
+        if (gameState is not null)
         {
-            vm.GameState.ShuffleLibraryCommand.Execute(null);
+            gameState.ShuffleLibraryCommand.Execute(null);
         }
     }
 
     private async void OnDrawXClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is PlaytestingViewModel vm && vm.IsInGame)
+        var gameState = GetActiveGameState();
+        if (gameState is not null)
         {
             var count = await PromptForPositiveIntAsync("Draw X Cards", 1);
             if (count is > 0)
             {
-                vm.GameState.DrawCards(count.Value);
+                gameState.DrawCards(count.Value);
             }
         }
     }
 
     private async void OnMillXClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is PlaytestingViewModel vm && vm.IsInGame)
+        var gameState = GetActiveGameState();
+        if (gameState is not null)
         {
             var count = await PromptForPositiveIntAsync("Mill X Cards", 1);
             if (count is > 0)
             {
-                vm.GameState.MillCards(count.Value);
+                gameState.MillCards(count.Value);
             }
         }
     }
 
     private async void OnExileTopXClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is PlaytestingViewModel vm && vm.IsInGame)
+        var gameState = GetActiveGameState();
+        if (gameState is not null)
         {
             var count = await PromptForPositiveIntAsync("Exile Top X Cards", 1);
             if (count is > 0)
             {
-                vm.GameState.ExileTopCards(count.Value);
+                gameState.ExileTopCards(count.Value);
             }
         }
     }
 
     private void OnLibraryViewContentsClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is PlaytestingViewModel vm && vm.IsInGame)
+        var gameState = GetActiveGameState();
+        if (gameState is not null)
         {
-            vm.GameState.OpenZoneContentsDialog(GameZone.Library);
+            gameState.OpenZoneContentsDialog(GameZone.Library);
         }
     }
 
     private async void OnLibraryViewTopXClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is PlaytestingViewModel vm && vm.IsInGame)
+        var gameState = GetActiveGameState();
+        if (gameState is not null)
         {
             var count = await PromptForPositiveIntAsync("View Top X Cards", 5);
             if (count is > 0)
             {
-                vm.GameState.OpenViewTopXDialog(count.Value);
+                gameState.OpenViewTopXDialog(count.Value);
             }
         }
     }
 
     private void OnGraveyardViewContentsClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is PlaytestingViewModel vm && vm.IsInGame)
+        var gameState = GetActiveGameState();
+        if (gameState is not null)
         {
-            vm.GameState.OpenZoneContentsDialog(GameZone.Graveyard);
+            gameState.OpenZoneContentsDialog(GameZone.Graveyard);
         }
     }
 
     private void OnExileViewContentsClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is PlaytestingViewModel vm && vm.IsInGame)
+        var gameState = GetActiveGameState();
+        if (gameState is not null)
         {
-            vm.GameState.OpenZoneContentsDialog(GameZone.Exile);
+            gameState.OpenZoneContentsDialog(GameZone.Exile);
         }
     }
 
     private void OnViewSideboardClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is PlaytestingViewModel vm && vm.IsInGame)
+        var gameState = GetActiveGameState();
+        if (gameState is not null)
         {
-            vm.GameState.OpenSideboardDialog();
+            gameState.OpenSideboardDialog();
         }
     }
 
     private void OnResolveStackClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is PlaytestingViewModel vm && vm.IsInGame)
+        var gameState = GetActiveGameState();
+        if (gameState is not null)
         {
-            vm.GameState.ResolveStack();
+            gameState.ResolveStack();
         }
     }
 
     private void OnCounterStackClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is PlaytestingViewModel vm && vm.IsInGame)
+        var gameState = GetActiveGameState();
+        if (gameState is not null)
         {
-            vm.GameState.CounterStack();
+            gameState.CounterStack();
         }
     }
 
     private void OnStackReturnToHandClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is PlaytestingViewModel vm && vm.IsInGame)
+        var gameState = GetActiveGameState();
+        if (gameState is not null)
         {
-            vm.GameState.ReturnStackToHand();
+            gameState.ReturnStackToHand();
         }
     }
 
     private void OnStackExileClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is PlaytestingViewModel vm && vm.IsInGame)
+        var gameState = GetActiveGameState();
+        if (gameState is not null)
         {
-            vm.GameState.ExileFromStack();
+            gameState.ExileFromStack();
         }
     }
 
     private void OnHandSendToBottomClick(object? sender, RoutedEventArgs e)
     {
-        if (TryGetCardFromSender(sender, out var card) &&
-            DataContext is PlaytestingViewModel vm &&
-            vm.IsInGame)
+        var gameState = GetActiveGameState();
+        if (TryGetCardFromSender(sender, out var card) && gameState is not null)
         {
-            vm.GameState.SendToBottomOfLibrary(card!);
+            gameState.SendToBottomOfLibrary(card!);
         }
     }
 
     private void OnHandSendToTopClick(object? sender, RoutedEventArgs e)
     {
-        if (TryGetCardFromSender(sender, out var card) &&
-            DataContext is PlaytestingViewModel vm &&
-            vm.IsInGame)
+        var gameState = GetActiveGameState();
+        if (TryGetCardFromSender(sender, out var card) && gameState is not null)
         {
-            vm.GameState.SendToTopOfLibrary(card!);
+            gameState.SendToTopOfLibrary(card!);
         }
     }
 
     private void OnHandDiscardClick(object? sender, RoutedEventArgs e)
     {
-        if (TryGetCardFromSender(sender, out var card) &&
-            DataContext is PlaytestingViewModel vm &&
-            vm.IsInGame)
+        var gameState = GetActiveGameState();
+        if (TryGetCardFromSender(sender, out var card) && gameState is not null)
         {
-            vm.GameState.DiscardFromHand(card!);
+            gameState.DiscardFromHand(card!);
         }
     }
 
     private void OnHandExileClick(object? sender, RoutedEventArgs e)
     {
-        if (TryGetCardFromSender(sender, out var card) &&
-            DataContext is PlaytestingViewModel vm &&
-            vm.IsInGame)
+        var gameState = GetActiveGameState();
+        if (TryGetCardFromSender(sender, out var card) && gameState is not null)
         {
-            vm.GameState.ExileFromHand(card!);
+            gameState.ExileFromHand(card!);
         }
     }
 
@@ -253,28 +284,30 @@ public partial class PlaytestingView : UserControl
 
     private void OnBattlefieldCreateTokenClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is PlaytestingViewModel vm && vm.IsInGame)
+        var gameState = GetActiveGameState();
+        if (gameState is not null)
         {
-            vm.GameState.OpenCreateTokenDialog();
+            gameState.OpenCreateTokenDialog();
         }
     }
 
     private void OnCommandZoneClick(object? sender, RoutedEventArgs e)
     {
-        if (DataContext is PlaytestingViewModel vm && vm.IsInGame)
+        var gameState = GetActiveGameState();
+        if (gameState is not null)
         {
-            vm.GameState.OpenCommandZoneDialog();
+            gameState.OpenCommandZoneDialog();
         }
     }
 
     private void OnAddCounterClick(object? sender, RoutedEventArgs e)
     {
+        var gameState = GetActiveGameState();
         if (TryGetCardFromSender(sender, out var card) &&
-            DataContext is PlaytestingViewModel vm &&
-            vm.IsInGame &&
+            gameState is not null &&
             card is not null)
         {
-            vm.GameState.OpenAddCounterDialog(card);
+            gameState.OpenAddCounterDialog(card);
         }
     }
 
@@ -299,11 +332,10 @@ public partial class PlaytestingView : UserControl
 
     private void MoveBattlefieldCard(object? sender, GameZone destination)
     {
-        if (TryGetCardFromSender(sender, out var card) &&
-            DataContext is PlaytestingViewModel vm &&
-            vm.IsInGame)
+        var gameState = GetActiveGameState();
+        if (TryGetCardFromSender(sender, out var card) && gameState is not null)
         {
-            vm.GameState.MoveCard(card!, destination);
+            gameState.MoveCard(card!, destination);
         }
     }
 
@@ -317,7 +349,8 @@ public partial class PlaytestingView : UserControl
         if (sender is not ContextMenu menu)
             return;
 
-        if (DataContext is not PlaytestingViewModel vm || !vm.IsInGame)
+        var gameState = GetActiveGameState();
+        if (gameState is null)
             return;
 
         var card = TryGetCardFromContextMenu(menu);
@@ -349,8 +382,13 @@ public partial class PlaytestingView : UserControl
                 };
                 addItem.Click += (_, _) =>
                 {
-                    if (DataContext is PlaytestingViewModel v && v.IsInGame)
-                        v.GameState.AdjustCounter(card, counterName, 1);
+                    var currentGameState = GetActiveGameState();
+                    if (currentGameState is null)
+                    {
+                        return;
+                    }
+
+                    currentGameState.AdjustCounter(card, counterName, 1);
                 };
                 menu.Items.Add(addItem);
 
@@ -361,15 +399,20 @@ public partial class PlaytestingView : UserControl
                 };
                 removeItem.Click += (_, _) =>
                 {
-                    if (DataContext is PlaytestingViewModel v && v.IsInGame)
-                        v.GameState.AdjustCounter(card, counterName, -1);
+                    var currentGameState = GetActiveGameState();
+                    if (currentGameState is null)
+                    {
+                        return;
+                    }
+
+                    currentGameState.AdjustCounter(card, counterName, -1);
                 };
                 menu.Items.Add(removeItem);
             }
         }
 
         // Add multi-selection actions when more than one card is selected
-        var selectedCards = vm.GameState.SelectedBattlefieldCards;
+        var selectedCards = gameState.SelectedBattlefieldCards;
         if (selectedCards.Count > 1 && selectedCards.Contains(card))
         {
             var multiSep = new Separator { Tag = "dynamic" };
@@ -384,8 +427,12 @@ public partial class PlaytestingView : UserControl
             };
             tapSelected.Click += (_, _) =>
             {
-                if (DataContext is PlaytestingViewModel v && v.IsInGame)
-                    v.GameState.TapSelectedCards();
+                if (!TryGetActiveGameState(out var gameState))
+                {
+                    return;
+                }
+
+                gameState.TapSelectedCards();
             };
             menu.Items.Add(tapSelected);
 
@@ -396,8 +443,12 @@ public partial class PlaytestingView : UserControl
             };
             untapSelected.Click += (_, _) =>
             {
-                if (DataContext is PlaytestingViewModel v && v.IsInGame)
-                    v.GameState.UntapSelectedCards();
+                if (!TryGetActiveGameState(out var gameState))
+                {
+                    return;
+                }
+
+                gameState.UntapSelectedCards();
             };
             menu.Items.Add(untapSelected);
 
@@ -408,8 +459,12 @@ public partial class PlaytestingView : UserControl
             };
             graveyardSelected.Click += (_, _) =>
             {
-                if (DataContext is PlaytestingViewModel v && v.IsInGame)
-                    v.GameState.MoveSelectedBattlefieldCardsTo(GameZone.Graveyard);
+                if (!TryGetActiveGameState(out var gameState))
+                {
+                    return;
+                }
+
+                gameState.MoveSelectedBattlefieldCardsTo(GameZone.Graveyard);
             };
             menu.Items.Add(graveyardSelected);
 
@@ -420,8 +475,12 @@ public partial class PlaytestingView : UserControl
             };
             handSelected.Click += (_, _) =>
             {
-                if (DataContext is PlaytestingViewModel v && v.IsInGame)
-                    v.GameState.MoveSelectedBattlefieldCardsTo(GameZone.Hand);
+                if (!TryGetActiveGameState(out var gameState))
+                {
+                    return;
+                }
+
+                gameState.MoveSelectedBattlefieldCardsTo(GameZone.Hand);
             };
             menu.Items.Add(handSelected);
 
@@ -432,8 +491,12 @@ public partial class PlaytestingView : UserControl
             };
             exileSelected.Click += (_, _) =>
             {
-                if (DataContext is PlaytestingViewModel v && v.IsInGame)
-                    v.GameState.MoveSelectedBattlefieldCardsTo(GameZone.Exile);
+                if (!TryGetActiveGameState(out var gameState))
+                {
+                    return;
+                }
+
+                gameState.MoveSelectedBattlefieldCardsTo(GameZone.Exile);
             };
             menu.Items.Add(exileSelected);
         }
@@ -443,10 +506,9 @@ public partial class PlaytestingView : UserControl
     {
         if (sender is Border border &&
             border.DataContext is PlaytestCardViewModel card &&
-            DataContext is PlaytestingViewModel vm &&
-            vm.IsInGame)
+            TryGetActiveGameState(out var gameState))
         {
-            vm.GameState.SelectedCard = card;
+            gameState.SelectedCard = card;
         }
     }
 
@@ -454,8 +516,7 @@ public partial class PlaytestingView : UserControl
     {
         if (sender is not Border border ||
             border.DataContext is not PlaytestCardViewModel card ||
-            DataContext is not PlaytestingViewModel vm ||
-            !vm.IsInGame)
+            !TryGetActiveGameState(out var gameState))
         {
             return;
         }
@@ -467,16 +528,16 @@ public partial class PlaytestingView : UserControl
         {
             var isCtrlHeld = e.KeyModifiers.HasFlag(KeyModifiers.Control) ||
                              e.KeyModifiers.HasFlag(KeyModifiers.Meta);
-            vm.GameState.ToggleBattlefieldCardSelection(card, isCtrlHeld);
+            gameState.ToggleBattlefieldCardSelection(card, isCtrlHeld);
         }
 
         // Track hand card drag for reordering
         if (card.Zone == GameZone.Hand)
         {
             _isDraggingHandCard = true;
-            _handDragSourceIndex = vm.GameState.Hand.IndexOf(card);
+            _handDragSourceIndex = gameState.Hand.IndexOf(card);
             _handDropTargetIndex = _handDragSourceIndex;
-            ShowHandDropIndicator(_handDropTargetIndex, vm);
+            ShowHandDropIndicator(_handDropTargetIndex, gameState);
         }
         else
         {
@@ -498,21 +559,22 @@ public partial class PlaytestingView : UserControl
     private void OnDropToHand(object? sender, PointerReleasedEventArgs e)
     {
         // If dragging a hand card within the hand zone, handle reordering
+        var handItemsControl = HandItemsControl;
         if (_isDraggingHandCard && _draggedCard is not null && _draggedCard.Zone == GameZone.Hand &&
-            DataContext is PlaytestingViewModel vm && vm.IsInGame)
+            TryGetActiveGameState(out var gameState) && handItemsControl is not null)
         {
-            var pointerPos = e.GetPosition(HandItemsControl);
-            var targetIndex = GetHandDropTargetIndex(pointerPos, vm);
-            var sourceIndex = vm.GameState.Hand.IndexOf(_draggedCard);
+            var pointerPos = e.GetPosition(handItemsControl);
+            var targetIndex = GetHandDropTargetIndex(pointerPos, gameState);
+            var sourceIndex = gameState.Hand.IndexOf(_draggedCard);
 
-            if (targetIndex >= vm.GameState.Hand.Count)
+            if (targetIndex >= gameState.Hand.Count)
             {
-                targetIndex = vm.GameState.Hand.Count - 1;
+                targetIndex = gameState.Hand.Count - 1;
             }
 
             if (targetIndex >= 0 && sourceIndex >= 0 && targetIndex != sourceIndex)
             {
-                vm.GameState.Hand.Move(sourceIndex, targetIndex);
+                gameState.Hand.Move(sourceIndex, targetIndex);
             }
 
             _draggedCard = null;
@@ -527,14 +589,14 @@ public partial class PlaytestingView : UserControl
         MoveDraggedCardTo(GameZone.Hand);
     }
 
-    private int GetHandDropTargetIndex(Avalonia.Point pointerPos, PlaytestingViewModel vm)
+    private int GetHandDropTargetIndex(Avalonia.Point pointerPos, PlaytestGameStateViewModel gameState)
     {
-        var hand = vm.GameState.Hand;
+        var hand = gameState.Hand;
         if (hand.Count == 0)
             return 0;
 
         // Each card occupies card width + horizontal margins + item spacing.
-        var stride = vm.GameState.CardWidth + HandCardTotalMargin + HandCardInterItemSpacing;
+        var stride = gameState.CardWidth + HandCardTotalMargin + HandCardInterItemSpacing;
         var hoveredIndex = Math.Max(0, Math.Min((int)(pointerPos.X / stride), hand.Count - 1));
         var localX = pointerPos.X - (hoveredIndex * stride);
         var isRightHalf = localX >= (stride / 2.0);
@@ -555,7 +617,7 @@ public partial class PlaytestingView : UserControl
             return;
         }
 
-        if (DataContext is PlaytestingViewModel vm && vm.IsInGame)
+        if (TryGetActiveGameState(out var gameState))
         {
             if (_draggedCard.Zone == destination)
             {
@@ -565,8 +627,10 @@ public partial class PlaytestingView : UserControl
                 ClearDropZoneHighlight();
                 return;
             }
-            vm.GameState.MoveCard(_draggedCard, destination);
-            vm.GameState.SelectedCard = _draggedCard;
+
+            var draggedCard = _draggedCard;
+            gameState.MoveCard(draggedCard, destination);
+            gameState.SelectedCard = draggedCard;
         }
 
         _draggedCard = null;
@@ -584,18 +648,19 @@ public partial class PlaytestingView : UserControl
             return;
         }
 
+        var handItemsControl = HandItemsControl;
         if (ReferenceEquals(zone, HandDropZone) &&
             _isDraggingHandCard &&
             _draggedCard.Zone == GameZone.Hand &&
-            DataContext is PlaytestingViewModel vm &&
-            vm.IsInGame)
+            TryGetActiveGameState(out var gameState) &&
+            handItemsControl is not null)
         {
-            var pointerPos = e.GetPosition(HandItemsControl);
-            var targetIndex = GetHandDropTargetIndex(pointerPos, vm);
+            var pointerPos = e.GetPosition(handItemsControl);
+            var targetIndex = GetHandDropTargetIndex(pointerPos, gameState);
             if (targetIndex != _handDropTargetIndex)
             {
                 _handDropTargetIndex = targetIndex;
-                ShowHandDropIndicator(targetIndex, vm);
+                ShowHandDropIndicator(targetIndex, gameState);
             }
         }
         else
@@ -680,23 +745,32 @@ public partial class PlaytestingView : UserControl
         }
     }
 
-    private void ShowHandDropIndicator(int targetIndex, PlaytestingViewModel vm)
+    private void ShowHandDropIndicator(int targetIndex, PlaytestGameStateViewModel gameState)
     {
-        var stride = vm.GameState.CardWidth + HandCardTotalMargin + HandCardInterItemSpacing;
-        var safeIndex = Math.Max(0, Math.Min(targetIndex, vm.GameState.Hand.Count));
+        var handDropIndicator = HandDropIndicator;
+        if (handDropIndicator is null)
+        {
+            return;
+        }
+
+        var stride = gameState.CardWidth + HandCardTotalMargin + HandCardInterItemSpacing;
+        var safeIndex = Math.Max(0, Math.Min(targetIndex, gameState.Hand.Count));
 
         // Draw at left/right edge of the hovered card. End-of-hand draws at the right edge of the last card.
-        var indicatorX = (safeIndex == vm.GameState.Hand.Count)
-            ? ((safeIndex - 1) * stride) + 3 + vm.GameState.CardWidth
+        var indicatorX = (safeIndex == gameState.Hand.Count)
+            ? ((safeIndex - 1) * stride) + 3 + gameState.CardWidth
             : (safeIndex * stride) + 3;
 
-        HandDropIndicator.Margin = new Thickness(indicatorX, 3, 0, 0);
-        HandDropIndicator.IsVisible = true;
+        handDropIndicator.Margin = new Thickness(indicatorX, 3, 0, 0);
+        handDropIndicator.IsVisible = true;
     }
 
     private void ClearHandDropIndicator()
     {
-        HandDropIndicator.IsVisible = false;
+        if (HandDropIndicator is Border handDropIndicator)
+        {
+            handDropIndicator.IsVisible = false;
+        }
     }
 
     private static async Task AnimateCardFlipAsync(Border border)

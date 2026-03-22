@@ -35,14 +35,14 @@
             <Border Grid.Column="1" Padding="8" Background="{DynamicResource SystemChromeLowColor}"
                     IsVisible="{Binding SelectedCard, Converter={x:Static ObjectConverters.IsNotNull}}">
                 <ScrollViewer>
-                    <StackPanel Spacing="6">
-                        <TextBlock Text="{Binding SelectedCard.CardName}"
+                    <StackPanel DataContext="{Binding SelectedCard}" Spacing="6">
+                        <TextBlock Text="{Binding CardName}"
                                    FontSize="14" FontWeight="Bold" TextWrapping="Wrap" />
-                        <TextBlock Text="{Binding SelectedCard.ManaCost}" FontSize="12"
-                                   IsVisible="{Binding SelectedCard.HasManaCost}" />
-                        <TextBlock Text="{Binding SelectedCard.CardType}" FontSize="11" TextWrapping="Wrap" Opacity="0.85" />
-                        <TextBlock Text="{Binding SelectedCard.OracleText}" FontSize="11" TextWrapping="Wrap" />
-                        <Image Source="{Binding SelectedCard.CardImageLarge^}" Stretch="Uniform" MaxHeight="280" Margin="0,4,0,0" />
+                        <TextBlock Text="{Binding ManaCost}" FontSize="12"
+                                   IsVisible="{Binding HasManaCost}" />
+                        <TextBlock Text="{Binding CardType}" FontSize="11" TextWrapping="Wrap" Opacity="0.85" />
+                        <TextBlock Text="{Binding OracleText}" FontSize="11" TextWrapping="Wrap" />
+                        <Image Source="{Binding CardImageLarge^}" Stretch="Uniform" MaxHeight="280" Margin="0,4,0,0" />
                     </StackPanel>
                 </ScrollViewer>
             </Border>

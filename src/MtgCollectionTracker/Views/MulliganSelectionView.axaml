@@ -31,25 +31,27 @@
         
         <!-- Right Panel: Details -->
         <Border Grid.Row="1" Grid.Column="1" Padding="12" Background="{DynamicResource SystemChromeLowColor}">
-            <StackPanel Spacing="8" IsVisible="{Binding SelectedCard, Converter={x:Static ObjectConverters.IsNotNull}}">
-                <TextBlock Text="{Binding SelectedCard.CardName}"
+            <StackPanel DataContext="{Binding SelectedCard}"
+                        Spacing="8"
+                        IsVisible="{Binding ., Converter={x:Static ObjectConverters.IsNotNull}}">
+                <TextBlock Text="{Binding CardName}"
                            FontSize="16"
                            FontWeight="Bold"
                            TextWrapping="Wrap" />
-                <TextBlock Text="{Binding SelectedCard.ManaCost}"
+                <TextBlock Text="{Binding ManaCost}"
                            FontSize="14" />
-                <TextBlock Text="{Binding SelectedCard.CardType}"
+                <TextBlock Text="{Binding CardType}"
                            FontSize="12"
                            TextWrapping="Wrap"
                            Opacity="0.9" />
-                <TextBlock Text="{Binding SelectedCard.OracleText}"
+                <TextBlock Text="{Binding OracleText}"
                            FontSize="11"
                            TextWrapping="Wrap" />
-                <TextBlock Text="{Binding SelectedCard.PT}"
+                <TextBlock Text="{Binding PT}"
                            FontSize="13"
                            FontWeight="Bold"
-                           IsVisible="{Binding SelectedCard.PT, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                <Image Source="{Binding SelectedCard.CardImageLarge^}"
+                           IsVisible="{Binding PT, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                <Image Source="{Binding CardImageLarge^}"
                        Stretch="Uniform"
                        MaxHeight="600"
                        Margin="0,8,0,0" />

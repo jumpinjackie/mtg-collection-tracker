@@ -74,6 +74,27 @@ public partial class PlaytestingViewModel : RecipientViewModelBase, IViewModelWi
     [ObservableProperty]
     private PlaytestGameStateViewModel? _gameState;
 
+    private PlaytestGameStateViewModel? _subscribedGameState;
+
+    partial void OnGameStateChanged(PlaytestGameStateViewModel? value)
+    {
+        if (_subscribedGameState is not null)
+            _subscribedGameState.PropertyChanged -= ForwardGameStatePropertyChanged;
+        _subscribedGameState = value;
+        if (value is not null)
+            value.PropertyChanged += ForwardGameStatePropertyChanged;
+        OnPropertyChanged(nameof(DetailsImageMaxHeight));
+    }
+
+    private void ForwardGameStatePropertyChanged(object? sender, System.ComponentModel.PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(PlaytestGameStateViewModel.DetailsImageMaxHeight))
+            OnPropertyChanged(nameof(DetailsImageMaxHeight));
+    }
+
+    /// <summary>Proxy for <see cref="PlaytestGameStateViewModel.DetailsImageMaxHeight"/>, safe to bind even when GameState is null.</summary>
+    public double DetailsImageMaxHeight => GameState?.DetailsImageMaxHeight ?? (250 * 1.25);
+
     public bool IsDeckSelected => SelectedDeck != null;
 
     /// <summary>
