@@ -21,6 +21,7 @@ public partial class ViewTopXViewModel : DialogContentViewModel
     private Action<IEnumerable<PlaytestCardViewModel>, CardMoveOrder>? _moveToGraveyardAction;
     private Action<IEnumerable<PlaytestCardViewModel>, CardMoveOrder>? _moveToExileAction;
     private Action<IEnumerable<PlaytestCardViewModel>, CardMoveOrder>? _moveToBottomAction;
+    private Action<IEnumerable<PlaytestCardViewModel>, CardMoveOrder>? _moveToTopAction;
 
     public ViewTopXViewModel()
         : this(WeakReferenceMessenger.Default) { }
@@ -50,13 +51,15 @@ public partial class ViewTopXViewModel : DialogContentViewModel
         Action<IEnumerable<PlaytestCardViewModel>, CardMoveOrder> moveToHandAction,
         Action<IEnumerable<PlaytestCardViewModel>, CardMoveOrder> moveToGraveyardAction,
         Action<IEnumerable<PlaytestCardViewModel>, CardMoveOrder> moveToExileAction,
-        Action<IEnumerable<PlaytestCardViewModel>, CardMoveOrder> moveToBottomAction)
+        Action<IEnumerable<PlaytestCardViewModel>, CardMoveOrder> moveToBottomAction,
+        Action<IEnumerable<PlaytestCardViewModel>, CardMoveOrder> moveToTopAction)
     {
         _shuffleLibraryAction = shuffleLibraryAction;
         _moveToHandAction = moveToHandAction;
         _moveToGraveyardAction = moveToGraveyardAction;
         _moveToExileAction = moveToExileAction;
         _moveToBottomAction = moveToBottomAction;
+        _moveToTopAction = moveToTopAction;
 
         TopCards.Clear();
         foreach (var card in topCards)
@@ -115,6 +118,20 @@ public partial class ViewTopXViewModel : DialogContentViewModel
         _messenger.Send(new CloseDialogMessage());
     }
 
+    [RelayCommand(CanExecute = nameof(HasSelection))]
+    private void MoveToTopAsSelected()
+    {
+        _moveToTopAction?.Invoke(SelectedCards.ToList(), CardMoveOrder.AsSelected);
+        _messenger.Send(new CloseDialogMessage());
+    }
+
+    [RelayCommand(CanExecute = nameof(HasSelection))]
+    private void MoveToTopRandom()
+    {
+        _moveToTopAction?.Invoke(SelectedCards.ToList(), CardMoveOrder.Random);
+        _messenger.Send(new CloseDialogMessage());
+    }
+
     [RelayCommand]
     private void Close()
     {
@@ -131,5 +148,7 @@ public partial class ViewTopXViewModel : DialogContentViewModel
         MoveToExileCommand.NotifyCanExecuteChanged();
         MoveToBottomRandomCommand.NotifyCanExecuteChanged();
         MoveToBottomAsSelectedCommand.NotifyCanExecuteChanged();
+        MoveToTopAsSelectedCommand.NotifyCanExecuteChanged();
+        MoveToTopRandomCommand.NotifyCanExecuteChanged();
     }
 }

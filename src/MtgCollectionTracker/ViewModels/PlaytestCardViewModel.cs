@@ -112,6 +112,12 @@ public partial class PlaytestCardViewModel : ViewModelBase
     [ObservableProperty]
     private bool _isTapped;
 
+    /// <summary>
+    /// Whether this card is currently selected on the battlefield (for multi-select actions)
+    /// </summary>
+    [ObservableProperty]
+    private bool _isSelected;
+
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(DisplayName))]
     private bool _isFrontFace = true;

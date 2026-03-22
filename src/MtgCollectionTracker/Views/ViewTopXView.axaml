@@ -47,15 +47,17 @@
             <!-- Card preview (right pane) -->
             <Border Grid.Column="1" Padding="12" Background="{DynamicResource SystemChromeLowColor}">
                 <ScrollViewer>
-                    <StackPanel Spacing="8" IsVisible="{Binding SelectedCard, Converter={x:Static ObjectConverters.IsNotNull}}">
-                        <TextBlock Text="{Binding SelectedCard.DisplayName}"
+                    <StackPanel DataContext="{Binding SelectedCard}"
+                                Spacing="8"
+                                IsVisible="{Binding ., Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <TextBlock Text="{Binding DisplayName}"
                                    FontSize="16" FontWeight="Bold" TextWrapping="Wrap" />
-                        <TextBlock Text="{Binding SelectedCard.ManaCost}" FontSize="14" />
-                        <TextBlock Text="{Binding SelectedCard.CardType}" FontSize="12" TextWrapping="Wrap" Opacity="0.9" />
-                        <TextBlock Text="{Binding SelectedCard.OracleText}" FontSize="11" TextWrapping="Wrap" />
-                        <TextBlock Text="{Binding SelectedCard.PT}" FontSize="13" FontWeight="Bold"
-                                   IsVisible="{Binding SelectedCard.PT, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                        <Image Source="{Binding SelectedCard.CardImageLarge^}" Stretch="Uniform" MaxHeight="400" Margin="0,8,0,0" />
+                        <TextBlock Text="{Binding ManaCost}" FontSize="14" />
+                        <TextBlock Text="{Binding CardType}" FontSize="12" TextWrapping="Wrap" Opacity="0.9" />
+                        <TextBlock Text="{Binding OracleText}" FontSize="11" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding PT}" FontSize="13" FontWeight="Bold"
+                                   IsVisible="{Binding PT, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                        <Image Source="{Binding CardImageLarge^}" Stretch="Uniform" MaxHeight="400" Margin="0,8,0,0" />
                     </StackPanel>
                 </ScrollViewer>
                 <Border.IsVisible>
@@ -80,6 +82,8 @@
             <Button Content="Move to Exile" Command="{Binding MoveToExileCommand}" IsEnabled="{Binding HasSelection}" />
             <Button Content="To Bottom (random order)" Command="{Binding MoveToBottomRandomCommand}" IsEnabled="{Binding HasSelection}" />
             <Button Content="To Bottom (as selected)" Command="{Binding MoveToBottomAsSelectedCommand}" IsEnabled="{Binding HasSelection}" />
+            <Button Content="To Top (as selected)" Command="{Binding MoveToTopAsSelectedCommand}" IsEnabled="{Binding HasSelection}" />
+            <Button Content="To Top (random order)" Command="{Binding MoveToTopRandomCommand}" IsEnabled="{Binding HasSelection}" />
             <Button Content="Close" Command="{Binding CloseCommand}" />
         </WrapPanel>
     </Grid>

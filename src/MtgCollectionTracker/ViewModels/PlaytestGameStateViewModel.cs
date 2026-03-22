@@ -47,6 +47,13 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
     public ObservableCollection<PlaytestCardViewModel> BattlefieldLands { get; } = new();
     public ObservableCollection<PlaytestCardViewModel> BattlefieldNonlands { get; } = new();
     public ObservableCollection<PlaytestCardViewModel> CommandZone { get; } = new();
+    public ObservableCollection<PlaytestCardViewModel> Sideboard { get; } = new();
+
+    // Original sideboard cards for reset (not a zone, just stored for reset)
+    private readonly List<PlaytestCard> _originalSideboardCards = new();
+
+    // Multi-selection: cards on the battlefield currently selected
+    public ObservableCollection<PlaytestCardViewModel> SelectedBattlefieldCards { get; } = new();
 
     // Counters
     [ObservableProperty]
@@ -101,6 +108,8 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
     private int _currentPhaseIndex = 0;
 
     public bool HasCommandZone => IsCommanderGame;
+
+    public bool HasSideboard => Sideboard.Count > 0;
 
     public string PhaseDisplayName => CurrentPhase switch
     {
@@ -292,7 +301,35 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
             CommandZone.Add(cmdVm);
         }
 
+        // Load sideboard cards
+        _originalSideboardCards.Clear();
+        Sideboard.Clear();
+        foreach (var deckCard in deck.Sideboard)
+        {
+            var sbCard = new PlaytestCard
+            {
+                CardName = deckCard.CardName,
+                ScryfallId = deckCard.ScryfallId,
+                ScryfallIdBack = deckCard.IsDoubleFaced ? deckCard.ScryfallId : null,
+                ManaCost = deckCard.CastingCost,
+                CardType = deckCard.CardType,
+                Power = deckCard.Power,
+                Toughness = deckCard.Toughness,
+                OracleText = deckCard.OracleText,
+                IsLand = deckCard.IsLand,
+                IsDoubleFaced = deckCard.IsDoubleFaced,
+                Zone = GameZone.Sideboard,
+                IsTapped = false,
+                IsFrontFace = true
+            };
+            _originalSideboardCards.Add(sbCard);
+            var sbVm = _cardVmFactory();
+            sbVm.InitializeFrom(sbCard);
+            Sideboard.Add(sbVm);
+        }
+
         OnPropertyChanged(nameof(LibraryCount));
+        OnPropertyChanged(nameof(HasSideboard));
     }
 
     /// <summary>
@@ -311,6 +348,7 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
         allCards.AddRange(BattlefieldLands);
         allCards.AddRange(BattlefieldNonlands);
         allCards.AddRange(CommandZone);
+        allCards.AddRange(Sideboard);
 
         // Clear all zones
         Library.Clear();
@@ -321,8 +359,11 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
         BattlefieldLands.Clear();
         BattlefieldNonlands.Clear();
         CommandZone.Clear();
+        Sideboard.Clear();
+        OnPropertyChanged(nameof(HasSideboard));
+        SelectedBattlefieldCards.Clear();
 
-        // Sort cards: commander cards go to Command Zone, others go to library (tokens are discarded)
+        // Sort cards: commander cards go to Command Zone, sideboard cards go back to sideboard, others go to library (tokens are discarded)
         foreach (var card in allCards)
         {
             if (card.IsToken)
@@ -332,6 +373,7 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
 
             card.IsTapped = false;
             card.IsFrontFace = true;
+            card.IsSelected = false;
             card.LoadCardImages();
 
             if (card.IsCommanderCard)
@@ -339,10 +381,44 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
                 card.Zone = GameZone.CommandZone;
                 CommandZone.Add(card);
             }
+            else if (card.Zone == GameZone.Sideboard)
+            {
+                card.Zone = GameZone.Sideboard;
+                Sideboard.Add(card);
+            }
             else
             {
                 card.Zone = GameZone.Library;
                 Library.Add(card);
+            }
+        }
+
+        // Re-add any sideboard cards that were moved to other zones (restore from original)
+        // Use count-based tracking to handle multiple copies of the same card correctly
+        var presentSideboardCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        foreach (var c in Sideboard)
+        {
+            presentSideboardCounts.TryGetValue(c.CardName, out var cnt);
+            presentSideboardCounts[c.CardName] = cnt + 1;
+        }
+
+        var originalCounts = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+        foreach (var orig in _originalSideboardCards)
+        {
+            originalCounts.TryGetValue(orig.CardName, out var cnt);
+            originalCounts[orig.CardName] = cnt + 1;
+        }
+
+        foreach (var orig in _originalSideboardCards)
+        {
+            presentSideboardCounts.TryGetValue(orig.CardName, out var present);
+            originalCounts.TryGetValue(orig.CardName, out var needed);
+            if (present < needed)
+            {
+                var sbVm = _cardVmFactory();
+                sbVm.InitializeFrom(orig);
+                Sideboard.Add(sbVm);
+                presentSideboardCounts[orig.CardName] = present + 1;
             }
         }
 
@@ -371,6 +447,7 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
 
         SelectedCard = null;
         OnPropertyChanged(nameof(LibraryCount));
+        OnPropertyChanged(nameof(HasSideboard));
     }
 
     /// <summary>
@@ -522,6 +599,33 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Opens a dialog showing the sideboard. Cards can be moved from sideboard to hand.
+    /// </summary>
+    public void OpenSideboardDialog()
+    {
+        if (Sideboard.Count == 0)
+            return;
+
+        var viewModel = new ZoneContentsViewModel(_messenger).Configure(
+            GameZone.Sideboard,
+            Sideboard,
+            (card, targetZone) => MoveCard(card, targetZone),
+            null);
+
+        var dialog = new DialogViewModel(_messenger).WithContent(
+            "Sideboard",
+            viewModel);
+
+        dialog.CanClose = true;
+
+        _messenger.Send(new OpenDialogMessage
+        {
+            DrawerWidth = 620,
+            ViewModel = dialog,
+        });
+    }
+
+    /// <summary>
     /// Opens a dialog showing the command zone. The commander can be moved to the Stack, Hand, Battlefield, Graveyard, or Library.
     /// </summary>
     public void OpenCommandZoneDialog()
@@ -630,7 +734,8 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
             (cards, order) => MoveCardsToHand(cards),
             (cards, order) => MoveCardsToGraveyard(cards, order),
             (cards, order) => MoveCardsToExile(cards),
-            (cards, order) => MoveCardsToBottomOfLibrary(cards, order));
+            (cards, order) => MoveCardsToBottomOfLibrary(cards, order),
+            (cards, order) => MoveCardsToTopOfLibrary(cards, order));
 
         var dialog = new DialogViewModel(_messenger).WithContent(
             $"View Top {topX} Cards",
@@ -695,6 +800,23 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
             Library.Add(card);
         }
         // count notification not needed since cards stay in library
+        OnPropertyChanged(nameof(LibraryCount));
+    }
+
+    private void MoveCardsToTopOfLibrary(IEnumerable<PlaytestCardViewModel> cards, CardMoveOrder order)
+    {
+        var list = cards.ToList();
+        if (order == CardMoveOrder.Random)
+            ShuffleCards(list);
+
+        // Insert in reverse so that the first selected card ends up on top
+        for (int i = list.Count - 1; i >= 0; i--)
+        {
+            var card = list[i];
+            Library.Remove(card);
+            card.Zone = GameZone.Library;
+            Library.Insert(0, card);
+        }
         OnPropertyChanged(nameof(LibraryCount));
     }
 
@@ -800,6 +922,91 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
     private static bool IsBattlefieldZone(GameZone zone)
     {
         return zone == GameZone.Battlefield || zone == GameZone.BattlefieldLands;
+    }
+
+    /// <summary>
+    /// Toggle selection of a battlefield card. If ctrl is not held, clears previous selection first.
+    /// </summary>
+    public void ToggleBattlefieldCardSelection(PlaytestCardViewModel card, bool addToSelection)
+    {
+        if (!addToSelection)
+        {
+            // Clear existing selection, but keep the clicked card selected
+            foreach (var existing in SelectedBattlefieldCards.ToList())
+            {
+                if (!ReferenceEquals(existing, card))
+                {
+                    existing.IsSelected = false;
+                }
+            }
+            SelectedBattlefieldCards.Clear();
+        }
+
+        card.IsSelected = !card.IsSelected;
+        if (card.IsSelected)
+        {
+            if (!SelectedBattlefieldCards.Contains(card))
+                SelectedBattlefieldCards.Add(card);
+        }
+        else
+        {
+            SelectedBattlefieldCards.Remove(card);
+        }
+    }
+
+    /// <summary>
+    /// Tap all currently selected battlefield cards
+    /// </summary>
+    public void TapSelectedCards()
+    {
+        foreach (var card in SelectedBattlefieldCards.ToList())
+        {
+            card.IsTapped = true;
+        }
+    }
+
+    /// <summary>
+    /// Untap all currently selected battlefield cards
+    /// </summary>
+    public void UntapSelectedCards()
+    {
+        foreach (var card in SelectedBattlefieldCards.ToList())
+        {
+            card.IsTapped = false;
+        }
+    }
+
+    /// <summary>
+    /// Move all selected battlefield cards to the specified zone
+    /// </summary>
+    public void MoveSelectedBattlefieldCardsTo(GameZone targetZone)
+    {
+        var toMove = SelectedBattlefieldCards.ToList();
+        foreach (var card in toMove)
+        {
+            card.IsSelected = false;
+            MoveCard(card, targetZone);
+        }
+        SelectedBattlefieldCards.Clear();
+    }
+
+    /// <summary>
+    /// Adjust an existing counter on a card by delta (+1 or -1)
+    /// </summary>
+    public void AdjustCounter(PlaytestCardViewModel card, string counterName, int delta)
+    {
+        var counter = card.Counters.FirstOrDefault(c =>
+            string.Equals(c.CounterName, counterName, StringComparison.OrdinalIgnoreCase));
+
+        if (counter is null)
+            return;
+
+        counter.Quantity += delta;
+
+        if (counter.Quantity <= 0)
+        {
+            card.Counters.Remove(counter);
+        }
     }
 
     private void CreateTokenOnBattlefield(string name, string? oracleText, string power, string toughness)
@@ -983,6 +1190,10 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
             case GameZone.CommandZone:
                 CommandZone.Remove(card);
                 break;
+            case GameZone.Sideboard:
+                Sideboard.Remove(card);
+                OnPropertyChanged(nameof(HasSideboard));
+                break;
         }
     }
 
@@ -1014,6 +1225,10 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
                 break;
             case GameZone.CommandZone:
                 CommandZone.Add(card);
+                break;
+            case GameZone.Sideboard:
+                Sideboard.Add(card);
+                OnPropertyChanged(nameof(HasSideboard));
                 break;
         }
     }
