@@ -1344,4 +1344,178 @@ public class PlaytestGameStateViewModelTests
         // Commander should be at the end (bottom of library since index 0 is top)
         Assert.Same(commander, game.Library[^1]);
     }
+
+    // ─── Sideboard ────────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task InitializeWithDeck_LoadsSideboardCards()
+    {
+        var game = CreateGameState();
+        var mockService = new Mock<ICollectionTrackingService>();
+
+        var deck = new DeckModel
+        {
+            Name = "Test Deck",
+            MainDeck = [new DeckCardModel { CardName = "Forest", IsLand = true, CardType = "Basic Land", Edition = "M21" }],
+            Sideboard =
+            [
+                new DeckCardModel { CardName = "Relic of Progenitus", IsLand = false, CardType = "Artifact", Edition = "ALA" },
+            ],
+        };
+
+        await game.InitializeWithDeck(deck, mockService.Object);
+
+        Assert.Single(game.Sideboard);
+        Assert.Equal("Relic of Progenitus", game.Sideboard[0].CardName);
+        Assert.Equal(GameZone.Sideboard, game.Sideboard[0].Zone);
+        Assert.True(game.HasSideboard);
+    }
+
+    [Fact]
+    public async Task InitializeWithDeck_EmptySideboard_HasSideboardIsFalse()
+    {
+        var game = CreateGameState();
+        var mockService = new Mock<ICollectionTrackingService>();
+
+        var deck = new DeckModel
+        {
+            Name = "Test Deck",
+            MainDeck = [new DeckCardModel { CardName = "Forest", IsLand = true, CardType = "Basic Land", Edition = "M21" }],
+            Sideboard = [],
+        };
+
+        await game.InitializeWithDeck(deck, mockService.Object);
+
+        Assert.Empty(game.Sideboard);
+        Assert.False(game.HasSideboard);
+    }
+
+    [Fact]
+    public async Task ResetGame_SideboardCardMovedToHand_RestoredToSideboardNoDuplicates()
+    {
+        var game = CreateGameState();
+        var mockService = new Mock<ICollectionTrackingService>();
+
+        var deck = new DeckModel
+        {
+            Name = "Test Deck",
+            MainDeck = [new DeckCardModel { CardName = "Forest", IsLand = true, CardType = "Basic Land", Edition = "M21" }],
+            Sideboard =
+            [
+                new DeckCardModel { CardName = "Tormod's Crypt", IsLand = false, CardType = "Artifact", Edition = "M21" },
+            ],
+        };
+
+        await game.InitializeWithDeck(deck, mockService.Object);
+
+        // Move the sideboard card to hand (simulates player putting it into play)
+        var sbCard = game.Sideboard[0];
+        game.MoveCard(sbCard, GameZone.Hand);
+        Assert.Empty(game.Sideboard);
+        Assert.Single(game.Hand);
+
+        // Reset — the card should be back in sideboard, NOT also in library
+        game.ResetGameCommand.Execute(null);
+
+        Assert.Single(game.Sideboard);
+        Assert.Equal("Tormod's Crypt", game.Sideboard[0].CardName);
+        Assert.Equal(GameZone.Sideboard, game.Sideboard[0].Zone);
+
+        // The original "Forest" main deck card should still be in the library
+        Assert.Single(game.Library);
+        Assert.Equal("Forest", game.Library[0].CardName);
+    }
+
+    [Fact]
+    public async Task ResetGame_MultipleCopiesOfSideboardCard_AllRestoredNoDuplicates()
+    {
+        var game = CreateGameState();
+        var mockService = new Mock<ICollectionTrackingService>();
+
+        var deck = new DeckModel
+        {
+            Name = "Test Deck",
+            MainDeck = [new DeckCardModel { CardName = "Forest", IsLand = true, CardType = "Basic Land", Edition = "M21" }],
+            Sideboard =
+            [
+                new DeckCardModel { CardName = "Relic of Progenitus", IsLand = false, CardType = "Artifact", Edition = "ALA" },
+                new DeckCardModel { CardName = "Relic of Progenitus", IsLand = false, CardType = "Artifact", Edition = "ALA" },
+            ],
+        };
+
+        await game.InitializeWithDeck(deck, mockService.Object);
+        Assert.Equal(2, game.Sideboard.Count);
+
+        // Move both copies to hand
+        game.MoveCard(game.Sideboard[0], GameZone.Hand);
+        game.MoveCard(game.Sideboard[0], GameZone.Hand);
+        Assert.Empty(game.Sideboard);
+
+        game.ResetGameCommand.Execute(null);
+
+        Assert.Equal(2, game.Sideboard.Count);
+        Assert.All(game.Sideboard, c => Assert.Equal("Relic of Progenitus", c.CardName));
+        // Only the one main-deck card in library — no duplicates from sideboard restoration
+        Assert.Single(game.Library);
+        Assert.Equal("Forest", game.Library[0].CardName);
+    }
+
+    // ─── SelectedBattlefieldCards sync ────────────────────────────────────────
+
+    [Fact]
+    public void MoveCard_SelectedBattlefieldCard_RemovedFromSelectionOnMove()
+    {
+        var game = CreateGameState();
+
+        var card = CreateCardVm();
+        card.InitializeFrom(new PlaytestCard
+        {
+            CardName = "Lightning Bolt",
+            CardType = "Instant",
+            Zone = GameZone.Battlefield,
+            IsFrontFace = true,
+        });
+        game.BattlefieldNonlands.Add(card);
+
+        // Select the card
+        game.ToggleBattlefieldCardSelection(card, addToSelection: true);
+        Assert.True(card.IsSelected);
+        Assert.Single(game.SelectedBattlefieldCards);
+
+        // Move card off the battlefield via single-card action
+        game.MoveCard(card, GameZone.Graveyard);
+
+        Assert.False(card.IsSelected);
+        Assert.Empty(game.SelectedBattlefieldCards);
+    }
+
+    [Fact]
+    public void TapSelectedCards_StaleSelectionPruned_DoesNotAffectMovedCard()
+    {
+        var game = CreateGameState();
+
+        var card = CreateCardVm();
+        card.InitializeFrom(new PlaytestCard
+        {
+            CardName = "Grizzly Bears",
+            CardType = "Creature",
+            Zone = GameZone.Battlefield,
+            IsFrontFace = true,
+        });
+        game.BattlefieldNonlands.Add(card);
+
+        game.ToggleBattlefieldCardSelection(card, addToSelection: true);
+
+        // Forcefully move without going through MoveCard to simulate a stale reference
+        game.BattlefieldNonlands.Remove(card);
+        card.Zone = GameZone.Graveyard;
+        game.Graveyard.Add(card);
+        // card.IsSelected is still true and still in SelectedBattlefieldCards at this point
+
+        // TapSelectedCards should prune it and NOT tap the already-moved card
+        game.TapSelectedCards();
+
+        Assert.Empty(game.SelectedBattlefieldCards);
+        Assert.False(card.IsSelected);
+    }
 }

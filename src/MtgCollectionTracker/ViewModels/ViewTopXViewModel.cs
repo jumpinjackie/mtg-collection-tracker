@@ -17,10 +17,11 @@ public partial class ViewTopXViewModel : DialogContentViewModel
 {
     private readonly IMessenger _messenger;
     private Action? _shuffleLibraryAction;
-    private Action<IEnumerable<PlaytestCardViewModel>, CardMoveOrder>? _moveToHandAction;
-    private Action<IEnumerable<PlaytestCardViewModel>, CardMoveOrder>? _moveToGraveyardAction;
-    private Action<IEnumerable<PlaytestCardViewModel>, CardMoveOrder>? _moveToExileAction;
-    private Action<IEnumerable<PlaytestCardViewModel>, CardMoveOrder>? _moveToBottomAction;
+    private Action<IReadOnlyList<PlaytestCardViewModel>>? _reorderTopCardsAction;
+    private Action<PlaytestCardViewModel>? _moveToHandAction;
+    private Action<PlaytestCardViewModel>? _moveToGraveyardAction;
+    private Action<PlaytestCardViewModel>? _moveToExileAction;
+    private Action<PlaytestCardViewModel>? _moveToBottomAction;
 
     public ViewTopXViewModel()
         : this(WeakReferenceMessenger.Default) { }
@@ -29,12 +30,9 @@ public partial class ViewTopXViewModel : DialogContentViewModel
         : base(messenger)
     {
         _messenger = messenger;
-        SelectedCards.CollectionChanged += (_, _) => UpdateSelectionState();
     }
 
     public ObservableCollection<PlaytestCardViewModel> TopCards { get; } = new();
-
-    public ObservableCollection<PlaytestCardViewModel> SelectedCards { get; } = new();
 
     [ObservableProperty]
     private PlaytestCardViewModel? _selectedCard;
@@ -42,28 +40,43 @@ public partial class ViewTopXViewModel : DialogContentViewModel
     [ObservableProperty]
     private int _selectedCount;
 
-    public bool HasSelection => SelectedCards.Count > 0;
+    public bool HasSelection => SelectedCard is not null;
+
+    public bool CanMoveSelectionUp => SelectedCard is not null && TopCards.IndexOf(SelectedCard) > 0;
+
+    public bool CanMoveSelectionDown =>
+        SelectedCard is not null
+        && TopCards.IndexOf(SelectedCard) >= 0
+        && TopCards.IndexOf(SelectedCard) < TopCards.Count - 1;
+
+    public bool CanShuffleTop => TopCards.Count > 1;
 
     public ViewTopXViewModel Configure(
         IEnumerable<PlaytestCardViewModel> topCards,
         Action shuffleLibraryAction,
-        Action<IEnumerable<PlaytestCardViewModel>, CardMoveOrder> moveToHandAction,
-        Action<IEnumerable<PlaytestCardViewModel>, CardMoveOrder> moveToGraveyardAction,
-        Action<IEnumerable<PlaytestCardViewModel>, CardMoveOrder> moveToExileAction,
-        Action<IEnumerable<PlaytestCardViewModel>, CardMoveOrder> moveToBottomAction)
+        Action<IReadOnlyList<PlaytestCardViewModel>> reorderTopCardsAction,
+        Action<PlaytestCardViewModel> moveToHandAction,
+        Action<PlaytestCardViewModel> moveToGraveyardAction,
+        Action<PlaytestCardViewModel> moveToExileAction,
+        Action<PlaytestCardViewModel> moveToBottomAction)
     {
         _shuffleLibraryAction = shuffleLibraryAction;
+        _reorderTopCardsAction = reorderTopCardsAction;
         _moveToHandAction = moveToHandAction;
         _moveToGraveyardAction = moveToGraveyardAction;
         _moveToExileAction = moveToExileAction;
         _moveToBottomAction = moveToBottomAction;
 
-        TopCards.Clear();
-        foreach (var card in topCards)
-            TopCards.Add(card);
+        ReplaceTopCards(topCards.ToList());
 
         SelectedCard = TopCards.FirstOrDefault();
+        UpdateSelectionState();
         return this;
+    }
+
+    partial void OnSelectedCardChanged(PlaytestCardViewModel? value)
+    {
+        UpdateSelectionState();
     }
 
     [RelayCommand]
@@ -76,43 +89,51 @@ public partial class ViewTopXViewModel : DialogContentViewModel
     [RelayCommand(CanExecute = nameof(HasSelection))]
     private void MoveToHand()
     {
-        _moveToHandAction?.Invoke(SelectedCards.ToList(), CardMoveOrder.AsSelected);
+        ApplySingleCardAction(_moveToHandAction);
+    }
+
+    [RelayCommand(CanExecute = nameof(CanShuffleTop))]
+    private void ShuffleTopAndClose()
+    {
+        if (TopCards.Count > 1)
+        {
+            var shuffledCards = TopCards.ToList();
+            ShuffleCards(shuffledCards);
+            ReplaceTopCards(shuffledCards, SelectedCard);
+            SyncTopCardsToLibrary();
+        }
+
         _messenger.Send(new CloseDialogMessage());
     }
 
     [RelayCommand(CanExecute = nameof(HasSelection))]
-    private void MoveToGraveyardRandom()
+    private void MoveToTopOfGraveyard()
     {
-        _moveToGraveyardAction?.Invoke(SelectedCards.ToList(), CardMoveOrder.Random);
-        _messenger.Send(new CloseDialogMessage());
-    }
-
-    [RelayCommand(CanExecute = nameof(HasSelection))]
-    private void MoveToGraveyardAsSelected()
-    {
-        _moveToGraveyardAction?.Invoke(SelectedCards.ToList(), CardMoveOrder.AsSelected);
-        _messenger.Send(new CloseDialogMessage());
+        ApplySingleCardAction(_moveToGraveyardAction);
     }
 
     [RelayCommand(CanExecute = nameof(HasSelection))]
     private void MoveToExile()
     {
-        _moveToExileAction?.Invoke(SelectedCards.ToList(), CardMoveOrder.AsSelected);
-        _messenger.Send(new CloseDialogMessage());
+        ApplySingleCardAction(_moveToExileAction);
     }
 
     [RelayCommand(CanExecute = nameof(HasSelection))]
-    private void MoveToBottomRandom()
+    private void MoveToBottomOfLibrary()
     {
-        _moveToBottomAction?.Invoke(SelectedCards.ToList(), CardMoveOrder.Random);
-        _messenger.Send(new CloseDialogMessage());
+        ApplySingleCardAction(_moveToBottomAction);
     }
 
-    [RelayCommand(CanExecute = nameof(HasSelection))]
-    private void MoveToBottomAsSelected()
+    [RelayCommand(CanExecute = nameof(CanMoveSelectionUp))]
+    private void MoveSelectionUp()
     {
-        _moveToBottomAction?.Invoke(SelectedCards.ToList(), CardMoveOrder.AsSelected);
-        _messenger.Send(new CloseDialogMessage());
+        MoveSelectionBy(-1);
+    }
+
+    [RelayCommand(CanExecute = nameof(CanMoveSelectionDown))]
+    private void MoveSelectionDown()
+    {
+        MoveSelectionBy(1);
     }
 
     [RelayCommand]
@@ -121,15 +142,92 @@ public partial class ViewTopXViewModel : DialogContentViewModel
         _messenger.Send(new CloseDialogMessage());
     }
 
+    private void ApplySingleCardAction(Action<PlaytestCardViewModel>? action)
+    {
+        var card = SelectedCard;
+        if (action is null || card is null)
+        {
+            return;
+        }
+
+        var previousIndex = TopCards.IndexOf(card);
+        action(card);
+        TopCards.Remove(card);
+
+        if (TopCards.Count == 0)
+        {
+            SelectedCard = null;
+            return;
+        }
+
+        var nextIndex = Math.Min(previousIndex, TopCards.Count - 1);
+        SelectedCard = TopCards[nextIndex];
+    }
+
+    private void MoveSelectionBy(int offset)
+    {
+        var card = SelectedCard;
+        if (card is null)
+        {
+            return;
+        }
+
+        var currentIndex = TopCards.IndexOf(card);
+        var targetIndex = currentIndex + offset;
+        if (currentIndex < 0 || targetIndex < 0 || targetIndex >= TopCards.Count)
+        {
+            return;
+        }
+
+        var reorderedCards = TopCards.ToList();
+        reorderedCards.RemoveAt(currentIndex);
+        reorderedCards.Insert(targetIndex, card);
+        ReplaceTopCards(reorderedCards, card);
+        SyncTopCardsToLibrary();
+        UpdateSelectionState();
+    }
+
+    private void ReplaceTopCards(IReadOnlyList<PlaytestCardViewModel> cards, PlaytestCardViewModel? selectedCard = null)
+    {
+        TopCards.Clear();
+        foreach (var card in cards)
+        {
+            TopCards.Add(card);
+        }
+
+        if (selectedCard is not null && TopCards.Contains(selectedCard))
+        {
+            SelectedCard = selectedCard;
+        }
+    }
+
+    private void SyncTopCardsToLibrary()
+    {
+        _reorderTopCardsAction?.Invoke(TopCards.ToList());
+    }
+
     private void UpdateSelectionState()
     {
-        SelectedCount = SelectedCards.Count;
+        SelectedCount = SelectedCard is null ? 0 : 1;
         OnPropertyChanged(nameof(HasSelection));
+        OnPropertyChanged(nameof(CanMoveSelectionUp));
+        OnPropertyChanged(nameof(CanMoveSelectionDown));
+        OnPropertyChanged(nameof(CanShuffleTop));
         MoveToHandCommand.NotifyCanExecuteChanged();
-        MoveToGraveyardRandomCommand.NotifyCanExecuteChanged();
-        MoveToGraveyardAsSelectedCommand.NotifyCanExecuteChanged();
+        ShuffleTopAndCloseCommand.NotifyCanExecuteChanged();
+        MoveToTopOfGraveyardCommand.NotifyCanExecuteChanged();
         MoveToExileCommand.NotifyCanExecuteChanged();
-        MoveToBottomRandomCommand.NotifyCanExecuteChanged();
-        MoveToBottomAsSelectedCommand.NotifyCanExecuteChanged();
+        MoveToBottomOfLibraryCommand.NotifyCanExecuteChanged();
+        MoveSelectionUpCommand.NotifyCanExecuteChanged();
+        MoveSelectionDownCommand.NotifyCanExecuteChanged();
+    }
+
+    private static void ShuffleCards<T>(IList<T> list)
+    {
+        for (var index = list.Count - 1; index > 0; index--)
+        {
+            var swapIndex = Random.Shared.Next(index + 1);
+            (list[index], list[swapIndex]) = (list[swapIndex], list[index]);
+        }
     }
 }

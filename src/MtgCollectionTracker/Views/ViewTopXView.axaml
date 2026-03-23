@@ -18,44 +18,52 @@
 
         <!-- Row 0: Summary info -->
         <StackPanel Grid.Row="0" Spacing="2" Margin="0,0,0,6">
-            <TextBlock Text="{Binding TopCards.Count, StringFormat='Showing top {0} card(s). Select cards to act on them.'}"
+            <TextBlock Text="{Binding TopCards.Count, StringFormat='Showing top {0} card(s). Select a card to act on it or reorder the visible stack.'}"
                        FontSize="12" Opacity="0.8" />
-            <TextBlock Text="{Binding SelectedCount, StringFormat='Selected: {0} (use Ctrl+Click / Shift+Click to select multiple)'}"
+            <TextBlock Text="{Binding SelectedCount, StringFormat='Selected: {0}'}"
                        FontSize="11" />
         </StackPanel>
 
         <!-- Row 1: DataGrid (takes all remaining vertical space, scrolls internally) + card preview pane -->
         <Grid Grid.Row="1" ColumnDefinitions="*,450" ColumnSpacing="8">
-            <DataGrid Grid.Column="0"
-                      x:Name="CardDataGrid"
-                      ItemsSource="{Binding TopCards}"
-                      SelectedItem="{Binding SelectedCard, Mode=TwoWay}"
-                      SelectionMode="Extended"
-                      SelectionChanged="OnCardDataGridSelectionChanged"
-                      CanUserReorderColumns="False"
-                      CanUserResizeColumns="True"
-                      CanUserSortColumns="False"
-                      GridLinesVisibility="Horizontal"
-                      IsReadOnly="True"
-                      BorderThickness="1">
-                <DataGrid.Columns>
-                    <DataGridTextColumn Header="Card Name" Binding="{Binding DisplayName}" Width="*" />
-                    <DataGridTextColumn Header="Mana Cost" Binding="{Binding ManaCost}" Width="Auto" />
-                </DataGrid.Columns>
-            </DataGrid>
+            <Grid Grid.Column="0" RowDefinitions="Auto,*" RowSpacing="6">
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                    <Button Content="Move Up" Command="{Binding MoveSelectionUpCommand}" IsEnabled="{Binding CanMoveSelectionUp}" />
+                    <Button Content="Move Down" Command="{Binding MoveSelectionDownCommand}" IsEnabled="{Binding CanMoveSelectionDown}" />
+                </StackPanel>
+
+                <DataGrid Grid.Row="1"
+                          x:Name="CardDataGrid"
+                          ItemsSource="{Binding TopCards}"
+                          SelectedItem="{Binding SelectedCard, Mode=TwoWay}"
+                          SelectionMode="Single"
+                          CanUserReorderColumns="False"
+                          CanUserResizeColumns="True"
+                          CanUserSortColumns="False"
+                          GridLinesVisibility="Horizontal"
+                          IsReadOnly="True"
+                          BorderThickness="1">
+                    <DataGrid.Columns>
+                        <DataGridTextColumn Header="Card Name" Binding="{Binding DisplayName}" Width="*" />
+                        <DataGridTextColumn Header="Mana Cost" Binding="{Binding ManaCost}" Width="Auto" />
+                    </DataGrid.Columns>
+                </DataGrid>
+            </Grid>
 
             <!-- Card preview (right pane) -->
             <Border Grid.Column="1" Padding="12" Background="{DynamicResource SystemChromeLowColor}">
                 <ScrollViewer>
-                    <StackPanel Spacing="8" IsVisible="{Binding SelectedCard, Converter={x:Static ObjectConverters.IsNotNull}}">
-                        <TextBlock Text="{Binding SelectedCard.DisplayName}"
+                    <StackPanel DataContext="{Binding SelectedCard}"
+                                Spacing="8"
+                                IsVisible="{Binding ., Converter={x:Static ObjectConverters.IsNotNull}}">
+                        <TextBlock Text="{Binding DisplayName}"
                                    FontSize="16" FontWeight="Bold" TextWrapping="Wrap" />
-                        <TextBlock Text="{Binding SelectedCard.ManaCost}" FontSize="14" />
-                        <TextBlock Text="{Binding SelectedCard.CardType}" FontSize="12" TextWrapping="Wrap" Opacity="0.9" />
-                        <TextBlock Text="{Binding SelectedCard.OracleText}" FontSize="11" TextWrapping="Wrap" />
-                        <TextBlock Text="{Binding SelectedCard.PT}" FontSize="13" FontWeight="Bold"
-                                   IsVisible="{Binding SelectedCard.PT, Converter={x:Static ObjectConverters.IsNotNull}}" />
-                        <Image Source="{Binding SelectedCard.CardImageLarge^}" Stretch="Uniform" MaxHeight="400" Margin="0,8,0,0" />
+                        <TextBlock Text="{Binding ManaCost}" FontSize="14" />
+                        <TextBlock Text="{Binding CardType}" FontSize="12" TextWrapping="Wrap" Opacity="0.9" />
+                        <TextBlock Text="{Binding OracleText}" FontSize="11" TextWrapping="Wrap" />
+                        <TextBlock Text="{Binding PT}" FontSize="13" FontWeight="Bold"
+                                   IsVisible="{Binding PT, Converter={x:Static ObjectConverters.IsNotNull}}" />
+                        <Image Source="{Binding CardImageLarge^}" Stretch="Uniform" MaxHeight="400" Margin="0,8,0,0" />
                     </StackPanel>
                 </ScrollViewer>
                 <Border.IsVisible>
@@ -74,12 +82,11 @@
         <!-- Row 3: Action buttons – left-aligned so they start at the left edge and never overflow off the right -->
         <WrapPanel Grid.Row="3" HorizontalAlignment="Left" ItemSpacing="6" LineSpacing="6" Margin="0,0,0,4">
             <Button Content="Shuffle Library" Command="{Binding ShuffleAndCloseCommand}" />
+            <Button Content="Shuffle Top" Command="{Binding ShuffleTopAndCloseCommand}" IsEnabled="{Binding CanShuffleTop}" />
             <Button Content="Move to Hand" Command="{Binding MoveToHandCommand}" IsEnabled="{Binding HasSelection}" />
-            <Button Content="To Graveyard (random order)" Command="{Binding MoveToGraveyardRandomCommand}" IsEnabled="{Binding HasSelection}" />
-            <Button Content="To Graveyard (as selected)" Command="{Binding MoveToGraveyardAsSelectedCommand}" IsEnabled="{Binding HasSelection}" />
+            <Button Content="To Top of Graveyard" Command="{Binding MoveToTopOfGraveyardCommand}" IsEnabled="{Binding HasSelection}" />
             <Button Content="Move to Exile" Command="{Binding MoveToExileCommand}" IsEnabled="{Binding HasSelection}" />
-            <Button Content="To Bottom (random order)" Command="{Binding MoveToBottomRandomCommand}" IsEnabled="{Binding HasSelection}" />
-            <Button Content="To Bottom (as selected)" Command="{Binding MoveToBottomAsSelectedCommand}" IsEnabled="{Binding HasSelection}" />
+            <Button Content="To Bottom of Library" Command="{Binding MoveToBottomOfLibraryCommand}" IsEnabled="{Binding HasSelection}" />
             <Button Content="Close" Command="{Binding CloseCommand}" />
         </WrapPanel>
     </Grid>

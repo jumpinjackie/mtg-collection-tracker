@@ -78,10 +78,10 @@ public partial class ZoneContentsViewModel : DialogContentViewModel
         _moveCard = moveCard;
         _shuffleLibrary = shuffleLibrary;
 
-        ShowMoveToBattlefield = true;
+        ShowMoveToBattlefield = sourceZone != GameZone.Sideboard;
         ShowMoveToHand = true;
-        ShowMoveToGraveyard = sourceZone != GameZone.Graveyard;
-        ShowMoveToExile = sourceZone != GameZone.Exile;
+        ShowMoveToGraveyard = sourceZone != GameZone.Graveyard && sourceZone != GameZone.Sideboard;
+        ShowMoveToExile = sourceZone != GameZone.Exile && sourceZone != GameZone.Sideboard;
 
         ShowShuffleOption = sourceZone == GameZone.Library;
         ShuffleAfterClose = ShowShuffleOption;

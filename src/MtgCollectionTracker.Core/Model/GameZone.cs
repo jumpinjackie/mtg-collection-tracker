@@ -12,5 +12,6 @@ public enum GameZone
     Graveyard = 4,
     Exile = 5,
     Stack = 6,
-    CommandZone = 7
+    CommandZone = 7,
+    Sideboard = 8
 }
