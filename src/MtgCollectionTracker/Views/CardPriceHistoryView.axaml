@@ -38,18 +38,39 @@
         </StackPanel>
 
         <!-- Chart area (fill child — must be last in DockPanel) -->
-        <ScrollViewer IsVisible="{Binding !HasNoData}" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+        <ScrollViewer x:Name="ChartScrollViewer"
+                      IsVisible="{Binding !HasNoData}"
+                      HorizontalScrollBarVisibility="Auto"
+                      VerticalScrollBarVisibility="Disabled"
+                      SizeChanged="ChartScrollViewer_OnSizeChanged">
             <StackPanel Orientation="Horizontal" Margin="8">
                 <!-- Y-axis labels -->
-                <StackPanel Width="55" Margin="0 0 4 20" VerticalAlignment="Bottom">
-                    <ItemsControl ItemsSource="{Binding YAxisLabels}">
+                <Grid Width="55"
+                      Height="{Binding ChartPlotHeight}"
+                      Margin="0 0 4 20"
+                      VerticalAlignment="Bottom">
+                    <ItemsControl ItemsSource="{Binding YAxisLabels}" Height="{Binding ChartPlotHeight}">
+                        <ItemsControl.ItemContainerTheme>
+                            <ControlTheme TargetType="ContentPresenter">
+                                <Setter Property="Canvas.Top" Value="{ReflectionBinding PixelTop}" />
+                            </ControlTheme>
+                        </ItemsControl.ItemContainerTheme>
+                        <ItemsControl.ItemsPanel>
+                            <ItemsPanelTemplate>
+                                <Canvas />
+                            </ItemsPanelTemplate>
+                        </ItemsControl.ItemsPanel>
                         <ItemsControl.ItemTemplate>
                             <DataTemplate>
-                                <TextBlock Text="{Binding}" FontSize="10" HorizontalAlignment="Right" Margin="0 0 4 0" Height="40" VerticalAlignment="Top" />
+                                <TextBlock Text="{Binding Text}"
+                                           Width="55"
+                                           FontSize="10"
+                                           TextAlignment="Right"
+                                           Margin="0 0 4 0" />
                             </DataTemplate>
                         </ItemsControl.ItemTemplate>
                     </ItemsControl>
-                </StackPanel>
+                </Grid>
 
                 <!-- Bar groups -->
                 <ItemsControl ItemsSource="{Binding BarGroups}">
@@ -62,7 +83,8 @@
                         <DataTemplate x:DataType="vm:PriceBarGroupViewModel">
                             <StackPanel Width="72" Margin="4 0" VerticalAlignment="Bottom">
                                 <!-- The three bars, aligned to the bottom -->
-                                <Grid Height="200" VerticalAlignment="Bottom">
+                                  <Grid Height="{ReflectionBinding DataContext.ChartPlotHeight, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                                      VerticalAlignment="Bottom">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="*" />
                                         <ColumnDefinition Width="*" />
@@ -71,21 +93,21 @@
                                     <!-- Low bar (green) -->
                                     <Panel Grid.Column="0" VerticalAlignment="Bottom" IsVisible="{Binding LowBar, Converter={x:Static ObjectConverters.IsNotNull}}">
                                         <Border Background="{Binding LowBar.Color}"
-                                                Height="{Binding LowBar.HeightRatio, Converter={StaticResource RatioToHeightConverter}, ConverterParameter=200}"
+                                                Height="{Binding LowBar.PixelHeight}"
                                                 ToolTip.Tip="{Binding LowBar.Tooltip}"
                                                 Margin="1 0" CornerRadius="2 2 0 0" />
                                     </Panel>
                                     <!-- Median bar (gold) -->
                                     <Panel Grid.Column="1" VerticalAlignment="Bottom" IsVisible="{Binding MedianBar, Converter={x:Static ObjectConverters.IsNotNull}}">
                                         <Border Background="{Binding MedianBar.Color}"
-                                                Height="{Binding MedianBar.HeightRatio, Converter={StaticResource RatioToHeightConverter}, ConverterParameter=200}"
+                                                Height="{Binding MedianBar.PixelHeight}"
                                                 ToolTip.Tip="{Binding MedianBar.Tooltip}"
                                                 Margin="1 0" CornerRadius="2 2 0 0" />
                                     </Panel>
                                     <!-- High bar (red) -->
                                     <Panel Grid.Column="2" VerticalAlignment="Bottom" IsVisible="{Binding HighBar, Converter={x:Static ObjectConverters.IsNotNull}}">
                                         <Border Background="{Binding HighBar.Color}"
-                                                Height="{Binding HighBar.HeightRatio, Converter={StaticResource RatioToHeightConverter}, ConverterParameter=200}"
+                                                Height="{Binding HighBar.PixelHeight}"
                                                 ToolTip.Tip="{Binding HighBar.Tooltip}"
                                                 Margin="1 0" CornerRadius="2 2 0 0" />
                                     </Panel>

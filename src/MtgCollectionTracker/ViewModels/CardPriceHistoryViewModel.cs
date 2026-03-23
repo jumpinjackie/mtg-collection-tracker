@@ -19,6 +19,10 @@ public partial class PriceBarViewModel : ObservableObject
     [ObservableProperty]
     private double _heightRatio;
 
+    /// <summary>Pixel height used by the chart UI for this bar.</summary>
+    [ObservableProperty]
+    private double _pixelHeight;
+
     /// <summary>Solid color brush name for this bar (e.g. "Green", "Gold", "Crimson").</summary>
     public required string Color { get; init; }
 
@@ -41,11 +45,24 @@ public class PriceBarGroupViewModel
     public PriceBarViewModel? HighBar { get; init; }
 }
 
+/// <summary>One Y-axis tick label with both text and resolved pixel position.</summary>
+public partial class YAxisLabelViewModel : ObservableObject
+{
+    /// <summary>Formatted tick label text (e.g. "$3.75").</summary>
+    public required string Text { get; init; }
+
+    /// <summary>Value ratio in the range 0.0-1.0 where 1.0 is top of the plot.</summary>
+    public required double HeightRatio { get; init; }
+
+    /// <summary>Top pixel coordinate inside the plot area.</summary>
+    [ObservableProperty]
+    private double _pixelTop;
+}
+
 /// <summary>ViewModel for the "Price History" dialog showing a bar chart of price data across up to 10 dates.</summary>
 public partial class CardPriceHistoryViewModel : DialogContentViewModel
 {
     private const string DefaultCurrency = "USD";
-    private const double ChartMaxHeight = 200.0;
 
     readonly ICollectionTrackingService _service;
 
@@ -80,11 +97,20 @@ public partial class CardPriceHistoryViewModel : DialogContentViewModel
     [ObservableProperty]
     private string _noDataMessage = string.Empty;
 
+    [ObservableProperty]
+    private double _chartPlotHeight = 200.0;
+
     /// <summary>Y-axis tick labels (price values) from top to bottom.</summary>
-    public ObservableCollection<string> YAxisLabels { get; } = new();
+    public ObservableCollection<YAxisLabelViewModel> YAxisLabels { get; } = new();
 
     /// <summary>Bar groups for the chart, one per date in ascending order.</summary>
     public ObservableCollection<PriceBarGroupViewModel> BarGroups { get; } = new();
+
+    partial void OnChartPlotHeightChanged(double value)
+    {
+        UpdateYAxisPixelPositions();
+        UpdateBarPixelHeights();
+    }
 
     public async Task LoadAsync(Guid skuId, CancellationToken cancel = default)
     {
@@ -130,12 +156,20 @@ public partial class CardPriceHistoryViewModel : DialogContentViewModel
             return;
         }
 
+        HasNoData = false;
+        NoDataMessage = string.Empty;
+
         // Build Y-axis labels (5 evenly spaced ticks from max to 0)
         YAxisLabels.Clear();
         for (int i = 4; i >= 0; i--)
         {
+            double ratio = i / 4.0;
             double labelValue = maxPrice * i / 4.0;
-            YAxisLabels.Add($"${labelValue:F2}");
+            YAxisLabels.Add(new YAxisLabelViewModel
+            {
+                Text = $"${labelValue:F2}",
+                HeightRatio = ratio,
+            });
         }
 
         // Build bar groups
@@ -169,5 +203,41 @@ public partial class CardPriceHistoryViewModel : DialogContentViewModel
             };
             BarGroups.Add(group);
         }
+
+        UpdateYAxisPixelPositions();
+        UpdateBarPixelHeights();
+    }
+
+    private void UpdateYAxisPixelPositions()
+    {
+        double plotHeight = Math.Max(1.0, ChartPlotHeight);
+        const double labelOffset = 7.0;
+
+        foreach (var label in YAxisLabels)
+        {
+            double pixelTop = ((1.0 - label.HeightRatio) * plotHeight) - labelOffset;
+            label.PixelTop = Math.Clamp(pixelTop, 0.0, plotHeight - 12.0);
+        }
+    }
+
+    private void UpdateBarPixelHeights()
+    {
+        double plotHeight = Math.Max(1.0, ChartPlotHeight);
+        foreach (var group in BarGroups)
+        {
+            SetBarPixelHeight(group.LowBar, plotHeight);
+            SetBarPixelHeight(group.MedianBar, plotHeight);
+            SetBarPixelHeight(group.HighBar, plotHeight);
+        }
+    }
+
+    private static void SetBarPixelHeight(PriceBarViewModel? bar, double plotHeight)
+    {
+        if (bar == null)
+        {
+            return;
+        }
+
+        bar.PixelHeight = Math.Max(1.0, bar.HeightRatio * plotHeight);
     }
 }
