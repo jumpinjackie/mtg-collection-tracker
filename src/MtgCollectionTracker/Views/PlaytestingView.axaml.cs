@@ -523,8 +523,12 @@ public partial class PlaytestingView : UserControl
 
         _draggedCard = card;
 
-        // Handle battlefield card multi-selection via Ctrl+Click
-        if (IsBattlefieldCard(card))
+        // Only handle selection/deselection on left-click; right-click opens the context menu
+        // and must not alter the current selection so that multi-select menu items fire correctly.
+        var isRightClick = e.GetCurrentPoint(null).Properties.IsRightButtonPressed;
+
+        // Handle battlefield card multi-selection via left Ctrl+Click
+        if (!isRightClick && IsBattlefieldCard(card))
         {
             var isCtrlHeld = e.KeyModifiers.HasFlag(KeyModifiers.Control) ||
                              e.KeyModifiers.HasFlag(KeyModifiers.Meta);
