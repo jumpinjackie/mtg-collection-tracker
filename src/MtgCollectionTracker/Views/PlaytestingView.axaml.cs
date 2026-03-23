@@ -16,15 +16,33 @@ namespace MtgCollectionTracker.Views;
 
 public partial class PlaytestingView : UserControl
 {
+    private enum DragCandidateKind
+    {
+        None,
+        Card,
+        Library,
+    }
+
     private static readonly IBrush DefaultDropZoneBrush = Brushes.Gray;
     private static readonly IBrush ActiveDropZoneBrush = Brushes.Gold;
+    private static readonly IBrush LibraryDragPreviewBrush = new SolidColorBrush(Color.Parse("#7B4F2B"));
+    private static readonly IBrush BattlefieldDragPreviewBrush = Brushes.White;
+    private static readonly IBrush BattlefieldDragPreviewBorderBrush = Brushes.DimGray;
 
     // Card horizontal margin (left + right) used for hand reorder position calculation
     private const int HandCardTotalMargin = 6;
     private const int HandCardInterItemSpacing = 5;
+    private const double LibraryPreviewWidth = 60;
+    private const double LibraryPreviewHeight = 85;
+    private const double DragPreviewPointerOffset = 12;
+    private const double DragStartThreshold = 6;
 
     private PlaytestCardViewModel? _draggedCard;
     private Border? _activeDropZone;
+    private bool _isDraggingLibraryTopCard;
+    private DragCandidateKind _pendingDragCandidate = DragCandidateKind.None;
+    private PlaytestCardViewModel? _pendingDragCard;
+    private Point _pendingDragStart;
 
     // For hand card reordering
     private bool _isDraggingHandCard;
@@ -34,6 +52,8 @@ public partial class PlaytestingView : UserControl
     public PlaytestingView()
     {
         InitializeComponent();
+        AddHandler(InputElement.PointerMovedEvent, OnRootPointerMoved, RoutingStrategies.Tunnel | RoutingStrategies.Bubble, handledEventsToo: true);
+        AddHandler(InputElement.PointerReleasedEvent, OnRootPointerReleased, RoutingStrategies.Tunnel | RoutingStrategies.Bubble, handledEventsToo: true);
     }
 
     private PlaytestingViewModel? GetActiveViewModel()
@@ -521,34 +541,51 @@ public partial class PlaytestingView : UserControl
             return;
         }
 
-        _draggedCard = card;
-
         // Only handle selection/deselection on left-click; right-click opens the context menu
         // and must not alter the current selection so that multi-select menu items fire correctly.
         var isRightClick = e.GetCurrentPoint(null).Properties.IsRightButtonPressed;
+        if (isRightClick)
+        {
+            return;
+        }
+
+        _pendingDragCandidate = DragCandidateKind.Card;
+        _pendingDragCard = card;
+        _pendingDragStart = e.GetPosition(RootGrid);
 
         // Handle battlefield card multi-selection via left Ctrl+Click
-        if (!isRightClick && IsBattlefieldCard(card))
+        if (IsBattlefieldCard(card))
         {
             var isCtrlHeld = e.KeyModifiers.HasFlag(KeyModifiers.Control) ||
                              e.KeyModifiers.HasFlag(KeyModifiers.Meta);
-            gameState.ToggleBattlefieldCardSelection(card, isCtrlHeld);
+            var preserveExistingSelection = !isCtrlHeld &&
+                                            card.IsSelected &&
+                                            gameState.SelectedBattlefieldCards.Count > 1;
+
+            if (!preserveExistingSelection)
+            {
+                gameState.ToggleBattlefieldCardSelection(card, isCtrlHeld);
+            }
         }
 
-        // Track hand card drag for reordering
-        if (card.Zone == GameZone.Hand)
+        _isDraggingHandCard = false;
+        _handDragSourceIndex = -1;
+        _handDropTargetIndex = -1;
+        ClearHandDropIndicator();
+    }
+
+    private void OnLibraryPointerPressed(object? sender, PointerPressedEventArgs e)
+    {
+        if (!e.GetCurrentPoint(null).Properties.IsLeftButtonPressed ||
+            !TryGetActiveGameState(out var gameState) ||
+            gameState.LibraryCount == 0)
         {
-            _isDraggingHandCard = true;
-            _handDragSourceIndex = gameState.Hand.IndexOf(card);
-            _handDropTargetIndex = _handDragSourceIndex;
-            ShowHandDropIndicator(_handDropTargetIndex, gameState);
+            return;
         }
-        else
-        {
-            _isDraggingHandCard = false;
-            _handDragSourceIndex = -1;
-            ClearHandDropIndicator();
-        }
+
+        _pendingDragCandidate = DragCandidateKind.Library;
+        _pendingDragCard = null;
+        _pendingDragStart = e.GetPosition(RootGrid);
     }
 
     private static bool IsBattlefieldCard(PlaytestCardViewModel card)
@@ -562,35 +599,45 @@ public partial class PlaytestingView : UserControl
 
     private void OnDropToHand(object? sender, PointerReleasedEventArgs e)
     {
+        if (_isDraggingLibraryTopCard)
+        {
+            if (TryGetActiveGameState(out var drawGameState))
+            {
+                drawGameState.DrawCardCommand.Execute(null);
+            }
+
+            ResetDragState();
+            e.Handled = true;
+            return;
+        }
+
         // If dragging a hand card within the hand zone, handle reordering
         var handItemsControl = HandItemsControl;
         if (_isDraggingHandCard && _draggedCard is not null && _draggedCard.Zone == GameZone.Hand &&
-            TryGetActiveGameState(out var gameState) && handItemsControl is not null)
+            TryGetActiveGameState(out var handGameState) && handItemsControl is not null)
         {
+            var draggedHandCard = _draggedCard;
             var pointerPos = e.GetPosition(handItemsControl);
-            var targetIndex = GetHandDropTargetIndex(pointerPos, gameState);
-            var sourceIndex = gameState.Hand.IndexOf(_draggedCard);
+            var targetIndex = GetHandDropTargetIndex(pointerPos, handGameState);
+            var sourceIndex = handGameState.Hand.IndexOf(draggedHandCard);
 
-            if (targetIndex >= gameState.Hand.Count)
+            if (targetIndex >= handGameState.Hand.Count)
             {
-                targetIndex = gameState.Hand.Count - 1;
+                targetIndex = handGameState.Hand.Count - 1;
             }
 
             if (targetIndex >= 0 && sourceIndex >= 0 && targetIndex != sourceIndex)
             {
-                gameState.Hand.Move(sourceIndex, targetIndex);
+                handGameState.Hand.Move(sourceIndex, targetIndex);
             }
 
-            _draggedCard = null;
-            _isDraggingHandCard = false;
-            _handDragSourceIndex = -1;
-            _handDropTargetIndex = -1;
-            ClearHandDropIndicator();
-            ClearDropZoneHighlight();
+            ResetDragState();
+            e.Handled = true;
             return;
         }
 
         MoveDraggedCardTo(GameZone.Hand);
+        e.Handled = true;
     }
 
     private int GetHandDropTargetIndex(Avalonia.Point pointerPos, PlaytestGameStateViewModel gameState)
@@ -614,8 +661,57 @@ public partial class PlaytestingView : UserControl
 
     private void OnDropToExile(object? sender, PointerReleasedEventArgs e) => MoveDraggedCardTo(GameZone.Exile);
 
+    private void HandleDropByZone(Border zone, PointerReleasedEventArgs e)
+    {
+        if (ReferenceEquals(zone, HandDropZone))
+        {
+            OnDropToHand(zone, e);
+            return;
+        }
+
+        if (ReferenceEquals(zone, GraveyardZone))
+        {
+            MoveDraggedCardTo(GameZone.Graveyard);
+            return;
+        }
+
+        if (ReferenceEquals(zone, ExileZone))
+        {
+            MoveDraggedCardTo(GameZone.Exile);
+            return;
+        }
+
+        if (ReferenceEquals(zone, StackZone))
+        {
+            MoveDraggedCardTo(GameZone.Stack);
+            return;
+        }
+
+        if (ReferenceEquals(zone, BattlefieldZone))
+        {
+            MoveDraggedCardTo(GameZone.Battlefield);
+            return;
+        }
+
+        if (ReferenceEquals(zone, BattlefieldLandsZone))
+        {
+            MoveDraggedCardTo(GameZone.BattlefieldLands);
+        }
+    }
+
     private void MoveDraggedCardTo(GameZone destination)
     {
+        if (_isDraggingLibraryTopCard)
+        {
+            if (destination == GameZone.Hand && TryGetActiveGameState(out var drawGameState))
+            {
+                drawGameState.DrawCardCommand.Execute(null);
+            }
+
+            ResetDragState();
+            return;
+        }
+
         if (_draggedCard is null)
         {
             return;
@@ -625,37 +721,57 @@ public partial class PlaytestingView : UserControl
         {
             if (_draggedCard.Zone == destination)
             {
-                _draggedCard = null;
-                _isDraggingHandCard = false;
-                _handDragSourceIndex = -1;
-                ClearDropZoneHighlight();
+                ResetDragState();
                 return;
             }
 
             var draggedCard = _draggedCard;
-            gameState.MoveCard(draggedCard, destination);
+            if (ShouldMoveSelectedBattlefieldCards(draggedCard, destination, gameState))
+            {
+                var order = destination == GameZone.Graveyard
+                    ? CardMoveOrder.Random
+                    : CardMoveOrder.AsSelected;
+                gameState.MoveSelectedBattlefieldCardsTo(destination, order);
+            }
+            else
+            {
+                gameState.MoveCard(draggedCard, destination);
+            }
+
             gameState.SelectedCard = draggedCard;
         }
 
-        _draggedCard = null;
-        _isDraggingHandCard = false;
-        _handDragSourceIndex = -1;
-        _handDropTargetIndex = -1;
-        ClearHandDropIndicator();
-        ClearDropZoneHighlight();
+        ResetDragState();
     }
 
     private void OnDropZonePointerMoved(object? sender, PointerEventArgs e)
     {
-        if (_draggedCard is null || sender is not Border zone)
+        if (!HasActiveDrag() || sender is not Border zone)
         {
             return;
         }
 
+        if (!CanDropOnZone(zone))
+        {
+            if (ReferenceEquals(_activeDropZone, zone))
+            {
+                ClearDropZoneHighlight();
+            }
+
+            if (ReferenceEquals(zone, HandDropZone))
+            {
+                ClearHandDropIndicator();
+            }
+
+            return;
+        }
+
         var handItemsControl = HandItemsControl;
+        var draggedCard = _draggedCard;
         if (ReferenceEquals(zone, HandDropZone) &&
             _isDraggingHandCard &&
-            _draggedCard.Zone == GameZone.Hand &&
+            draggedCard is not null &&
+            draggedCard.Zone == GameZone.Hand &&
             TryGetActiveGameState(out var gameState) &&
             handItemsControl is not null)
         {
@@ -691,6 +807,88 @@ public partial class PlaytestingView : UserControl
         {
             ClearHandDropIndicator();
         }
+    }
+
+    private void OnRootPointerMoved(object? sender, PointerEventArgs e)
+    {
+        TryActivatePendingDrag(e);
+
+        if (!HasActiveDrag())
+        {
+            return;
+        }
+
+        var pointerPosition = e.GetPosition(RootGrid);
+        RefreshDragPreview(pointerPosition);
+
+        var zone = ResolveDropZoneFromPoint(pointerPosition);
+        if (zone is not null && CanDropOnZone(zone))
+        {
+            if (!ReferenceEquals(_activeDropZone, zone))
+            {
+                ClearDropZoneHighlight();
+                _activeDropZone = zone;
+                _activeDropZone.BorderBrush = ActiveDropZoneBrush;
+            }
+
+            return;
+        }
+
+        ClearDropZoneHighlight();
+        ClearHandDropIndicator();
+    }
+
+    private void OnRootPointerReleased(object? sender, PointerReleasedEventArgs e)
+    {
+        ClearPendingDragCandidate();
+
+        if (!HasActiveDrag())
+        {
+            return;
+        }
+
+        var zone = _activeDropZone;
+        if (zone is null)
+        {
+            var pointerPosition = e.GetPosition(RootGrid);
+            zone = ResolveDropZoneFromPoint(pointerPosition);
+        }
+
+        if (zone is not null && CanDropOnZone(zone))
+        {
+            HandleDropByZone(zone, e);
+            e.Handled = true;
+            return;
+        }
+
+        ResetDragState();
+    }
+
+    private Border? ResolveDropZoneFromPoint(Point point)
+    {
+        var current = this.GetVisualAt(point);
+
+        while (current is not null)
+        {
+            if (current is Border border && IsKnownDropZone(border))
+            {
+                return border;
+            }
+
+            current = current.GetVisualParent();
+        }
+
+        return null;
+    }
+
+    private bool IsKnownDropZone(Border zone)
+    {
+        return ReferenceEquals(zone, HandDropZone) ||
+               ReferenceEquals(zone, StackZone) ||
+               ReferenceEquals(zone, GraveyardZone) ||
+               ReferenceEquals(zone, ExileZone) ||
+               ReferenceEquals(zone, BattlefieldZone) ||
+               ReferenceEquals(zone, BattlefieldLandsZone);
     }
 
     private static bool TryGetCardFromSender(object? sender, out PlaytestCardViewModel? card)
@@ -746,6 +944,167 @@ public partial class PlaytestingView : UserControl
         {
             _activeDropZone.BorderBrush = DefaultDropZoneBrush;
             _activeDropZone = null;
+        }
+    }
+
+    private static bool ShouldMoveSelectedBattlefieldCards(
+        PlaytestCardViewModel draggedCard,
+        GameZone destination,
+        PlaytestGameStateViewModel gameState)
+    {
+        return IsBattlefieldCard(draggedCard) &&
+               (destination == GameZone.Graveyard || destination == GameZone.Exile) &&
+               gameState.SelectedBattlefieldCards.Contains(draggedCard);
+    }
+
+    private bool HasActiveDrag()
+    {
+        return _draggedCard is not null || _isDraggingLibraryTopCard;
+    }
+
+    private bool CanDropOnZone(Border zone)
+    {
+        if (_isDraggingLibraryTopCard)
+        {
+            return ReferenceEquals(zone, HandDropZone);
+        }
+
+        return _draggedCard is not null &&
+               (ReferenceEquals(zone, HandDropZone) ||
+                ReferenceEquals(zone, StackZone) ||
+                ReferenceEquals(zone, GraveyardZone) ||
+                ReferenceEquals(zone, ExileZone) ||
+                ReferenceEquals(zone, BattlefieldZone) ||
+                ReferenceEquals(zone, BattlefieldLandsZone));
+    }
+
+    private void RefreshDragPreview(Point pointerPosition)
+    {
+        if (_isDraggingLibraryTopCard)
+        {
+            ShowDragPreview(LibraryDragPreviewBrush, Brushes.Black, LibraryPreviewWidth, LibraryPreviewHeight, pointerPosition);
+            return;
+        }
+
+        if (_draggedCard is not null && IsBattlefieldCard(_draggedCard) && TryGetActiveGameState(out var gameState))
+        {
+            ShowDragPreview(
+                BattlefieldDragPreviewBrush,
+                BattlefieldDragPreviewBorderBrush,
+                gameState.CardWidth,
+                gameState.CardHeight,
+                pointerPosition);
+            return;
+        }
+
+        HideDragPreview();
+    }
+
+    private void ShowDragPreview(IBrush background, IBrush borderBrush, double width, double height, Point pointerPosition)
+    {
+        if (DragPreview is null)
+        {
+            return;
+        }
+
+        DragPreview.Background = background;
+        DragPreview.BorderBrush = borderBrush;
+        DragPreview.Width = width;
+        DragPreview.Height = height;
+        Canvas.SetLeft(DragPreview, pointerPosition.X + DragPreviewPointerOffset);
+        Canvas.SetTop(DragPreview, pointerPosition.Y + DragPreviewPointerOffset);
+        DragPreview.IsVisible = true;
+    }
+
+    private void HideDragPreview()
+    {
+        if (DragPreview is not null)
+        {
+            DragPreview.IsVisible = false;
+        }
+    }
+
+    private void ResetDragState()
+    {
+        _draggedCard = null;
+        _isDraggingLibraryTopCard = false;
+        ClearPendingDragCandidate();
+        _isDraggingHandCard = false;
+        _handDragSourceIndex = -1;
+        _handDropTargetIndex = -1;
+        ClearHandDropIndicator();
+        HideDragPreview();
+        ClearDropZoneHighlight();
+    }
+
+    private void ClearPendingDragCandidate()
+    {
+        _pendingDragCandidate = DragCandidateKind.None;
+        _pendingDragCard = null;
+    }
+
+    private void TryActivatePendingDrag(PointerEventArgs e)
+    {
+        if (_pendingDragCandidate == DragCandidateKind.None || HasActiveDrag())
+        {
+            return;
+        }
+
+        var point = e.GetCurrentPoint(this);
+        if (!point.Properties.IsLeftButtonPressed)
+        {
+            ClearPendingDragCandidate();
+            return;
+        }
+
+        var pointerPosition = e.GetPosition(RootGrid);
+        var dx = pointerPosition.X - _pendingDragStart.X;
+        var dy = pointerPosition.Y - _pendingDragStart.Y;
+        if ((dx * dx) + (dy * dy) < DragStartThreshold * DragStartThreshold)
+        {
+            return;
+        }
+
+        if (_pendingDragCandidate == DragCandidateKind.Library)
+        {
+            if (!TryGetActiveGameState(out var gameState) || gameState.LibraryCount == 0)
+            {
+                ClearPendingDragCandidate();
+                return;
+            }
+
+            _isDraggingLibraryTopCard = true;
+            _draggedCard = null;
+            _isDraggingHandCard = false;
+            _handDragSourceIndex = -1;
+            _handDropTargetIndex = -1;
+            ClearHandDropIndicator();
+            ClearPendingDragCandidate();
+            return;
+        }
+
+        if (_pendingDragCandidate == DragCandidateKind.Card && _pendingDragCard is not null)
+        {
+            var card = _pendingDragCard;
+            _draggedCard = card;
+            _isDraggingLibraryTopCard = false;
+
+            if (card.Zone == GameZone.Hand && TryGetActiveGameState(out var gameState))
+            {
+                _isDraggingHandCard = true;
+                _handDragSourceIndex = gameState.Hand.IndexOf(card);
+                _handDropTargetIndex = _handDragSourceIndex;
+                ShowHandDropIndicator(_handDropTargetIndex, gameState);
+            }
+            else
+            {
+                _isDraggingHandCard = false;
+                _handDragSourceIndex = -1;
+                _handDropTargetIndex = -1;
+                ClearHandDropIndicator();
+            }
+
+            ClearPendingDragCandidate();
         }
     }
 

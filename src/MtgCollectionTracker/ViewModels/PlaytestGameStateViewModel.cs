@@ -767,8 +767,9 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
         if (order == CardMoveOrder.Random)
             ShuffleCards(list);
 
-        foreach (var card in list)
+        for (var index = list.Count - 1; index >= 0; index--)
         {
+            var card = list[index];
             Library.Remove(card);
             card.Zone = GameZone.Graveyard;
             Graveyard.Insert(0, card);
@@ -953,7 +954,7 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
     {
         if (!addToSelection)
         {
-            // Clear existing selection, but keep the clicked card selected
+            // Clear existing selection, but keep the clicked card selected.
             foreach (var existing in SelectedBattlefieldCards.ToList())
             {
                 if (!ReferenceEquals(existing, card))
@@ -962,6 +963,14 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
                 }
             }
             SelectedBattlefieldCards.Clear();
+
+            card.IsSelected = true;
+            if (!SelectedBattlefieldCards.Contains(card))
+            {
+                SelectedBattlefieldCards.Add(card);
+            }
+
+            return;
         }
 
         card.IsSelected = !card.IsSelected;
@@ -1001,15 +1010,32 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
     /// <summary>
     /// Move all selected battlefield cards to the specified zone
     /// </summary>
-    public void MoveSelectedBattlefieldCardsTo(GameZone targetZone)
+    public void MoveSelectedBattlefieldCardsTo(GameZone targetZone, CardMoveOrder order = CardMoveOrder.AsSelected)
     {
         var toMove = SelectedBattlefieldCards.ToList();
+        if (order == CardMoveOrder.Random)
+        {
+            ShuffleCards(toMove);
+        }
+
+        if (TargetZoneInsertsAtTop(targetZone))
+        {
+            toMove.Reverse();
+        }
+
         foreach (var card in toMove)
         {
             card.IsSelected = false;
             MoveCard(card, targetZone);
         }
         SelectedBattlefieldCards.Clear();
+    }
+
+    private static bool TargetZoneInsertsAtTop(GameZone targetZone)
+    {
+        return targetZone == GameZone.Graveyard ||
+               targetZone == GameZone.Exile ||
+               targetZone == GameZone.Stack;
     }
 
     /// <summary>

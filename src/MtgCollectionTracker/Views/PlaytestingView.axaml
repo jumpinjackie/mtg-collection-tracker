@@ -10,7 +10,7 @@
 		<vm:PlaytestingViewModel />
 	</Design.DataContext>
 
-	<Grid>
+	<Grid x:Name="RootGrid">
 		<!-- Deck Selection View -->
 		<Border IsVisible="{Binding !IsInGame}"
 		        Padding="40"
@@ -73,12 +73,13 @@
 				<DockPanel Grid.Column="0" Grid.Row="0" Grid.RowSpan="4" Margin="0,0,5,0" LastChildFill="True" DataContext="{Binding GameState}">
 					
 					<!-- (1) Library -->
-					<Border DockPanel.Dock="Top" BorderBrush="Gray" BorderThickness="2" Padding="5" Margin="0,0,0,5"
+					<Border x:Name="LibraryZone" DockPanel.Dock="Top" BorderBrush="Gray" BorderThickness="2" Padding="5" Margin="0,0,0,5"
 					        PointerMoved="OnDropZonePointerMoved"
 					        PointerExited="OnDropZonePointerExited">
 						<StackPanel Spacing="5" DoubleTapped="OnLibraryDoubleTapped">
 							<TextBlock Text="Library" FontWeight="Bold" HorizontalAlignment="Center" FontSize="12" />
-							<Border Width="60" Height="85" Background="#7B4F2B" CornerRadius="3" BorderBrush="Black" BorderThickness="1">
+							<Border Width="60" Height="85" Background="#7B4F2B" CornerRadius="3" BorderBrush="Black" BorderThickness="1"
+							        PointerPressed="OnLibraryPointerPressed">
 								<Border.ContextMenu>
 									<ContextMenu>
 										<MenuItem Header="Shuffle Library" Click="OnShuffleLibraryClick" />
@@ -117,7 +118,7 @@
 					</Border>
 
 					<!-- (3) Graveyard -->
-					<Border DockPanel.Dock="Top" BorderBrush="Gray" BorderThickness="2" Padding="5" Margin="0,0,0,5"
+					<Border x:Name="GraveyardZone" DockPanel.Dock="Top" BorderBrush="Gray" BorderThickness="2" Padding="5" Margin="0,0,0,5"
 					        PointerReleased="OnDropToGraveyard"
 					        PointerMoved="OnDropZonePointerMoved"
 					        PointerExited="OnDropZonePointerExited">
@@ -145,7 +146,7 @@
 					</Border>
 
 					<!-- (4) Exile -->
-					<Border DockPanel.Dock="Top" BorderBrush="Gray" BorderThickness="2" Padding="5" Margin="0,0,0,5"
+					<Border x:Name="ExileZone" DockPanel.Dock="Top" BorderBrush="Gray" BorderThickness="2" Padding="5" Margin="0,0,0,5"
 					        PointerReleased="OnDropToExile"
 					        PointerMoved="OnDropZonePointerMoved"
 					        PointerExited="OnDropZonePointerExited">
@@ -306,7 +307,7 @@
 				<!-- Column 1: Stack and Phase Tracker -->
 				<Grid Grid.Column="1" Grid.Row="0" Grid.RowSpan="4" ColumnDefinitions="*" RowDefinitions="*,*">
 					<!-- Stack -->
-					<Border Grid.Row="0" BorderBrush="Gray" BorderThickness="2" Padding="5" Margin="5,0,5,5"
+					<Border x:Name="StackZone" Grid.Row="0" BorderBrush="Gray" BorderThickness="2" Padding="5" Margin="5,0,5,5"
 					        PointerReleased="OnDropToStack"
 					        PointerMoved="OnDropZonePointerMoved"
 					        PointerExited="OnDropZonePointerExited">
@@ -393,7 +394,7 @@
 				<!-- Column 2: Battlefield (non-lands, lands, hand) -->
 			<Grid Grid.Column="2" Grid.Row="0" Grid.RowSpan="4" RowDefinitions="2*,Auto,*,*" Margin="5,0,5,0">
 					<!-- Battlefield Non-lands -->
-					<Border Grid.Row="0" BorderBrush="Gray" BorderThickness="2" Padding="5"
+					<Border x:Name="BattlefieldZone" Grid.Row="0" BorderBrush="Gray" BorderThickness="2" Padding="5"
 					        PointerReleased="OnDropToBattlefield"
 					        PointerMoved="OnDropZonePointerMoved"
 					        PointerExited="OnDropZonePointerExited">
@@ -490,7 +491,7 @@
 					<GridSplitter Grid.Row="1" Height="5" HorizontalAlignment="Stretch" Background="LightGray" />
 
 					<!-- Battlefield Lands -->
-					<Border Grid.Row="2" BorderBrush="Gray" BorderThickness="2" Padding="5"
+					<Border x:Name="BattlefieldLandsZone" Grid.Row="2" BorderBrush="Gray" BorderThickness="2" Padding="5"
 					        PointerReleased="OnDropToBattlefieldLands"
 					        PointerMoved="OnDropZonePointerMoved"
 					        PointerExited="OnDropZonePointerExited">
@@ -777,5 +778,16 @@
 				</Grid>
 			</Border>
 		</Grid>
+
+		<Canvas IsHitTestVisible="False"
+		        Panel.ZIndex="1000">
+			<Border x:Name="DragPreview"
+			        Width="60"
+			        Height="85"
+			        CornerRadius="3"
+			        BorderThickness="1"
+			        Opacity="0.9"
+			        IsVisible="False" />
+		</Canvas>
 	</Grid>
 </UserControl>
