@@ -1455,8 +1455,9 @@ public class PlaytestGameStateViewModelTests
 
         Assert.Equal(2, game.Sideboard.Count);
         Assert.All(game.Sideboard, c => Assert.Equal("Relic of Progenitus", c.CardName));
-        // Only the one main-deck card in library
+        // Only the one main-deck card in library — no duplicates from sideboard restoration
         Assert.Single(game.Library);
+        Assert.Equal("Forest", game.Library[0].CardName);
     }
 
     // ─── SelectedBattlefieldCards sync ────────────────────────────────────────
