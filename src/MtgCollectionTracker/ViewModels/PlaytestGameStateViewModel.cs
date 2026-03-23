@@ -415,9 +415,24 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
             originalCounts.TryGetValue(orig.CardName, out var needed);
             if (present < needed)
             {
-                var sbVm = _cardVmFactory();
-                sbVm.InitializeFrom(orig);
-                Sideboard.Add(sbVm);
+                // Prefer to reuse an existing card VM (likely currently in Library) rather than creating a duplicate.
+                var existingVm = Library.FirstOrDefault(
+                    c => string.Equals(c.CardName, orig.CardName, StringComparison.OrdinalIgnoreCase));
+
+                if (existingVm != null)
+                {
+                    Library.Remove(existingVm);
+                    existingVm.Zone = GameZone.Sideboard;
+                    Sideboard.Add(existingVm);
+                    OnPropertyChanged(nameof(LibraryCount));
+                }
+                else
+                {
+                    var sbVm = _cardVmFactory();
+                    sbVm.InitializeFrom(orig);
+                    Sideboard.Add(sbVm);
+                }
+
                 presentSideboardCounts[orig.CardName] = present + 1;
             }
         }
@@ -917,6 +932,13 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
     {
         var sourceZone = card.Zone;
 
+        // If a selected card is leaving the battlefield, remove it from the selection immediately.
+        if (IsBattlefieldZone(sourceZone) && card.IsSelected)
+        {
+            card.IsSelected = false;
+            SelectedBattlefieldCards.Remove(card);
+        }
+
         // Remove from current zone
         RemoveFromZone(card, sourceZone);
 
@@ -986,10 +1008,27 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Remove any cards from SelectedBattlefieldCards that are no longer on the battlefield,
+    /// keeping IsSelected in sync with the selection collection.
+    /// </summary>
+    private void PruneSelectedBattlefieldCards()
+    {
+        foreach (var card in SelectedBattlefieldCards.ToList())
+        {
+            if (!IsBattlefieldZone(card.Zone))
+            {
+                card.IsSelected = false;
+                SelectedBattlefieldCards.Remove(card);
+            }
+        }
+    }
+
+    /// <summary>
     /// Tap all currently selected battlefield cards
     /// </summary>
     public void TapSelectedCards()
     {
+        PruneSelectedBattlefieldCards();
         foreach (var card in SelectedBattlefieldCards.ToList())
         {
             card.IsTapped = true;
@@ -1001,6 +1040,7 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
     /// </summary>
     public void UntapSelectedCards()
     {
+        PruneSelectedBattlefieldCards();
         foreach (var card in SelectedBattlefieldCards.ToList())
         {
             card.IsTapped = false;
@@ -1012,6 +1052,7 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
     /// </summary>
     public void MoveSelectedBattlefieldCardsTo(GameZone targetZone, CardMoveOrder order = CardMoveOrder.AsSelected)
     {
+        PruneSelectedBattlefieldCards();
         var toMove = SelectedBattlefieldCards.ToList();
         if (order == CardMoveOrder.Random)
         {
