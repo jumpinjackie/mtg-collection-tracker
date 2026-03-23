@@ -731,11 +731,11 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
         var viewModel = new ViewTopXViewModel(_messenger).Configure(
             topCards,
             () => ShuffleLibrary(),
-            (cards, order) => MoveCardsToHand(cards),
-            (cards, order) => MoveCardsToGraveyard(cards, order),
-            (cards, order) => MoveCardsToExile(cards),
-            (cards, order) => MoveCardsToBottomOfLibrary(cards, order),
-            (cards, order) => MoveCardsToTopOfLibrary(cards, order));
+            cards => ReorderTopCards(cards),
+            card => MoveCardsToHand([card]),
+            card => MoveCardsToGraveyard([card], CardMoveOrder.AsSelected),
+            card => MoveCardsToExile([card]),
+            card => MoveCardsToBottomOfLibrary([card], CardMoveOrder.AsSelected));
 
         var dialog = new DialogViewModel(_messenger).WithContent(
             $"View Top {topX} Cards",
@@ -817,6 +817,28 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
             card.Zone = GameZone.Library;
             Library.Insert(0, card);
         }
+        OnPropertyChanged(nameof(LibraryCount));
+    }
+
+    private void ReorderTopCards(IReadOnlyList<PlaytestCardViewModel> cards)
+    {
+        if (cards.Count <= 1)
+        {
+            return;
+        }
+
+        foreach (var card in cards)
+        {
+            Library.Remove(card);
+        }
+
+        for (var index = cards.Count - 1; index >= 0; index--)
+        {
+            var card = cards[index];
+            card.Zone = GameZone.Library;
+            Library.Insert(0, card);
+        }
+
         OnPropertyChanged(nameof(LibraryCount));
     }
 
