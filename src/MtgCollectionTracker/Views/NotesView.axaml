@@ -39,11 +39,11 @@
 				<DockPanel>
 					<StackPanel DockPanel.Dock="Top">
 						<TextBlock Margin="6">Title</TextBlock>
-						<TextBox Text="{Binding SelectedNote.Title}" Watermark="Notes Title" AcceptsReturn="True" TextWrapping="Wrap" />
+						<TextBox Text="{Binding SelectedNote?.Title, TargetNullValue=''}" Watermark="Notes Title" AcceptsReturn="True" TextWrapping="Wrap" />
 					</StackPanel>
 					<DockPanel>
 						<TextBlock Margin="6" DockPanel.Dock="Top">Notes</TextBlock>
-						<TextBox Text="{Binding SelectedNote.Notes}" Watermark="Use this tab to write any notes regarding this collection" AcceptsReturn="True" TextWrapping="Wrap" />
+						<TextBox Text="{Binding SelectedNote?.Notes, TargetNullValue=''}" Watermark="Use this tab to write any notes regarding this collection" AcceptsReturn="True" TextWrapping="Wrap" />
 					</DockPanel>
 				</DockPanel>
 			</DockPanel>

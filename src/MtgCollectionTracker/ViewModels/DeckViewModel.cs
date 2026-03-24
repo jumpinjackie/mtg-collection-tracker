@@ -44,10 +44,10 @@ public partial class DeckViewModel : ViewModelBase
     private string _sideboard;
 
     [ObservableProperty]
-    [NotifyPropertyChangedFor(nameof(HasBanner))]
-    private Task<Bitmap?>? _banner;
+    private Task<Bitmap?> _banner = Task.FromResult<Bitmap?>(null);
 
-    public bool HasBanner => this.Banner != null;
+    [ObservableProperty]
+    private bool _hasBanner;
 
     public bool HasContainer => !string.IsNullOrEmpty(this.ContainerName);
 
@@ -84,9 +84,10 @@ public partial class DeckViewModel : ViewModelBase
         this.ContainerName = deck.ContainerName;
         this.Maindeck = $"MD: {deck.MaindeckTotal}";
         this.Sideboard = $"SB: {deck.SideboardTotal}";
-        this.Banner = (deck.BannerScryfallId != null && _service != null)
-            ? LoadBannerImageAsync(deck.BannerScryfallId)
-            : null;
+        this.HasBanner = deck.BannerScryfallId != null && _service != null;
+        this.Banner = this.HasBanner
+            ? LoadBannerImageAsync(deck.BannerScryfallId!)
+            : Task.FromResult<Bitmap?>(null);
         this.IsCommander = deck.IsCommander;
         this.CommanderName = deck.CommanderName;
         this.IsCommanderValid = deck.IsCommanderValid;

@@ -126,10 +126,10 @@ public partial class PlaytestCardViewModel : ViewModelBase
     private GameZone _zone;
 
     [ObservableProperty]
-    private Task<Bitmap?>? _cardImage;
+    private Task<Bitmap?> _cardImage = Task.FromResult<Bitmap?>(null);
 
     [ObservableProperty]
-    private Task<Bitmap?>? _cardImageLarge;
+    private Task<Bitmap?> _cardImageLarge = Task.FromResult<Bitmap?>(null);
 
     public string? PT
     {
