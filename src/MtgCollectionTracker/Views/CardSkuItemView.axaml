@@ -2,6 +2,7 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			 xmlns:behaviors="clr-namespace:MtgCollectionTracker.Views.Behaviors"
 			 xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="MtgCollectionTracker.Views.CardSkuItemView"
@@ -15,8 +16,13 @@
 		<Border CornerRadius="10" ClipToBounds="True">
 			<Canvas Width="200" Height="280">
 				<Panel Canvas.Left="0" Canvas.Top="0" Canvas.Bottom="0" Canvas.Right="0" Background="#7FFF22DD">
-					<!-- TODO: If this is even possible, do a flip animation for double-faced cards -->
-					<Image Width="200" Stretch="Uniform" Source="{Binding CardImage^}" />
+					<Image x:Name="CardImageElement" Width="200" Stretch="Uniform" Source="{Binding CardImage^}" RenderTransformOrigin="0.5,0.5"
+						   behaviors:CardFaceFlipBehavior.Enabled="{Binding IsDoubleFaced}"
+						   behaviors:CardFaceFlipBehavior.FaceState="{Binding IsFrontFace}">
+						<Image.RenderTransform>
+							<ScaleTransform ScaleX="1" ScaleY="1" />
+						</Image.RenderTransform>
+					</Image>
 					<Panel Height="280" IsVisible="{Binding IsCardImageLoading}">
 						<ProgressBar Width="72" IsIndeterminate="True" VerticalAlignment="Center" />
 					</Panel>
