@@ -294,14 +294,8 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
     void IRecipient<WishlistItemsAddedToCollectionMessage>.Receive(WishlistItemsAddedToCollectionMessage message)
     {
         var result = message.Result;
-        var removedIds = result.CreatedSkus.Select(tuple => tuple.WishlistItemId);
-        var toRemove = Behavior.SelectedItems.Where(i => removedIds.Contains(i.Id)).ToList();
-        foreach (var item in toRemove)
-        {
-            Behavior.SelectedItems.Remove(item);
-            this.Cards.Remove(item);
-        }
-        this.ApplySummary();
+        Behavior.SelectedItems.Clear();
+        this.LoadWishlist();
         Messenger.ToastNotify($"{result.CreatedSkus.Length} wishlist items moved to your collection", Avalonia.Controls.Notifications.NotificationType.Success);
     }
 }

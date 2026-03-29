@@ -1,5 +1,4 @@
-﻿using Avalonia.Controls.Shapes;
-using CommunityToolkit.Mvvm.ComponentModel;
+﻿using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Core.Model;
@@ -7,6 +6,7 @@ using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
@@ -30,14 +30,33 @@ public partial class MoveWishlistItemsToCollectionViewModel : DialogContentViewM
     {
         this.ThrowIfNotDesignMode();
         _service = new StubCollectionTrackingService();
-        this.WishListItems = [];
+        this.WishListItems =
+        [
+            new MoveWishlistSelectionItemViewModel
+            {
+                CardName = "Ancestral Recall",
+                Edition = "LEA",
+                AvailableQty = 2,
+                QuantityToMove = 2
+            }
+        ];
     }
 
-    public ObservableCollection<WishlistItemViewModel> WishListItems { get; private set; }
+    public ObservableCollection<MoveWishlistSelectionItemViewModel> WishListItems { get; private set; } = [];
 
     public MoveWishlistItemsToCollectionViewModel WithData(ObservableCollection<WishlistItemViewModel> items)
     {
-        this.WishListItems = items;
+        this.WishListItems =
+        [
+            ..items.Select(w => new MoveWishlistSelectionItemViewModel
+            {
+                Id = w.Id,
+                CardName = w.CardName,
+                Edition = w.Edition,
+                AvailableQty = w.QuantityNum,
+                QuantityToMove = w.QuantityNum
+            })
+        ];
         return this;
     }
 
@@ -54,11 +73,55 @@ public partial class MoveWishlistItemsToCollectionViewModel : DialogContentViewM
     {
         var arg = new MoveWishlistItemsToCollectionInputModel
         {
-            WishlistItemIds = this.WishListItems.Select(w => w.Id).ToArray(),
+            Items = this.WishListItems
+                .Select(w => new MoveWishlistItemQuantityInputModel(
+                    w.Id,
+                    Math.Clamp(w.QuantityToMove, 1, w.AvailableQty)))
+                .ToArray(),
             ContainerId = this.SelectedContainer?.Id
         };
         var result = await _service.MoveWishlistItemsToCollectionAsync(arg);
         Messenger.Send(new WishlistItemsAddedToCollectionMessage(result));
         Messenger.Send(new CloseDialogMessage());
+    }
+}
+
+public partial class MoveWishlistSelectionItemViewModel : ObservableObject
+{
+    public int Id { get; set; }
+
+    [ObservableProperty]
+    private string _cardName = string.Empty;
+
+    [ObservableProperty]
+    private string _edition = string.Empty;
+
+    [ObservableProperty]
+    private int _availableQty;
+
+    [ObservableProperty]
+    private int _quantityToMove;
+
+    partial void OnAvailableQtyChanged(int value)
+    {
+        if (value < 1)
+        {
+            this.AvailableQty = 1;
+            return;
+        }
+
+        if (this.QuantityToMove > value)
+        {
+            this.QuantityToMove = value;
+        }
+    }
+
+    partial void OnQuantityToMoveChanged(int value)
+    {
+        var clamped = Math.Clamp(value, 1, this.AvailableQty);
+        if (clamped != value)
+        {
+            this.QuantityToMove = clamped;
+        }
     }
 }

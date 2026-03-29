@@ -1663,19 +1663,41 @@ public class CollectionTrackingService : ICollectionTrackingService
 
     public async ValueTask<MoveWishlistItemsToCollectionResult> MoveWishlistItemsToCollectionAsync(MoveWishlistItemsToCollectionInputModel model)
     {
+        if (model.Items.Length == 0)
+            return new MoveWishlistItemsToCollectionResult { CreatedSkus = [] };
+
+        if (model.Items.Any(i => i.Quantity < 1))
+            throw new ArgumentOutOfRangeException(nameof(model), "Move quantities must be at least 1.");
+
+        var requestedById = model.Items.ToDictionary(i => i.WishlistItemId, i => i.Quantity);
+
         using var db = _db.Invoke();
         var items = db.Value.Set<WishlistItem>()
             .Include(wi => wi.Scryfall)
-            .Where(wi => model.WishlistItemIds.Contains(wi.Id))
+            .Where(wi => requestedById.Keys.Contains(wi.Id))
             .ToList();
 
         var converted = new List<(int id, CardSku sku)>();
+        var fullyMoved = new List<WishlistItem>();
         foreach (var item in items)
         {
-            converted.Add(new(item.Id, item.CreateSku(model.ContainerId)));
+            var requestedQty = requestedById[item.Id];
+            if (requestedQty > item.Quantity)
+                throw new InvalidOperationException($"Requested quantity {requestedQty} exceeds wishlist quantity {item.Quantity} for item {item.Id}.");
+
+            converted.Add(new(item.Id, item.CreateSku(model.ContainerId, requestedQty)));
+
+            if (requestedQty == item.Quantity)
+            {
+                fullyMoved.Add(item);
+            }
+            else
+            {
+                item.Quantity -= requestedQty;
+            }
         }
 
-        db.Value.Set<WishlistItem>().RemoveRange(items);
+        db.Value.Set<WishlistItem>().RemoveRange(fullyMoved);
         await db.Value.Set<CardSku>().AddRangeAsync(converted.Select(c => c.sku));
         await db.Value.SaveChangesAsync();
 

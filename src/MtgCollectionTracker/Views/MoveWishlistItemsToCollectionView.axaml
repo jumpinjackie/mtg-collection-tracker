@@ -18,7 +18,7 @@
 		</StackPanel>
 		<ScrollViewer>
 			<StackPanel>
-				<TextBlock Margin="6">Are you sure you want move these wishlist items to your collection?</TextBlock>
+				<TextBlock Margin="6">Choose how many of each wishlist item you want to move to your collection.</TextBlock>
 				<StackPanel>
 					<TextBlock Margin="6">Move these cards to container (cards will be un-parented if no container selected)</TextBlock>
 					<ComboBox Margin="6" SelectedItem="{Binding SelectedContainer}" ItemsSource="{Binding AvailableContainers}">
@@ -41,7 +41,19 @@
 						  Margin="6"
 						  BorderBrush="Gray">
 					<DataGrid.Columns>
-						<DataGridTextColumn Header="Qty" Binding="{Binding RealQty}" />
+						<DataGridTextColumn Header="Wishlist Qty" Binding="{Binding AvailableQty}" />
+						<DataGridTemplateColumn Header="Move Qty" Width="140">
+							<DataGridTemplateColumn.CellTemplate>
+								<DataTemplate x:DataType="vm:MoveWishlistSelectionItemViewModel">
+									<NumericUpDown Value="{Binding QuantityToMove}"
+												   Minimum="1"
+												   Maximum="{Binding AvailableQty}"
+												   FormatString="0"
+												   BorderThickness="0"
+												   Padding="4,0" />
+								</DataTemplate>
+							</DataGridTemplateColumn.CellTemplate>
+						</DataGridTemplateColumn>
 						<DataGridTextColumn Header="Card Name" Binding="{Binding CardName}" Width="*" />
 						<DataGridTextColumn Header="Edition" Binding="{Binding Edition}" />
 					</DataGrid.Columns>

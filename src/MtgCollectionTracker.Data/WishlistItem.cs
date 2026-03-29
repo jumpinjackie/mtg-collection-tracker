@@ -127,16 +127,21 @@ public class WishlistItem : IScryfallMetaLinkable
     /// Creates a new SKU for this wishlist item
     /// </summary>
     /// <param name="containerId"></param>
+    /// <param name="quantity">Optional quantity to move. If omitted, moves the full wishlist quantity.</param>
     /// <returns></returns>
-    public CardSku CreateSku(int? containerId)
+    public CardSku CreateSku(int? containerId, int? quantity = null)
     {
+        var skuQuantity = quantity ?? this.Quantity;
+        if (skuQuantity < 1 || skuQuantity > this.Quantity)
+            throw new ArgumentOutOfRangeException(nameof(quantity), "Quantity to move must be between 1 and the wishlist quantity.");
+
         var sku = new CardSku
         {
             CardName = this.CardName,
             NormalizedCardName = Utils.NormalizeCardName(this.CardName),
             Edition = this.Edition,
             CollectorNumber = this.CollectorNumber,
-            Quantity = this.Quantity,
+            Quantity = skuQuantity,
             IsLand = this.IsLand,
             ScryfallId = this.ScryfallId,
             Condition = this.Condition,
