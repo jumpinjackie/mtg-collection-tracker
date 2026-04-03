@@ -30,8 +30,9 @@ jobs:
         dotnet-version: 10.0.x
     - name: Add appimagetool
       run: |
-        sudo wget -q https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-x86_64.AppImage -O /usr/local/bin/appimagetool
-        sudo chmod +x /usr/local/bin/appimagetool
+        sudo wget -q https://github.com/AppImage/appimagetool/releases/download/1.9.1/appimagetool-x86_64.AppImage -O /usr/local/bin/appimagetool-x86_64.AppImage
+        sudo chmod +x /usr/local/bin/appimagetool-x86_64.AppImage
+        sudo ln -s /usr/local/bin/appimagetool-x86_64.AppImage /usr/local/bin/appimagetool
         appimagetool --version
     #- name: Add wasm workload
     #  run: dotnet workload install wasm-tools
