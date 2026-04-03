@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "MtgCollectionTracker.Console": {
-      "commandName": "Project",
-      "commandLineArgs": "update-card-sku --card-sku-ids 2949 2950 --is-land"
-    }
-  }
-}
