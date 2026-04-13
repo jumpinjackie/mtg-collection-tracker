@@ -1,6 +1,5 @@
 ﻿using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
-using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using Microsoft.EntityFrameworkCore;
 using MtgCollectionTracker.Data;
@@ -18,10 +17,6 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        // Line below is needed to remove Avalonia data validation.
-        // Without this line you will get duplicate validations from both Avalonia and CT
-        BindingPlugins.DataValidators.RemoveAt(0);
-
         Action<Container>? init = null;
         Visual? root = null;
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
@@ -42,6 +37,11 @@ public partial class App : Application
                 singleViewPlatform.MainView = (MainView)root;
             };
         }
+        if (root is null || init is null)
+        {
+            throw new InvalidOperationException("Unsupported application lifetime.");
+        }
+
         var cnt = new Container(root);
         if (!Avalonia.Controls.Design.IsDesignMode)
         {

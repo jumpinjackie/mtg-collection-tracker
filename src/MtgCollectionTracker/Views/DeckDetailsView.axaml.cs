@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using MtgCollectionTracker.ViewModels;
 
 namespace MtgCollectionTracker.Views
@@ -19,9 +20,7 @@ namespace MtgCollectionTracker.Views
                 var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
                 if (clipboard != null)
                 {
-                    var dataObject = new DataObject();
-                    dataObject.Set(DataFormats.Text, text);
-                    await clipboard.SetDataObjectAsync(dataObject);
+                    await clipboard.SetTextAsync(text);
 
                     var vm = this.DataContext as DeckDetailsViewModel;
                     if (vm != null)

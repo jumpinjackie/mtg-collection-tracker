@@ -1,5 +1,6 @@
 using Avalonia.Controls;
 using Avalonia.Input;
+using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
 using System;
@@ -116,7 +117,7 @@ public partial class AddCardsView : UserControl
         if (topLevel?.FocusManager?.GetFocusedElement() is TextBox textBox
             && topLevel.Clipboard is { } clipboard)
         {
-            var text = await clipboard.GetTextAsync();
+            var text = await clipboard.TryGetTextAsync();
             if (!string.IsNullOrEmpty(text))
             {
                 textBox.Text = text;
