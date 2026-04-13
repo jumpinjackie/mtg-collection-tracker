@@ -62,7 +62,7 @@ jobs:
     #- name: Publish WASM AppBundle
     #  run: |
     #    dotnet publish -c Release -r browser-wasm ./src/Maestro.Browser
-    #    cp -R ./src/Maestro.Browser/bin/Release/net8.0/browser-wasm/AppBundle ./artifacts/browser-wasm
+    #    cp -R ./src/Maestro.Browser/bin/Release/net10.0/browser-wasm/AppBundle ./artifacts/browser-wasm
     #    tar -zcf ./artifacts/files/MtgCollectionTracker-${{env.VERSION}}-browser-wasm.tar.gz -C ./artifacts/browser-wasm .
     - name: Publish linux appimage
       run: pupnet --runtime linux-x64 --kind appimage --skip-yes --app-version ${{env.APP_VERSION}}
