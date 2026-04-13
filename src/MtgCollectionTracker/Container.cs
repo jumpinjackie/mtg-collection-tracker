@@ -88,7 +88,8 @@ public partial class Container : IContainer<MainViewModel>
     public IMessenger GetMessenger() => WeakReferenceMessenger.Default;
 
     [Factory(Scope.SingleInstance)]
-    public IStorageProvider GetStorageProvider() => TopLevel.GetTopLevel(_root).StorageProvider;
+    public IStorageProvider GetStorageProvider() => TopLevel.GetTopLevel(_root)?.StorageProvider
+        ?? throw new InvalidOperationException("Unable to resolve storage provider from current top-level visual.");
 
     class ScryfallHttpHandler : DelegatingHandler
     {

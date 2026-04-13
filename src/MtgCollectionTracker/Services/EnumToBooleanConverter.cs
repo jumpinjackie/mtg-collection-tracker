@@ -7,12 +7,12 @@ namespace MtgCollectionTracker.Services
 {
     public class EnumToBooleanConverter : IValueConverter
     {
-        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? Convert(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
-            return value?.Equals(parameter);
+            return value?.Equals(parameter) == true;
         }
 
-        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        public object? ConvertBack(object? value, Type targetType, object? parameter, CultureInfo culture)
         {
             return value?.Equals(true) == true ? parameter : BindingOperations.DoNothing;
         }

@@ -116,7 +116,7 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
-    public IEnumerable<DeckSummaryModel> GetDecks(DeckFilterModel filter)
+    public IEnumerable<DeckSummaryModel> GetDecks(DeckFilterModel? filter)
     {
         throw new System.NotImplementedException();
     }

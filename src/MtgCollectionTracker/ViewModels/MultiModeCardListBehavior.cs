@@ -168,7 +168,7 @@ public partial class MultiModeCardListBehavior<T> : ObservableObject where T : c
     [ObservableProperty]
     private T? _selectedRow;
 
-    partial void OnSelectedRowChanged(T? oldValue, T newValue)
+    partial void OnSelectedRowChanged(T? oldValue, T? newValue)
     {
         // Sync with SelectedCardSkus to ensure existing bound commands work.
         // NOTE: Can only sync one item as Avalonia DataGrid SelectedItems is currently not bindable :(
