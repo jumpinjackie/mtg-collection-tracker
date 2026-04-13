@@ -18,6 +18,10 @@ public partial class LoadCardsViewModel : DialogContentViewModel
         "^(?<qty>\\d+)\\s+(?<name>.+?)\\s+\\((?<edition>[^)]+)\\)\\s+(?<collector>\\S+)(?:\\s+(?<foil>\\*?F\\*?))?\\s*$",
         RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
 
+    static readonly Regex BasicEditionFormat = new(
+        "^(?<qty>\\d+)\\s+(?<name>.+?)\\s+\\((?<edition>[^)]+)\\)\\s*$",
+        RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.IgnoreCase);
+
     static readonly Regex BasicFormat = new(
         "^(?<qty>\\d+)\\s+(?<name>.+?)\\s*$",
         RegexOptions.Compiled | RegexOptions.CultureInvariant);
@@ -105,6 +109,20 @@ public partial class LoadCardsViewModel : DialogContentViewModel
             if (name.Length > 0 && edition.Length > 0 && collectorNumber.Length > 0)
             {
                 parsedCard = new LoadCardsInputItem(qty, name, edition, collectorNumber, isFoil);
+                return true;
+            }
+        }
+
+        var basicEditionMatch = BasicEditionFormat.Match(line);
+        if (basicEditionMatch.Success
+            && int.TryParse(basicEditionMatch.Groups["qty"].Value, out qty)
+            && qty > 0)
+        {
+            var name = basicEditionMatch.Groups["name"].Value.Trim();
+            var edition = basicEditionMatch.Groups["edition"].Value.Trim();
+            if (name.Length > 0 && edition.Length > 0)
+            {
+                parsedCard = new LoadCardsInputItem(qty, name, edition, null, false);
                 return true;
             }
         }
