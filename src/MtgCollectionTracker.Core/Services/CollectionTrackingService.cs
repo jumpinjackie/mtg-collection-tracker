@@ -325,36 +325,88 @@ public class CollectionTrackingService : ICollectionTrackingService
         else if (query.DeckIds?.Length > 0)
             queryable = queryable.Where(c => c.DeckId != null && query.DeckIds.Contains((int)c.DeckId));
 
+        if (query.Colors?.Any() == true)
+            queryable = ApplyColorFilter(queryable, query.Colors);
+
+        if (query.CardTypes?.Any() == true)
+            queryable = ApplyCardTypeFilter(queryable, query.CardTypes);
+
         var bq = queryable;
         if (query.IncludeScryfallMetadata || query.Colors?.Any() == true || query.CardTypes?.Any() == true)
             bq = queryable.Include(c => c.Scryfall);
 
-        var results = ToCardSkuModel(bq.OrderBy(c => c.CardName), db.Value);
-
-        if (query.Colors?.Any() == true)
-        {
-            var selectedColors = query.Colors.ToHashSet();
-            var hasColorless = selectedColors.Contains("C");
-            var nonColorlessColors = selectedColors.Where(c => c != "C").ToHashSet();
-            results = results.Where(c => MatchesColorFilter(c, hasColorless, nonColorlessColors)).ToList();
-        }
-
-        if (query.CardTypes?.Any() == true)
-        {
-            results = results.Where(c => c.CardType != null && query.CardTypes.Any(type => c.CardType.Contains(type, StringComparison.OrdinalIgnoreCase))).ToList();
-        }
-
-        return results;
+        return ToCardSkuModel(bq.OrderBy(c => c.CardName), db.Value);
     }
 
-    private static bool MatchesColorFilter(CardSkuModel card, bool hasColorless, HashSet<string> nonColorlessColors)
+    private static IQueryable<CardSku> ApplyColorFilter(IQueryable<CardSku> queryable, IEnumerable<string> colors)
     {
-        var isColorless = card.Colors == null || card.Colors.Length == 0;
-        if (hasColorless && isColorless)
-            return true;
-        if (nonColorlessColors.Count > 0 && card.Colors != null && card.Colors.Any(color => nonColorlessColors.Contains(color)))
-            return true;
-        return false;
+        var normalizedColors = colors
+            .Where(color => !string.IsNullOrWhiteSpace(color))
+            .Select(color => color.Trim().ToUpperInvariant())
+            .Distinct()
+            .ToArray();
+
+        if (normalizedColors.Length == 0)
+            return queryable;
+
+        var hasColorless = normalizedColors.Contains("C");
+        var nonColorlessColors = normalizedColors.Where(color => color != "C").ToArray();
+
+        return queryable.Where(c =>
+            c.Scryfall != null &&
+            (
+                (hasColorless && (c.Scryfall.Colors == null || c.Scryfall.Colors.Length == 0))
+                || (nonColorlessColors.Length > 0
+                    && c.Scryfall.Colors != null
+                    && c.Scryfall.Colors.Any(color => nonColorlessColors.Contains(color)))
+            ));
+    }
+
+    private static IQueryable<CardSku> ApplyCardTypeFilter(IQueryable<CardSku> queryable, IEnumerable<string> cardTypes)
+    {
+        var normalizedCardTypes = cardTypes
+            .Where(cardType => !string.IsNullOrWhiteSpace(cardType))
+            .Select(cardType => cardType.Trim().ToLowerInvariant())
+            .Distinct()
+            .ToArray();
+
+        if (normalizedCardTypes.Length == 0)
+            return queryable;
+
+        Expression<Func<CardSku, bool>> predicate = c => false;
+        foreach (var cardType in normalizedCardTypes)
+        {
+            var localCardType = cardType;
+            predicate = Or(predicate, c => c.Scryfall != null
+                && c.Scryfall.CardType != null
+                && c.Scryfall.CardType.ToLower().Contains(localCardType));
+        }
+
+        return queryable.Where(predicate);
+    }
+
+    private static Expression<Func<T, bool>> Or<T>(Expression<Func<T, bool>> left, Expression<Func<T, bool>> right)
+    {
+        var parameter = left.Parameters[0];
+        var rightBody = new ReplaceParameterVisitor(right.Parameters[0], parameter).Visit(right.Body)!;
+        return Expression.Lambda<Func<T, bool>>(Expression.OrElse(left.Body, rightBody), parameter);
+    }
+
+    private sealed class ReplaceParameterVisitor : ExpressionVisitor
+    {
+        private readonly ParameterExpression _source;
+        private readonly ParameterExpression _target;
+
+        public ReplaceParameterVisitor(ParameterExpression source, ParameterExpression target)
+        {
+            _source = source;
+            _target = target;
+        }
+
+        protected override Expression VisitParameter(ParameterExpression node)
+        {
+            return node == _source ? _target : base.VisitParameter(node);
+        }
     }
 
     private static List<CardSkuModel> ToCardSkuModel(IQueryable<CardSku> skus, CardsDbContext db, string currency = DefaultPriceCurrency)
