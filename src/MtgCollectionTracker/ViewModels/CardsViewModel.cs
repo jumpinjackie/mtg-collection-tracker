@@ -124,8 +124,37 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
             }
 
             this.OnPropertyChanged(nameof(CanSearch));
-            this.PerformSearchCommand.Execute(null);
         }
+    }
+
+    [RelayCommand]
+    private void ApplyColorFilters()
+    {
+        this.PerformSearchCommand.Execute(null);
+    }
+
+    [RelayCommand]
+    private void ClearColorFilters()
+    {
+        foreach (var item in this.ColorItems)
+            item.IsSelected = false;
+
+        this.PerformSearchCommand.Execute(null);
+    }
+
+    [RelayCommand]
+    private void ApplyCardTypeFilters()
+    {
+        this.PerformSearchCommand.Execute(null);
+    }
+
+    [RelayCommand]
+    private void ClearCardTypeFilters()
+    {
+        foreach (var item in this.CardTypeItems)
+            item.IsSelected = false;
+
+        this.PerformSearchCommand.Execute(null);
     }
 
     private void Tags_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)

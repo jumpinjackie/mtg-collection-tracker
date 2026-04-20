@@ -26,36 +26,48 @@
 				<DropDownButton IsEnabled="{Binding !Behavior.IsBusy}" Content="{Binding ColorFilterLabel}">
 					<DropDownButton.Flyout>
 						<Flyout Placement="BottomEdgeAlignedLeft">
-							<ListBox ItemsSource="{Binding ColorItems}" Background="Transparent" Padding="4">
-								<ListBox.Styles>
-									<Style Selector="ListBoxItem">
-										<Setter Property="Padding" Value="2 1" />
-									</Style>
-								</ListBox.Styles>
-								<ListBox.ItemTemplate>
-									<DataTemplate x:DataType="vm:FilterItemViewModel">
-										<CheckBox IsChecked="{Binding IsSelected}" Content="{Binding DisplayName}" />
-									</DataTemplate>
-								</ListBox.ItemTemplate>
-							</ListBox>
+							<StackPanel Spacing="6" MinWidth="200">
+								<ListBox ItemsSource="{Binding ColorItems}" Background="Transparent" Padding="4">
+									<ListBox.Styles>
+										<Style Selector="ListBoxItem">
+											<Setter Property="Padding" Value="2 1" />
+										</Style>
+									</ListBox.Styles>
+									<ListBox.ItemTemplate>
+										<DataTemplate x:DataType="vm:FilterItemViewModel">
+											<CheckBox IsChecked="{Binding IsSelected}" Content="{Binding DisplayName}" />
+										</DataTemplate>
+									</ListBox.ItemTemplate>
+								</ListBox>
+								<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="4 0 4 4">
+									<Button IsEnabled="{Binding !Behavior.IsBusy}" Command="{Binding ClearColorFiltersCommand}" Content="Clear" />
+									<Button IsEnabled="{Binding !Behavior.IsBusy}" Command="{Binding ApplyColorFiltersCommand}" Content="Apply" />
+								</StackPanel>
+							</StackPanel>
 						</Flyout>
 					</DropDownButton.Flyout>
 				</DropDownButton>
 				<DropDownButton IsEnabled="{Binding !Behavior.IsBusy}" Content="{Binding CardTypeFilterLabel}">
 					<DropDownButton.Flyout>
 						<Flyout Placement="BottomEdgeAlignedLeft">
-							<ListBox ItemsSource="{Binding CardTypeItems}" Background="Transparent" Padding="4">
-								<ListBox.Styles>
-									<Style Selector="ListBoxItem">
-										<Setter Property="Padding" Value="2 1" />
-									</Style>
-								</ListBox.Styles>
-								<ListBox.ItemTemplate>
-									<DataTemplate x:DataType="vm:FilterItemViewModel">
-										<CheckBox IsChecked="{Binding IsSelected}" Content="{Binding DisplayName}" />
-									</DataTemplate>
-								</ListBox.ItemTemplate>
-							</ListBox>
+							<StackPanel Spacing="6" MinWidth="220">
+								<ListBox ItemsSource="{Binding CardTypeItems}" Background="Transparent" Padding="4">
+									<ListBox.Styles>
+										<Style Selector="ListBoxItem">
+											<Setter Property="Padding" Value="2 1" />
+										</Style>
+									</ListBox.Styles>
+									<ListBox.ItemTemplate>
+										<DataTemplate x:DataType="vm:FilterItemViewModel">
+											<CheckBox IsChecked="{Binding IsSelected}" Content="{Binding DisplayName}" />
+										</DataTemplate>
+									</ListBox.ItemTemplate>
+								</ListBox>
+								<StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Spacing="8" Margin="4 0 4 4">
+									<Button IsEnabled="{Binding !Behavior.IsBusy}" Command="{Binding ClearCardTypeFiltersCommand}" Content="Clear" />
+									<Button IsEnabled="{Binding !Behavior.IsBusy}" Command="{Binding ApplyCardTypeFiltersCommand}" Content="Apply" />
+								</StackPanel>
+							</StackPanel>
 						</Flyout>
 					</DropDownButton.Flyout>
 				</DropDownButton>
