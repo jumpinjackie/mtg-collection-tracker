@@ -566,6 +566,7 @@ app.MapGet("/api/images/{scryfallId}/front/large", async (
     string scryfallId,
     ICollectionTrackingService svc) =>
 {
+    if (!IsValidScryfallId(scryfallId)) return Results.BadRequest("Invalid Scryfall ID");
     var stream = await svc.GetLargeFrontFaceImageAsync(scryfallId);
     return stream is null ? Results.NotFound() : Results.Stream(stream, "image/jpeg");
 });
@@ -574,6 +575,7 @@ app.MapGet("/api/images/{scryfallId}/front/small", async (
     string scryfallId,
     ICollectionTrackingService svc) =>
 {
+    if (!IsValidScryfallId(scryfallId)) return Results.BadRequest("Invalid Scryfall ID");
     var stream = await svc.GetSmallFrontFaceImageAsync(scryfallId);
     return stream is null ? Results.NotFound() : Results.Stream(stream, "image/jpeg");
 });
@@ -582,6 +584,7 @@ app.MapGet("/api/images/{scryfallId}/back/large", async (
     string scryfallId,
     ICollectionTrackingService svc) =>
 {
+    if (!IsValidScryfallId(scryfallId)) return Results.BadRequest("Invalid Scryfall ID");
     var stream = await svc.GetLargeBackFaceImageAsync(scryfallId);
     return stream is null ? Results.NotFound() : Results.Stream(stream, "image/jpeg");
 });
@@ -590,6 +593,7 @@ app.MapGet("/api/images/{scryfallId}/back/small", async (
     string scryfallId,
     ICollectionTrackingService svc) =>
 {
+    if (!IsValidScryfallId(scryfallId)) return Results.BadRequest("Invalid Scryfall ID");
     var stream = await svc.GetSmallBackFaceImageAsync(scryfallId);
     return stream is null ? Results.NotFound() : Results.Stream(stream, "image/jpeg");
 });
@@ -863,6 +867,14 @@ app.MapGet("/api/operations/{operationId}/events", async (
 });
 
 app.Run();
+
+// ── Local helper ──────────────────────────────────────────────────────────────
+
+/// <summary>Validates that a Scryfall ID contains only alphanumeric characters and hyphens.</summary>
+static bool IsValidScryfallId(string scryfallId) =>
+    !string.IsNullOrEmpty(scryfallId) &&
+    scryfallId.Length <= 64 &&
+    scryfallId.All(c => char.IsAsciiLetterOrDigit(c) || c == '-');
 
 // ── Helper types ──────────────────────────────────────────────────────────────
 

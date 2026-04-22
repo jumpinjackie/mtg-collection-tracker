@@ -10,7 +10,7 @@ public class WishlistBuyingListModel
 
     /// <summary>Read-only view of the buying list grouped by vendor.</summary>
     public IReadOnlyDictionary<string, IReadOnlyList<BuyingListItem>> Entries =>
-        _itemsByVendor.ToDictionary(kv => kv.Key, kv => (IReadOnlyList<BuyingListItem>)kv.Value);
+        _itemsByVendor.ToDictionary(kv => kv.Key, kv => (IReadOnlyList<BuyingListItem>)kv.Value.AsReadOnly());
 
     public void Add(string vendor, BuyingListItem item)
     {
