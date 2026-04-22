@@ -16,16 +16,20 @@ class Program
     [STAThread]
     public static void Main(string[] args)
     {
-        var settings = AppSettings.Load();
         EmbeddedServerHost? serverHost = null;
 
-        if (settings.Mode == AppMode.Server)
+        // Register a hook that starts the embedded server (if needed) after the user
+        // confirms their mode selection in the startup window.
+        App.AfterModeSelected = settings =>
         {
-            var dbPath = settings.DbPath != null
-                ? Path.GetFullPath(settings.DbPath)
-                : Path.GetFullPath("collection.sqlite");
-            serverHost = EmbeddedServerHost.Start(settings.ServerPort, settings.HostApiKey, dbPath);
-        }
+            if (settings.Mode == AppMode.Server)
+            {
+                var dbPath = settings.DbPath != null
+                    ? Path.GetFullPath(settings.DbPath)
+                    : Path.GetFullPath("collection.sqlite");
+                serverHost = EmbeddedServerHost.Start(settings.ServerPort, settings.HostApiKey, dbPath);
+            }
+        };
 
         try
         {
