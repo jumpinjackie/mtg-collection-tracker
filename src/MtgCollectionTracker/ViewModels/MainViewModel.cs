@@ -41,7 +41,8 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
                          Func<PlaytestingViewModel> playtesting,
                          ICollectionTrackingService service,
                          Func<DialogViewModel> dialog,
-                         Func<ImportCardIdentifiersViewModel> importCardIdentifiers)
+                         Func<ImportCardIdentifiersViewModel> importCardIdentifiers,
+                         AppSettings appSettings)
     {
         this.Cards = cards();
         this.Decks = decks();
@@ -54,6 +55,9 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
         _service = service;
         _dialog = dialog;
         _importCardIdentifiers = importCardIdentifiers;
+        IsServerMode = appSettings.Mode == AppMode.Server;
+        IsRemoteClientMode = appSettings.Mode == AppMode.RemoteClient;
+        ServerPort = appSettings.ServerPort;
         this.IsActive = true;
 
         // Defer the startup check until after the window is shown
@@ -207,6 +211,15 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
 
     [ObservableProperty]
     private bool _isBusy;
+
+    /// <summary>True when this app instance is running as a sharing server.</summary>
+    public bool IsServerMode { get; }
+
+    /// <summary>True when this app instance is connected to a remote server.</summary>
+    public bool IsRemoteClientMode { get; }
+
+    /// <summary>Port the embedded server is listening on (valid when <see cref="IsServerMode"/> is true).</summary>
+    public int ServerPort { get; }
 
     public WindowNotificationManager? NotificationManager { get; set; }
 }

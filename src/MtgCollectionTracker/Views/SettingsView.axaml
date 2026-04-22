@@ -25,5 +25,8 @@
 		<TabItem Header="Database">
 			<views:DatabaseMaintenanceView DataContext="{Binding Maintenance}" />
 		</TabItem>
+		<TabItem Header="Connection">
+			<views:ConnectionSettingsView DataContext="{Binding Connection}" />
+		</TabItem>
 	</TabControl>
 </UserControl>

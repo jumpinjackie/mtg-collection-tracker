@@ -43,7 +43,7 @@ public partial class App : Application
         }
 
         var cnt = new Container(root);
-        if (!Avalonia.Controls.Design.IsDesignMode)
+        if (!Avalonia.Controls.Design.IsDesignMode && cnt.Mode != AppMode.RemoteClient)
         {
             using (var db = new CardsDbContext(cnt.CreateDbContextOptions()))
             {
