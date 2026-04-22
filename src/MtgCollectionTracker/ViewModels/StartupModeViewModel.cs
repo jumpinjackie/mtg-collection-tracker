@@ -31,11 +31,27 @@ public partial class StartupModeViewModel : ObservableObject
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(IsRemoteClientMode))]
     [NotifyPropertyChangedFor(nameof(IsServerMode))]
+    [NotifyPropertyChangedFor(nameof(ModeDescription))]
     private AppMode _mode = AppMode.Local;
 
     public bool IsRemoteClientMode => Mode == AppMode.RemoteClient;
 
     public bool IsServerMode => Mode == AppMode.Server;
+
+    /// <summary>A human-readable description of the currently selected <see cref="Mode"/>.</summary>
+    public string ModeDescription => Mode switch
+    {
+        AppMode.Local =>
+            "Use the local collection database on this machine. " +
+            "This is the default mode for a single-machine setup.",
+        AppMode.Server =>
+            "Start an embedded sharing server so that other devices on your local network " +
+            "can connect to this machine's collection database using Remote Client mode.",
+        AppMode.RemoteClient =>
+            "Connect to a remote MTG Collection Tracker instance running in Server mode. " +
+            "All operations are forwarded to that server.",
+        _ => string.Empty,
+    };
 
     // ── Remote client settings ────────────────────────────────────────────────
 

@@ -20,6 +20,8 @@
         <StackPanel Spacing="6">
             <TextBlock>Mode</TextBlock>
             <ComboBox SelectedItem="{Binding Mode}" ItemsSource="{Binding Modes}" Width="260" />
+            <TextBlock TextWrapping="Wrap" Foreground="Gray" FontSize="11" MaxWidth="460"
+                       HorizontalAlignment="Left" Text="{Binding ModeDescription}" />
         </StackPanel>
 
         <!-- Remote client settings -->
