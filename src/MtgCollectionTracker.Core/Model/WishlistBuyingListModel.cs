@@ -8,6 +8,10 @@ public class WishlistBuyingListModel
 {
     readonly Dictionary<string, List<BuyingListItem>> _itemsByVendor = new();
 
+    /// <summary>Read-only view of the buying list grouped by vendor.</summary>
+    public IReadOnlyDictionary<string, IReadOnlyList<BuyingListItem>> Entries =>
+        _itemsByVendor.ToDictionary(kv => kv.Key, kv => (IReadOnlyList<BuyingListItem>)kv.Value);
+
     public void Add(string vendor, BuyingListItem item)
     {
         if (!_itemsByVendor.ContainsKey(vendor))
