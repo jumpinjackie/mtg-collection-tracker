@@ -9,6 +9,7 @@ using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.ViewModels;
 using MtgCollectionTracker.Views;
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MtgCollectionTracker;
@@ -96,12 +97,20 @@ public partial class App : Application
         Dispatcher.UIThread.Post(() => ShowExceptionDialog(ex));
     }
 
+    // 0 = no dialog open, 1 = dialog already open.  Use Interlocked for thread-safe compare-and-swap.
+    private static int _exceptionDialogVisible;
+
     private static void ShowExceptionDialog(Exception ex)
     {
+        // Only ever show one error dialog at a time – drop subsequent exceptions while one is open.
+        if (Interlocked.CompareExchange(ref _exceptionDialogVisible, 1, 0) != 0)
+            return;
+
         var errorVm = new UnhandledExceptionViewModel
         {
             Message = ex.Message,
-            Details = ex.ToString()
+            Details = ex.ToString(),
+            OnClosed = () => Interlocked.Exchange(ref _exceptionDialogVisible, 0)
         };
         var dialogVm = new DialogViewModel();
         dialogVm.WithContent("An error occurred", errorVm);

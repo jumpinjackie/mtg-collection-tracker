@@ -2,6 +2,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
+using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
@@ -109,9 +111,17 @@ public partial class DeckViewModel : ViewModelBase
 
     private async Task<Bitmap?> LoadBannerImageAsync(string scryfallId)
     {
-        using var stream = await _service!.GetSmallFrontFaceImageAsync(scryfallId);
-        if (stream != null)
-            return new Bitmap(stream);
+        try
+        {
+            using var stream = await _service!.GetSmallFrontFaceImageAsync(scryfallId);
+            if (stream != null)
+                return new Bitmap(stream);
+        }
+        catch (Exception ex)
+        {
+            // Image data could not be decoded (e.g. corrupted cache entry) – treat as no banner.
+            Debug.WriteLine($"[DeckViewModel] Failed to decode banner image for {scryfallId}: {ex.Message}");
+        }
         return null;
     }
 }

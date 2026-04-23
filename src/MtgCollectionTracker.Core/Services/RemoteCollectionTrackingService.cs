@@ -153,7 +153,7 @@ public class RemoteCollectionTrackingService : ICollectionTrackingService
     public IEnumerable<CardSkuModel> GetCards(CardQueryModel query)
     {
         var qs = new List<(string, string?)>();
-        if (query.SearchFilter != null) qs.Add(("searchFilter", query.SearchFilter));
+        if (!string.IsNullOrWhiteSpace(query.SearchFilter)) qs.Add(("searchFilter", query.SearchFilter));
         if (query.NotInDecks) qs.Add(("notInDecks", "true"));
         if (query.NoProxies) qs.Add(("noProxies", "true"));
         if (query.UnParented) qs.Add(("unParented", "true"));
