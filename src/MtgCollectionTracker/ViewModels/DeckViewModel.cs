@@ -119,9 +119,12 @@ public partial class DeckViewModel : ViewModelBase
         }
         catch (Exception ex)
         {
-            // Image data could not be decoded (e.g. corrupted cache entry) – treat as no banner.
+            // Image data could not be decoded (e.g. corrupted cache entry).
             Debug.WriteLine($"[DeckViewModel] Failed to decode banner image for {scryfallId}: {ex.Message}");
         }
+
+        // Fall back to the stock deckbox icon by clearing the banner flag.
+        HasBanner = false;
         return null;
     }
 }
