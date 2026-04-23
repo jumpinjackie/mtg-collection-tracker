@@ -1,3 +1,4 @@
+using Avalonia.Controls.ApplicationLifetimes;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Services.Messaging;
@@ -14,5 +15,14 @@ public partial class UnhandledExceptionViewModel : DialogContentViewModel
     private void Close()
     {
         Messenger.Send(new CloseDialogMessage());
+    }
+
+    [RelayCommand]
+    private static void Quit()
+    {
+        if (Avalonia.Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
+            desktop.Shutdown(1);
+        else
+            System.Environment.Exit(1);
     }
 }
