@@ -123,18 +123,18 @@ app.MapPost("/api/tags", async (
 // ── Cards ─────────────────────────────────────────────────────────────────────
 
 app.MapGet("/api/cards", (
+    ICollectionTrackingService svc,
     string? searchFilter,
-    bool notInDecks,
-    bool noProxies,
-    bool unParented,
-    bool missingMetadata,
-    bool includeScryfallMetadata,
-    string? deckIds,
-    string? containerIds,
-    string? tags,
-    string? colors,
-    string? cardTypes,
-    ICollectionTrackingService svc) =>
+    bool notInDecks = false,
+    bool noProxies = false,
+    bool unParented = false,
+    bool missingMetadata = false,
+    bool includeScryfallMetadata = false,
+    string? deckIds = null,
+    string? containerIds = null,
+    string? tags = null,
+    string? colors = null,
+    string? cardTypes = null) =>
 {
     var query = new CardQueryModel
     {
@@ -162,11 +162,11 @@ app.MapGet("/api/cards/isBasicLand/{cardName}", (string cardName, ICollectionTra
     Results.Ok(svc.IsBasicLand(cardName)));
 
 app.MapGet("/api/cards/container/{containerId:int}", (
+    ICollectionTrackingService svc,
     int containerId,
     int page,
     int? pageSize,
-    bool missingMetadata,
-    ICollectionTrackingService svc) =>
+    bool missingMetadata = false) =>
 {
     var opts = new FetchContainerPageModel
     {
