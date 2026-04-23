@@ -1,11 +1,15 @@
 ﻿using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
+using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.EntityFrameworkCore;
 using MtgCollectionTracker.Data;
+using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.ViewModels;
 using MtgCollectionTracker.Views;
 using System;
+using System.Threading.Tasks;
 
 namespace MtgCollectionTracker;
 
@@ -26,6 +30,11 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
+        // Install global unhandled exception handlers so errors are shown in a dialog
+        // rather than crashing the app.
+        Dispatcher.UIThread.UnhandledException += OnUiThreadUnhandledException;
+        TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var startupVm = new StartupModeViewModel();
@@ -72,5 +81,30 @@ public partial class App : Application
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private static void OnUiThreadUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+    {
+        e.Handled = true;
+        ShowExceptionDialog(e.Exception);
+    }
+
+    private static void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
+    {
+        e.SetObserved();
+        var ex = e.Exception.InnerException ?? e.Exception;
+        Dispatcher.UIThread.Post(() => ShowExceptionDialog(ex));
+    }
+
+    private static void ShowExceptionDialog(Exception ex)
+    {
+        var errorVm = new UnhandledExceptionViewModel
+        {
+            Message = ex.Message,
+            Details = ex.ToString()
+        };
+        var dialogVm = new DialogViewModel();
+        dialogVm.WithContent("An error occurred", errorVm);
+        WeakReferenceMessenger.Default.Send(new OpenDialogMessage { ViewModel = dialogVm });
     }
 }

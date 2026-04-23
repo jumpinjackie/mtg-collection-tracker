@@ -1,0 +1,29 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
+             mc:Ignorable="d" d:DesignWidth="600" d:DesignHeight="400"
+             x:Class="MtgCollectionTracker.Views.UnhandledExceptionView"
+             x:DataType="vm:UnhandledExceptionViewModel">
+	<DockPanel>
+		<Button DockPanel.Dock="Bottom"
+		        Command="{Binding CloseCommand}"
+		        Content="Close"
+		        HorizontalAlignment="Right"
+		        Margin="0,10,0,0" />
+		<StackPanel Spacing="10">
+			<TextBlock Text="{Binding Message}"
+			           TextWrapping="Wrap"
+			           FontWeight="SemiBold" />
+			<ScrollViewer MaxHeight="300">
+				<TextBox Text="{Binding Details}"
+				         IsReadOnly="True"
+				         FontFamily="Consolas,Menlo,monospace"
+				         FontSize="11"
+				         AcceptsReturn="True"
+				         TextWrapping="Wrap" />
+			</ScrollViewer>
+		</StackPanel>
+	</DockPanel>
+</UserControl>
