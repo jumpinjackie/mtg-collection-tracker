@@ -32,6 +32,7 @@ public partial class StartupModeViewModel : ObservableObject
     [NotifyPropertyChangedFor(nameof(IsRemoteClientMode))]
     [NotifyPropertyChangedFor(nameof(IsServerMode))]
     [NotifyPropertyChangedFor(nameof(ModeDescription))]
+    [NotifyCanExecuteChangedFor(nameof(TestConnectionCommand))]
     private AppMode _mode = AppMode.Local;
 
     public bool IsRemoteClientMode => Mode == AppMode.RemoteClient;
@@ -72,6 +73,7 @@ public partial class StartupModeViewModel : ObservableObject
     // ── Connection test ───────────────────────────────────────────────────────
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(TestConnectionCommand))]
     private bool _isTestingConnection;
 
     [ObservableProperty]
