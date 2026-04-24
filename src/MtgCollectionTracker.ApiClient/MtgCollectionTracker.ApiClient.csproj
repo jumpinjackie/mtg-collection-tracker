@@ -1,0 +1,41 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <!-- Suppress warnings in NSwag-generated code -->
+    <NoWarn>$(NoWarn);1591;8618;8600;8603;8604;8625</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NSwag.MSBuild">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\MtgCollectionTracker.Core\MtgCollectionTracker.Core.csproj" />
+  </ItemGroup>
+
+  <!-- Regenerate the typed client from the committed OpenAPI spec before compilation -->
+  <Target Name="NSwag" BeforeTargets="PrepareForBuild" Condition="Exists('MtgCollectionTracker.Server.json')">
+    <PropertyGroup>
+      <!-- Prefer Net90 if available, fall back to Net80 -->
+      <_NSwagExe Condition="'$(NSwagExe_Net90)' != ''">$(NSwagExe_Net90)</_NSwagExe>
+      <_NSwagExe Condition="'$(_NSwagExe)' == ''">$(NSwagExe_Net80)</_NSwagExe>
+    </PropertyGroup>
+    <Exec Command="$(_NSwagExe) run nswag.json /variables:Configuration=$(Configuration)"
+          WorkingDirectory="$(MSBuildProjectDirectory)" />
+  </Target>
+
+  <ItemGroup>
+    <!-- Mark the generated file so it is not analysed by the IDE -->
+    <Compile Update="Generated\MtgCollectionTrackerApiClient.g.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+    </Compile>
+  </ItemGroup>
+
+</Project>

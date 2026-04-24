@@ -25,6 +25,7 @@ builder.WebHost.ConfigureKestrel(opts => opts.ListenAnyIP(port));
 
 var services = builder.Services;
 
+services.AddOpenApi();
 // DbContext – transient so every Owned<CardsDbContext> wrapper is a fresh unit-of-work.
 services.AddDbContext<CardsDbContext>(
     opts => opts.UseSqlite($"Data Source={dbPath}"),
@@ -71,11 +72,15 @@ using (var scope = app.Services.CreateScope())
     await db.Database.MigrateAsync();
 }
 
+// OpenAPI document endpoint (design-time spec generation uses this too)
+app.MapOpenApi();
+
 // ── API-key middleware ────────────────────────────────────────────────────────
 
 app.Use(async (context, next) =>
 {
-    if (context.Request.Path.StartsWithSegments("/api/health"))
+    if (context.Request.Path.StartsWithSegments("/api/health") ||
+        context.Request.Path.StartsWithSegments("/openapi"))
     {
         await next(context);
         return;
@@ -101,15 +106,15 @@ app.Use(async (context, next) =>
 // ── Endpoints ─────────────────────────────────────────────────────────────────
 
 // Health
-app.MapGet("/api/health", () => Results.Ok(new { status = "ok", version = "1.0.0" }));
+app.MapGet("/api/health", () => TypedResults.Ok(new { status = "ok", version = "1.0.0" }));
 
 // Languages
 app.MapGet("/api/languages", (ICollectionTrackingService svc) =>
-    Results.Ok(svc.GetLanguages()));
+    TypedResults.Ok(svc.GetLanguages()));
 
 // Tags
 app.MapGet("/api/tags", (ICollectionTrackingService svc) =>
-    Results.Ok(svc.GetTags()));
+    TypedResults.Ok(svc.GetTags()));
 
 app.MapPost("/api/tags", async (
     string[] tags,
@@ -117,7 +122,7 @@ app.MapPost("/api/tags", async (
     CancellationToken cancel) =>
 {
     var result = await svc.ApplyTagsAsync(tags, cancel);
-    return Results.Ok(result);
+    return TypedResults.Ok(result);
 });
 
 // ── Cards ─────────────────────────────────────────────────────────────────────
@@ -130,11 +135,11 @@ app.MapGet("/api/cards", (
     bool unParented = false,
     bool missingMetadata = false,
     bool includeScryfallMetadata = false,
-    string? deckIds = null,
-    string? containerIds = null,
-    string? tags = null,
-    string? colors = null,
-    string? cardTypes = null) =>
+    [Microsoft.AspNetCore.Mvc.FromQuery] int[]? deckIds = null,
+    [Microsoft.AspNetCore.Mvc.FromQuery] int[]? containerIds = null,
+    [Microsoft.AspNetCore.Mvc.FromQuery] string[]? tags = null,
+    [Microsoft.AspNetCore.Mvc.FromQuery] string[]? colors = null,
+    [Microsoft.AspNetCore.Mvc.FromQuery] string[]? cardTypes = null) =>
 {
     var query = new CardQueryModel
     {
@@ -144,22 +149,17 @@ app.MapGet("/api/cards", (
         UnParented = unParented,
         MissingMetadata = missingMetadata,
         IncludeScryfallMetadata = includeScryfallMetadata,
-        DeckIds = string.IsNullOrWhiteSpace(deckIds) ? null
-            : deckIds.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToArray(),
-        ContainerIds = string.IsNullOrWhiteSpace(containerIds) ? null
-            : containerIds.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse).ToArray(),
-        Tags = string.IsNullOrWhiteSpace(tags) ? null
-            : tags.Split(',', StringSplitOptions.RemoveEmptyEntries),
-        Colors = string.IsNullOrWhiteSpace(colors) ? null
-            : colors.Split(',', StringSplitOptions.RemoveEmptyEntries),
-        CardTypes = string.IsNullOrWhiteSpace(cardTypes) ? null
-            : cardTypes.Split(',', StringSplitOptions.RemoveEmptyEntries),
+        DeckIds = deckIds,
+        ContainerIds = containerIds,
+        Tags = tags,
+        Colors = colors,
+        CardTypes = cardTypes,
     };
-    return Results.Ok(svc.GetCards(query));
+    return TypedResults.Ok(svc.GetCards(query));
 });
 
 app.MapGet("/api/cards/isBasicLand/{cardName}", (string cardName, ICollectionTrackingService svc) =>
-    Results.Ok(svc.IsBasicLand(cardName)));
+    TypedResults.Ok(svc.IsBasicLand(cardName)));
 
 app.MapGet("/api/cards/container/{containerId:int}", (
     ICollectionTrackingService svc,
@@ -174,7 +174,7 @@ app.MapGet("/api/cards/container/{containerId:int}", (
         PageSize = pageSize,
         ShowOnlyMissingMetadata = missingMetadata,
     };
-    return Results.Ok(svc.GetCardsForContainer(containerId, opts));
+    return TypedResults.Ok(svc.GetCardsForContainer(containerId, opts));
 });
 
 app.MapGet("/api/cards/{id:guid}", async (
@@ -183,7 +183,7 @@ app.MapGet("/api/cards/{id:guid}", async (
     CancellationToken cancel) =>
 {
     var card = await svc.GetCardSkuByIdAsync(id, cancel);
-    return Results.Ok(card);
+    return TypedResults.Ok(card);
 });
 
 app.MapPost("/api/cards/add", async (
@@ -194,7 +194,7 @@ app.MapPost("/api/cards/add", async (
 {
     var effectiveDeckId = deckId ?? model.DeckId;
     var sku = await svc.AddToDeckOrContainerAsync(containerId, effectiveDeckId, model);
-    return Results.Ok(sku);
+    return TypedResults.Ok(sku);
 });
 
 app.MapPost("/api/cards/addToDeck", async (
@@ -202,7 +202,7 @@ app.MapPost("/api/cards/addToDeck", async (
     ICollectionTrackingService svc) =>
 {
     var sku = await svc.AddToDeckAsync(model);
-    return Results.Ok(sku);
+    return TypedResults.Ok(sku);
 });
 
 app.MapPost("/api/cards/addBatch", async (
@@ -212,7 +212,7 @@ app.MapPost("/api/cards/addBatch", async (
 {
     var (total, proxyTotal, rows) = await svc.AddMultipleToContainerOrDeckAsync(
         req.ContainerId, req.DeckId, req.Items, scryfallApi);
-    return Results.Ok(new { total, proxyTotal, rows });
+    return TypedResults.Ok(new AddBatchResult(total, proxyTotal, rows));
 });
 
 app.MapPut("/api/cards/{id:guid}", async (
@@ -224,7 +224,7 @@ app.MapPut("/api/cards/{id:guid}", async (
 {
     model.Ids = new[] { id };
     var result = await svc.UpdateCardSkuAsync(model, scryfallApi, cancel);
-    return Results.Ok(result);
+    return TypedResults.Ok(result);
 });
 
 app.MapPost("/api/cards/{id:guid}/split", async (
@@ -234,7 +234,7 @@ app.MapPost("/api/cards/{id:guid}/split", async (
 {
     model.CardSkuId = id;
     var sku = await svc.SplitCardSkuAsync(model);
-    return Results.Ok(sku);
+    return TypedResults.Ok(sku);
 });
 
 app.MapPost("/api/cards/{id:guid}/delete", async (
@@ -242,7 +242,7 @@ app.MapPost("/api/cards/{id:guid}/delete", async (
     ICollectionTrackingService svc) =>
 {
     var sku = await svc.DeleteCardSkuAsync(id);
-    return Results.Ok(sku);
+    return TypedResults.Ok(sku);
 });
 
 app.MapPost("/api/cards/removeFromDeck", async (
@@ -250,7 +250,7 @@ app.MapPost("/api/cards/removeFromDeck", async (
     ICollectionTrackingService svc) =>
 {
     var (sku, wasMerged) = await svc.RemoveFromDeckAsync(model);
-    return Results.Ok(new { sku, wasMerged });
+    return TypedResults.Ok(new RemoveFromDeckResult(sku, wasMerged));
 });
 
 app.MapPost("/api/cards/consolidate", async (
@@ -258,7 +258,7 @@ app.MapPost("/api/cards/consolidate", async (
     ICollectionTrackingService svc) =>
 {
     var (skusUpdated, skusRemoved) = await svc.ConsolidateCardSkusAsync(model);
-    return Results.Ok(new { skusUpdated, skusRemoved });
+    return TypedResults.Ok(new ConsolidateResult(skusUpdated, skusRemoved));
 });
 
 app.MapPost("/api/cards/resolveEditions", async (
@@ -267,20 +267,20 @@ app.MapPost("/api/cards/resolveEditions", async (
     IScryfallApiClient scryfallApi) =>
 {
     var result = await svc.ResolveEditionsForCardsAsync(cardNames, scryfallApi);
-    return Results.Ok(result);
+    return TypedResults.Ok(result);
 });
 
 // ── Containers ────────────────────────────────────────────────────────────────
 
 app.MapGet("/api/containers", (ICollectionTrackingService svc) =>
-    Results.Ok(svc.GetContainers()));
+    TypedResults.Ok(svc.GetContainers()));
 
 app.MapPost("/api/containers", async (
     CreateContainerRequest req,
     ICollectionTrackingService svc) =>
 {
     var container = await svc.CreateContainerAsync(req.Name, req.Description);
-    return Results.Ok(container);
+    return TypedResults.Ok(container);
 });
 
 app.MapPut("/api/containers/{id:int}", async (
@@ -289,7 +289,7 @@ app.MapPut("/api/containers/{id:int}", async (
     ICollectionTrackingService svc) =>
 {
     var container = await svc.UpdateContainerAsync(id, req.Name, req.Description);
-    return Results.Ok(container);
+    return TypedResults.Ok(container);
 });
 
 app.MapPost("/api/containers/{id:int}/delete", async (
@@ -299,7 +299,7 @@ app.MapPost("/api/containers/{id:int}/delete", async (
 {
     model.ContainerId = id;
     var result = await svc.DeleteContainerAsync(model);
-    return Results.Ok(result);
+    return TypedResults.Ok(result);
 });
 
 app.MapGet("/api/containers/{id:int}/print", (
@@ -314,35 +314,32 @@ app.MapGet("/api/containers/{id:int}/print", (
 // ── Decks ─────────────────────────────────────────────────────────────────────
 
 app.MapGet("/api/decks", (
-    string? formats,
-    string? deckIds,
+    [Microsoft.AspNetCore.Mvc.FromQuery] string[]? formats,
+    [Microsoft.AspNetCore.Mvc.FromQuery] int[]? deckIds,
     bool? isCommander,
     ICollectionTrackingService svc) =>
 {
     DeckFilterModel? filter = null;
-    if (!string.IsNullOrWhiteSpace(formats) || !string.IsNullOrWhiteSpace(deckIds))
+    if (formats?.Length > 0 || deckIds?.Length > 0)
     {
         filter = new DeckFilterModel
         {
-            Formats = string.IsNullOrWhiteSpace(formats)
-                ? []
-                : formats.Split(',', StringSplitOptions.RemoveEmptyEntries),
-            Ids = string.IsNullOrWhiteSpace(deckIds) ? null
-                : deckIds.Split(',', StringSplitOptions.RemoveEmptyEntries).Select(int.Parse),
+            Formats = formats ?? [],
+            Ids = deckIds,
         };
     }
 
     var decks = svc.GetDecks(filter);
     if (isCommander.HasValue)
         decks = decks.Where(d => d.IsCommander == isCommander.Value);
-    return Results.Ok(decks);
+    return TypedResults.Ok(decks);
 });
 
 app.MapGet("/api/decks/formats", (ICollectionTrackingService svc) =>
-    Results.Ok(svc.GetDeckFormats()));
+    TypedResults.Ok(svc.GetDeckFormats()));
 
 app.MapGet("/api/decks/hasOtherFormats/{format}", (string format, ICollectionTrackingService svc) =>
-    Results.Ok(svc.HasOtherDecksInFormat(format)));
+    TypedResults.Ok(svc.HasOtherDecksInFormat(format)));
 
 app.MapGet("/api/decks/{id:int}", async (
     int id,
@@ -351,7 +348,7 @@ app.MapGet("/api/decks/{id:int}", async (
     CancellationToken cancel) =>
 {
     var deck = await svc.GetDeckAsync(id, scryfallApi, cancel);
-    return Results.Ok(deck);
+    return TypedResults.Ok(deck);
 });
 
 app.MapGet("/api/decks/{id:int}/print", (
@@ -368,7 +365,7 @@ app.MapPost("/api/decks", async (
     ICollectionTrackingService svc) =>
 {
     var deck = await svc.CreateDeckAsync(req.Name, req.Format, req.ContainerId, req.IsCommander);
-    return Results.Ok(deck);
+    return TypedResults.Ok(deck);
 });
 
 app.MapPut("/api/decks/{id:int}", async (
@@ -377,7 +374,7 @@ app.MapPut("/api/decks/{id:int}", async (
     ICollectionTrackingService svc) =>
 {
     var deck = await svc.UpdateDeckAsync(id, req.Name, req.Format, req.ContainerId, req.IsCommander);
-    return Results.Ok(deck);
+    return TypedResults.Ok(deck);
 });
 
 app.MapPost("/api/decks/{id:int}/banner", async (
@@ -386,7 +383,7 @@ app.MapPost("/api/decks/{id:int}/banner", async (
     ICollectionTrackingService svc) =>
 {
     var deck = await svc.SetDeckBannerAsync(id, req.CardSkuId);
-    return Results.Ok(deck);
+    return TypedResults.Ok(deck);
 });
 
 app.MapPost("/api/decks/{id:int}/commander", async (
@@ -395,7 +392,7 @@ app.MapPost("/api/decks/{id:int}/commander", async (
     ICollectionTrackingService svc) =>
 {
     var deck = await svc.SetDeckCommanderAsync(id, req.CommanderSkuId);
-    return Results.Ok(deck);
+    return TypedResults.Ok(deck);
 });
 
 app.MapPost("/api/decks/{id:int}/dismantle", async (
@@ -405,7 +402,7 @@ app.MapPost("/api/decks/{id:int}/dismantle", async (
 {
     model.DeckId = id;
     var result = await svc.DismantleDeckAsync(model);
-    return Results.Ok(result);
+    return TypedResults.Ok(result);
 });
 
 app.MapPost("/api/decks/{id:int}/validate", async (
@@ -414,23 +411,21 @@ app.MapPost("/api/decks/{id:int}/validate", async (
     CancellationToken cancel) =>
 {
     var result = await svc.ValidateCommanderDeckAsync(id, cancel);
-    return Results.Ok(result);
+    return TypedResults.Ok(result);
 });
 
 // ── Wishlist ──────────────────────────────────────────────────────────────────
 
 app.MapGet("/api/wishlist", (
-    string? tags,
+    [Microsoft.AspNetCore.Mvc.FromQuery] string[]? tags,
     ICollectionTrackingService svc) =>
 {
-    var filter = new WishlistItemFilter(
-        string.IsNullOrWhiteSpace(tags) ? null
-            : tags.Split(',', StringSplitOptions.RemoveEmptyEntries));
-    return Results.Ok(svc.GetWishlistItems(filter));
+    var filter = new WishlistItemFilter(tags?.Length > 0 ? tags : null);
+    return TypedResults.Ok(svc.GetWishlistItems(filter));
 });
 
 app.MapGet("/api/wishlist/spend", (ICollectionTrackingService svc) =>
-    Results.Ok(svc.GetWishlistSpend()));
+    TypedResults.Ok(svc.GetWishlistSpend()));
 
 app.MapGet("/api/wishlist/buyingList", (ICollectionTrackingService svc) =>
 {
@@ -438,16 +433,16 @@ app.MapGet("/api/wishlist/buyingList", (ICollectionTrackingService svc) =>
     var entries = model.Entries
         .Select(kv => new BuyingListVendorEntry(kv.Key, kv.Value.ToArray()))
         .ToArray();
-    return Results.Ok(entries);
+    return TypedResults.Ok(entries);
 });
 
 app.MapPost("/api/wishlist", async (
-    IEnumerable<AddToWishlistInputModel> items,
+    [Microsoft.AspNetCore.Mvc.FromBody] IEnumerable<AddToWishlistInputModel> items,
     ICollectionTrackingService svc,
     IScryfallApiClient scryfallApi) =>
 {
     var result = await svc.AddMultipleToWishlistAsync(items, scryfallApi);
-    return Results.Ok(result);
+    return TypedResults.Ok(result);
 });
 
 app.MapPut("/api/wishlist/{id:int}", async (
@@ -459,7 +454,7 @@ app.MapPut("/api/wishlist/{id:int}", async (
 {
     model.Id = id;
     var item = await svc.UpdateWishlistItemAsync(model, scryfallApi, cancel);
-    return Results.Ok(item);
+    return TypedResults.Ok(item);
 });
 
 app.MapPost("/api/wishlist/{id:int}/delete", async (
@@ -467,7 +462,7 @@ app.MapPost("/api/wishlist/{id:int}/delete", async (
     ICollectionTrackingService svc) =>
 {
     var item = await svc.DeleteWishlistItemAsync(id);
-    return Results.Ok(item);
+    return TypedResults.Ok(item);
 });
 
 app.MapPost("/api/wishlist/moveToCollection", async (
@@ -475,20 +470,20 @@ app.MapPost("/api/wishlist/moveToCollection", async (
     ICollectionTrackingService svc) =>
 {
     var result = await svc.MoveWishlistItemsToCollectionAsync(model);
-    return Results.Ok(result);
+    return TypedResults.Ok(result);
 });
 
 // ── Notes ─────────────────────────────────────────────────────────────────────
 
 app.MapGet("/api/notes", (ICollectionTrackingService svc) =>
-    Results.Ok(svc.GetNotes()));
+    TypedResults.Ok(svc.GetNotes()));
 
 app.MapPost("/api/notes", async (
     UpdateNotesRequest req,
     ICollectionTrackingService svc) =>
 {
     var note = await svc.UpdateNotesAsync(req.Id, req.Title, req.Notes);
-    return Results.Ok(note);
+    return TypedResults.Ok(note);
 });
 
 app.MapDelete("/api/notes/{id:int}", async (
@@ -496,26 +491,26 @@ app.MapDelete("/api/notes/{id:int}", async (
     ICollectionTrackingService svc) =>
 {
     var result = await svc.DeleteNotesAsync(id);
-    return Results.Ok(result);
+    return TypedResults.Ok(result);
 });
 
 // ── Vendors ───────────────────────────────────────────────────────────────────
 
 app.MapGet("/api/vendors", (ICollectionTrackingService svc) =>
-    Results.Ok(svc.GetVendors()));
+    TypedResults.Ok(svc.GetVendors()));
 
 app.MapPost("/api/vendors", async (
     ApplyVendorsInputModel model,
     ICollectionTrackingService svc) =>
 {
     var (created, deleted) = await svc.ApplyVendorsAsync(model);
-    return Results.Ok(new { created, deleted });
+    return TypedResults.Ok(new ApplyVendorsResult(created, deleted));
 });
 
 // ── Collection ────────────────────────────────────────────────────────────────
 
 app.MapGet("/api/collection/summary", (ICollectionTrackingService svc) =>
-    Results.Ok(svc.GetCollectionSummary()));
+    TypedResults.Ok(svc.GetCollectionSummary()));
 
 app.MapGet("/api/collection/checkQuantity", async (
     string cardName,
@@ -525,7 +520,7 @@ app.MapGet("/api/collection/checkQuantity", async (
     ICollectionTrackingService svc) =>
 {
     var result = await svc.CheckQuantityShortfallAsync(cardName, wantQty, noProxies, sparesOnly);
-    return Results.Ok(result);
+    return TypedResults.Ok(result);
 });
 
 // ── Prices ────────────────────────────────────────────────────────────────────
@@ -537,7 +532,7 @@ app.MapGet("/api/prices/sku/{skuId:guid}", async (
     CancellationToken cancel) =>
 {
     var (price, provider) = await svc.GetLatestPriceForSkuAsync(skuId, currency ?? "USD", cancel);
-    return Results.Ok(new { price, provider });
+    return TypedResults.Ok(new SkuPriceResult(price, provider));
 });
 
 app.MapGet("/api/prices/sku/{skuId:guid}/history", async (
@@ -547,7 +542,7 @@ app.MapGet("/api/prices/sku/{skuId:guid}/history", async (
     CancellationToken cancel) =>
 {
     var history = await svc.GetPriceHistoryForSkuAsync(skuId, currency ?? "USD", cancel);
-    return Results.Ok(history);
+    return TypedResults.Ok(history);
 });
 
 app.MapPost("/api/prices/lowest", async (
@@ -557,7 +552,7 @@ app.MapPost("/api/prices/lowest", async (
     CancellationToken cancel) =>
 {
     var result = await svc.GetLowestPricesAsync(opts, scryfallApi, cancel);
-    return Results.Ok(result);
+    return TypedResults.Ok(result);
 });
 
 // ── Card images ───────────────────────────────────────────────────────────────
@@ -605,7 +600,7 @@ app.MapGet("/api/identifiers/isEmpty", async (
     CancellationToken cancel) =>
 {
     var isEmpty = await svc.IsScryfallIdMappingEmptyAsync(cancel);
-    return Results.Ok(isEmpty);
+    return TypedResults.Ok(isEmpty);
 });
 
 // ── Long-running operations with SSE ─────────────────────────────────────────
@@ -877,16 +872,8 @@ static bool IsValidScryfallId(string scryfallId) =>
     scryfallId.All(c => char.IsAsciiLetterOrDigit(c) || c == '-');
 
 // ── Helper types ──────────────────────────────────────────────────────────────
-
-record CreateContainerRequest(string Name, string? Description);
-record CreateDeckRequest(string Name, string? Format, int? ContainerId, bool IsCommander);
-record SetBannerRequest(Guid? CardSkuId);
-record SetCommanderRequest(Guid? CommanderSkuId);
-record AddBatchRequest(int? ContainerId, int? DeckId, IEnumerable<AddToDeckOrContainerInputModel> Items);
-record UpdateCardsMetadataRequest(ICollection<Guid> Ids);
-record UpdateWishlistMetadataRequest(ICollection<int> Ids);
-record UpdateNotesRequest(int? Id, string? Title, string Notes);
-record BuyingListVendorEntry(string Vendor, BuyingListItem[] Items);
+// Request/response records are defined in MtgCollectionTracker.Core.Model and shared
+// with the generated API client. Only server-internal types are defined here.
 
 /// <summary>Represents a single SSE progress event sent to the client.</summary>
 public class ProgressEvent

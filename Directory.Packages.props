@@ -6,6 +6,9 @@
     <PackageVersion Include="CommandLineParser" Version="2.9.1" />
     <PackageVersion Include="ConsoleTables" Version="2.7.0" />
     <PackageVersion Include="CsvHelper" Version="33.1.0" />
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.7" />
+    <PackageVersion Include="Microsoft.Extensions.ApiDescription.Server" Version="10.0.7" />
+    <PackageVersion Include="NSwag.MSBuild" Version="14.7.1" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.6" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.6" />
     <PackageVersion Include="Microsoft.IO.RecyclableMemoryStream" Version="3.0.1" />

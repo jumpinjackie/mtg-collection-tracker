@@ -1,0 +1,4215 @@
+{
+  "openapi": "3.1.1",
+  "info": {
+    "title": "MtgCollectionTracker.Server | v1",
+    "version": "1.0.0"
+  },
+  "paths": {
+    "/api/health": {
+      "get": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnonymousTypeOfstringAndstring"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/languages": {
+      "get": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CardLanguageModel"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/tags": {
+      "get": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplyTagsResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cards": {
+      "get": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "searchFilter",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "notInDecks",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "noProxies",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "unParented",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "missingMetadata",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "includeScryfallMetadata",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          },
+          {
+            "name": "deckIds",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "pattern": "^-?(?:0|[1-9]\\d*)$",
+                "type": [
+                  "integer",
+                  "string"
+                ],
+                "format": "int32"
+              }
+            }
+          },
+          {
+            "name": "containerIds",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "pattern": "^-?(?:0|[1-9]\\d*)$",
+                "type": [
+                  "integer",
+                  "string"
+                ],
+                "format": "int32"
+              }
+            }
+          },
+          {
+            "name": "tags",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "colors",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "cardTypes",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CardSkuModel"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cards/isBasicLand/{cardName}": {
+      "get": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "cardName",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cards/container/{containerId}": {
+      "get": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "containerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "page",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "pageSize",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "missingMetadata",
+            "in": "query",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PaginatedCardSkuModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cards/{id}": {
+      "get": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardSkuModel"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCardSkuInputModel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UpdateCardSkuResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cards/add": {
+      "post": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "containerId",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "deckId",
+            "in": "query",
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddToDeckOrContainerInputModel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardSkuModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cards/addToDeck": {
+      "post": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddToDeckInputModel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardSkuModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cards/addBatch": {
+      "post": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddBatchRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AddBatchResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cards/{id}/split": {
+      "post": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SplitCardSkuInputModel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardSkuModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cards/{id}/delete": {
+      "post": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardSkuModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cards/removeFromDeck": {
+      "post": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RemoveFromDeckInputModel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RemoveFromDeckResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cards/consolidate": {
+      "post": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConsolidateCardSkusInputModel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConsolidateResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cards/resolveEditions": {
+      "post": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/ScryfallResolvedCard"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/containers": {
+      "get": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ContainerSummaryModel"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateContainerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContainerSummaryModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/containers/{id}": {
+      "put": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateContainerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContainerSummaryModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/containers/{id}/delete": {
+      "post": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DeleteContainerInputModel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteContainerResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/containers/{id}/print": {
+      "get": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "reportProxyUsage",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/decks": {
+      "get": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "formats",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          },
+          {
+            "name": "deckIds",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "pattern": "^-?(?:0|[1-9]\\d*)$",
+                "type": [
+                  "integer",
+                  "string"
+                ],
+                "format": "int32"
+              }
+            }
+          },
+          {
+            "name": "isCommander",
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DeckSummaryModel"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDeckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeckSummaryModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/decks/formats": {
+      "get": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/decks/hasOtherFormats/{format}": {
+      "get": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "format",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/decks/{id}": {
+      "get": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeckModel"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDeckRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeckSummaryModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/decks/{id}/print": {
+      "get": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "reportProxyUsage",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/decks/{id}/banner": {
+      "post": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetBannerRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeckSummaryModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/decks/{id}/commander": {
+      "post": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SetCommanderRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeckSummaryModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/decks/{id}/dismantle": {
+      "post": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DismantleDeckInputModel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DismantleDeckResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/decks/{id}/validate": {
+      "post": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CommanderValidationResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wishlist": {
+      "get": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "tags",
+            "in": "query",
+            "schema": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WishlistItemModel"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/AddToWishlistInputModel"
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WishlistItemModel"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wishlist/spend": {
+      "get": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WishlistSpendSummaryModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wishlist/buyingList": {
+      "get": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BuyingListVendorEntry"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wishlist/{id}": {
+      "put": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWishlistItemInputModel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WishlistItemModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wishlist/{id}/delete": {
+      "post": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WishlistItemModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/wishlist/moveToCollection": {
+      "post": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoveWishlistItemsToCollectionInputModel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MoveWishlistItemsToCollectionResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notes": {
+      "get": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NotesModel"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateNotesRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotesModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/notes/{id}": {
+      "delete": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vendors": {
+      "get": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/VendorModel"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApplyVendorsInputModel"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApplyVendorsResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/collection/summary": {
+      "get": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CollectionSummaryModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/collection/checkQuantity": {
+      "get": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "cardName",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "wantQty",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          },
+          {
+            "name": "noProxies",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "sparesOnly",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CheckQuantityResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/prices/sku/{skuId}": {
+      "get": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "skuId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SkuPriceResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/prices/sku/{skuId}/history": {
+      "get": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "skuId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "currency",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CardPriceHistoryModel"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/prices/lowest": {
+      "post": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LowestPriceCheckOptions"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/LowestPriceCheckItem"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/images/{scryfallId}/front/large": {
+      "get": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "scryfallId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/images/{scryfallId}/front/small": {
+      "get": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "scryfallId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/images/{scryfallId}/back/large": {
+      "get": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "scryfallId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/images/{scryfallId}/back/small": {
+      "get": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "scryfallId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/identifiers/isEmpty": {
+      "get": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/metadata/updateCards": {
+      "post": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateCardsMetadataRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/metadata/updateWishlist": {
+      "post": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateWishlistMetadataRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/metadata/addMissing": {
+      "post": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/metadata/rebuildAll": {
+      "post": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/metadata/normalizeNames": {
+      "post": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/identifiers/import": {
+      "post": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/prices/import": {
+      "post": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    },
+    "/api/operations/{operationId}/events": {
+      "get": {
+        "tags": [
+          "MtgCollectionTracker.Server"
+        ],
+        "parameters": [
+          {
+            "name": "operationId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AddBatchRequest": {
+        "required": [
+          "containerId",
+          "deckId",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "containerId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "deckId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AddToDeckOrContainerInputModel"
+            }
+          }
+        }
+      },
+      "AddBatchResult": {
+        "required": [
+          "total",
+          "proxyTotal",
+          "rows"
+        ],
+        "type": "object",
+        "properties": {
+          "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "proxyTotal": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "rows": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "AddToDeckInputModel": {
+        "type": "object",
+        "properties": {
+          "cardSkuId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "deckId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "isSideboard": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AddToDeckOrContainerInputModel": {
+        "required": [
+          "cardName",
+          "edition"
+        ],
+        "type": "object",
+        "properties": {
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "cardName": {
+            "type": "string"
+          },
+          "edition": {
+            "type": "string"
+          },
+          "collectorNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "language": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "deckId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "isSideboard": {
+            "type": "boolean"
+          },
+          "isFoil": {
+            "type": "boolean"
+          },
+          "condition": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CardCondition"
+              }
+            ]
+          },
+          "comments": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isLand": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AddToWishlistInputModel": {
+        "required": [
+          "cardName",
+          "edition"
+        ],
+        "type": "object",
+        "properties": {
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "cardName": {
+            "type": "string"
+          },
+          "edition": {
+            "type": "string"
+          },
+          "collectorNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "language": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "deckId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "isSideboard": {
+            "type": "boolean"
+          },
+          "isFoil": {
+            "type": "boolean"
+          },
+          "condition": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CardCondition"
+              }
+            ]
+          },
+          "comments": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isLand": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AnonymousTypeOfstringAndstring": {
+        "required": [
+          "status",
+          "version"
+        ],
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "version": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "ApplyTagsResult": {
+        "type": "object",
+        "properties": {
+          "added": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "deleted": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "detached": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "currentTags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ApplyVendorsInputModel": {
+        "required": [
+          "names"
+        ],
+        "type": "object",
+        "properties": {
+          "names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ApplyVendorsResult": {
+        "required": [
+          "created",
+          "deleted"
+        ],
+        "type": "object",
+        "properties": {
+          "created": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "deleted": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "BuyingListItem": {
+        "required": [
+          "qty",
+          "cardName",
+          "price",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "qty": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "cardName": {
+            "type": "string"
+          },
+          "price": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "BuyingListVendorEntry": {
+        "required": [
+          "vendor",
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "vendor": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuyingListItem"
+            }
+          }
+        }
+      },
+      "CardCondition": {
+        "type": "integer"
+      },
+      "CardLanguageModel": {
+        "required": [
+          "code",
+          "printedCode",
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "printedCode": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "CardPriceDatePoint": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "lowest": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CardPricePoint"
+              }
+            ]
+          },
+          "highest": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CardPricePoint"
+              }
+            ]
+          },
+          "median": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "CardPriceHistoryModel": {
+        "required": [
+          "cardName",
+          "edition"
+        ],
+        "type": "object",
+        "properties": {
+          "cardName": {
+            "type": "string"
+          },
+          "edition": {
+            "type": "string"
+          },
+          "isFoil": {
+            "type": "boolean"
+          },
+          "datePoints": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CardPriceDatePoint"
+            }
+          }
+        }
+      },
+      "CardPricePoint": {
+        "required": [
+          "provider"
+        ],
+        "type": "object",
+        "properties": {
+          "price": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "provider": {
+            "type": "string"
+          }
+        }
+      },
+      "CardSkuModel": {
+        "required": [
+          "cardName",
+          "edition"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "scryfallId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "cardName": {
+            "type": "string"
+          },
+          "edition": {
+            "type": "string"
+          },
+          "language": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "collectorNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "deckId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "deckName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "containerId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "containerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "comments": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isSideboard": {
+            "type": "boolean"
+          },
+          "isFoil": {
+            "type": "boolean"
+          },
+          "condition": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CardCondition"
+              }
+            ]
+          },
+          "isLand": {
+            "type": "boolean"
+          },
+          "isDoubleFaced": {
+            "type": "boolean"
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "castingCost": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "oracleText": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "cardType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "power": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "toughness": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "backPower": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "backToughness": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "loyalty": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "backLoyalty": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "colors": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "colorIdentity": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "latestPrice": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CardSkuPriceModel"
+              }
+            ]
+          }
+        }
+      },
+      "CardSkuPriceModel": {
+        "required": [
+          "provider"
+        ],
+        "type": "object",
+        "properties": {
+          "price": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "provider": {
+            "type": "string"
+          }
+        }
+      },
+      "CheckQuantityResult": {
+        "type": "object",
+        "properties": {
+          "shortAmount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "fromDeckNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "fromContainerNames": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "suggestedName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "wishlistAmount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "CollectionSummaryModel": {
+        "type": "object",
+        "properties": {
+          "cardTotal": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "proxyTotal": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "skuTotal": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "deckTotal": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "containerTotal": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "CommanderValidationResult": {
+        "type": "object",
+        "properties": {
+          "isValid": {
+            "type": "boolean"
+          },
+          "errors": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "ConsolidateCardSkusInputModel": {
+        "type": "object",
+        "properties": {
+          "deckId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "containerId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ConsolidateResult": {
+        "required": [
+          "skusUpdated",
+          "skusRemoved"
+        ],
+        "type": "object",
+        "properties": {
+          "skusUpdated": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "skusRemoved": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "ContainerSummaryModel": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "id": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateContainerRequest": {
+        "required": [
+          "name",
+          "description"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CreateDeckRequest": {
+        "required": [
+          "name",
+          "format",
+          "containerId",
+          "isCommander"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "format": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "containerId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "isCommander": {
+            "type": "boolean"
+          }
+        }
+      },
+      "DeckCardModel": {
+        "type": "object",
+        "properties": {
+          "skuId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "cardName": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string"
+          },
+          "manaValue": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "edition": {
+            "type": "string"
+          },
+          "isLand": {
+            "type": "boolean"
+          },
+          "isDoubleFaced": {
+            "type": "boolean"
+          },
+          "scryfallId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "castingCost": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "oracleText": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "cardType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "power": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "toughness": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "backPower": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "backToughness": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "loyalty": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "backLoyalty": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "colors": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "colorIdentity": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "DeckModel": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "format": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "bannerCardId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "mainDeck": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeckCardModel"
+            }
+          },
+          "sideboard": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DeckCardModel"
+            }
+          },
+          "isCommander": {
+            "type": "boolean"
+          },
+          "commander": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/DeckCardModel"
+              }
+            ]
+          }
+        }
+      },
+      "DeckSummaryModel": {
+        "required": [
+          "name",
+          "deckName"
+        ],
+        "type": "object",
+        "properties": {
+          "maindeckTotal": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "sideboardTotal": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "bannerScryfallId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "bannerCardId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          },
+          "isCommander": {
+            "type": "boolean"
+          },
+          "commanderName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isCommanderValid": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "commanderValidationMessage": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "id": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          },
+          "deckName": {
+            "type": "string"
+          },
+          "containerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "format": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "DeleteContainerInputModel": {
+        "type": "object",
+        "properties": {
+          "containerId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "DeleteContainerResult": {
+        "type": "object",
+        "properties": {
+          "unassignedSkuTotal": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "DismantleDeckInputModel": {
+        "type": "object",
+        "properties": {
+          "deckId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "containerId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "DismantleDeckResult": {
+        "type": "object",
+        "properties": {
+          "removed": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "containerName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "LowestPriceCheckItem": {
+        "type": "object",
+        "properties": {
+          "cardName": {
+            "type": "string"
+          },
+          "edition": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "itemTotal": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "quantityTotal": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "LowestPriceCheckOptions": {
+        "required": [
+          "items",
+          "skipBasicLands",
+          "skipSnowBasicLands"
+        ],
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PriceCheckItem"
+            }
+          },
+          "skipBasicLands": {
+            "type": "boolean"
+          },
+          "skipSnowBasicLands": {
+            "type": "boolean"
+          }
+        }
+      },
+      "MoveWishlistItemQuantityInputModel": {
+        "type": "object",
+        "properties": {
+          "wishlistItemId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "MoveWishlistItemsToCollectionInputModel": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "containerId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MoveWishlistItemQuantityInputModel"
+            }
+          }
+        }
+      },
+      "MoveWishlistItemsToCollectionResult": {
+        "required": [
+          "createdSkus"
+        ],
+        "type": "object",
+        "properties": {
+          "createdSkus": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/WishlistItemMoveResult"
+            }
+          }
+        }
+      },
+      "NotesModel": {
+        "required": [
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "PaginatedCardSkuModel": {
+        "required": [
+          "items"
+        ],
+        "type": "object",
+        "properties": {
+          "pageNumber": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "pageSize": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "total": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CardSkuModel"
+            }
+          }
+        }
+      },
+      "PriceCheckItem": {
+        "type": "object",
+        "properties": {
+          "cardName": {
+            "type": "string"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "RemoveFromDeckInputModel": {
+        "type": "object",
+        "properties": {
+          "cardSkuId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "containerId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "RemoveFromDeckResult": {
+        "required": [
+          "sku",
+          "wasMerged"
+        ],
+        "type": "object",
+        "properties": {
+          "sku": {
+            "$ref": "#/components/schemas/CardSkuModel"
+          },
+          "wasMerged": {
+            "type": "boolean"
+          }
+        }
+      },
+      "ScryfallResolvedCard": {
+        "required": [
+          "cardName",
+          "edition"
+        ],
+        "type": "object",
+        "properties": {
+          "cardName": {
+            "type": "string"
+          },
+          "edition": {
+            "type": "string"
+          }
+        }
+      },
+      "SetBannerRequest": {
+        "required": [
+          "cardSkuId"
+        ],
+        "type": "object",
+        "properties": {
+          "cardSkuId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "SetCommanderRequest": {
+        "required": [
+          "commanderSkuId"
+        ],
+        "type": "object",
+        "properties": {
+          "commanderSkuId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "uuid"
+          }
+        }
+      },
+      "SkuPriceResult": {
+        "required": [
+          "price",
+          "provider"
+        ],
+        "type": "object",
+        "properties": {
+          "price": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "provider": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "SkuUpdateInfo": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "oldQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "newQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "oldDeckId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "newDeckId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "oldContainerId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "newContainerId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "SplitCardSkuInputModel": {
+        "type": "object",
+        "properties": {
+          "cardSkuId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          }
+        }
+      },
+      "Total": {
+        "required": [
+          "amount"
+        ],
+        "type": "object",
+        "properties": {
+          "amount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "UpdateCardSkuInputModel": {
+        "required": [
+          "ids"
+        ],
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "cardName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "edition": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "language": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "comments": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "collectorNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "condition": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CardCondition"
+              }
+            ]
+          },
+          "deckId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "containerId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "isSideboard": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "isFoil": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "isLand": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "unsetDeck": {
+            "type": "boolean"
+          },
+          "unsetContainer": {
+            "type": "boolean"
+          },
+          "updateMetadata": {
+            "type": "boolean"
+          },
+          "tags": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "applyTags": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpdateCardSkuResult": {
+        "type": "object",
+        "properties": {
+          "recordsAffected": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "skus": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SkuUpdateInfo"
+            }
+          }
+        }
+      },
+      "UpdateCardsMetadataRequest": {
+        "required": [
+          "ids"
+        ],
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "UpdateNotesRequest": {
+        "required": [
+          "id",
+          "title",
+          "notes"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "title": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateVendorOfferInputModel": {
+        "type": "object",
+        "properties": {
+          "vendorId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "price": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "available": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "UpdateWishlistItemInputModel": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "cardName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "edition": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "language": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "collectorNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isFoil": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
+          "condition": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CardCondition"
+              }
+            ]
+          },
+          "vendorOffers": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "$ref": "#/components/schemas/UpdateVendorOfferInputModel"
+            }
+          },
+          "tags": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "applyTags": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpdateWishlistMetadataRequest": {
+        "required": [
+          "ids"
+        ],
+        "type": "object",
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": [
+                "integer",
+                "string"
+              ],
+              "format": "int32"
+            }
+          }
+        }
+      },
+      "VendorModel": {
+        "required": [
+          "name"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "VendorOfferModel": {
+        "required": [
+          "vendorName"
+        ],
+        "type": "object",
+        "properties": {
+          "vendorId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "vendorName": {
+            "type": "string"
+          },
+          "availableStock": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "price": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "notes": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "WishlistItemModel": {
+        "required": [
+          "cardName",
+          "edition",
+          "offers"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "scryfallId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "cardName": {
+            "type": "string"
+          },
+          "edition": {
+            "type": "string"
+          },
+          "language": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "collectorNumber": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "isFoil": {
+            "type": "boolean"
+          },
+          "condition": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "$ref": "#/components/schemas/CardCondition"
+              }
+            ]
+          },
+          "isLand": {
+            "type": "boolean"
+          },
+          "isDoubleFaced": {
+            "type": "boolean"
+          },
+          "offers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/VendorOfferModel"
+            }
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "castingCost": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "oracleText": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "cardType": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "power": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "toughness": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "backPower": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "backToughness": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "loyalty": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "backLoyalty": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "colors": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "colorIdentity": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "WishlistItemMoveResult": {
+        "required": [
+          "wishlistItemId",
+          "card"
+        ],
+        "type": "object",
+        "properties": {
+          "wishlistItemId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "card": {
+            "$ref": "#/components/schemas/CardSkuModel"
+          }
+        }
+      },
+      "WishlistSpendSummaryModel": {
+        "required": [
+          "total",
+          "vendors",
+          "isComplete"
+        ],
+        "type": "object",
+        "properties": {
+          "total": {
+            "$ref": "#/components/schemas/Total"
+          },
+          "vendors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "isComplete": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "MtgCollectionTracker.Server"
+    }
+  ]
+}
