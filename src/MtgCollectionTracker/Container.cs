@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.EntityFrameworkCore;
+using MtgCollectionTracker.ApiClient;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Data;
 using MtgCollectionTracker.ViewModels;
