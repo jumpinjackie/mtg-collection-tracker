@@ -253,8 +253,8 @@ public class RemoteCollectionTrackingService : ICollectionTrackingService
 
     public string PrintContainer(int containerId, ContainerPrintOptions options)
     {
-        var qs = options.ReportProxyUsage ? "?reportProxyUsage=true" : string.Empty;
-        return _http.GetStringAsync($"/api/containers/{containerId}/print{qs}")
+        var reportProxyUsage = options.ReportProxyUsage ? "true" : "false";
+        return _http.GetStringAsync($"/api/containers/{containerId}/print?reportProxyUsage={reportProxyUsage}")
             .ConfigureAwait(false).GetAwaiter().GetResult();
     }
 
@@ -298,8 +298,8 @@ public class RemoteCollectionTrackingService : ICollectionTrackingService
 
     public string PrintDeck(int deckId, DeckPrintOptions options)
     {
-        var qs = options.ReportProxyUsage ? "?reportProxyUsage=true" : string.Empty;
-        return _http.GetStringAsync($"/api/decks/{deckId}/print{qs}")
+        var reportProxyUsage = options.ReportProxyUsage ? "true" : "false";
+        return _http.GetStringAsync($"/api/decks/{deckId}/print?reportProxyUsage={reportProxyUsage}")
             .ConfigureAwait(false).GetAwaiter().GetResult();
     }
 
@@ -444,6 +444,50 @@ public class RemoteCollectionTrackingService : ICollectionTrackingService
         {
             var resp = await _http.GetAsync(
                 $"/api/images/{scryfallId}/back/small", HttpCompletionOption.ResponseHeadersRead);
+            return resp.IsSuccessStatusCode ? await resp.Content.ReadAsStreamAsync() : null;
+        }
+        catch { return null; }
+    }
+
+    public async ValueTask<Stream?> GetLargeFrontFaceImageAsync(Guid cardSkuId)
+    {
+        try
+        {
+            var resp = await _http.GetAsync(
+                $"/api/images/sku/{cardSkuId}/front/large", HttpCompletionOption.ResponseHeadersRead);
+            return resp.IsSuccessStatusCode ? await resp.Content.ReadAsStreamAsync() : null;
+        }
+        catch { return null; }
+    }
+
+    public async ValueTask<Stream?> GetSmallFrontFaceImageAsync(Guid cardSkuId)
+    {
+        try
+        {
+            var resp = await _http.GetAsync(
+                $"/api/images/sku/{cardSkuId}/front/small", HttpCompletionOption.ResponseHeadersRead);
+            return resp.IsSuccessStatusCode ? await resp.Content.ReadAsStreamAsync() : null;
+        }
+        catch { return null; }
+    }
+
+    public async ValueTask<Stream?> GetLargeBackFaceImageAsync(Guid cardSkuId)
+    {
+        try
+        {
+            var resp = await _http.GetAsync(
+                $"/api/images/sku/{cardSkuId}/back/large", HttpCompletionOption.ResponseHeadersRead);
+            return resp.IsSuccessStatusCode ? await resp.Content.ReadAsStreamAsync() : null;
+        }
+        catch { return null; }
+    }
+
+    public async ValueTask<Stream?> GetSmallBackFaceImageAsync(Guid cardSkuId)
+    {
+        try
+        {
+            var resp = await _http.GetAsync(
+                $"/api/images/sku/{cardSkuId}/back/small", HttpCompletionOption.ResponseHeadersRead);
             return resp.IsSuccessStatusCode ? await resp.Content.ReadAsStreamAsync() : null;
         }
         catch { return null; }

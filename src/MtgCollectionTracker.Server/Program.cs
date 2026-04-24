@@ -313,8 +313,8 @@ app.MapPost("/api/containers/{id:int}/delete", async (
 
 app.MapGet("/api/containers/{id:int}/print", (
     int id,
-    bool reportProxyUsage,
-    ICollectionTrackingService svc) =>
+    ICollectionTrackingService svc,
+    bool reportProxyUsage = false) =>
 {
     var text = svc.PrintContainer(id, new ContainerPrintOptions(reportProxyUsage));
     return Results.Text(text, "text/plain");
@@ -362,8 +362,8 @@ app.MapGet("/api/decks/{id:int}", async (
 
 app.MapGet("/api/decks/{id:int}/print", (
     int id,
-    bool reportProxyUsage,
-    ICollectionTrackingService svc) =>
+    ICollectionTrackingService svc,
+    bool reportProxyUsage = false) =>
 {
     var text = svc.PrintDeck(id, new DeckPrintOptions(reportProxyUsage));
     return Results.Text(text, "text/plain");
@@ -599,6 +599,40 @@ app.MapGet("/api/images/{scryfallId}/back/small", async (
 {
     if (!IsValidScryfallId(scryfallId)) return Results.BadRequest("Invalid Scryfall ID");
     var stream = await svc.GetSmallBackFaceImageAsync(scryfallId);
+    return stream is null ? Results.NotFound() : Results.Stream(stream, "image/jpeg");
+});
+
+// ── Card images by card SKU ID ─────────────────────────────────────────────────
+
+app.MapGet("/api/images/sku/{id:guid}/front/large", async (
+    Guid id,
+    ICollectionTrackingService svc) =>
+{
+    var stream = await svc.GetLargeFrontFaceImageAsync(id);
+    return stream is null ? Results.NotFound() : Results.Stream(stream, "image/jpeg");
+});
+
+app.MapGet("/api/images/sku/{id:guid}/front/small", async (
+    Guid id,
+    ICollectionTrackingService svc) =>
+{
+    var stream = await svc.GetSmallFrontFaceImageAsync(id);
+    return stream is null ? Results.NotFound() : Results.Stream(stream, "image/jpeg");
+});
+
+app.MapGet("/api/images/sku/{id:guid}/back/large", async (
+    Guid id,
+    ICollectionTrackingService svc) =>
+{
+    var stream = await svc.GetLargeBackFaceImageAsync(id);
+    return stream is null ? Results.NotFound() : Results.Stream(stream, "image/jpeg");
+});
+
+app.MapGet("/api/images/sku/{id:guid}/back/small", async (
+    Guid id,
+    ICollectionTrackingService svc) =>
+{
+    var stream = await svc.GetSmallBackFaceImageAsync(id);
     return stream is null ? Results.NotFound() : Results.Stream(stream, "image/jpeg");
 });
 

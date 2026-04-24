@@ -1883,6 +1883,39 @@ public class CollectionTrackingService : ICollectionTrackingService
         return await _cache.GetSmallBackFaceImageAsync(scryfallId);
     }
 
+    private async ValueTask<string?> GetScryfallIdForSkuAsync(Guid cardSkuId)
+    {
+        using var db = _db.Invoke();
+        return await db.Value.Cards
+            .Where(c => c.Id == cardSkuId)
+            .Select(c => c.ScryfallId)
+            .FirstOrDefaultAsync();
+    }
+
+    public async ValueTask<Stream?> GetLargeFrontFaceImageAsync(Guid cardSkuId)
+    {
+        var scryfallId = await GetScryfallIdForSkuAsync(cardSkuId);
+        return scryfallId is null ? null : await _cache.GetLargeFrontFaceImageAsync(scryfallId);
+    }
+
+    public async ValueTask<Stream?> GetLargeBackFaceImageAsync(Guid cardSkuId)
+    {
+        var scryfallId = await GetScryfallIdForSkuAsync(cardSkuId);
+        return scryfallId is null ? null : await _cache.GetLargeBackFaceImageAsync(scryfallId);
+    }
+
+    public async ValueTask<Stream?> GetSmallFrontFaceImageAsync(Guid cardSkuId)
+    {
+        var scryfallId = await GetScryfallIdForSkuAsync(cardSkuId);
+        return scryfallId is null ? null : await _cache.GetSmallFrontFaceImageAsync(scryfallId);
+    }
+
+    public async ValueTask<Stream?> GetSmallBackFaceImageAsync(Guid cardSkuId)
+    {
+        var scryfallId = await GetScryfallIdForSkuAsync(cardSkuId);
+        return scryfallId is null ? null : await _cache.GetSmallBackFaceImageAsync(scryfallId);
+    }
+
     public IEnumerable<string> GetTags()
     {
         using var db = _db.Invoke();
