@@ -24,7 +24,15 @@
 		<Border DockPanel.Dock="Bottom"
 		        IsVisible="{Binding IsRemoteClientMode}"
 		        Background="#1A4A7A" Padding="6,3">
-			<TextBlock Foreground="White" FontSize="11">Connected to remote server</TextBlock>
+			<StackPanel Orientation="Horizontal" Spacing="6">
+				<ProgressBar IsIndeterminate="True"
+				             IsVisible="{Binding IsBusy}"
+				             Width="14" Height="14"
+				             Foreground="White" />
+				<TextBlock Foreground="White" FontSize="11"
+				           VerticalAlignment="Center"
+				           Text="{Binding RemoteStatusText}" />
+			</StackPanel>
 		</Border>
 		<dialogHost:DialogHost PopupPositioner="{Binding DialogPositioner}" DisableOpeningAnimation="True" CloseOnClickAway="False">
 			<TabControl IsEnabled="{Binding !IsBusy}" Margin="5">

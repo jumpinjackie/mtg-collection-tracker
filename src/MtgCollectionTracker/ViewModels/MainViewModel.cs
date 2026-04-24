@@ -207,10 +207,15 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
     void IRecipient<GlobalBusyMessage>.Receive(GlobalBusyMessage message)
     {
         this.IsBusy = message.IsBusy;
+        this.RemoteStatusText = message.IsBusy ? "Working…" : "Connected to remote server";
     }
 
     [ObservableProperty]
     private bool _isBusy;
+
+    /// <summary>Status text shown in the remote-client status bar.</summary>
+    [ObservableProperty]
+    private string _remoteStatusText = "Connected to remote server";
 
     /// <summary>True when this app instance is running as a sharing server.</summary>
     public bool IsServerMode { get; }

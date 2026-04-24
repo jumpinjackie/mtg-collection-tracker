@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Data;
+using Scalar.AspNetCore;
 using ScryfallApi.Client;
 using StrongInject;
 using System.Collections.Concurrent;
@@ -75,12 +76,20 @@ using (var scope = app.Services.CreateScope())
 // OpenAPI document endpoint (design-time spec generation uses this too)
 app.MapOpenApi();
 
+// Scalar API explorer UI – available at /scalar
+app.MapScalarApiReference(options =>
+{
+    options.WithTitle("MtgCollectionTracker API")
+           .WithOpenApiRoutePattern("/openapi/{documentName}.json");
+});
+
 // ── API-key middleware ────────────────────────────────────────────────────────
 
 app.Use(async (context, next) =>
 {
     if (context.Request.Path.StartsWithSegments("/api/health") ||
-        context.Request.Path.StartsWithSegments("/openapi"))
+        context.Request.Path.StartsWithSegments("/openapi") ||
+        context.Request.Path.StartsWithSegments("/scalar"))
     {
         await next(context);
         return;

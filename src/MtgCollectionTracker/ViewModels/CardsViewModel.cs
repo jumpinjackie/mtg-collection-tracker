@@ -164,6 +164,8 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
 
     IMessenger IViewModelWithBusyState.Messenger => this.Messenger;
 
+    private CancellationTokenSource? _refreshCts;
+
     protected override void OnActivated()
     {
         base.OnActivated();
@@ -180,7 +182,44 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
             {
                 this.Tags.Add(t);
             }
+            StartPeriodicSummaryRefresh();
         }
+    }
+
+    private void StartPeriodicSummaryRefresh()
+    {
+        _refreshCts?.Cancel();
+        _refreshCts?.Dispose();
+        _refreshCts = new CancellationTokenSource();
+        var token = _refreshCts.Token;
+        _ = Task.Run(async () =>
+        {
+            using var timer = new PeriodicTimer(TimeSpan.FromSeconds(30));
+            while (!token.IsCancellationRequested && await timer.WaitForNextTickAsync(token).ConfigureAwait(false))
+            {
+                try
+                {
+                    var totals = _service.GetCollectionSummary();
+                    await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => ApplyTotals(totals));
+                }
+                catch (OperationCanceledException)
+                {
+                    break;
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"[CardsViewModel] Periodic summary refresh failed: {ex.Message}");
+                }
+            }
+        }, token);
+    }
+
+    protected override void OnDeactivated()
+    {
+        _refreshCts?.Cancel();
+        _refreshCts?.Dispose();
+        _refreshCts = null;
+        base.OnDeactivated();
     }
 
     private void ApplyTotals(CollectionSummaryModel totals)

@@ -8,6 +8,7 @@ using MtgCollectionTracker.Services.Stubs;
 using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
@@ -31,7 +32,17 @@ public partial class NotesViewModel : RecipientViewModelBase
         if (oldValue != null)
             oldValue.PropertyChanged -= OnNotePropertyChanged;
         if (newValue != null)
+        {
             newValue.PropertyChanged += OnNotePropertyChanged;
+            // Reload the note's content fresh from the database whenever it is selected
+            // so that edits made by a remote client are always visible.
+            if (newValue.Id.HasValue)
+            {
+                var fresh = _service.GetNotes().FirstOrDefault(n => n.Id == newValue.Id.Value);
+                if (fresh != null)
+                    newValue.From(fresh);
+            }
+        }
     }
 
     private void OnNotePropertyChanged(object? sender, PropertyChangedEventArgs e)
