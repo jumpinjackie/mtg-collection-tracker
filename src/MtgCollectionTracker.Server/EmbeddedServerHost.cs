@@ -9,7 +9,7 @@ namespace MtgCollectionTracker.Server;
 /// Manages an out-of-process <c>MtgCollectionTracker.Server</c> instance started
 /// by the Desktop application when running in <c>Server</c> mode.
 /// </summary>
-public sealed class EmbeddedServerHost : IAsyncDisposable
+public sealed class EmbeddedServerHost : IDisposable, IAsyncDisposable
 {
     private readonly Process? _process;
 
@@ -64,14 +64,21 @@ public sealed class EmbeddedServerHost : IAsyncDisposable
     }
 
     /// <inheritdoc />
-    public ValueTask DisposeAsync()
+    public void Dispose()
     {
         if (_process is { HasExited: false })
         {
             try { _process.Kill(entireProcessTree: true); }
             catch { /* best-effort */ }
         }
+
         _process?.Dispose();
+    }
+
+    /// <inheritdoc />
+    public ValueTask DisposeAsync()
+    {
+        Dispose();
         return ValueTask.CompletedTask;
     }
 }

@@ -3,6 +3,8 @@ using Avalonia.Input;
 using Avalonia.Input.Platform;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
+using CommunityToolkit.Mvvm.Messaging;
+using MtgCollectionTracker.Services;
 using System;
 
 namespace MtgCollectionTracker.Views;
@@ -117,11 +119,18 @@ public partial class AddCardsView : UserControl
         if (topLevel?.FocusManager?.GetFocusedElement() is TextBox textBox
             && topLevel.Clipboard is { } clipboard)
         {
-            var text = await clipboard.TryGetTextAsync();
-            if (!string.IsNullOrEmpty(text))
+            try
             {
-                textBox.Text = text;
-                textBox.CaretIndex = text.Length;
+                var text = await clipboard.TryGetTextAsync();
+                if (!string.IsNullOrEmpty(text))
+                {
+                    textBox.Text = text;
+                    textBox.CaretIndex = text.Length;
+                }
+            }
+            catch (Exception ex) when (DesktopIntegrationExceptionHelper.IsServiceUnavailable(ex))
+            {
+                WeakReferenceMessenger.Default.ToastNotify("Clipboard access is unavailable in this desktop session.", Avalonia.Controls.Notifications.NotificationType.Warning);
             }
         }
     }

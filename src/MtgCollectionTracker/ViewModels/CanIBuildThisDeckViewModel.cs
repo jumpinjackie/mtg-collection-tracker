@@ -259,15 +259,14 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
         if (_storageProvider == null)
             return;
 
-        var selectedFiles = await _storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            AllowMultiple = false,
-            Title = "Load decklist",
-            FileTypeFilter = [new FilePickerFileType(null) { Patterns = ["*.txt"] }]
-        });
-
         try
         {
+            var selectedFiles = await _storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                AllowMultiple = false,
+                Title = "Load decklist",
+                FileTypeFilter = [new FilePickerFileType(null) { Patterns = ["*.txt"] }]
+            });
             if (selectedFiles?.Count == 1)
             {
                 var filePath = selectedFiles[0].TryGetLocalPath();
@@ -279,6 +278,10 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
                     Messenger.ToastNotify("Decklist loaded", Avalonia.Controls.Notifications.NotificationType.Information);
                 }
             }
+        }
+        catch (Exception ex) when (DesktopIntegrationExceptionHelper.IsServiceUnavailable(ex))
+        {
+            Messenger.ToastNotify("File picker is unavailable in this desktop session.", Avalonia.Controls.Notifications.NotificationType.Warning);
         }
         catch (Exception ex)
         {

@@ -78,7 +78,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
     {
         if (!Avalonia.Controls.Design.IsDesignMode)
         {
-            this.ResetFiltersCommand.Execute(null);
+            _ = ResetFiltersAsync();
         }
         base.OnActivated();
     }
@@ -90,23 +90,23 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
         if (_silentSelectedFormatsUpdate)
             return;
 
-        this.RefreshDecks();
+        _ = this.RefreshDecksAsync();
     }
 
     [RelayCommand]
-    private void ResetFilters()
+    private async Task ResetFiltersAsync()
     {
         this.Formats.Clear();
         this.SelectedFormats.Clear();
 
-        var formats = _service.GetDeckFormatsAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult();
+        var formats = await _service.GetDeckFormatsAsync(CancellationToken.None);
         foreach (var fmt in formats)
         {
             this.Formats.Add(fmt);
             this.SelectedFormats.Add(fmt);
         }
 
-        this.RefreshDecks();
+        await this.RefreshDecksAsync();
     }
 
     public ObservableCollection<string> Formats { get; } = new();
@@ -164,41 +164,40 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
     }
 
     [RelayCommand]
-    private void DismantleDeck()
+    private async Task DismantleDeck()
     {
         if (this.SelectedDeck != null)
         {
             var selectedDeck = this.SelectedDeck;
+            var vm = await _dismantleDeck().WithDeckAsync(
+                selectedDeck.DeckId,
+                selectedDeck.Name,
+                async (containerId) =>
+                {
+                    try
+                    {
+                        await _service.DismantleDeckAsync(new() { DeckId = selectedDeck.DeckId, ContainerId = containerId }, System.Threading.CancellationToken.None);
+                        this.Messenger.ToastNotify("Deck dismantled", Avalonia.Controls.Notifications.NotificationType.Success);
+                        this.Messenger.Send(new DeckDismantledMessage { Id = selectedDeck.DeckId, Format = selectedDeck.Format });
+                    }
+                    catch (Exception ex)
+                    {
+                        this.Messenger.ToastNotify($"Error dismantling deck: {ex.Message}", Avalonia.Controls.Notifications.NotificationType.Error);
+                    }
+                });
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 500,
-                ViewModel = _dialog().WithContent(
-                    "Dismantle Deck",
-                    _dismantleDeck().WithDeck(
-                        selectedDeck.DeckId,
-                        selectedDeck.Name,
-                        async (containerId) =>
-                        {
-                            try
-                            {
-                                await _service.DismantleDeckAsync(new() { DeckId = selectedDeck.DeckId, ContainerId = containerId }, System.Threading.CancellationToken.None);
-                                this.Messenger.ToastNotify("Deck dismantled", Avalonia.Controls.Notifications.NotificationType.Success);
-                                this.Messenger.Send(new DeckDismantledMessage { Id = selectedDeck.DeckId, Format = selectedDeck.Format });
-                            }
-                            catch (Exception ex)
-                            {
-                                this.Messenger.ToastNotify($"Error dismantling deck: {ex.Message}", Avalonia.Controls.Notifications.NotificationType.Error);
-                            }
-                        }))
+                ViewModel = _dialog().WithContent("Dismantle Deck", vm)
             });
         }
     }
 
     [RelayCommand]
-    private void RefreshDecks()
+    private async Task RefreshDecksAsync()
     {
         this.Decks.Clear();
-        var decks = _service.GetDecksAsync(new DeckFilterModel { Formats = this.SelectedFormats }, System.Threading.CancellationToken.None).GetAwaiter().GetResult();
+        var decks = await _service.GetDecksAsync(new DeckFilterModel { Formats = this.SelectedFormats }, CancellationToken.None);
         foreach (var deck in decks)
         {
             this.Decks.Add(_deck().WithData(deck));
@@ -250,12 +249,17 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
 
     void IRecipient<DeckDismantledMessage>.Receive(DeckDismantledMessage message)
     {
+        _ = HandleDeckDismantledAsync(message);
+    }
+
+    private async Task HandleDeckDismantledAsync(DeckDismantledMessage message)
+    {
         var item = this.Decks.FirstOrDefault(d => d.DeckId == message.Id);
         if (item != null)
             this.Decks.Remove(item);
 
         // If this was the last deck in this format, remove format from filter list
-        if (!_service.HasOtherDecksInFormatAsync(message.Format, System.Threading.CancellationToken.None).GetAwaiter().GetResult())
+        if (!await _service.HasOtherDecksInFormatAsync(message.Format, CancellationToken.None))
         {
             this.Formats.Remove(message.Format);
             try
@@ -272,13 +276,13 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
 
     void IRecipient<CardsSentToDeckMessage>.Receive(CardsSentToDeckMessage message)
     {
-        UpdateDeckTotals([message.DeckId]);
+        _ = UpdateDeckTotalsAsync([message.DeckId]);
     }
 
-    private void UpdateDeckTotals(IEnumerable<int> deckIds)
+    private async Task UpdateDeckTotalsAsync(IEnumerable<int> deckIds)
     {
         // Update totals of given decks
-        var sum = _service.GetDecksAsync(new() { Formats = [], Ids = deckIds }, System.Threading.CancellationToken.None).GetAwaiter().GetResult();
+        var sum = await _service.GetDecksAsync(new() { Formats = [], Ids = deckIds }, CancellationToken.None);
         foreach (var s in sum)
         {
             var deck = this.Decks.FirstOrDefault(d => d.DeckId == s.Id);
@@ -289,12 +293,12 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
     void IRecipient<CardsRemovedFromDeckMessage>.Receive(CardsRemovedFromDeckMessage message)
     {
         if (message.DeckId.HasValue)
-            UpdateDeckTotals([message.DeckId.Value]);
+            _ = UpdateDeckTotalsAsync([message.DeckId.Value]);
     }
 
     void IRecipient<DeckTotalsChangedMessage>.Receive(DeckTotalsChangedMessage message)
     {
-        UpdateDeckTotals(message.DeckIds);
+        _ = UpdateDeckTotalsAsync(message.DeckIds);
     }
 
     void IRecipient<DeckUpdatedMessage>.Receive(DeckUpdatedMessage message)

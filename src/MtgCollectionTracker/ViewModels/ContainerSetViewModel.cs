@@ -8,6 +8,8 @@ using MtgCollectionTracker.Services.Stubs;
 using System;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
 
@@ -56,7 +58,7 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
     {
         if (!Avalonia.Controls.Design.IsDesignMode)
         {
-            this.RefreshListCommand.Execute(null);
+            _ = RefreshListAsync();
         }
         base.OnActivated();
     }
@@ -138,11 +140,11 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
     }
 
     [RelayCommand]
-    private void ViewContainerText()
+    private async Task ViewContainerText()
     {
         if (this.SelectedContainer != null)
         {
-            var text = _service.PrintContainerAsync(this.SelectedContainer.Id, new ContainerPrintOptions(true), System.Threading.CancellationToken.None).GetAwaiter().GetResult();
+            var text = await _service.PrintContainerAsync(this.SelectedContainer.Id, new ContainerPrintOptions(true), CancellationToken.None);
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 1000,
@@ -152,10 +154,10 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
     }
 
     [RelayCommand]
-    private void RefreshList()
+    private async Task RefreshListAsync()
     {
         this.Containers.Clear();
-        var containers = _service.GetContainersAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult();
+        var containers = await _service.GetContainersAsync(CancellationToken.None);
         foreach (var cont in containers)
         {
             this.Containers.Add(_container().WithData(cont));
@@ -191,9 +193,14 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
         var item = this.Containers.FirstOrDefault(c => c.Id == message.ContainerId);
         if (item != null)
         {
-            var updated = _service.GetContainersAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult().FirstOrDefault(c => c.Id == message.ContainerId);
-            if (updated != null)
-                item.WithData(updated);
+            _ = RefreshContainerAsync(item, message.ContainerId);
         }
+    }
+
+    private async Task RefreshContainerAsync(ContainerViewModel item, int containerId)
+    {
+        var updated = (await _service.GetContainersAsync(CancellationToken.None)).FirstOrDefault(c => c.Id == containerId);
+        if (updated != null)
+            item.WithData(updated);
     }
 }

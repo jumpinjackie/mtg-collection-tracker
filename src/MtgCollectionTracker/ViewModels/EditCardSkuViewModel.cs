@@ -20,12 +20,16 @@ public partial class EditCardSkuViewModel : DialogContentViewModel
 {
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
-    public LanguageViewModel[] Languages { get; }
+    private readonly Func<DeckViewModel>? _deckItem;
+    private bool _isInitialized;
+
+    public LanguageViewModel[] Languages { get; private set; } = [];
 
     public EditCardSkuViewModel()
     {
         base.ThrowIfNotDesignMode();
         _service = new StubCollectionTrackingService();
+        _deckItem = () => new();
         this.Languages = [
             new LanguageViewModel("en", "en", "English"),
             new LanguageViewModel("es", "sp", "Spanish"),
@@ -50,15 +54,41 @@ public partial class EditCardSkuViewModel : DialogContentViewModel
     {
         _service = service;
         _scryfallApiClient = scryfallApiClient;
-        this.AllTags = service.GetTagsAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult().ToList();
-        this.Languages = service.GetLanguagesAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult().Select(lang => new LanguageViewModel(lang.Code, lang.PrintedCode, lang.Name)).ToArray();
-        this.AvailableDecks = service.GetDecksAsync(null, System.Threading.CancellationToken.None).GetAwaiter().GetResult().Select(deck => deckItem().WithData(deck));
-        this.AvailableContainers = service.GetContainersAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult().Select(cnt => new ContainerViewModel().WithData(cnt)).ToList();
+        _deckItem = deckItem;
     }
 
-    public IEnumerable<DeckViewModel> AvailableDecks { get; private set; }
+    private async Task EnsureInitializedAsync()
+    {
+        if (_isInitialized)
+            return;
 
-    public IEnumerable<ContainerViewModel> AvailableContainers { get; private set; }
+        var tagsTask = _service.GetTagsAsync(CancellationToken.None).AsTask();
+        var languagesTask = _service.GetLanguagesAsync(CancellationToken.None).AsTask();
+        var decksTask = _service.GetDecksAsync(null, CancellationToken.None).AsTask();
+        var containersTask = _service.GetContainersAsync(CancellationToken.None).AsTask();
+        await Task.WhenAll(tagsTask, languagesTask, decksTask, containersTask);
+        var tags = await tagsTask;
+        var languages = await languagesTask;
+        var decks = await decksTask;
+        var containers = await containersTask;
+
+        this.AllTags.Clear();
+        this.AllTags.AddRange(tags);
+        this.Languages = languages
+            .Select(lang => new LanguageViewModel(lang.Code, lang.PrintedCode, lang.Name))
+            .ToArray();
+        this.AvailableDecks = decks
+            .Select(deck => _deckItem!().WithData(deck))
+            .ToList();
+        this.AvailableContainers = containers
+            .Select(cnt => new ContainerViewModel().WithData(cnt))
+            .ToList();
+        _isInitialized = true;
+    }
+
+    public IEnumerable<DeckViewModel> AvailableDecks { get; private set; } = [];
+
+    public IEnumerable<ContainerViewModel> AvailableContainers { get; private set; } = [];
 
     [ObservableProperty]
     private DeckViewModel? _deck;
@@ -70,8 +100,9 @@ public partial class EditCardSkuViewModel : DialogContentViewModel
 
     private CardSkuItemViewModel _origItem;
 
-    public EditCardSkuViewModel WithSku(CardSkuItemViewModel sku)
+    public async Task<EditCardSkuViewModel> WithSkuAsync(CardSkuItemViewModel sku)
     {
+        await EnsureInitializedAsync();
         _origItem = sku;
 
         this.Ids = [sku.Id];
@@ -93,12 +124,13 @@ public partial class EditCardSkuViewModel : DialogContentViewModel
 
     private List<CardSkuItemViewModel> _origItems;
 
-    public List<string> AllTags { get; }
+    public List<string> AllTags { get; } = [];
 
     public ObservableCollection<string> Tags { get; } = new();
 
-    public EditCardSkuViewModel WithSkus(IEnumerable<CardSkuItemViewModel> skus)
+    public async Task<EditCardSkuViewModel> WithSkusAsync(IEnumerable<CardSkuItemViewModel> skus)
     {
+        await EnsureInitializedAsync();
         _origItems = skus.ToList();
         this.Ids = skus.Select(s => s.Id).ToList();
 

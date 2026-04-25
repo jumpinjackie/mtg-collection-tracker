@@ -9,6 +9,7 @@ using System;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
@@ -38,11 +39,16 @@ public partial class NotesViewModel : RecipientViewModelBase
             // so that edits made by a remote client are always visible.
             if (newValue.Id.HasValue)
             {
-                var fresh = _service.GetNotesAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult().FirstOrDefault(n => n.Id == newValue.Id.Value);
-                if (fresh != null)
-                    newValue.From(fresh);
+                _ = RefreshSelectedNoteAsync(newValue, newValue.Id.Value);
             }
         }
+    }
+
+    private async Task RefreshSelectedNoteAsync(NotesItemViewModel note, int noteId)
+    {
+        var fresh = (await _service.GetNotesAsync(CancellationToken.None)).FirstOrDefault(n => n.Id == noteId);
+        if (fresh != null)
+            note.From(fresh);
     }
 
     private void OnNotePropertyChanged(object? sender, PropertyChangedEventArgs e)
@@ -109,13 +115,18 @@ public partial class NotesViewModel : RecipientViewModelBase
     {
         if (!Avalonia.Controls.Design.IsDesignMode)
         {
-            this.Notes.Clear();
-            foreach (var n in _service.GetNotesAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult())
-            {
-                this.Notes.Add(new NotesItemViewModel().From(n));
-            }
+            _ = LoadNotesAsync();
         }
         base.OnActivated();
+    }
+
+    private async Task LoadNotesAsync()
+    {
+        this.Notes.Clear();
+        foreach (var n in await _service.GetNotesAsync(CancellationToken.None))
+        {
+            this.Notes.Add(new NotesItemViewModel().From(n));
+        }
     }
 
     [ObservableProperty]

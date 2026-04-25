@@ -9,6 +9,7 @@ using MtgCollectionTracker.Services.Stubs;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
@@ -64,12 +65,12 @@ public partial class DismantleDeckViewModel : DialogContentViewModel
 
     public IEnumerable<ContainerViewModel>? AvailableContainers { get; private set; }
 
-    public DismantleDeckViewModel WithDeck(int deckId, string deckName, Func<int?, ValueTask> onConfirm)
+    public async Task<DismantleDeckViewModel> WithDeckAsync(int deckId, string deckName, Func<int?, ValueTask> onConfirm)
     {
         this.Message = $"Are you sure you want to dismantle ({deckName})?";
         var unparented = new ContainerViewModel { Name = "(Unparented)" };
         var containers = new List<ContainerViewModel> { unparented };
-        containers.AddRange(_service.GetContainersAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult().Select(c => _container().WithData(c)));
+        containers.AddRange((await _service.GetContainersAsync(CancellationToken.None)).Select(c => _container().WithData(c)));
         this.AvailableContainers = containers;
         this.SelectedContainer = unparented;
         _confirmAction = onConfirm;

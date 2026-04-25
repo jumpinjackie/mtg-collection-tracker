@@ -9,20 +9,20 @@ namespace MtgCollectionTracker.Tests;
 
 internal static class CollectionTrackingServiceTestExtensions
 {
-    public static bool IsBasicLand(this ICollectionTrackingService service, string cardName)
-        => service.IsBasicLandAsync(cardName, CancellationToken.None).GetAwaiter().GetResult();
+    public static Task<bool> IsBasicLand(this ICollectionTrackingService service, string cardName)
+        => service.IsBasicLandAsync(cardName, CancellationToken.None).AsTask();
 
-    public static CollectionSummaryModel GetCollectionSummary(this ICollectionTrackingService service)
-        => service.GetCollectionSummaryAsync(CancellationToken.None).GetAwaiter().GetResult();
+    public static Task<CollectionSummaryModel> GetCollectionSummary(this ICollectionTrackingService service)
+        => service.GetCollectionSummaryAsync(CancellationToken.None).AsTask();
 
-    public static IReadOnlyList<ContainerSummaryModel> GetContainers(this ICollectionTrackingService service)
-        => service.GetContainersAsync(CancellationToken.None).GetAwaiter().GetResult();
+    public static Task<IReadOnlyList<ContainerSummaryModel>> GetContainers(this ICollectionTrackingService service)
+        => service.GetContainersAsync(CancellationToken.None).AsTask();
 
-    public static IReadOnlyList<DeckSummaryModel> GetDecks(this ICollectionTrackingService service, DeckFilterModel? filter)
-        => service.GetDecksAsync(filter, CancellationToken.None).GetAwaiter().GetResult();
+    public static Task<IReadOnlyList<DeckSummaryModel>> GetDecks(this ICollectionTrackingService service, DeckFilterModel? filter)
+        => service.GetDecksAsync(filter, CancellationToken.None).AsTask();
 
-    public static IReadOnlyList<CardSkuModel> GetCards(this ICollectionTrackingService service, CardQueryModel query)
-        => service.GetCardsAsync(query, CancellationToken.None).GetAwaiter().GetResult();
+    public static Task<IReadOnlyList<CardSkuModel>> GetCards(this ICollectionTrackingService service, CardQueryModel query)
+        => service.GetCardsAsync(query, CancellationToken.None).AsTask();
 
     public static ValueTask<ContainerSummaryModel> CreateContainerAsync(this ICollectionTrackingService service, string name, string? description)
         => service.CreateContainerAsync(name, description, CancellationToken.None);

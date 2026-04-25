@@ -10,6 +10,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
@@ -22,7 +23,6 @@ public partial class MoveWishlistItemsToCollectionViewModel : DialogContentViewM
         : base(messenger)
     {
         _service = service;
-        this.AvailableContainers = service.GetContainersAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult().Select(c => new ContainerViewModel().WithData(c));
     }
 
     public MoveWishlistItemsToCollectionViewModel()
@@ -44,8 +44,11 @@ public partial class MoveWishlistItemsToCollectionViewModel : DialogContentViewM
 
     public ObservableCollection<MoveWishlistSelectionItemViewModel> WishListItems { get; private set; } = [];
 
-    public MoveWishlistItemsToCollectionViewModel WithData(ObservableCollection<WishlistItemViewModel> items)
+    public async Task<MoveWishlistItemsToCollectionViewModel> WithDataAsync(ObservableCollection<WishlistItemViewModel> items)
     {
+        this.AvailableContainers = (await _service.GetContainersAsync(CancellationToken.None))
+            .Select(c => new ContainerViewModel().WithData(c))
+            .ToList();
         this.WishListItems =
         [
             ..items.Select(w => new MoveWishlistSelectionItemViewModel
@@ -63,7 +66,7 @@ public partial class MoveWishlistItemsToCollectionViewModel : DialogContentViewM
     [ObservableProperty]
     private ContainerViewModel? _selectedContainer;
 
-    public IEnumerable<ContainerViewModel>? AvailableContainers { get; internal set; }
+    public IEnumerable<ContainerViewModel>? AvailableContainers { get; internal set; } = [];
 
     [RelayCommand]
     private void Cancel() => Messenger.Send(new CloseDialogMessage());

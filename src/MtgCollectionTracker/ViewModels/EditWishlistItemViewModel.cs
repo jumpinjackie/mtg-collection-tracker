@@ -37,7 +37,9 @@ public partial class EditWishlistItemViewModel : DialogContentViewModel
 {
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
-    public LanguageViewModel[] Languages { get; }
+    private bool _isInitialized;
+
+    public LanguageViewModel[] Languages { get; private set; } = [];
 
     public EditWishlistItemViewModel()
     {
@@ -58,14 +60,34 @@ public partial class EditWishlistItemViewModel : DialogContentViewModel
     {
         _service = service;
         _scryfallApiClient = scryfallApiClient;
-        this.AllTags = service.GetTagsAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult().ToList();
-        this.Languages = service.GetLanguagesAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult().Select(lang => new LanguageViewModel(lang.Code, lang.PrintedCode, lang.Name)).ToArray();
+        this.AllTags = [];
+        this.AvailableVendors = [];
     }
 
     private WishlistItemViewModel _origItem;
 
-    public EditWishlistItemViewModel WithData(WishlistItemViewModel wm)
+    private async Task EnsureInitializedAsync()
     {
+        if (_isInitialized)
+            return;
+
+        var tagsTask = _service.GetTagsAsync(CancellationToken.None).AsTask();
+        var languagesTask = _service.GetLanguagesAsync(CancellationToken.None).AsTask();
+        await Task.WhenAll(tagsTask, languagesTask);
+        var tags = await tagsTask;
+        var languages = await languagesTask;
+
+        this.AllTags.Clear();
+        this.AllTags.AddRange(tags);
+        this.Languages = languages
+            .Select(lang => new LanguageViewModel(lang.Code, lang.PrintedCode, lang.Name))
+            .ToArray();
+        _isInitialized = true;
+    }
+
+    public async Task<EditWishlistItemViewModel> WithDataAsync(WishlistItemViewModel wm)
+    {
+        await EnsureInitializedAsync();
         _origItem = wm;
 
         this.Id = wm.Id;
@@ -74,7 +96,9 @@ public partial class EditWishlistItemViewModel : DialogContentViewModel
         this.Edition = wm.Edition;
         this.Language = this.Languages.FirstOrDefault(lang => lang.Code == wm.Language);
         this.Quantity = wm.RealQty;
-        this.AvailableVendors = _service.GetVendorsAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult().Select(v => new VendorViewModel { Id = v.Id, Name = v.Name }).ToList();
+        this.AvailableVendors = (await _service.GetVendorsAsync(CancellationToken.None))
+            .Select(v => new VendorViewModel { Id = v.Id, Name = v.Name })
+            .ToList();
         this.VendorOffers.Clear();
         foreach (var o in wm.Offers)
         {
@@ -92,7 +116,7 @@ public partial class EditWishlistItemViewModel : DialogContentViewModel
         return this;
     }
 
-    public IEnumerable<VendorViewModel> AvailableVendors { get; set; }
+    public IEnumerable<VendorViewModel> AvailableVendors { get; set; } = [];
 
     public ObservableCollection<VendorOfferViewModel> VendorOffers { get; } = new();
 
@@ -160,7 +184,7 @@ public partial class EditWishlistItemViewModel : DialogContentViewModel
             || this.IsFoil.HasValue;
     }
 
-    public List<string> AllTags { get; }
+    public List<string> AllTags { get; } = [];
 
     public ObservableCollection<string> Tags { get; } = new();
 

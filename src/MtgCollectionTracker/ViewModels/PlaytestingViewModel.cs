@@ -106,7 +106,7 @@ public partial class PlaytestingViewModel : RecipientViewModelBase, IViewModelWi
         // Auto-load decks on first activation if list is empty
         if (AvailableDecks.Count == 0)
         {
-            RefreshDecks();
+            _ = RefreshDecksAsync();
         }
     }
 
@@ -114,10 +114,10 @@ public partial class PlaytestingViewModel : RecipientViewModelBase, IViewModelWi
     /// Refresh the list of available decks
     /// </summary>
     [RelayCommand]
-    private void RefreshDecks()
+    private async Task RefreshDecksAsync()
     {
         _allDecks.Clear();
-        _allDecks.AddRange(_service.GetDecksAsync(null, System.Threading.CancellationToken.None).GetAwaiter().GetResult().OrderBy(d => d.Name));
+        _allDecks.AddRange((await _service.GetDecksAsync(null, CancellationToken.None)).OrderBy(d => d.Name));
         ApplyDeckFilter();
     }
 

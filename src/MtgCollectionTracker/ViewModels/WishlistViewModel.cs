@@ -65,11 +65,6 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
         _wishlistItem = wishlistItem;
         _moveToCollection = moveToCollection;
         _manageVendors = manageVendors;
-        var tags = service.GetTagsAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult();
-        foreach (var t in tags)
-        {
-            this.Tags.Add(t);
-        }
         this.Cards.CollectionChanged += Cards_CollectionChanged;
         this.SelectedTags.CollectionChanged += Tags_CollectionChanged;
         this.Behavior = new(this);
@@ -80,7 +75,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
 
     private void Tags_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
     {
-        this.LoadWishlist();
+        _ = LoadWishlistAsync();
     }
 
     private void Cards_CollectionChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
@@ -92,21 +87,34 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
     {
         if (!Avalonia.Controls.Design.IsDesignMode)
         {
-            this.LoadWishlist();
+            _ = LoadInitialDataAsync();
         }
         base.OnActivated();
     }
 
-    private void LoadWishlist()
+    private async Task LoadInitialDataAsync()
+    {
+        if (this.Tags.Count == 0)
+        {
+            foreach (var t in await _service.GetTagsAsync(CancellationToken.None))
+            {
+                this.Tags.Add(t);
+            }
+        }
+
+        await LoadWishlistAsync();
+    }
+
+    private async Task LoadWishlistAsync()
     {
         this.Cards.Clear();
         var filter = new WishlistItemFilter(this.SelectedTags.Count > 0 ? this.SelectedTags : null);
-        var items = _service.GetWishlistItemsAsync(filter, System.Threading.CancellationToken.None).GetAwaiter().GetResult();
+        var items = await _service.GetWishlistItemsAsync(filter, CancellationToken.None);
         foreach (var item in items)
         {
             this.Cards.Add(_wishlistItem().WithImageCache(_imageCache!).WithData(item));
         }
-        this.ApplySummary();
+        await this.ApplySummaryAsync();
     }
 
     bool IViewModelWithBusyState.IsBusy
@@ -129,12 +137,13 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
     private string _wishlistSummary;
 
     [RelayCommand]
-    private void AddCards()
+    private async Task AddCards()
     {
+        var vm = await _addCardsToWishlist().InitializeAsync();
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 800,
-            ViewModel = _dialog().WithContent("Add Cards to Wishlist", _addCardsToWishlist(), canClose: false)
+            ViewModel = _dialog().WithContent("Add Cards to Wishlist", vm, canClose: false)
         });
     }
 
@@ -162,7 +171,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
                             removed++;
                         }
 
-                        this.ApplySummary();
+                        _ = this.ApplySummaryAsync();
                         Messenger.ToastNotify($"{removed} wishlist items deleted", Avalonia.Controls.Notifications.NotificationType.Success);
                     })
             });
@@ -170,9 +179,9 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
     }
 
     [RelayCommand]
-    private void ManageVendors()
+    private async Task ManageVendors()
     {
-        var vendors = _service.GetVendorsAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult();
+        var vendors = await _service.GetVendorsAsync(CancellationToken.None);
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 800,
@@ -181,35 +190,37 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
     }
 
     [RelayCommand]
-    private void MoveToCollection()
+    private async Task MoveToCollection()
     {
         if (Behavior.SelectedItems.Count > 0)
         {
+            var vm = await _moveToCollection()
+                .WithDataAsync(Behavior.SelectedItems);
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 400,
                 ViewModel = _dialog().WithContent(
                     "Move to Collection",
-                    _moveToCollection()
-                        .WithData(Behavior.SelectedItems))
+                    vm)
             });
         }
     }
 
     [RelayCommand]
-    private void EditItem()
+    private async Task EditItem()
     {
+        var vm = await _editWishlistItem().WithDataAsync(Behavior.SelectedItems[0]);
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 600,
-            ViewModel = _dialog().WithContent("Edit Wishlist Item", _editWishlistItem().WithData(Behavior.SelectedItems[0]))
+            ViewModel = _dialog().WithContent("Edit Wishlist Item", vm)
         });
     }
 
     [RelayCommand]
-    private void GenerateBuyingList()
+    private async Task GenerateBuyingList()
     {
-        var buylist = _service.GenerateBuyingListAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult();
+        var buylist = await _service.GenerateBuyingListAsync(CancellationToken.None);
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 600,
@@ -261,15 +272,15 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
         }
     }
 
-    private void ApplySummary()
+    private async Task ApplySummaryAsync()
     {
-        var summary = _service.GetWishlistSpendAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult();
+        var summary = await _service.GetWishlistSpendAsync(CancellationToken.None);
         this.WishlistSummary = $"Current spend: ${summary.Total.Amount} across {summary.Vendors.Length} vendor(s)";
     }
 
     void IRecipient<WishlistItemUpdatedMessage>.Receive(WishlistItemUpdatedMessage message)
     {
-        this.ApplySummary();
+        _ = this.ApplySummaryAsync();
     }
 
     void IMultiModeCardListBehaviorHost.HandleBusyChanged(bool oldValue, bool newValue)
@@ -298,7 +309,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
     {
         var result = message.Result;
         Behavior.SelectedItems.Clear();
-        this.LoadWishlist();
+        _ = LoadWishlistAsync();
         Messenger.ToastNotify($"{result.CreatedSkus.Length} wishlist items moved to your collection", Avalonia.Controls.Notifications.NotificationType.Success);
     }
 }

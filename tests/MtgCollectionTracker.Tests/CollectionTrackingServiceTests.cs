@@ -64,10 +64,10 @@ public class CollectionTrackingServiceTests : IDisposable
     [InlineData("Snow-Covered Mountain")]
     [InlineData("Snow-Covered Forest")]
     [InlineData("Wastes")]
-    public void IsBasicLand_ReturnsTrue_ForBasicLandNames(string cardName)
+    public async Task IsBasicLand_ReturnsTrue_ForBasicLandNames(string cardName)
     {
         var service = CreateService();
-        Assert.True(service.IsBasicLand(cardName));
+        Assert.True(await service.IsBasicLand(cardName));
     }
 
     [Theory]
@@ -76,17 +76,17 @@ public class CollectionTrackingServiceTests : IDisposable
     [InlineData("Birds of Paradise")]
     [InlineData("Tundra")]
     [InlineData("Dark Ritual")]
-    public void IsBasicLand_ReturnsFalse_ForNonBasicLands(string cardName)
+    public async Task IsBasicLand_ReturnsFalse_ForNonBasicLands(string cardName)
     {
         var service = CreateService();
-        Assert.False(service.IsBasicLand(cardName));
+        Assert.False(await service.IsBasicLand(cardName));
     }
 
     [Fact]
-    public void GetCollectionSummary_ReturnsAllZeros_ForEmptyDatabase()
+    public async Task GetCollectionSummary_ReturnsAllZeros_ForEmptyDatabase()
     {
         var service = CreateService();
-        var summary = service.GetCollectionSummary();
+        var summary = await service.GetCollectionSummary();
 
         Assert.Equal(0, summary.CardTotal);
         Assert.Equal(0, summary.ProxyTotal);
@@ -107,7 +107,7 @@ public class CollectionTrackingServiceTests : IDisposable
     }
 
     [Fact]
-    public void GetContainers_ReturnsCreatedContainers()
+    public async Task GetContainers_ReturnsCreatedContainers()
     {
         using var ctx = new CardsDbContext(_dbOptions);
         ctx.Containers.Add(new MtgCollectionTracker.Data.Container { Name = "Binder 1" });
@@ -115,7 +115,7 @@ public class CollectionTrackingServiceTests : IDisposable
         ctx.SaveChanges();
 
         var service = CreateService();
-        var containers = service.GetContainers().ToList();
+        var containers = (await service.GetContainers()).ToList();
 
         Assert.Equal(2, containers.Count);
         Assert.Contains(containers, c => c.Name == "Binder 1");
@@ -135,7 +135,7 @@ public class CollectionTrackingServiceTests : IDisposable
     }
 
     [Fact]
-    public void GetDecks_ReturnsAllDecks()
+    public async Task GetDecks_ReturnsAllDecks()
     {
         using var ctx = new CardsDbContext(_dbOptions);
         ctx.Decks.Add(new Deck { Name = "Deck A", Format = "Modern" });
@@ -143,7 +143,7 @@ public class CollectionTrackingServiceTests : IDisposable
         ctx.SaveChanges();
 
         var service = CreateService();
-        var decks = service.GetDecks(null).ToList();
+        var decks = (await service.GetDecks(null)).ToList();
 
         Assert.Equal(2, decks.Count);
         Assert.Contains(decks, d => d.DeckName == "Deck A");
@@ -283,11 +283,11 @@ public class CollectionTrackingServiceTests : IDisposable
         Assert.Null(result.ContainerName);
 
         // Deck should be gone
-        var decks = service.GetDecks(null).ToList();
+        var decks = (await service.GetDecks(null)).ToList();
         Assert.DoesNotContain(decks, d => d.Id == deck.Id);
 
         // Cards should be unparented (no container, no deck)
-        var cards = service.GetCards(new MtgCollectionTracker.Core.Model.CardQueryModel()).ToList();
+        var cards = (await service.GetCards(new MtgCollectionTracker.Core.Model.CardQueryModel())).ToList();
         Assert.All(cards, c => Assert.Null(c.ContainerName));
         Assert.All(cards, c => Assert.Null(c.DeckName));
     }
@@ -309,11 +309,11 @@ public class CollectionTrackingServiceTests : IDisposable
         Assert.Equal("Main Binder", result.ContainerName);
 
         // Deck should be gone
-        var decks = service.GetDecks(null).ToList();
+        var decks = (await service.GetDecks(null)).ToList();
         Assert.DoesNotContain(decks, d => d.Id == deck.Id);
 
         // Cards should be in the specified container with no deck
-        var cards = service.GetCards(new MtgCollectionTracker.Core.Model.CardQueryModel()).ToList();
+        var cards = (await service.GetCards(new MtgCollectionTracker.Core.Model.CardQueryModel())).ToList();
         Assert.All(cards, c => Assert.StartsWith("Main Binder", c.ContainerName));
         Assert.All(cards, c => Assert.Null(c.DeckName));
     }
@@ -329,7 +329,7 @@ public class CollectionTrackingServiceTests : IDisposable
         await service.DismantleDeckAsync(new() { DeckId = deck.Id, ContainerId = null });
 
         // The card should no longer be flagged as sideboard
-        var cards = service.GetCards(new MtgCollectionTracker.Core.Model.CardQueryModel()).ToList();
+        var cards = (await service.GetCards(new MtgCollectionTracker.Core.Model.CardQueryModel())).ToList();
         Assert.Single(cards);
         Assert.False(cards[0].IsSideboard);
     }
@@ -495,7 +495,7 @@ public class CollectionTrackingServiceTests : IDisposable
 
         Assert.Contains(result.Errors, e => e.Contains("Commander must be exactly 1 card in the main deck", StringComparison.Ordinal));
 
-        var summary = service.GetDecks(new DeckFilterModel { Ids = [deckId], Formats = [] }).Single();
+        var summary = (await service.GetDecks(new DeckFilterModel { Ids = [deckId], Formats = [] })).Single();
         Assert.False(summary.IsCommanderValid);
     }
 
@@ -555,7 +555,7 @@ public class CollectionTrackingServiceTests : IDisposable
 
         Assert.Contains(result.Errors, e => e.Contains("Main deck must have exactly 99 cards", StringComparison.Ordinal));
 
-        var summary = service.GetDecks(new DeckFilterModel { Ids = [deckId], Formats = [] }).Single();
+        var summary = (await service.GetDecks(new DeckFilterModel { Ids = [deckId], Formats = [] })).Single();
         Assert.False(summary.IsCommanderValid);
     }
 
@@ -640,27 +640,27 @@ public class CollectionTrackingServiceTests : IDisposable
     }
 
     [Fact]
-    public void GetCards_ColorFilter_ReturnsOnlyRedCards()
+    public async Task GetCards_ColorFilter_ReturnsOnlyRedCards()
     {
         using var ctx = new CardsDbContext(_dbOptions);
         SeedCardsWithMetadata(ctx);
 
         var service = CreateService();
-        var results = service.GetCards(new CardQueryModel { Colors = ["R"], IncludeScryfallMetadata = true }).ToList();
+        var results = (await service.GetCards(new CardQueryModel { Colors = ["R"], IncludeScryfallMetadata = true })).ToList();
 
         Assert.Single(results);
         Assert.Equal("Lightning Bolt", results[0].CardName);
     }
 
     [Fact]
-    public void GetCards_ColorFilter_ReturnsBlueAndWhiteBlueCards()
+    public async Task GetCards_ColorFilter_ReturnsBlueAndWhiteBlueCards()
     {
         using var ctx = new CardsDbContext(_dbOptions);
         SeedCardsWithMetadata(ctx);
 
         var service = CreateService();
         // Asking for U should return Counterspell (mono-U) and Absorb (W/U/B)
-        var results = service.GetCards(new CardQueryModel { Colors = ["U"], IncludeScryfallMetadata = true }).ToList();
+        var results = (await service.GetCards(new CardQueryModel { Colors = ["U"], IncludeScryfallMetadata = true })).ToList();
 
         Assert.Equal(2, results.Count);
         Assert.Contains(results, r => r.CardName == "Counterspell");
@@ -668,14 +668,14 @@ public class CollectionTrackingServiceTests : IDisposable
     }
 
     [Fact]
-    public void GetCards_ColorFilter_MultipleColors_ReturnsUnionOfMatchingCards()
+    public async Task GetCards_ColorFilter_MultipleColors_ReturnsUnionOfMatchingCards()
     {
         using var ctx = new CardsDbContext(_dbOptions);
         SeedCardsWithMetadata(ctx);
 
         var service = CreateService();
         // R + G should return Lightning Bolt and Rampant Growth
-        var results = service.GetCards(new CardQueryModel { Colors = ["R", "G"], IncludeScryfallMetadata = true }).ToList();
+        var results = (await service.GetCards(new CardQueryModel { Colors = ["R", "G"], IncludeScryfallMetadata = true })).ToList();
 
         Assert.Equal(2, results.Count);
         Assert.Contains(results, r => r.CardName == "Lightning Bolt");
@@ -683,14 +683,14 @@ public class CollectionTrackingServiceTests : IDisposable
     }
 
     [Fact]
-    public void GetCards_ColorFilter_Colorless_ReturnsArtifactAndLand()
+    public async Task GetCards_ColorFilter_Colorless_ReturnsArtifactAndLand()
     {
         using var ctx = new CardsDbContext(_dbOptions);
         SeedCardsWithMetadata(ctx);
 
         var service = CreateService();
         // Colorless (C) matches cards with empty Colors array
-        var results = service.GetCards(new CardQueryModel { Colors = ["C"], IncludeScryfallMetadata = true }).ToList();
+        var results = (await service.GetCards(new CardQueryModel { Colors = ["C"], IncludeScryfallMetadata = true })).ToList();
 
         Assert.Equal(2, results.Count);
         Assert.Contains(results, r => r.CardName == "Darksteel Colossus");
@@ -698,14 +698,14 @@ public class CollectionTrackingServiceTests : IDisposable
     }
 
     [Fact]
-    public void GetCards_ColorFilter_ColorlessAndColored_ReturnsBothColorlessAndMatchingColoredCards()
+    public async Task GetCards_ColorFilter_ColorlessAndColored_ReturnsBothColorlessAndMatchingColoredCards()
     {
         using var ctx = new CardsDbContext(_dbOptions);
         SeedCardsWithMetadata(ctx);
 
         var service = CreateService();
         // C + R: colorless cards + red cards
-        var results = service.GetCards(new CardQueryModel { Colors = ["C", "R"], IncludeScryfallMetadata = true }).ToList();
+        var results = (await service.GetCards(new CardQueryModel { Colors = ["C", "R"], IncludeScryfallMetadata = true })).ToList();
 
         Assert.Equal(3, results.Count);
         Assert.Contains(results, r => r.CardName == "Darksteel Colossus");
@@ -714,13 +714,13 @@ public class CollectionTrackingServiceTests : IDisposable
     }
 
     [Fact]
-    public void GetCards_ColorFilter_Null_ReturnsAllCardsRegardlessOfColor()
+    public async Task GetCards_ColorFilter_Null_ReturnsAllCardsRegardlessOfColor()
     {
         using var ctx = new CardsDbContext(_dbOptions);
         SeedCardsWithMetadata(ctx);
 
         var service = CreateService();
-        var results = service.GetCards(new CardQueryModel { SearchFilter = "Lightning Bolt", IncludeScryfallMetadata = true }).ToList();
+        var results = (await service.GetCards(new CardQueryModel { SearchFilter = "Lightning Bolt", IncludeScryfallMetadata = true })).ToList();
 
         Assert.Single(results);
         Assert.Equal("Lightning Bolt", results[0].CardName);
@@ -729,13 +729,13 @@ public class CollectionTrackingServiceTests : IDisposable
     // ── Card type filter tests ──────────────────────────────────────────────────
 
     [Fact]
-    public void GetCards_CardTypeFilter_ReturnsOnlyInstants()
+    public async Task GetCards_CardTypeFilter_ReturnsOnlyInstants()
     {
         using var ctx = new CardsDbContext(_dbOptions);
         SeedCardsWithMetadata(ctx);
 
         var service = CreateService();
-        var results = service.GetCards(new CardQueryModel { CardTypes = ["Instant"], IncludeScryfallMetadata = true }).ToList();
+        var results = (await service.GetCards(new CardQueryModel { CardTypes = ["Instant"], IncludeScryfallMetadata = true })).ToList();
 
         Assert.Equal(3, results.Count);
         Assert.Contains(results, r => r.CardName == "Absorb");
@@ -744,41 +744,41 @@ public class CollectionTrackingServiceTests : IDisposable
     }
 
     [Fact]
-    public void GetCards_CardTypeFilter_ReturnsSorceries()
+    public async Task GetCards_CardTypeFilter_ReturnsSorceries()
     {
         using var ctx = new CardsDbContext(_dbOptions);
         SeedCardsWithMetadata(ctx);
 
         var service = CreateService();
-        var results = service.GetCards(new CardQueryModel { CardTypes = ["Sorcery"], IncludeScryfallMetadata = true }).ToList();
+        var results = (await service.GetCards(new CardQueryModel { CardTypes = ["Sorcery"], IncludeScryfallMetadata = true })).ToList();
 
         Assert.Single(results);
         Assert.Equal("Rampant Growth", results[0].CardName);
     }
 
     [Fact]
-    public void GetCards_CardTypeFilter_ReturnsCreatureAndArtifact_ViaPartialTypeLineMatch()
+    public async Task GetCards_CardTypeFilter_ReturnsCreatureAndArtifact_ViaPartialTypeLineMatch()
     {
         using var ctx = new CardsDbContext(_dbOptions);
         SeedCardsWithMetadata(ctx);
 
         var service = CreateService();
         // "Artifact" matches "Artifact Creature — Golem"
-        var results = service.GetCards(new CardQueryModel { CardTypes = ["Artifact"], IncludeScryfallMetadata = true }).ToList();
+        var results = (await service.GetCards(new CardQueryModel { CardTypes = ["Artifact"], IncludeScryfallMetadata = true })).ToList();
 
         Assert.Single(results);
         Assert.Equal("Darksteel Colossus", results[0].CardName);
     }
 
     [Fact]
-    public void GetCards_CardTypeFilter_MultipleTypes_ReturnsUnionOfMatchingCards()
+    public async Task GetCards_CardTypeFilter_MultipleTypes_ReturnsUnionOfMatchingCards()
     {
         using var ctx = new CardsDbContext(_dbOptions);
         SeedCardsWithMetadata(ctx);
 
         var service = CreateService();
         // Instant + Enchantment
-        var results = service.GetCards(new CardQueryModel { CardTypes = ["Instant", "Enchantment"], IncludeScryfallMetadata = true }).ToList();
+        var results = (await service.GetCards(new CardQueryModel { CardTypes = ["Instant", "Enchantment"], IncludeScryfallMetadata = true })).ToList();
 
         Assert.Equal(4, results.Count);
         Assert.Contains(results, r => r.CardName == "Absorb");
@@ -788,13 +788,13 @@ public class CollectionTrackingServiceTests : IDisposable
     }
 
     [Fact]
-    public void GetCards_CardTypeFilter_TypeMatchIsCaseInsensitive()
+    public async Task GetCards_CardTypeFilter_TypeMatchIsCaseInsensitive()
     {
         using var ctx = new CardsDbContext(_dbOptions);
         SeedCardsWithMetadata(ctx);
 
         var service = CreateService();
-        var results = service.GetCards(new CardQueryModel { CardTypes = ["enchantment"], IncludeScryfallMetadata = true }).ToList();
+        var results = (await service.GetCards(new CardQueryModel { CardTypes = ["enchantment"], IncludeScryfallMetadata = true })).ToList();
 
         Assert.Single(results);
         Assert.Equal("Necropotence", results[0].CardName);
@@ -803,19 +803,19 @@ public class CollectionTrackingServiceTests : IDisposable
     // ── Combined color + type filter tests ────────────────────────────────────
 
     [Fact]
-    public void GetCards_ColorAndTypeFilter_ReturnsOnlyMatchingIntersection()
+    public async Task GetCards_ColorAndTypeFilter_ReturnsOnlyMatchingIntersection()
     {
         using var ctx = new CardsDbContext(_dbOptions);
         SeedCardsWithMetadata(ctx);
 
         var service = CreateService();
         // Blue Instants: Counterspell and Absorb
-        var results = service.GetCards(new CardQueryModel
+        var results = (await service.GetCards(new CardQueryModel
         {
             Colors = ["U"],
             CardTypes = ["Instant"],
             IncludeScryfallMetadata = true
-        }).ToList();
+        })).ToList();
 
         Assert.Equal(2, results.Count);
         Assert.Contains(results, r => r.CardName == "Counterspell");
@@ -823,38 +823,38 @@ public class CollectionTrackingServiceTests : IDisposable
     }
 
     [Fact]
-    public void GetCards_ColorAndTypeFilter_ReturnsEmpty_WhenNoCardsMatch()
+    public async Task GetCards_ColorAndTypeFilter_ReturnsEmpty_WhenNoCardsMatch()
     {
         using var ctx = new CardsDbContext(_dbOptions);
         SeedCardsWithMetadata(ctx);
 
         var service = CreateService();
         // There are no Red Sorceries in the seed data
-        var results = service.GetCards(new CardQueryModel
+        var results = (await service.GetCards(new CardQueryModel
         {
             Colors = ["R"],
             CardTypes = ["Sorcery"],
             IncludeScryfallMetadata = true
-        }).ToList();
+        })).ToList();
 
         Assert.Empty(results);
     }
 
     [Fact]
-    public void GetCards_ColorAndTypeFilter_WithSearchText_NarrowsResults()
+    public async Task GetCards_ColorAndTypeFilter_WithSearchText_NarrowsResults()
     {
         using var ctx = new CardsDbContext(_dbOptions);
         SeedCardsWithMetadata(ctx);
 
         var service = CreateService();
         // Search "bolt" + Red + Instant → only Lightning Bolt
-        var results = service.GetCards(new CardQueryModel
+        var results = (await service.GetCards(new CardQueryModel
         {
             SearchFilter = "bolt",
             Colors = ["R"],
             CardTypes = ["Instant"],
             IncludeScryfallMetadata = true
-        }).ToList();
+        })).ToList();
 
         Assert.Single(results);
         Assert.Equal("Lightning Bolt", results[0].CardName);
@@ -863,7 +863,7 @@ public class CollectionTrackingServiceTests : IDisposable
     // ── IsDoubleFaced calculation ────────────────────────────────────────────
 
     [Fact]
-    public void GetCards_IsDoubleFaced_ReturnsTrue_WhenBackImageSmallUrlDistinctFromFront()
+    public async Task GetCards_IsDoubleFaced_ReturnsTrue_WhenBackImageSmallUrlDistinctFromFront()
     {
         // A true double-faced card has a back-face image URL that differs from the front.
         using var ctx = new CardsDbContext(_dbOptions);
@@ -882,14 +882,14 @@ public class CollectionTrackingServiceTests : IDisposable
         ctx.SaveChanges();
 
         var service = CreateService();
-        var results = service.GetCards(new CardQueryModel { IncludeScryfallMetadata = true }).ToList();
+        var results = (await service.GetCards(new CardQueryModel { IncludeScryfallMetadata = true })).ToList();
 
         Assert.Single(results);
         Assert.True(results[0].IsDoubleFaced);
     }
 
     [Fact]
-    public void GetCards_IsDoubleFaced_ReturnsFalse_ForAdventureCard_WhenBackImageMatchesFront()
+    public async Task GetCards_IsDoubleFaced_ReturnsFalse_ForAdventureCard_WhenBackImageMatchesFront()
     {
         // Adventure cards (e.g. "Questing Druid // Seek the Beast") may have BackImageSmallUrl
         // populated with the SAME URL as ImageSmallUrl because both halves are on one physical face.
@@ -910,14 +910,14 @@ public class CollectionTrackingServiceTests : IDisposable
         ctx.SaveChanges();
 
         var service = CreateService();
-        var results = service.GetCards(new CardQueryModel { IncludeScryfallMetadata = true }).ToList();
+        var results = (await service.GetCards(new CardQueryModel { IncludeScryfallMetadata = true })).ToList();
 
         Assert.Single(results);
         Assert.False(results[0].IsDoubleFaced);
     }
 
     [Fact]
-    public void GetCards_IsDoubleFaced_ReturnsFalse_WhenNoBackImageSmallUrl()
+    public async Task GetCards_IsDoubleFaced_ReturnsFalse_WhenNoBackImageSmallUrl()
     {
         using var ctx = new CardsDbContext(_dbOptions);
         var sfSingle = new ScryfallCardMetadata
@@ -935,14 +935,14 @@ public class CollectionTrackingServiceTests : IDisposable
         ctx.SaveChanges();
 
         var service = CreateService();
-        var results = service.GetCards(new CardQueryModel { IncludeScryfallMetadata = true }).ToList();
+        var results = (await service.GetCards(new CardQueryModel { IncludeScryfallMetadata = true })).ToList();
 
         Assert.Single(results);
         Assert.False(results[0].IsDoubleFaced);
     }
 
     [Fact]
-    public void GetCards_IsDoubleFaced_ReturnsTrue_ForNameWithDoubleSlash_WhenNoScryfallMetadata()
+    public async Task GetCards_IsDoubleFaced_ReturnsTrue_ForNameWithDoubleSlash_WhenNoScryfallMetadata()
     {
         // Before Scryfall metadata has been fetched, presence of " // " in the card name is used
         // as a conservative fallback to show the Transform menu item.
@@ -951,21 +951,21 @@ public class CollectionTrackingServiceTests : IDisposable
         ctx.SaveChanges();
 
         var service = CreateService();
-        var results = service.GetCards(new CardQueryModel()).ToList();
+        var results = (await service.GetCards(new CardQueryModel())).ToList();
 
         Assert.Single(results);
         Assert.True(results[0].IsDoubleFaced);
     }
 
     [Fact]
-    public void GetCards_IsDoubleFaced_ReturnsFalse_ForNameWithoutDoubleSlash_WhenNoScryfallMetadata()
+    public async Task GetCards_IsDoubleFaced_ReturnsFalse_ForNameWithoutDoubleSlash_WhenNoScryfallMetadata()
     {
         using var ctx = new CardsDbContext(_dbOptions);
         ctx.Cards.Add(new CardSku { CardName = "Lightning Bolt", Edition = "M10", Quantity = 1 });
         ctx.SaveChanges();
 
         var service = CreateService();
-        var results = service.GetCards(new CardQueryModel()).ToList();
+        var results = (await service.GetCards(new CardQueryModel())).ToList();
 
         Assert.Single(results);
         Assert.False(results[0].IsDoubleFaced);
@@ -1153,7 +1153,7 @@ public class CollectionTrackingServiceTests : IDisposable
     }
 
     [Fact]
-    public void GetDecks_CommanderDeck_MaindeckTotalIncludesCommander()
+    public async Task GetDecks_CommanderDeck_MaindeckTotalIncludesCommander()
     {
         using var ctx = new CardsDbContext(_dbOptions);
         var deck = new Deck { Name = "Hakbal EDH", Format = "Commander", IsCommander = true };
@@ -1197,7 +1197,7 @@ public class CollectionTrackingServiceTests : IDisposable
         ctx.SaveChanges();
 
         var service = CreateService();
-        var summary = service.GetDecks(new DeckFilterModel { Ids = [deck.Id], Formats = [] }).Single();
+        var summary = (await service.GetDecks(new DeckFilterModel { Ids = [deck.Id], Formats = [] })).Single();
 
         Assert.Equal(100, summary.MaindeckTotal);
         Assert.True(summary.IsCommanderValid);
