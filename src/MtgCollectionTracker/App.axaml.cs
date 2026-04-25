@@ -87,6 +87,9 @@ public partial class App : Application
     private static void OnUiThreadUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
     {
         e.Handled = true;
+        if (IsIgnorableUnhandledException(e.Exception))
+            return;
+
         ShowExceptionDialog(e.Exception);
     }
 
@@ -94,6 +97,9 @@ public partial class App : Application
     {
         e.SetObserved();
         var ex = e.Exception.InnerException ?? e.Exception;
+        if (IsIgnorableUnhandledException(ex))
+            return;
+
         Dispatcher.UIThread.Post(() => ShowExceptionDialog(ex));
     }
 
@@ -115,5 +121,20 @@ public partial class App : Application
         var dialogVm = new DialogViewModel();
         dialogVm.WithContent("An error occurred", errorVm);
         WeakReferenceMessenger.Default.Send(new OpenDialogMessage { ViewModel = dialogVm });
+    }
+
+    private static bool IsIgnorableUnhandledException(Exception ex)
+    {
+        for (Exception? current = ex; current != null; current = current.InnerException)
+        {
+            if (current.GetType().FullName == "Tmds.DBus.Protocol.DBusException"
+                && current.Message.Contains("org.freedesktop.DBus.Error.ServiceUnknown", StringComparison.Ordinal)
+                && current.Message.Contains("The name is not activatable", StringComparison.Ordinal))
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
