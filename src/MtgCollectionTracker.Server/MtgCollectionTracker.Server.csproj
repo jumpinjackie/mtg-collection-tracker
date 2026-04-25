@@ -5,7 +5,8 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>MtgCollectionTracker.Server</RootNamespace>
     <!-- Generate the OpenAPI document next to the ApiClient project so it can be committed -->
-    <OpenApiGenerateDocuments>true</OpenApiGenerateDocuments>
+    <OpenApiGenerateDocuments Condition="'$(RuntimeIdentifier)' == ''">true</OpenApiGenerateDocuments>
+    <OpenApiGenerateDocuments Condition="'$(RuntimeIdentifier)' != ''">false</OpenApiGenerateDocuments>
     <OpenApiDocumentsDirectory>$(MSBuildThisFileDirectory)../MtgCollectionTracker.ApiClient</OpenApiDocumentsDirectory>
     <OpenApiDocumentName>openapi</OpenApiDocumentName>
   </PropertyGroup>
