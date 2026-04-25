@@ -236,7 +236,13 @@ app.MapPut("/api/cards/{id:guid}", async (
     IScryfallApiClient scryfallApi,
     CancellationToken cancel) =>
 {
-    model.Ids = new[] { id };
+    // Preserve any batched ids supplied in the body for remote callers. The route id remains a
+    // fallback for older single-item clients that do not populate model.Ids.
+    if (!model.Ids.Any())
+    {
+        model.Ids = new[] { id };
+    }
+
     var result = await svc.UpdateCardSkuAsync(model, scryfallApi, cancel);
     return TypedResults.Ok(result);
 });
