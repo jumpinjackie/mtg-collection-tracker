@@ -69,7 +69,7 @@ public partial class DismantleDeckViewModel : DialogContentViewModel
         this.Message = $"Are you sure you want to dismantle ({deckName})?";
         var unparented = new ContainerViewModel { Name = "(Unparented)" };
         var containers = new List<ContainerViewModel> { unparented };
-        containers.AddRange(_service.GetContainers().Select(c => _container().WithData(c)));
+        containers.AddRange(_service.GetContainersAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult().Select(c => _container().WithData(c)));
         this.AvailableContainers = containers;
         this.SelectedContainer = unparented;
         _confirmAction = onConfirm;

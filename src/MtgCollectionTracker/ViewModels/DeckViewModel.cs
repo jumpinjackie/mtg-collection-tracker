@@ -113,7 +113,7 @@ public partial class DeckViewModel : ViewModelBase
     {
         try
         {
-            using var stream = await _service!.GetSmallFrontFaceImageAsync(cardSkuId);
+            using var stream = await _service!.GetSmallFrontFaceImageAsync(cardSkuId, System.Threading.CancellationToken.None);
             if (stream != null)
                 return new Bitmap(stream);
         }

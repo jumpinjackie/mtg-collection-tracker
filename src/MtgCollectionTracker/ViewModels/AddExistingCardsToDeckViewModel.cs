@@ -78,11 +78,11 @@ public partial class AddExistingCardsToDeckViewModel : DialogContentViewModel
     [RelayCommand]
     private void Search()
     {
-        var results = _service.GetCards(new CardQueryModel
+        var results = _service.GetCardsAsync(new CardQueryModel
         {
             SearchFilter = this.SearchFilter,
             NotInDecks = true
-        });
+        }, System.Threading.CancellationToken.None).GetAwaiter().GetResult();
 
         this.SearchResults.Clear();
         foreach (var sku in results)
@@ -149,7 +149,7 @@ public partial class AddExistingCardsToDeckViewModel : DialogContentViewModel
                 {
                     CardSkuId = skuId,
                     Quantity = qty
-                });
+                }, cancel);
                 transferSkuId = newSku.Id;
 
                 Messenger.Send(new CardSkuSplitMessage

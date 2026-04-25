@@ -5,6 +5,7 @@ using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.ViewModels;
 using System;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.Tests;
@@ -16,14 +17,14 @@ public class CardsViewModelTests
     {
         // Arrange
         var service = new Mock<ICollectionTrackingService>();
-        service.Setup(s => s.GetCollectionSummary()).Returns(new CollectionSummaryModel
+        service.Setup(s => s.GetCollectionSummaryAsync(It.IsAny<System.Threading.CancellationToken>())).ReturnsAsync(new CollectionSummaryModel
         {
             CardTotal = 10,
             ProxyTotal = 0,
             SkuTotal = 10,
         });
-        service.Setup(s => s.GetTags()).Returns([]);
-        service.Setup(s => s.GetCards(It.IsAny<CardQueryModel>())).Returns([]);
+        service.Setup(s => s.GetTagsAsync(It.IsAny<System.Threading.CancellationToken>())).ReturnsAsync([]);
+        service.Setup(s => s.GetCardsAsync(It.IsAny<CardQueryModel>(), It.IsAny<System.Threading.CancellationToken>())).ReturnsAsync([]);
 
         var viewModel = CreateViewModel(service.Object);
         viewModel.SearchText = "lightning bolt";

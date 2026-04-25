@@ -58,7 +58,7 @@ public partial class AddCardsToWishlistViewModel : DialogContentViewModel
         _storage = storage;
         _service = service;
         _scryfallApiClient = scryfallApiClient;
-        _languages = service.GetLanguages().Select(lang => new LanguageViewModel(lang.Code, lang.PrintedCode, lang.Name)).ToArray();
+        _languages = service.GetLanguagesAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult().Select(lang => new LanguageViewModel(lang.Code, lang.PrintedCode, lang.Name)).ToArray();
     }
 
     public AddCardsToWishlistViewModel WithCards(IEnumerable<(int qty, string cardName, string edition)> cards)
@@ -238,7 +238,7 @@ public partial class AddCardsToWishlistViewModel : DialogContentViewModel
                 Edition = c.Edition
             });
 
-            var added = await _service.AddMultipleToWishlistAsync(adds, _scryfallApiClient);
+            var added = await _service.AddMultipleToWishlistAsync(adds, _scryfallApiClient, System.Threading.CancellationToken.None);
             Messenger.Send(new CardsAddedToWishlistMessage { Added = added });
             Messenger.Send(new CloseDialogMessage());
         }

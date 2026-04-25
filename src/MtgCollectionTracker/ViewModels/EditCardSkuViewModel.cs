@@ -50,10 +50,10 @@ public partial class EditCardSkuViewModel : DialogContentViewModel
     {
         _service = service;
         _scryfallApiClient = scryfallApiClient;
-        this.AllTags = service.GetTags().ToList();
-        this.Languages = service.GetLanguages().Select(lang => new LanguageViewModel(lang.Code, lang.PrintedCode, lang.Name)).ToArray();
-        this.AvailableDecks = service.GetDecks(null).Select(deck => deckItem().WithData(deck));
-        this.AvailableContainers = service.GetContainers().Select(cnt => new ContainerViewModel().WithData(cnt)).ToList();
+        this.AllTags = service.GetTagsAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult().ToList();
+        this.Languages = service.GetLanguagesAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult().Select(lang => new LanguageViewModel(lang.Code, lang.PrintedCode, lang.Name)).ToArray();
+        this.AvailableDecks = service.GetDecksAsync(null, System.Threading.CancellationToken.None).GetAwaiter().GetResult().Select(deck => deckItem().WithData(deck));
+        this.AvailableContainers = service.GetContainersAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult().Select(cnt => new ContainerViewModel().WithData(cnt)).ToList();
     }
 
     public IEnumerable<DeckViewModel> AvailableDecks { get; private set; }
@@ -81,7 +81,7 @@ public partial class EditCardSkuViewModel : DialogContentViewModel
         this.Language = this.Languages.FirstOrDefault(lang => lang.Code == sku.Language);
         this.Quantity = sku.OriginalEdition == "PROXY" ? sku.ProxyQty : sku.RealQty;
         this.Comments = sku.Comments;
-        
+
         this.Tags.Clear();
         foreach (var t in sku.TagList)
         {
@@ -274,7 +274,7 @@ public partial class EditCardSkuViewModel : DialogContentViewModel
             }
         }
 
-        
+
 
         Messenger.Send(new CloseDialogMessage());
     }

@@ -59,67 +59,63 @@ namespace MtgCollectionTracker.Core.Services
 
     public interface ICollectionTrackingService
     {
-        IEnumerable<CardLanguageModel> GetLanguages();
-        ValueTask<(int total, int proxyTotal, int rows)> AddMultipleToContainerOrDeckAsync(int? containerId, int? deckId, IEnumerable<AddToDeckOrContainerInputModel> items, IScryfallApiClient? scryfallClient);
-        ValueTask<CardSkuModel> AddToDeckAsync(AddToDeckInputModel model);
-        ValueTask<CardSkuModel> AddToDeckOrContainerAsync(int? containerId, int? deckId, AddToDeckOrContainerInputModel model);
-        ValueTask<CheckQuantityResult> CheckQuantityShortfallAsync(string cardName, int wantQty, bool noProxies, bool sparesOnly);
-        ValueTask<(int skusUpdated, int skusRemoved)> ConsolidateCardSkusAsync(ConsolidateCardSkusInputModel model);
-        ValueTask<ContainerSummaryModel> CreateContainerAsync(string name, string? description);
-        ValueTask<ContainerSummaryModel> UpdateContainerAsync(int id, string name, string? description);
-        ValueTask<DeckSummaryModel> CreateDeckAsync(string name, string? format, int? containerId, bool isCommander = false);
-        ValueTask<DeckSummaryModel> UpdateDeckAsync(int id, string name, string? format, int? containerId, bool isCommander = false);
-        ValueTask<DeckSummaryModel> SetDeckBannerAsync(int deckId, Guid? cardSkuId);
-        ValueTask<CardSkuModel> DeleteCardSkuAsync(Guid skuId);
-        ValueTask<DismantleDeckResult> DismantleDeckAsync(DismantleDeckInputModel model);
-        ValueTask<IEnumerable<CardSkuModel>> UpdateCardMetadataAsync(ICollection<Guid> ids, IScryfallApiClient scryfallApiClient, UpdateCardMetadataProgressCallback? callback, CancellationToken cancel);
-        ValueTask<IEnumerable<WishlistItemModel>> UpdateWishlistMetadataAsync(ICollection<int> ids, IScryfallApiClient scryfallApiClient, UpdateCardMetadataProgressCallback? callback, CancellationToken cancel);
-        IEnumerable<CardSkuModel> GetCards(CardQueryModel query);
+        ValueTask<IReadOnlyList<CardLanguageModel>> GetLanguagesAsync(CancellationToken cancel);
+        ValueTask<(int total, int proxyTotal, int rows)> AddMultipleToContainerOrDeckAsync(int? containerId, int? deckId, IEnumerable<AddToDeckOrContainerInputModel> items, IScryfallApiClient? scryfallClient, CancellationToken cancel);
+        ValueTask<CardSkuModel> AddToDeckAsync(AddToDeckInputModel model, CancellationToken cancel);
+        ValueTask<CardSkuModel> AddToDeckOrContainerAsync(int? containerId, int? deckId, AddToDeckOrContainerInputModel model, CancellationToken cancel);
+        ValueTask<CheckQuantityResult> CheckQuantityShortfallAsync(string cardName, int wantQty, bool noProxies, bool sparesOnly, CancellationToken cancel);
+        ValueTask<(int skusUpdated, int skusRemoved)> ConsolidateCardSkusAsync(ConsolidateCardSkusInputModel model, CancellationToken cancel);
+        ValueTask<ContainerSummaryModel> CreateContainerAsync(string name, string? description, CancellationToken cancel);
+        ValueTask<ContainerSummaryModel> UpdateContainerAsync(int id, string name, string? description, CancellationToken cancel);
+        ValueTask<DeckSummaryModel> CreateDeckAsync(string name, string? format, int? containerId, bool isCommander, CancellationToken cancel);
+        ValueTask<DeckSummaryModel> UpdateDeckAsync(int id, string name, string? format, int? containerId, bool isCommander, CancellationToken cancel);
+        ValueTask<DeckSummaryModel> SetDeckBannerAsync(int deckId, Guid? cardSkuId, CancellationToken cancel);
+        ValueTask<CardSkuModel> DeleteCardSkuAsync(Guid skuId, CancellationToken cancel);
+        ValueTask<DismantleDeckResult> DismantleDeckAsync(DismantleDeckInputModel model, CancellationToken cancel);
+        ValueTask<IReadOnlyList<CardSkuModel>> UpdateCardMetadataAsync(ICollection<Guid> ids, IScryfallApiClient scryfallApiClient, UpdateCardMetadataProgressCallback? callback, CancellationToken cancel);
+        ValueTask<IReadOnlyList<WishlistItemModel>> UpdateWishlistMetadataAsync(ICollection<int> ids, IScryfallApiClient scryfallApiClient, UpdateCardMetadataProgressCallback? callback, CancellationToken cancel);
+        ValueTask<IReadOnlyList<CardSkuModel>> GetCardsAsync(CardQueryModel query, CancellationToken cancel);
         ValueTask<CardSkuModel> GetCardSkuByIdAsync(Guid id, CancellationToken cancel);
-        PaginatedCardSkuModel GetCardsForContainer(int containerId, FetchContainerPageModel options);
-        IEnumerable<ContainerSummaryModel> GetContainers();
-        IEnumerable<DeckSummaryModel> GetDecks(DeckFilterModel? filter);
-        bool IsBasicLand(string cardName);
-        string PrintDeck(int deckId, DeckPrintOptions options);
-        string PrintContainer(int containerId, ContainerPrintOptions options);
-        ValueTask<(CardSkuModel sku, bool wasMerged)> RemoveFromDeckAsync(RemoveFromDeckInputModel model);
-        Task<CardSkuModel> SplitCardSkuAsync(SplitCardSkuInputModel model);
+        ValueTask<PaginatedCardSkuModel> GetCardsForContainerAsync(int containerId, FetchContainerPageModel options, CancellationToken cancel);
+        ValueTask<IReadOnlyList<ContainerSummaryModel>> GetContainersAsync(CancellationToken cancel);
+        ValueTask<IReadOnlyList<DeckSummaryModel>> GetDecksAsync(DeckFilterModel? filter, CancellationToken cancel);
+        ValueTask<bool> IsBasicLandAsync(string cardName, CancellationToken cancel);
+        ValueTask<string> PrintDeckAsync(int deckId, DeckPrintOptions options, CancellationToken cancel);
+        ValueTask<string> PrintContainerAsync(int containerId, ContainerPrintOptions options, CancellationToken cancel);
+        ValueTask<(CardSkuModel sku, bool wasMerged)> RemoveFromDeckAsync(RemoveFromDeckInputModel model, CancellationToken cancel);
+        ValueTask<CardSkuModel> SplitCardSkuAsync(SplitCardSkuInputModel model, CancellationToken cancel);
         ValueTask<UpdateCardSkuResult> UpdateCardSkuAsync(UpdateCardSkuInputModel model, IScryfallApiClient? scryfallApiClient, CancellationToken cancel);
-        CollectionSummaryModel GetCollectionSummary();
-        ValueTask<ICollection<WishlistItemModel>> AddMultipleToWishlistAsync(IEnumerable<AddToWishlistInputModel> items, IScryfallApiClient? scryfallClient);
-        IEnumerable<WishlistItemModel> GetWishlistItems(WishlistItemFilter filter);
-        ValueTask<(int created, int deleted)> ApplyVendorsAsync(ApplyVendorsInputModel model);
-        IEnumerable<VendorModel> GetVendors();
+        ValueTask<CollectionSummaryModel> GetCollectionSummaryAsync(CancellationToken cancel);
+        ValueTask<IReadOnlyList<WishlistItemModel>> AddMultipleToWishlistAsync(IEnumerable<AddToWishlistInputModel> items, IScryfallApiClient? scryfallClient, CancellationToken cancel);
+        ValueTask<IReadOnlyList<WishlistItemModel>> GetWishlistItemsAsync(WishlistItemFilter filter, CancellationToken cancel);
+        ValueTask<(int created, int deleted)> ApplyVendorsAsync(ApplyVendorsInputModel model, CancellationToken cancel);
+        ValueTask<IReadOnlyList<VendorModel>> GetVendorsAsync(CancellationToken cancel);
         ValueTask<WishlistItemModel> UpdateWishlistItemAsync(UpdateWishlistItemInputModel model, IScryfallApiClient? scryfallApiClient, CancellationToken cancel);
-        WishlistSpendSummaryModel GetWishlistSpend();
-        ValueTask<WishlistItemModel> DeleteWishlistItemAsync(int id);
+        ValueTask<WishlistSpendSummaryModel> GetWishlistSpendAsync(CancellationToken cancel);
+        ValueTask<WishlistItemModel> DeleteWishlistItemAsync(int id, CancellationToken cancel);
         ValueTask<DeckModel> GetDeckAsync(int deckId, IScryfallApiClient? scryfallApiClient, CancellationToken cancel);
-        ValueTask<MoveWishlistItemsToCollectionResult> MoveWishlistItemsToCollectionAsync(MoveWishlistItemsToCollectionInputModel model);
-        ValueTask<DeleteContainerResult> DeleteContainerAsync(DeleteContainerInputModel model);
-        IEnumerable<NotesModel> GetNotes();
-        ValueTask<NotesModel> UpdateNotesAsync(int? id, string? title, string notes);
-        ValueTask<bool> DeleteNotesAsync(int id);
-        ValueTask<Dictionary<string, ScryfallResolvedCard>> ResolveEditionsForCardsAsync(IEnumerable<string> cardNames, IScryfallApiClient client);
-        WishlistBuyingListModel GenerateBuyingList();
-        IEnumerable<string> GetDeckFormats();
-        bool HasOtherDecksInFormat(string format);
-        ValueTask<Stream?> GetLargeFrontFaceImageAsync(string scryfallId);
-        ValueTask<Stream?> GetLargeBackFaceImageAsync(string scryfallId);
-        ValueTask<Stream?> GetSmallFrontFaceImageAsync(string scryfallId);
-        ValueTask<Stream?> GetSmallBackFaceImageAsync(string scryfallId);
+        ValueTask<MoveWishlistItemsToCollectionResult> MoveWishlistItemsToCollectionAsync(MoveWishlistItemsToCollectionInputModel model, CancellationToken cancel);
+        ValueTask<DeleteContainerResult> DeleteContainerAsync(DeleteContainerInputModel model, CancellationToken cancel);
+        ValueTask<IReadOnlyList<NotesModel>> GetNotesAsync(CancellationToken cancel);
+        ValueTask<NotesModel> UpdateNotesAsync(int? id, string? title, string notes, CancellationToken cancel);
+        ValueTask<bool> DeleteNotesAsync(int id, CancellationToken cancel);
+        ValueTask<Dictionary<string, ScryfallResolvedCard>> ResolveEditionsForCardsAsync(IEnumerable<string> cardNames, IScryfallApiClient client, CancellationToken cancel);
+        ValueTask<WishlistBuyingListModel> GenerateBuyingListAsync(CancellationToken cancel);
+        ValueTask<IReadOnlyList<string>> GetDeckFormatsAsync(CancellationToken cancel);
+        ValueTask<bool> HasOtherDecksInFormatAsync(string format, CancellationToken cancel);
 
         /// <summary>Fetches the large front-face image for the card SKU with the given id.</summary>
-        ValueTask<Stream?> GetLargeFrontFaceImageAsync(Guid cardSkuId);
+        ValueTask<Stream?> GetLargeFrontFaceImageAsync(Guid cardSkuId, CancellationToken cancel);
 
         /// <summary>Fetches the large back-face image for the card SKU with the given id.</summary>
-        ValueTask<Stream?> GetLargeBackFaceImageAsync(Guid cardSkuId);
+        ValueTask<Stream?> GetLargeBackFaceImageAsync(Guid cardSkuId, CancellationToken cancel);
 
         /// <summary>Fetches the small front-face image for the card SKU with the given id.</summary>
-        ValueTask<Stream?> GetSmallFrontFaceImageAsync(Guid cardSkuId);
+        ValueTask<Stream?> GetSmallFrontFaceImageAsync(Guid cardSkuId, CancellationToken cancel);
 
         /// <summary>Fetches the small back-face image for the card SKU with the given id.</summary>
-        ValueTask<Stream?> GetSmallBackFaceImageAsync(Guid cardSkuId);
-        IEnumerable<string> GetTags();
+        ValueTask<Stream?> GetSmallBackFaceImageAsync(Guid cardSkuId, CancellationToken cancel);
+        ValueTask<IReadOnlyList<string>> GetTagsAsync(CancellationToken cancel);
         ValueTask<ApplyTagsResult> ApplyTagsAsync(IEnumerable<string> tags, CancellationToken cancel);
         ValueTask AddMissingMetadataAsync(UpdateCardMetadataProgressCallback callback, IScryfallApiClient scryfallApiClient, CancellationToken cancel);
         ValueTask RebuildAllMetadataAsync(UpdateCardMetadataProgressCallback callback, IScryfallApiClient scryfallApiClient, CancellationToken cancel);
@@ -146,7 +142,7 @@ namespace MtgCollectionTracker.Core.Services
         ValueTask<CommanderValidationResult> ValidateCommanderDeckAsync(int deckId, CancellationToken cancel);
 
         /// <summary>Sets the commander card for a commander deck.</summary>
-        ValueTask<DeckSummaryModel> SetDeckCommanderAsync(int deckId, Guid? commanderSkuId);
+        ValueTask<DeckSummaryModel> SetDeckCommanderAsync(int deckId, Guid? commanderSkuId, CancellationToken cancel);
     }
 
     public static class CollectionTrackingServiceExtensions
@@ -154,7 +150,7 @@ namespace MtgCollectionTracker.Core.Services
         public static async ValueTask<List<LowestPriceCheckItem>> GetLowestPricesForDeckAsync(this ICollectionTrackingService service, LowestPriceCheckForDeckOptions options, IScryfallApiClient client, CancellationToken cancel)
         {
             var deck = await service.GetDeckAsync(options.DeckId, client, cancel);
-            
+
             var items = new List<PriceCheckItem>();
 
             items.AddRange(deck.MainDeck.GroupBy(c => c.CardName).Select(grp => new PriceCheckItem(grp.Key, grp.Count())));

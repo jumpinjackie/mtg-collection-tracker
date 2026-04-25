@@ -38,7 +38,7 @@ public partial class ManageVendorsViewModel : DialogContentViewModel
         {
             Names = this.VendorsText.Split(Environment.NewLine, StringSplitOptions.RemoveEmptyEntries)
         };
-        await _service.ApplyVendorsAsync(input);
+        await _service.ApplyVendorsAsync(input, System.Threading.CancellationToken.None);
         Messenger.ToastNotify("Vendors updated", Avalonia.Controls.Notifications.NotificationType.Success);
         Messenger.Send(new CloseDialogMessage());
     }

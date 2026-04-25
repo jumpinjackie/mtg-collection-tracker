@@ -111,7 +111,7 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
                     {
                         try
                         {
-                            var res = await _service.DeleteContainerAsync(new() { ContainerId = this.SelectedContainer.Id });
+                            var res = await _service.DeleteContainerAsync(new() { ContainerId = this.SelectedContainer.Id }, System.Threading.CancellationToken.None);
                             this.Messenger.ToastNotify($"Container Deleted. {res.UnassignedSkuTotal} SKU(s) un-assigned", Avalonia.Controls.Notifications.NotificationType.Success);
                             this.Messenger.Send(new ContainerDeletedMessage { Id = this.SelectedContainer.Id });
                         }
@@ -142,7 +142,7 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
     {
         if (this.SelectedContainer != null)
         {
-            var text = _service.PrintContainer(this.SelectedContainer.Id, new ContainerPrintOptions(true));
+            var text = _service.PrintContainerAsync(this.SelectedContainer.Id, new ContainerPrintOptions(true), System.Threading.CancellationToken.None).GetAwaiter().GetResult();
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 1000,
@@ -155,7 +155,7 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
     private void RefreshList()
     {
         this.Containers.Clear();
-        var containers = _service.GetContainers();
+        var containers = _service.GetContainersAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult();
         foreach (var cont in containers)
         {
             this.Containers.Add(_container().WithData(cont));
@@ -191,7 +191,7 @@ public partial class ContainerSetViewModel : RecipientViewModelBase, IRecipient<
         var item = this.Containers.FirstOrDefault(c => c.Id == message.ContainerId);
         if (item != null)
         {
-            var updated = _service.GetContainers().FirstOrDefault(c => c.Id == message.ContainerId);
+            var updated = _service.GetContainersAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult().FirstOrDefault(c => c.Id == message.ContainerId);
             if (updated != null)
                 item.WithData(updated);
         }

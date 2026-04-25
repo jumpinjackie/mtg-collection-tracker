@@ -19,6 +19,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
 {
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
+    private readonly CardImageCache? _imageCache;
 
     readonly Func<DialogViewModel> _dialog;
     readonly Func<EditWishlistItemViewModel> _editWishlistItem;
@@ -45,6 +46,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
     }
 
     public WishlistViewModel(ICollectionTrackingService service,
+        CardImageCache imageCache,
         Func<DialogViewModel> dialog,
         Func<EditWishlistItemViewModel> editWishlistItem,
         Func<AddCardsToWishlistViewModel> addCardsToWishlist,
@@ -56,13 +58,14 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
     {
         _service = service;
         _scryfallApiClient = scryfallApiClient;
+        _imageCache = imageCache;
         _dialog = dialog;
         _editWishlistItem = editWishlistItem;
         _addCardsToWishlist = addCardsToWishlist;
         _wishlistItem = wishlistItem;
         _moveToCollection = moveToCollection;
         _manageVendors = manageVendors;
-        var tags = service.GetTags();
+        var tags = service.GetTagsAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult();
         foreach (var t in tags)
         {
             this.Tags.Add(t);
@@ -98,10 +101,10 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
     {
         this.Cards.Clear();
         var filter = new WishlistItemFilter(this.SelectedTags.Count > 0 ? this.SelectedTags : null);
-        var items = _service.GetWishlistItems(filter);
+        var items = _service.GetWishlistItemsAsync(filter, System.Threading.CancellationToken.None).GetAwaiter().GetResult();
         foreach (var item in items)
         {
-            this.Cards.Add(_wishlistItem().WithData(item));
+            this.Cards.Add(_wishlistItem().WithImageCache(_imageCache!).WithData(item));
         }
         this.ApplySummary();
     }
@@ -153,7 +156,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
                         var toRemove = Behavior.SelectedItems.ToList();
                         foreach (var item in toRemove)
                         {
-                            await _service.DeleteWishlistItemAsync(item.Id);
+                            await _service.DeleteWishlistItemAsync(item.Id, System.Threading.CancellationToken.None);
                             Behavior.SelectedItems.Remove(item);
                             this.Cards.Remove(item);
                             removed++;
@@ -169,7 +172,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
     [RelayCommand]
     private void ManageVendors()
     {
-        var vendors = _service.GetVendors();
+        var vendors = _service.GetVendorsAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult();
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 800,
@@ -206,7 +209,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
     [RelayCommand]
     private void GenerateBuyingList()
     {
-        var buylist = _service.GenerateBuyingList();
+        var buylist = _service.GenerateBuyingListAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult();
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 600,
@@ -260,7 +263,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
 
     private void ApplySummary()
     {
-        var summary = _service.GetWishlistSpend();
+        var summary = _service.GetWishlistSpendAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult();
         this.WishlistSummary = $"Current spend: ${summary.Total.Amount} across {summary.Vendors.Length} vendor(s)";
     }
 

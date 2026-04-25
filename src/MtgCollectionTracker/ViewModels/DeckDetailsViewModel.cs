@@ -175,7 +175,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
 
     partial void OnReportProxyUsageChanged(bool value)
     {
-        this.DeckListText = _service.PrintDeck(_origDeck.Id, new DeckPrintOptions(value));
+        this.DeckListText = _service.PrintDeckAsync(_origDeck.Id, new DeckPrintOptions(value), System.Threading.CancellationToken.None).GetAwaiter().GetResult();
     }
 
     private void UpdateView(DeckViewMode mode)
@@ -183,7 +183,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
         switch (mode)
         {
             case DeckViewMode.Text:
-                this.DeckListText = _service.PrintDeck(_origDeck.Id, new DeckPrintOptions(false));
+                this.DeckListText = _service.PrintDeckAsync(_origDeck.Id, new DeckPrintOptions(false), System.Threading.CancellationToken.None).GetAwaiter().GetResult();
                 break;
             case DeckViewMode.VisualByCardName:
                 UpdateVisual(_service, _origDeck, null, ref _mainDeckByCardName, this.MainDeck, ref _sideboardByCardName, this.Sideboard, c => c.CardName);
@@ -338,8 +338,8 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
                     _bannerCardId = selected.Id;
                     _origDeck.BannerCardId = selected.Id;
 
-                    await _service.SetDeckBannerAsync(_origDeck.Id, selected.Id);
-                    updatedDeck = await _service.SetDeckCommanderAsync(_origDeck.Id, selected.Id);
+                    await _service.SetDeckBannerAsync(_origDeck.Id, selected.Id, System.Threading.CancellationToken.None);
+                    updatedDeck = await _service.SetDeckCommanderAsync(_origDeck.Id, selected.Id, System.Threading.CancellationToken.None);
 
                     var selectedCommander = _origDeck.MainDeck.FirstOrDefault(c => c.SkuId == selected.Id)
                         ?? _origDeck.Sideboard.FirstOrDefault(c => c.SkuId == selected.Id);
@@ -349,7 +349,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
                 {
                     // Toggle: if this card is already the banner, clear it; otherwise set it
                     var newBannerId = selected.Id == _bannerCardId ? (Guid?)null : selected.Id;
-                    updatedDeck = await _service.SetDeckBannerAsync(_origDeck.Id, newBannerId);
+                    updatedDeck = await _service.SetDeckBannerAsync(_origDeck.Id, newBannerId, System.Threading.CancellationToken.None);
                     _bannerCardId = newBannerId;
                     _origDeck.BannerCardId = newBannerId;
                 }

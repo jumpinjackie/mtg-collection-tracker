@@ -118,12 +118,12 @@ app.Use(async (context, next) =>
 app.MapGet("/api/health", () => TypedResults.Ok(new { status = "ok", version = "1.0.0" }));
 
 // Languages
-app.MapGet("/api/languages", (ICollectionTrackingService svc) =>
-    TypedResults.Ok(svc.GetLanguages()));
+app.MapGet("/api/languages", async (ICollectionTrackingService svc, CancellationToken cancel) =>
+    TypedResults.Ok(await svc.GetLanguagesAsync(cancel)));
 
 // Tags
-app.MapGet("/api/tags", (ICollectionTrackingService svc) =>
-    TypedResults.Ok(svc.GetTags()));
+app.MapGet("/api/tags", async (ICollectionTrackingService svc, CancellationToken cancel) =>
+    TypedResults.Ok(await svc.GetTagsAsync(cancel)));
 
 app.MapPost("/api/tags", async (
     string[] tags,
@@ -136,8 +136,9 @@ app.MapPost("/api/tags", async (
 
 // ── Cards ─────────────────────────────────────────────────────────────────────
 
-app.MapGet("/api/cards", (
+app.MapGet("/api/cards", async (
     ICollectionTrackingService svc,
+    CancellationToken cancel,
     string? searchFilter,
     bool notInDecks = false,
     bool noProxies = false,
@@ -164,14 +165,15 @@ app.MapGet("/api/cards", (
         Colors = colors,
         CardTypes = cardTypes,
     };
-    return TypedResults.Ok(svc.GetCards(query));
+    return TypedResults.Ok(await svc.GetCardsAsync(query, cancel));
 });
 
-app.MapGet("/api/cards/isBasicLand/{cardName}", (string cardName, ICollectionTrackingService svc) =>
-    TypedResults.Ok(svc.IsBasicLand(cardName)));
+app.MapGet("/api/cards/isBasicLand/{cardName}", async (string cardName, ICollectionTrackingService svc, CancellationToken cancel) =>
+    TypedResults.Ok(await svc.IsBasicLandAsync(cardName, cancel)));
 
-app.MapGet("/api/cards/container/{containerId:int}", (
+app.MapGet("/api/cards/container/{containerId:int}", async (
     ICollectionTrackingService svc,
+    CancellationToken cancel,
     int containerId,
     int page,
     int? pageSize,
@@ -183,7 +185,7 @@ app.MapGet("/api/cards/container/{containerId:int}", (
         PageSize = pageSize,
         ShowOnlyMissingMetadata = missingMetadata,
     };
-    return TypedResults.Ok(svc.GetCardsForContainer(containerId, opts));
+    return TypedResults.Ok(await svc.GetCardsForContainerAsync(containerId, opts, cancel));
 });
 
 app.MapGet("/api/cards/{id:guid}", async (
@@ -199,28 +201,31 @@ app.MapPost("/api/cards/add", async (
     int? containerId,
     int? deckId,
     AddToDeckOrContainerInputModel model,
-    ICollectionTrackingService svc) =>
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
 {
     var effectiveDeckId = deckId ?? model.DeckId;
-    var sku = await svc.AddToDeckOrContainerAsync(containerId, effectiveDeckId, model);
+    var sku = await svc.AddToDeckOrContainerAsync(containerId, effectiveDeckId, model, cancel);
     return TypedResults.Ok(sku);
 });
 
 app.MapPost("/api/cards/addToDeck", async (
     AddToDeckInputModel model,
-    ICollectionTrackingService svc) =>
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
 {
-    var sku = await svc.AddToDeckAsync(model);
+    var sku = await svc.AddToDeckAsync(model, cancel);
     return TypedResults.Ok(sku);
 });
 
 app.MapPost("/api/cards/addBatch", async (
     AddBatchRequest req,
     ICollectionTrackingService svc,
-    IScryfallApiClient scryfallApi) =>
+    IScryfallApiClient scryfallApi,
+    CancellationToken cancel) =>
 {
     var (total, proxyTotal, rows) = await svc.AddMultipleToContainerOrDeckAsync(
-        req.ContainerId, req.DeckId, req.Items, scryfallApi);
+        req.ContainerId, req.DeckId, req.Items, scryfallApi, cancel);
     return TypedResults.Ok(new AddBatchResult(total, proxyTotal, rows));
 });
 
@@ -239,94 +244,104 @@ app.MapPut("/api/cards/{id:guid}", async (
 app.MapPost("/api/cards/{id:guid}/split", async (
     Guid id,
     SplitCardSkuInputModel model,
-    ICollectionTrackingService svc) =>
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
 {
     model.CardSkuId = id;
-    var sku = await svc.SplitCardSkuAsync(model);
+    var sku = await svc.SplitCardSkuAsync(model, cancel);
     return TypedResults.Ok(sku);
 });
 
 app.MapPost("/api/cards/{id:guid}/delete", async (
     Guid id,
-    ICollectionTrackingService svc) =>
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
 {
-    var sku = await svc.DeleteCardSkuAsync(id);
+    var sku = await svc.DeleteCardSkuAsync(id, cancel);
     return TypedResults.Ok(sku);
 });
 
 app.MapPost("/api/cards/removeFromDeck", async (
     RemoveFromDeckInputModel model,
-    ICollectionTrackingService svc) =>
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
 {
-    var (sku, wasMerged) = await svc.RemoveFromDeckAsync(model);
+    var (sku, wasMerged) = await svc.RemoveFromDeckAsync(model, cancel);
     return TypedResults.Ok(new RemoveFromDeckResult(sku, wasMerged));
 });
 
 app.MapPost("/api/cards/consolidate", async (
     ConsolidateCardSkusInputModel model,
-    ICollectionTrackingService svc) =>
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
 {
-    var (skusUpdated, skusRemoved) = await svc.ConsolidateCardSkusAsync(model);
+    var (skusUpdated, skusRemoved) = await svc.ConsolidateCardSkusAsync(model, cancel);
     return TypedResults.Ok(new ConsolidateResult(skusUpdated, skusRemoved));
 });
 
 app.MapPost("/api/cards/resolveEditions", async (
     string[] cardNames,
     ICollectionTrackingService svc,
-    IScryfallApiClient scryfallApi) =>
+    IScryfallApiClient scryfallApi,
+    CancellationToken cancel) =>
 {
-    var result = await svc.ResolveEditionsForCardsAsync(cardNames, scryfallApi);
+    var result = await svc.ResolveEditionsForCardsAsync(cardNames, scryfallApi, cancel);
     return TypedResults.Ok(result);
 });
 
 // ── Containers ────────────────────────────────────────────────────────────────
 
-app.MapGet("/api/containers", (ICollectionTrackingService svc) =>
-    TypedResults.Ok(svc.GetContainers()));
+app.MapGet("/api/containers", async (ICollectionTrackingService svc, CancellationToken cancel) =>
+    TypedResults.Ok(await svc.GetContainersAsync(cancel)));
 
 app.MapPost("/api/containers", async (
     CreateContainerRequest req,
-    ICollectionTrackingService svc) =>
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
 {
-    var container = await svc.CreateContainerAsync(req.Name, req.Description);
+    var container = await svc.CreateContainerAsync(req.Name, req.Description, cancel);
     return TypedResults.Ok(container);
 });
 
 app.MapPut("/api/containers/{id:int}", async (
     int id,
     CreateContainerRequest req,
-    ICollectionTrackingService svc) =>
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
 {
-    var container = await svc.UpdateContainerAsync(id, req.Name, req.Description);
+    var container = await svc.UpdateContainerAsync(id, req.Name, req.Description, cancel);
     return TypedResults.Ok(container);
 });
 
 app.MapPost("/api/containers/{id:int}/delete", async (
     int id,
     DeleteContainerInputModel model,
-    ICollectionTrackingService svc) =>
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
 {
     model.ContainerId = id;
-    var result = await svc.DeleteContainerAsync(model);
+    var result = await svc.DeleteContainerAsync(model, cancel);
     return TypedResults.Ok(result);
 });
 
-app.MapGet("/api/containers/{id:int}/print", (
+app.MapGet("/api/containers/{id:int}/print", async (
     int id,
     ICollectionTrackingService svc,
+    CancellationToken cancel,
     bool reportProxyUsage = false) =>
 {
-    var text = svc.PrintContainer(id, new ContainerPrintOptions(reportProxyUsage));
+    var text = await svc.PrintContainerAsync(id, new ContainerPrintOptions(reportProxyUsage), cancel);
     return Results.Text(text, "text/plain");
 });
 
 // ── Decks ─────────────────────────────────────────────────────────────────────
 
-app.MapGet("/api/decks", (
+app.MapGet("/api/decks", async (
     [Microsoft.AspNetCore.Mvc.FromQuery] string[]? formats,
     [Microsoft.AspNetCore.Mvc.FromQuery] int[]? deckIds,
     bool? isCommander,
-    ICollectionTrackingService svc) =>
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
 {
     DeckFilterModel? filter = null;
     if (formats?.Length > 0 || deckIds?.Length > 0)
@@ -338,17 +353,17 @@ app.MapGet("/api/decks", (
         };
     }
 
-    var decks = svc.GetDecks(filter);
+    IReadOnlyList<DeckSummaryModel> decks = await svc.GetDecksAsync(filter, cancel);
     if (isCommander.HasValue)
-        decks = decks.Where(d => d.IsCommander == isCommander.Value);
+        decks = decks.Where(d => d.IsCommander == isCommander.Value).ToList();
     return TypedResults.Ok(decks);
 });
 
-app.MapGet("/api/decks/formats", (ICollectionTrackingService svc) =>
-    TypedResults.Ok(svc.GetDeckFormats()));
+app.MapGet("/api/decks/formats", async (ICollectionTrackingService svc, CancellationToken cancel) =>
+    TypedResults.Ok(await svc.GetDeckFormatsAsync(cancel)));
 
-app.MapGet("/api/decks/hasOtherFormats/{format}", (string format, ICollectionTrackingService svc) =>
-    TypedResults.Ok(svc.HasOtherDecksInFormat(format)));
+app.MapGet("/api/decks/hasOtherFormats/{format}", async (string format, ICollectionTrackingService svc, CancellationToken cancel) =>
+    TypedResults.Ok(await svc.HasOtherDecksInFormatAsync(format, cancel)));
 
 app.MapGet("/api/decks/{id:int}", async (
     int id,
@@ -360,57 +375,63 @@ app.MapGet("/api/decks/{id:int}", async (
     return TypedResults.Ok(deck);
 });
 
-app.MapGet("/api/decks/{id:int}/print", (
+app.MapGet("/api/decks/{id:int}/print", async (
     int id,
     ICollectionTrackingService svc,
+    CancellationToken cancel,
     bool reportProxyUsage = false) =>
 {
-    var text = svc.PrintDeck(id, new DeckPrintOptions(reportProxyUsage));
+    var text = await svc.PrintDeckAsync(id, new DeckPrintOptions(reportProxyUsage), cancel);
     return Results.Text(text, "text/plain");
 });
 
 app.MapPost("/api/decks", async (
     CreateDeckRequest req,
-    ICollectionTrackingService svc) =>
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
 {
-    var deck = await svc.CreateDeckAsync(req.Name, req.Format, req.ContainerId, req.IsCommander);
+    var deck = await svc.CreateDeckAsync(req.Name, req.Format, req.ContainerId, req.IsCommander, cancel);
     return TypedResults.Ok(deck);
 });
 
 app.MapPut("/api/decks/{id:int}", async (
     int id,
     CreateDeckRequest req,
-    ICollectionTrackingService svc) =>
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
 {
-    var deck = await svc.UpdateDeckAsync(id, req.Name, req.Format, req.ContainerId, req.IsCommander);
+    var deck = await svc.UpdateDeckAsync(id, req.Name, req.Format, req.ContainerId, req.IsCommander, cancel);
     return TypedResults.Ok(deck);
 });
 
 app.MapPost("/api/decks/{id:int}/banner", async (
     int id,
     SetBannerRequest req,
-    ICollectionTrackingService svc) =>
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
 {
-    var deck = await svc.SetDeckBannerAsync(id, req.CardSkuId);
+    var deck = await svc.SetDeckBannerAsync(id, req.CardSkuId, cancel);
     return TypedResults.Ok(deck);
 });
 
 app.MapPost("/api/decks/{id:int}/commander", async (
     int id,
     SetCommanderRequest req,
-    ICollectionTrackingService svc) =>
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
 {
-    var deck = await svc.SetDeckCommanderAsync(id, req.CommanderSkuId);
+    var deck = await svc.SetDeckCommanderAsync(id, req.CommanderSkuId, cancel);
     return TypedResults.Ok(deck);
 });
 
 app.MapPost("/api/decks/{id:int}/dismantle", async (
     int id,
     DismantleDeckInputModel model,
-    ICollectionTrackingService svc) =>
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
 {
     model.DeckId = id;
-    var result = await svc.DismantleDeckAsync(model);
+    var result = await svc.DismantleDeckAsync(model, cancel);
     return TypedResults.Ok(result);
 });
 
@@ -425,20 +446,21 @@ app.MapPost("/api/decks/{id:int}/validate", async (
 
 // ── Wishlist ──────────────────────────────────────────────────────────────────
 
-app.MapGet("/api/wishlist", (
+app.MapGet("/api/wishlist", async (
     [Microsoft.AspNetCore.Mvc.FromQuery] string[]? tags,
-    ICollectionTrackingService svc) =>
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
 {
     var filter = new WishlistItemFilter(tags?.Length > 0 ? tags : null);
-    return TypedResults.Ok(svc.GetWishlistItems(filter));
+    return TypedResults.Ok(await svc.GetWishlistItemsAsync(filter, cancel));
 });
 
-app.MapGet("/api/wishlist/spend", (ICollectionTrackingService svc) =>
-    TypedResults.Ok(svc.GetWishlistSpend()));
+app.MapGet("/api/wishlist/spend", async (ICollectionTrackingService svc, CancellationToken cancel) =>
+    TypedResults.Ok(await svc.GetWishlistSpendAsync(cancel)));
 
-app.MapGet("/api/wishlist/buyingList", (ICollectionTrackingService svc) =>
+app.MapGet("/api/wishlist/buyingList", async (ICollectionTrackingService svc, CancellationToken cancel) =>
 {
-    var model = svc.GenerateBuyingList();
+    var model = await svc.GenerateBuyingListAsync(cancel);
     var entries = model.Entries
         .Select(kv => new BuyingListVendorEntry(kv.Key, kv.Value.ToArray()))
         .ToArray();
@@ -448,9 +470,10 @@ app.MapGet("/api/wishlist/buyingList", (ICollectionTrackingService svc) =>
 app.MapPost("/api/wishlist", async (
     [Microsoft.AspNetCore.Mvc.FromBody] IEnumerable<AddToWishlistInputModel> items,
     ICollectionTrackingService svc,
-    IScryfallApiClient scryfallApi) =>
+    IScryfallApiClient scryfallApi,
+    CancellationToken cancel) =>
 {
-    var result = await svc.AddMultipleToWishlistAsync(items, scryfallApi);
+    var result = await svc.AddMultipleToWishlistAsync(items, scryfallApi, cancel);
     return TypedResults.Ok(result);
 });
 
@@ -468,67 +491,73 @@ app.MapPut("/api/wishlist/{id:int}", async (
 
 app.MapPost("/api/wishlist/{id:int}/delete", async (
     int id,
-    ICollectionTrackingService svc) =>
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
 {
-    var item = await svc.DeleteWishlistItemAsync(id);
+    var item = await svc.DeleteWishlistItemAsync(id, cancel);
     return TypedResults.Ok(item);
 });
 
 app.MapPost("/api/wishlist/moveToCollection", async (
     MoveWishlistItemsToCollectionInputModel model,
-    ICollectionTrackingService svc) =>
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
 {
-    var result = await svc.MoveWishlistItemsToCollectionAsync(model);
+    var result = await svc.MoveWishlistItemsToCollectionAsync(model, cancel);
     return TypedResults.Ok(result);
 });
 
 // ── Notes ─────────────────────────────────────────────────────────────────────
 
-app.MapGet("/api/notes", (ICollectionTrackingService svc) =>
-    TypedResults.Ok(svc.GetNotes()));
+app.MapGet("/api/notes", async (ICollectionTrackingService svc, CancellationToken cancel) =>
+    TypedResults.Ok(await svc.GetNotesAsync(cancel)));
 
 app.MapPost("/api/notes", async (
     UpdateNotesRequest req,
-    ICollectionTrackingService svc) =>
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
 {
-    var note = await svc.UpdateNotesAsync(req.Id, req.Title, req.Notes);
+    var note = await svc.UpdateNotesAsync(req.Id, req.Title, req.Notes, cancel);
     return TypedResults.Ok(note);
 });
 
 app.MapDelete("/api/notes/{id:int}", async (
     int id,
-    ICollectionTrackingService svc) =>
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
 {
-    var result = await svc.DeleteNotesAsync(id);
+    var result = await svc.DeleteNotesAsync(id, cancel);
     return TypedResults.Ok(result);
 });
 
 // ── Vendors ───────────────────────────────────────────────────────────────────
 
-app.MapGet("/api/vendors", (ICollectionTrackingService svc) =>
-    TypedResults.Ok(svc.GetVendors()));
+app.MapGet("/api/vendors", async (ICollectionTrackingService svc, CancellationToken cancel) =>
+    TypedResults.Ok(await svc.GetVendorsAsync(cancel)));
 
 app.MapPost("/api/vendors", async (
     ApplyVendorsInputModel model,
-    ICollectionTrackingService svc) =>
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
 {
-    var (created, deleted) = await svc.ApplyVendorsAsync(model);
+    var (created, deleted) = await svc.ApplyVendorsAsync(model, cancel);
     return TypedResults.Ok(new ApplyVendorsResult(created, deleted));
 });
 
 // ── Collection ────────────────────────────────────────────────────────────────
 
-app.MapGet("/api/collection/summary", (ICollectionTrackingService svc) =>
-    TypedResults.Ok(svc.GetCollectionSummary()));
+app.MapGet("/api/collection/summary", async (ICollectionTrackingService svc, CancellationToken cancel) =>
+    TypedResults.Ok(await svc.GetCollectionSummaryAsync(cancel)));
 
 app.MapGet("/api/collection/checkQuantity", async (
     string cardName,
     int wantQty,
     bool noProxies,
     bool sparesOnly,
-    ICollectionTrackingService svc) =>
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
 {
-    var result = await svc.CheckQuantityShortfallAsync(cardName, wantQty, noProxies, sparesOnly);
+    var result = await svc.CheckQuantityShortfallAsync(cardName, wantQty, noProxies, sparesOnly, cancel);
     return TypedResults.Ok(result);
 });
 
@@ -564,75 +593,41 @@ app.MapPost("/api/prices/lowest", async (
     return TypedResults.Ok(result);
 });
 
-// ── Card images ───────────────────────────────────────────────────────────────
-
-app.MapGet("/api/images/{scryfallId}/front/large", async (
-    string scryfallId,
-    ICollectionTrackingService svc) =>
-{
-    if (!IsValidScryfallId(scryfallId)) return Results.BadRequest("Invalid Scryfall ID");
-    var stream = await svc.GetLargeFrontFaceImageAsync(scryfallId);
-    return stream is null ? Results.NotFound() : Results.Stream(stream, "image/jpeg");
-});
-
-app.MapGet("/api/images/{scryfallId}/front/small", async (
-    string scryfallId,
-    ICollectionTrackingService svc) =>
-{
-    if (!IsValidScryfallId(scryfallId)) return Results.BadRequest("Invalid Scryfall ID");
-    var stream = await svc.GetSmallFrontFaceImageAsync(scryfallId);
-    return stream is null ? Results.NotFound() : Results.Stream(stream, "image/jpeg");
-});
-
-app.MapGet("/api/images/{scryfallId}/back/large", async (
-    string scryfallId,
-    ICollectionTrackingService svc) =>
-{
-    if (!IsValidScryfallId(scryfallId)) return Results.BadRequest("Invalid Scryfall ID");
-    var stream = await svc.GetLargeBackFaceImageAsync(scryfallId);
-    return stream is null ? Results.NotFound() : Results.Stream(stream, "image/jpeg");
-});
-
-app.MapGet("/api/images/{scryfallId}/back/small", async (
-    string scryfallId,
-    ICollectionTrackingService svc) =>
-{
-    if (!IsValidScryfallId(scryfallId)) return Results.BadRequest("Invalid Scryfall ID");
-    var stream = await svc.GetSmallBackFaceImageAsync(scryfallId);
-    return stream is null ? Results.NotFound() : Results.Stream(stream, "image/jpeg");
-});
-
 // ── Card images by card SKU ID ─────────────────────────────────────────────────
 
 app.MapGet("/api/images/sku/{id:guid}/front/large", async (
     Guid id,
-    ICollectionTrackingService svc) =>
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
 {
-    var stream = await svc.GetLargeFrontFaceImageAsync(id);
+    var stream = await svc.GetLargeFrontFaceImageAsync(id, cancel);
     return stream is null ? Results.NotFound() : Results.Stream(stream, "image/jpeg");
 });
 
 app.MapGet("/api/images/sku/{id:guid}/front/small", async (
     Guid id,
-    ICollectionTrackingService svc) =>
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
 {
-    var stream = await svc.GetSmallFrontFaceImageAsync(id);
+    var stream = await svc.GetSmallFrontFaceImageAsync(id, cancel);
     return stream is null ? Results.NotFound() : Results.Stream(stream, "image/jpeg");
 });
 
 app.MapGet("/api/images/sku/{id:guid}/back/large", async (
     Guid id,
-    ICollectionTrackingService svc) =>
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
 {
-    var stream = await svc.GetLargeBackFaceImageAsync(id);
+    var stream = await svc.GetLargeBackFaceImageAsync(id, cancel);
     return stream is null ? Results.NotFound() : Results.Stream(stream, "image/jpeg");
 });
 
 app.MapGet("/api/images/sku/{id:guid}/back/small", async (
     Guid id,
-    ICollectionTrackingService svc) =>
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
 {
-    var stream = await svc.GetSmallBackFaceImageAsync(id);
+    var stream = await svc.GetSmallBackFaceImageAsync(id, cancel);
     return stream is null ? Results.NotFound() : Results.Stream(stream, "image/jpeg");
 });
 
@@ -905,14 +900,6 @@ app.MapGet("/api/operations/{operationId}/events", async (
 });
 
 app.Run();
-
-// ── Local helper ──────────────────────────────────────────────────────────────
-
-/// <summary>Validates that a Scryfall ID contains only alphanumeric characters and hyphens.</summary>
-static bool IsValidScryfallId(string scryfallId) =>
-    !string.IsNullOrEmpty(scryfallId) &&
-    scryfallId.Length <= 64 &&
-    scryfallId.All(c => char.IsAsciiLetterOrDigit(c) || c == '-');
 
 // ── Helper types ──────────────────────────────────────────────────────────────
 // Request/response records are defined in MtgCollectionTracker.Core.Model and shared

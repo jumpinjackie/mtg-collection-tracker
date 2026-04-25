@@ -93,14 +93,14 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
     {
         using (((IViewModelWithBusyState)this).StartBusyState())
         {
-            var page = _service.GetCardsForContainer(_containerId.Value, new()
+            var page = _service.GetCardsForContainerAsync(_containerId.Value, new()
             {
                 ShowOnlyMissingMetadata = this.ShowOnlyMissingMetadata,
                 // TODO: Dynamically compute desired page size based on screen real estate
                 // right now it is hard-coded to 16
                 PageSize = 16,
                 PageNumber = oneBasedPageNumber - 1
-            });
+            }, System.Threading.CancellationToken.None).GetAwaiter().GetResult();
             Behavior.SelectedItems.Clear();
             Behavior.SelectedRow = null;
             this.CurrentPage.Clear();
@@ -171,7 +171,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
 
     public bool PreviousEnabled => this.CanGoPrevious && !Behavior.IsBusy;
 
-    
+
     [ObservableProperty]
     private string? _containerSummary;
 
@@ -310,7 +310,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
                 .Where(r => r.Id == message.SplitSkuId)
                 .Select(r => r.Id)
                 .ToList();
-        var updatedSkus = _service.GetCards(new() { CardSkuIds = toUpdate });
+        var updatedSkus = _service.GetCardsAsync(new() { CardSkuIds = toUpdate }, System.Threading.CancellationToken.None).GetAwaiter().GetResult();
         foreach (var sku in updatedSkus)
         {
             var item = this.CurrentPage.FirstOrDefault(r => r.Id == sku.Id);
@@ -319,7 +319,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
                 item.WithData(sku);
                 var idx = this.CurrentPage.IndexOf(item);
                 // Add the new split sku as well
-                var newSku = _service.GetCards(new() { CardSkuIds = [message.NewSkuId] }).ToList();
+                var newSku = _service.GetCardsAsync(new() { CardSkuIds = [message.NewSkuId] }, System.Threading.CancellationToken.None).GetAwaiter().GetResult().ToList();
                 if (newSku.Count == 1)
                 {
                     this.CurrentPage.Insert(idx, _cardSku().WithData(newSku[0]));

@@ -99,9 +99,9 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
 
     private async Task<Bitmap?> GetSmallFrontFaceImageAsync()
     {
-        if (this.ScryfallId != null)
+        if (this.Id != Guid.Empty)
         {
-            using var stream = await _service.GetSmallFrontFaceImageAsync(this.ScryfallId);
+            using var stream = await _service.GetSmallFrontFaceImageAsync(this.Id, CancellationToken.None);
             if (stream != null)
                 return new Bitmap(stream);
         }
@@ -110,9 +110,9 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
 
     private async Task<Bitmap?> GetSmallBackFaceImageAsync()
     {
-        if (this.ScryfallId != null)
+        if (this.Id != Guid.Empty)
         {
-            using var stream = await _service.GetSmallBackFaceImageAsync(this.ScryfallId);
+            using var stream = await _service.GetSmallBackFaceImageAsync(this.Id, CancellationToken.None);
             if (stream != null)
                 return new Bitmap(stream);
         }
@@ -341,9 +341,9 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
 
     private async Task<Bitmap?> GetLargeFrontFaceImageAsync()
     {
-        if (this.ScryfallId != null)
+        if (this.Id != Guid.Empty)
         {
-            using var stream = await _service.GetLargeFrontFaceImageAsync(this.ScryfallId);
+            using var stream = await _service.GetLargeFrontFaceImageAsync(this.Id, CancellationToken.None);
             if (stream != null)
                 return new Bitmap(stream);
         }
@@ -352,9 +352,9 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
 
     private async Task<Bitmap?> GetLargeBackFaceImageAsync()
     {
-        if (this.ScryfallId != null)
+        if (this.Id != Guid.Empty)
         {
-            using var stream = await _service.GetLargeBackFaceImageAsync(this.ScryfallId);
+            using var stream = await _service.GetLargeBackFaceImageAsync(this.Id, CancellationToken.None);
             if (stream != null)
                 return new Bitmap(stream);
         }

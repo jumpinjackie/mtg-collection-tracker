@@ -42,7 +42,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
 {
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
-    
+
     readonly Func<CardSkuItemViewModel> _cardSku;
     readonly Func<DialogViewModel> _dialog;
     readonly Func<AddCardsViewModel> _addCards;
@@ -176,10 +176,10 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
         }
         else
         {
-            var totals = _service.GetCollectionSummary();
+            var totals = _service.GetCollectionSummaryAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult();
             ApplyTotals(totals);
             this.Tags.Clear();
-            foreach (var t in _service.GetTags())
+            foreach (var t in _service.GetTagsAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult())
             {
                 this.Tags.Add(t);
             }
@@ -200,7 +200,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
             {
                 try
                 {
-                    var totals = _service.GetCollectionSummary();
+                    var totals = await _service.GetCollectionSummaryAsync(token).ConfigureAwait(false);
                     await Avalonia.Threading.Dispatcher.UIThread.InvokeAsync(() => ApplyTotals(totals));
                 }
                 catch (OperationCanceledException)
@@ -345,7 +345,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
             this.ShowSearchResults = true;
 
             await Task.Delay(500);
-            var cards = _service.GetCards(new Core.Model.CardQueryModel
+            var cards = await _service.GetCardsAsync(new Core.Model.CardQueryModel
             {
                 SearchFilter = this.SearchText,
                 Tags = this.SelectedTags.Count > 0 ? this.SelectedTags : null,
@@ -356,7 +356,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
                 UnParented = this.UnParented,
                 MissingMetadata = this.MissingMetadata,
                 IncludeScryfallMetadata = true
-            });
+            }, System.Threading.CancellationToken.None);
             this.SearchResults.Clear();
             foreach (var sku in cards)
             {
@@ -587,7 +587,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
                     {
                         using (((IViewModelWithBusyState)this).StartBusyState())
                         {
-                            await _service.DeleteCardSkuAsync(sku.Id);
+                            await _service.DeleteCardSkuAsync(sku.Id, System.Threading.CancellationToken.None);
                             Messenger.ToastNotify($"Card SKU ({sku.Quantity}x {sku.CardName}, {sku.Edition}, {sku.Language ?? "en"}) deleted", Avalonia.Controls.Notifications.NotificationType.Success);
                             Behavior.SelectedItems.Remove(sku);
                             this.SearchResults.Remove(sku);
@@ -629,7 +629,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
                 .Where(r => message.SkuIds.Contains(r.Id))
                 .Select(r => r.Id)
                 .ToList();
-            var updatedSkus = _service.GetCards(new() { CardSkuIds = toUpdate });
+            var updatedSkus = _service.GetCardsAsync(new() { CardSkuIds = toUpdate }, System.Threading.CancellationToken.None).GetAwaiter().GetResult();
             foreach (var sku in updatedSkus)
             {
                 this.SearchResults.FirstOrDefault(r => r.Id == sku.Id)?.WithData(sku);
@@ -654,7 +654,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
                 .Where(r => message.SkuIds.Contains(r.Id))
                 .Select(r => r.Id)
                 .ToList();
-            var updatedSkus = _service.GetCards(new() { CardSkuIds = toUpdate });
+            var updatedSkus = _service.GetCardsAsync(new() { CardSkuIds = toUpdate }, System.Threading.CancellationToken.None).GetAwaiter().GetResult();
             foreach (var sku in updatedSkus)
             {
                 this.SearchResults.FirstOrDefault(r => r.Id == sku.Id)?.WithData(sku);
@@ -691,7 +691,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
                 .Where(r => r.Id == message.SplitSkuId)
                 .Select(r => r.Id)
                 .ToList();
-        var updatedSkus = _service.GetCards(new() { CardSkuIds = toUpdate });
+        var updatedSkus = _service.GetCardsAsync(new() { CardSkuIds = toUpdate }, System.Threading.CancellationToken.None).GetAwaiter().GetResult();
         foreach (var sku in updatedSkus)
         {
             var item = this.SearchResults.FirstOrDefault(r => r.Id == sku.Id);
@@ -700,7 +700,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
                 item.WithData(sku);
                 var idx = this.SearchResults.IndexOf(item);
                 // Add the new split sku as well
-                var newSku = _service.GetCards(new() { CardSkuIds = [message.NewSkuId] }).ToList();
+                var newSku = _service.GetCardsAsync(new() { CardSkuIds = [message.NewSkuId] }, System.Threading.CancellationToken.None).GetAwaiter().GetResult().ToList();
                 if (newSku.Count == 1)
                 {
                     this.SearchResults.Insert(idx, _cardSku().WithData(newSku[0]));

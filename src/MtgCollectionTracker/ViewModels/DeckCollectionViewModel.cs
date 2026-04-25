@@ -99,7 +99,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
         this.Formats.Clear();
         this.SelectedFormats.Clear();
 
-        var formats = _service.GetDeckFormats();
+        var formats = _service.GetDeckFormatsAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult();
         foreach (var fmt in formats)
         {
             this.Formats.Add(fmt);
@@ -181,7 +181,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
                         {
                             try
                             {
-                                await _service.DismantleDeckAsync(new() { DeckId = selectedDeck.DeckId, ContainerId = containerId });
+                                await _service.DismantleDeckAsync(new() { DeckId = selectedDeck.DeckId, ContainerId = containerId }, System.Threading.CancellationToken.None);
                                 this.Messenger.ToastNotify("Deck dismantled", Avalonia.Controls.Notifications.NotificationType.Success);
                                 this.Messenger.Send(new DeckDismantledMessage { Id = selectedDeck.DeckId, Format = selectedDeck.Format });
                             }
@@ -198,7 +198,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
     private void RefreshDecks()
     {
         this.Decks.Clear();
-        var decks = _service.GetDecks(new DeckFilterModel { Formats = this.SelectedFormats });
+        var decks = _service.GetDecksAsync(new DeckFilterModel { Formats = this.SelectedFormats }, System.Threading.CancellationToken.None).GetAwaiter().GetResult();
         foreach (var deck in decks)
         {
             this.Decks.Add(_deck().WithData(deck));
@@ -255,7 +255,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
             this.Decks.Remove(item);
 
         // If this was the last deck in this format, remove format from filter list
-        if (!_service.HasOtherDecksInFormat(message.Format))
+        if (!_service.HasOtherDecksInFormatAsync(message.Format, System.Threading.CancellationToken.None).GetAwaiter().GetResult())
         {
             this.Formats.Remove(message.Format);
             try
@@ -278,7 +278,7 @@ public partial class DeckCollectionViewModel : RecipientViewModelBase, IViewMode
     private void UpdateDeckTotals(IEnumerable<int> deckIds)
     {
         // Update totals of given decks
-        var sum = _service.GetDecks(new() { Formats = [], Ids = deckIds });
+        var sum = _service.GetDecksAsync(new() { Formats = [], Ids = deckIds }, System.Threading.CancellationToken.None).GetAwaiter().GetResult();
         foreach (var s in sum)
         {
             var deck = this.Decks.FirstOrDefault(d => d.DeckId == s.Id);

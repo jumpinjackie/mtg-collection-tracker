@@ -62,7 +62,7 @@ public partial class SettingsViewModel : RecipientViewModelBase, IRecipient<Glob
         }
         else
         {
-            var t = string.Join(Environment.NewLine, _service.GetTags()); ;
+            var t = string.Join(Environment.NewLine, _service.GetTagsAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult()); ;
             _origTags = t;
             this.Tags = t;
         }

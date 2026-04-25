@@ -134,8 +134,8 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
     public SendCardsToContainerOrDeckViewModel WithCards(IEnumerable<ISendableCardItem> cards)
     {
         this.Cards = cards;
-        var availableContainers = _service.GetContainers().Select(c => _container().WithData(c)).ToList();
-        var availableDecks = _service.GetDecks(null).Select(d => _deck().WithData(d)).ToList();
+        var availableContainers = _service.GetContainersAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult().Select(c => _container().WithData(c)).ToList();
+        var availableDecks = _service.GetDecksAsync(null, System.Threading.CancellationToken.None).GetAwaiter().GetResult().Select(d => _deck().WithData(d)).ToList();
 
         this.AvailableContainers = availableContainers;
         this.AvailableDecks = availableDecks;

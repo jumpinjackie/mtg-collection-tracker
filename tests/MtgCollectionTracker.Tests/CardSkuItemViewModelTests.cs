@@ -16,10 +16,10 @@ public class CardSkuItemViewModelTests
     {
         var mockService = new Mock<ICollectionTrackingService>();
         var messenger = new WeakReferenceMessenger();
-        mockService.Setup(s => s.GetSmallFrontFaceImageAsync(It.IsAny<string>())).ReturnsAsync(System.IO.Stream.Null);
-        mockService.Setup(s => s.GetSmallBackFaceImageAsync(It.IsAny<string>())).ReturnsAsync(System.IO.Stream.Null);
-        mockService.Setup(s => s.GetLargeFrontFaceImageAsync(It.IsAny<string>())).ReturnsAsync(System.IO.Stream.Null);
-        mockService.Setup(s => s.GetLargeBackFaceImageAsync(It.IsAny<string>())).ReturnsAsync(System.IO.Stream.Null);
+        mockService.Setup(s => s.GetSmallFrontFaceImageAsync(It.IsAny<Guid>(), It.IsAny<System.Threading.CancellationToken>())).ReturnsAsync(System.IO.Stream.Null);
+        mockService.Setup(s => s.GetSmallBackFaceImageAsync(It.IsAny<Guid>(), It.IsAny<System.Threading.CancellationToken>())).ReturnsAsync(System.IO.Stream.Null);
+        mockService.Setup(s => s.GetLargeFrontFaceImageAsync(It.IsAny<Guid>(), It.IsAny<System.Threading.CancellationToken>())).ReturnsAsync(System.IO.Stream.Null);
+        mockService.Setup(s => s.GetLargeBackFaceImageAsync(It.IsAny<Guid>(), It.IsAny<System.Threading.CancellationToken>())).ReturnsAsync(System.IO.Stream.Null);
         return new CardSkuItemViewModel(
             mockService.Object,
             messenger,

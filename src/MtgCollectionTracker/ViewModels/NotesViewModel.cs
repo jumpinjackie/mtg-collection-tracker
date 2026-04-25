@@ -38,7 +38,7 @@ public partial class NotesViewModel : RecipientViewModelBase
             // so that edits made by a remote client are always visible.
             if (newValue.Id.HasValue)
             {
-                var fresh = _service.GetNotes().FirstOrDefault(n => n.Id == newValue.Id.Value);
+                var fresh = _service.GetNotesAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult().FirstOrDefault(n => n.Id == newValue.Id.Value);
                 if (fresh != null)
                     newValue.From(fresh);
             }
@@ -54,7 +54,7 @@ public partial class NotesViewModel : RecipientViewModelBase
     [RelayCommand]
     private void AddNewNote()
     {
-        var n = new NotesItemViewModel(); 
+        var n = new NotesItemViewModel();
         this.Notes.Add(n);
         this.SelectedNote = n;
     }
@@ -74,11 +74,11 @@ public partial class NotesViewModel : RecipientViewModelBase
                     {
                         if (this.SelectedNote.Id.HasValue)
                         {
-                            await _service.DeleteNotesAsync(this.SelectedNote.Id.Value);
+                            await _service.DeleteNotesAsync(this.SelectedNote.Id.Value, System.Threading.CancellationToken.None);
                         }
-//                        await _service.DeleteWishlistItemAsync(item.Id);
+                        //                        await _service.DeleteWishlistItemAsync(item.Id);
                         Messenger.ToastNotify($"Note ({this.SelectedNote.TitleText}) deleted", Avalonia.Controls.Notifications.NotificationType.Success);
-                        
+
                         this.Notes.Remove(this.SelectedNote);
                         this.SelectedNote = null;
                     })
@@ -110,7 +110,7 @@ public partial class NotesViewModel : RecipientViewModelBase
         if (!Avalonia.Controls.Design.IsDesignMode)
         {
             this.Notes.Clear();
-            foreach (var n in _service.GetNotes())
+            foreach (var n in _service.GetNotesAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult())
             {
                 this.Notes.Add(new NotesItemViewModel().From(n));
             }
@@ -127,7 +127,7 @@ public partial class NotesViewModel : RecipientViewModelBase
     {
         if (this.SelectedNote != null)
         {
-            var updated = await _service.UpdateNotesAsync(this.SelectedNote.Id, this.SelectedNote.Title, this.SelectedNote.Notes);
+            var updated = await _service.UpdateNotesAsync(this.SelectedNote.Id, this.SelectedNote.Title, this.SelectedNote.Notes, System.Threading.CancellationToken.None);
             this.SelectedNote.From(updated);
             Messenger.ToastNotify("Notes updated", Avalonia.Controls.Notifications.NotificationType.Success);
         }

@@ -11,87 +11,87 @@ namespace MtgCollectionTracker.Services.Stubs;
 
 public class StubCollectionTrackingService : ICollectionTrackingService
 {
-    public ValueTask<(int total, int proxyTotal, int rows)> AddMultipleToContainerOrDeckAsync(int? containerId, int? deckId, IEnumerable<AddToDeckOrContainerInputModel> items, IScryfallApiClient? client)
+    public ValueTask<(int total, int proxyTotal, int rows)> AddMultipleToContainerOrDeckAsync(int? containerId, int? deckId, IEnumerable<AddToDeckOrContainerInputModel> items, IScryfallApiClient? client, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<ICollection<WishlistItemModel>> AddMultipleToWishlistAsync(IEnumerable<AddToWishlistInputModel> items, IScryfallApiClient? scryfallClient)
+    public ValueTask<IReadOnlyList<WishlistItemModel>> AddMultipleToWishlistAsync(IEnumerable<AddToWishlistInputModel> items, IScryfallApiClient? scryfallClient, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<CardSkuModel> AddToDeckAsync(AddToDeckInputModel model)
+    public ValueTask<CardSkuModel> AddToDeckAsync(AddToDeckInputModel model, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<CardSkuModel> AddToDeckOrContainerAsync(int? containerId, int? deckId, AddToDeckOrContainerInputModel model)
+    public ValueTask<CardSkuModel> AddToDeckOrContainerAsync(int? containerId, int? deckId, AddToDeckOrContainerInputModel model, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<(int created, int deleted)> ApplyVendorsAsync(ApplyVendorsInputModel model)
+    public ValueTask<(int created, int deleted)> ApplyVendorsAsync(ApplyVendorsInputModel model, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<CheckQuantityResult> CheckQuantityShortfallAsync(string cardName, int wantQty, bool noProxies, bool sparesOnly)
+    public ValueTask<CheckQuantityResult> CheckQuantityShortfallAsync(string cardName, int wantQty, bool noProxies, bool sparesOnly, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<(int skusUpdated, int skusRemoved)> ConsolidateCardSkusAsync(ConsolidateCardSkusInputModel model)
+    public ValueTask<(int skusUpdated, int skusRemoved)> ConsolidateCardSkusAsync(ConsolidateCardSkusInputModel model, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<ContainerSummaryModel> CreateContainerAsync(string name, string? description)
+    public ValueTask<ContainerSummaryModel> CreateContainerAsync(string name, string? description, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<DeckSummaryModel> CreateDeckAsync(string name, string? format, int? containerId, bool isCommander = false)
+    public ValueTask<DeckSummaryModel> CreateDeckAsync(string name, string? format, int? containerId, bool isCommander, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<CardSkuModel> DeleteCardSkuAsync(Guid skuId)
+    public ValueTask<CardSkuModel> DeleteCardSkuAsync(Guid skuId, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<DeleteContainerResult> DeleteContainerAsync(DeleteContainerInputModel model)
+    public ValueTask<DeleteContainerResult> DeleteContainerAsync(DeleteContainerInputModel model, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<bool> DeleteNotesAsync(int id)
+    public ValueTask<bool> DeleteNotesAsync(int id, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<WishlistItemModel> DeleteWishlistItemAsync(int id)
+    public ValueTask<WishlistItemModel> DeleteWishlistItemAsync(int id, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<DismantleDeckResult> DismantleDeckAsync(DismantleDeckInputModel model)
+    public ValueTask<DismantleDeckResult> DismantleDeckAsync(DismantleDeckInputModel model, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public WishlistBuyingListModel GenerateBuyingList()
+    public ValueTask<WishlistBuyingListModel> GenerateBuyingListAsync(CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public IEnumerable<CardSkuModel> GetCards(CardQueryModel query)
+    public ValueTask<IReadOnlyList<CardSkuModel>> GetCardsAsync(CardQueryModel query, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public PaginatedCardSkuModel GetCardsForContainer(int containerId, FetchContainerPageModel options)
+    public ValueTask<PaginatedCardSkuModel> GetCardsForContainerAsync(int containerId, FetchContainerPageModel options, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
@@ -101,12 +101,12 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
-    public CollectionSummaryModel GetCollectionSummary()
+    public ValueTask<CollectionSummaryModel> GetCollectionSummaryAsync(CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public IEnumerable<ContainerSummaryModel> GetContainers()
+    public ValueTask<IReadOnlyList<ContainerSummaryModel>> GetContainersAsync(CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
@@ -116,67 +116,67 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
-    public IEnumerable<DeckSummaryModel> GetDecks(DeckFilterModel? filter)
+    public ValueTask<IReadOnlyList<DeckSummaryModel>> GetDecksAsync(DeckFilterModel? filter, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public IEnumerable<CardLanguageModel> GetLanguages()
+    public ValueTask<IReadOnlyList<CardLanguageModel>> GetLanguagesAsync(CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public IEnumerable<NotesModel> GetNotes()
+    public ValueTask<IReadOnlyList<NotesModel>> GetNotesAsync(CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public IEnumerable<VendorModel> GetVendors()
+    public ValueTask<IReadOnlyList<VendorModel>> GetVendorsAsync(CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public IEnumerable<WishlistItemModel> GetWishlistItems(WishlistItemFilter filter)
+    public ValueTask<IReadOnlyList<WishlistItemModel>> GetWishlistItemsAsync(WishlistItemFilter filter, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public WishlistSpendSummaryModel GetWishlistSpend()
+    public ValueTask<WishlistSpendSummaryModel> GetWishlistSpendAsync(CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public bool IsBasicLand(string cardName)
+    public ValueTask<bool> IsBasicLandAsync(string cardName, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<MoveWishlistItemsToCollectionResult> MoveWishlistItemsToCollectionAsync(MoveWishlistItemsToCollectionInputModel model)
+    public ValueTask<MoveWishlistItemsToCollectionResult> MoveWishlistItemsToCollectionAsync(MoveWishlistItemsToCollectionInputModel model, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public string PrintDeck(int deckId, DeckPrintOptions options)
+    public ValueTask<string> PrintDeckAsync(int deckId, DeckPrintOptions options, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<(CardSkuModel sku, bool wasMerged)> RemoveFromDeckAsync(RemoveFromDeckInputModel model)
+    public ValueTask<(CardSkuModel sku, bool wasMerged)> RemoveFromDeckAsync(RemoveFromDeckInputModel model, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<Dictionary<string, ScryfallResolvedCard>> ResolveEditionsForCardsAsync(IEnumerable<string> cardNames, IScryfallApiClient client)
+    public ValueTask<Dictionary<string, ScryfallResolvedCard>> ResolveEditionsForCardsAsync(IEnumerable<string> cardNames, IScryfallApiClient client, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public Task<CardSkuModel> SplitCardSkuAsync(SplitCardSkuInputModel model)
+    public ValueTask<CardSkuModel> SplitCardSkuAsync(SplitCardSkuInputModel model, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<IEnumerable<CardSkuModel>> UpdateCardMetadataAsync(ICollection<Guid> ids, IScryfallApiClient scryfallApiClient, UpdateCardMetadataProgressCallback? callback, CancellationToken cancel)
+    public ValueTask<IReadOnlyList<CardSkuModel>> UpdateCardMetadataAsync(ICollection<Guid> ids, IScryfallApiClient scryfallApiClient, UpdateCardMetadataProgressCallback? callback, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
@@ -186,7 +186,7 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<NotesModel> UpdateNotesAsync(int? id, string? title, string notes)
+    public ValueTask<NotesModel> UpdateNotesAsync(int? id, string? title, string notes, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
@@ -196,62 +196,42 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
-    public IEnumerable<string> GetDeckFormats()
+    public ValueTask<IReadOnlyList<string>> GetDeckFormatsAsync(CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public bool HasOtherDecksInFormat(string format)
+    public ValueTask<bool> HasOtherDecksInFormatAsync(string format, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<Stream?> GetLargeFrontFaceImageAsync(string scryfallId)
+    public ValueTask<Stream?> GetLargeFrontFaceImageAsync(Guid cardSkuId, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<Stream?> GetLargeBackFaceImageAsync(string scryfallId)
+    public ValueTask<Stream?> GetLargeBackFaceImageAsync(Guid cardSkuId, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<Stream?> GetSmallFrontFaceImageAsync(string scryfallId)
+    public ValueTask<Stream?> GetSmallFrontFaceImageAsync(Guid cardSkuId, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<Stream?> GetSmallBackFaceImageAsync(string scryfallId)
+    public ValueTask<Stream?> GetSmallBackFaceImageAsync(Guid cardSkuId, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<Stream?> GetLargeFrontFaceImageAsync(Guid cardSkuId)
+    public ValueTask<IReadOnlyList<WishlistItemModel>> UpdateWishlistMetadataAsync(ICollection<int> ids, IScryfallApiClient scryfallApiClient, UpdateCardMetadataProgressCallback? callback, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<Stream?> GetLargeBackFaceImageAsync(Guid cardSkuId)
-    {
-        throw new System.NotImplementedException();
-    }
-
-    public ValueTask<Stream?> GetSmallFrontFaceImageAsync(Guid cardSkuId)
-    {
-        throw new System.NotImplementedException();
-    }
-
-    public ValueTask<Stream?> GetSmallBackFaceImageAsync(Guid cardSkuId)
-    {
-        throw new System.NotImplementedException();
-    }
-
-    public ValueTask<IEnumerable<WishlistItemModel>> UpdateWishlistMetadataAsync(ICollection<int> ids, IScryfallApiClient scryfallApiClient, UpdateCardMetadataProgressCallback? callback, CancellationToken cancel)
-    {
-        throw new System.NotImplementedException();
-    }
-
-    public IEnumerable<string> GetTags()
+    public ValueTask<IReadOnlyList<string>> GetTagsAsync(CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
@@ -276,17 +256,17 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<ContainerSummaryModel> UpdateContainerAsync(int id, string name, string? description)
+    public ValueTask<ContainerSummaryModel> UpdateContainerAsync(int id, string name, string? description, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<DeckSummaryModel> UpdateDeckAsync(int id, string name, string? format, int? containerId, bool isCommander = false)
+    public ValueTask<DeckSummaryModel> UpdateDeckAsync(int id, string name, string? format, int? containerId, bool isCommander, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<DeckSummaryModel> SetDeckCommanderAsync(int deckId, Guid? commanderSkuId)
+    public ValueTask<DeckSummaryModel> SetDeckCommanderAsync(int deckId, Guid? commanderSkuId, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
@@ -296,12 +276,12 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
-    public ValueTask<DeckSummaryModel> SetDeckBannerAsync(int deckId, Guid? cardSkuId)
+    public ValueTask<DeckSummaryModel> SetDeckBannerAsync(int deckId, Guid? cardSkuId, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
 
-    public string PrintContainer(int containerId, ContainerPrintOptions options)
+    public ValueTask<string> PrintContainerAsync(int containerId, ContainerPrintOptions options, CancellationToken cancel)
     {
         throw new System.NotImplementedException();
     }
@@ -336,4 +316,3 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 }
-

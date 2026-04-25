@@ -22,7 +22,7 @@ public partial class MoveWishlistItemsToCollectionViewModel : DialogContentViewM
         : base(messenger)
     {
         _service = service;
-        this.AvailableContainers = service.GetContainers().Select(c => new ContainerViewModel().WithData(c));
+        this.AvailableContainers = service.GetContainersAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult().Select(c => new ContainerViewModel().WithData(c));
     }
 
     public MoveWishlistItemsToCollectionViewModel()
@@ -80,7 +80,7 @@ public partial class MoveWishlistItemsToCollectionViewModel : DialogContentViewM
                 .ToArray(),
             ContainerId = this.SelectedContainer?.Id
         };
-        var result = await _service.MoveWishlistItemsToCollectionAsync(arg);
+        var result = await _service.MoveWishlistItemsToCollectionAsync(arg, System.Threading.CancellationToken.None);
         Messenger.Send(new WishlistItemsAddedToCollectionMessage(result));
         Messenger.Send(new CloseDialogMessage());
     }

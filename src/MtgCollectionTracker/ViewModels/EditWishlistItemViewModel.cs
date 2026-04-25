@@ -58,8 +58,8 @@ public partial class EditWishlistItemViewModel : DialogContentViewModel
     {
         _service = service;
         _scryfallApiClient = scryfallApiClient;
-        this.AllTags = service.GetTags().ToList();
-        this.Languages = service.GetLanguages().Select(lang => new LanguageViewModel(lang.Code, lang.PrintedCode, lang.Name)).ToArray();
+        this.AllTags = service.GetTagsAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult().ToList();
+        this.Languages = service.GetLanguagesAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult().Select(lang => new LanguageViewModel(lang.Code, lang.PrintedCode, lang.Name)).ToArray();
     }
 
     private WishlistItemViewModel _origItem;
@@ -74,7 +74,7 @@ public partial class EditWishlistItemViewModel : DialogContentViewModel
         this.Edition = wm.Edition;
         this.Language = this.Languages.FirstOrDefault(lang => lang.Code == wm.Language);
         this.Quantity = wm.RealQty;
-        this.AvailableVendors = _service.GetVendors().Select(v => new VendorViewModel { Id = v.Id, Name = v.Name }).ToList();
+        this.AvailableVendors = _service.GetVendorsAsync(System.Threading.CancellationToken.None).GetAwaiter().GetResult().Select(v => new VendorViewModel { Id = v.Id, Name = v.Name }).ToList();
         this.VendorOffers.Clear();
         foreach (var o in wm.Offers)
         {

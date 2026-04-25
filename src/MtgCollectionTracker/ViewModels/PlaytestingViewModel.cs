@@ -117,7 +117,7 @@ public partial class PlaytestingViewModel : RecipientViewModelBase, IViewModelWi
     private void RefreshDecks()
     {
         _allDecks.Clear();
-        _allDecks.AddRange(_service.GetDecks(null).OrderBy(d => d.Name));
+        _allDecks.AddRange(_service.GetDecksAsync(null, System.Threading.CancellationToken.None).GetAwaiter().GetResult().OrderBy(d => d.Name));
         ApplyDeckFilter();
     }
 

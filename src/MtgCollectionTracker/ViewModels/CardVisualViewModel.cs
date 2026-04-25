@@ -52,7 +52,7 @@ public partial class CardVisualViewModel : ViewModelBase, ICardSkuItem, ISendabl
     {
         if (this.Id != Guid.Empty)
         {
-            using var stream = await _service.GetSmallFrontFaceImageAsync(this.Id);
+            using var stream = await _service.GetSmallFrontFaceImageAsync(this.Id, System.Threading.CancellationToken.None);
             if (stream != null)
                 return new Bitmap(stream);
         }
@@ -63,7 +63,7 @@ public partial class CardVisualViewModel : ViewModelBase, ICardSkuItem, ISendabl
     {
         if (this.Id != Guid.Empty)
         {
-            using var stream = await _service.GetSmallBackFaceImageAsync(this.Id);
+            using var stream = await _service.GetSmallBackFaceImageAsync(this.Id, System.Threading.CancellationToken.None);
             if (stream != null)
                 return new Bitmap(stream);
         }
@@ -84,7 +84,7 @@ public partial class CardVisualViewModel : ViewModelBase, ICardSkuItem, ISendabl
     {
         if (this.Id != Guid.Empty)
         {
-            using var stream = await _service.GetLargeFrontFaceImageAsync(this.Id);
+            using var stream = await _service.GetLargeFrontFaceImageAsync(this.Id, System.Threading.CancellationToken.None);
             if (stream != null)
                 return new Bitmap(stream);
         }
@@ -95,7 +95,7 @@ public partial class CardVisualViewModel : ViewModelBase, ICardSkuItem, ISendabl
     {
         if (this.Id != Guid.Empty)
         {
-            using var stream = await _service.GetLargeBackFaceImageAsync(this.Id);
+            using var stream = await _service.GetLargeBackFaceImageAsync(this.Id, System.Threading.CancellationToken.None);
             if (stream != null)
                 return new Bitmap(stream);
         }
