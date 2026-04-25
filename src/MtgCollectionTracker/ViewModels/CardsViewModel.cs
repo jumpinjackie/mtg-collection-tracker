@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using Avalonia.Controls.Notifications;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Core.Model;
@@ -198,7 +199,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
         }
         catch (Exception ex)
         {
-            Messenger.ToastNotify($"Error loading collection data: {ex.Message}", Avalonia.Controls.Notifications.NotificationType.Error);
+            Messenger.ToastNotify($"Error loading collection data: {ex.Message}", NotificationType.Error);
         }
     }
 

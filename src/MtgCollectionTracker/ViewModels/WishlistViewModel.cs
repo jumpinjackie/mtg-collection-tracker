@@ -1,4 +1,5 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+﻿using Avalonia.Controls.Notifications;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Core.Services;
@@ -108,7 +109,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
         }
         catch (Exception ex)
         {
-            Messenger.ToastNotify($"Error loading wishlist data: {ex.Message}", Avalonia.Controls.Notifications.NotificationType.Error);
+            Messenger.ToastNotify($"Error loading wishlist data: {ex.Message}", NotificationType.Error);
         }
     }
 
@@ -127,7 +128,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
         }
         catch (Exception ex)
         {
-            Messenger.ToastNotify($"Error loading wishlist: {ex.Message}", Avalonia.Controls.Notifications.NotificationType.Error);
+            Messenger.ToastNotify($"Error loading wishlist: {ex.Message}", NotificationType.Error);
         }
     }
 
