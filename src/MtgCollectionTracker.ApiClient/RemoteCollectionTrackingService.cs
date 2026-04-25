@@ -423,6 +423,18 @@ public class RemoteCollectionTrackingService : ICollectionTrackingService
     public async ValueTask<Stream?> GetSmallBackFaceImageAsync(Guid cardSkuId, CancellationToken cancel)
         => await GetImageAsync($"/api/images/sku/{cardSkuId}/back/small", cancel);
 
+    public async ValueTask<Stream?> GetLargeFrontFaceImageAsync(int wishlistItemId, CancellationToken cancel)
+        => await GetImageAsync($"/api/images/wishlist/{wishlistItemId}/front/large", cancel);
+
+    public async ValueTask<Stream?> GetSmallFrontFaceImageAsync(int wishlistItemId, CancellationToken cancel)
+        => await GetImageAsync($"/api/images/wishlist/{wishlistItemId}/front/small", cancel);
+
+    public async ValueTask<Stream?> GetLargeBackFaceImageAsync(int wishlistItemId, CancellationToken cancel)
+        => await GetImageAsync($"/api/images/wishlist/{wishlistItemId}/back/large", cancel);
+
+    public async ValueTask<Stream?> GetSmallBackFaceImageAsync(int wishlistItemId, CancellationToken cancel)
+        => await GetImageAsync($"/api/images/wishlist/{wishlistItemId}/back/small", cancel);
+
     // ── Scryfall identifiers ──────────────────────────────────────────────────
 
     public async ValueTask<bool> IsScryfallIdMappingEmptyAsync(CancellationToken cancel)

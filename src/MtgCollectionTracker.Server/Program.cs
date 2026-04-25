@@ -631,6 +631,44 @@ app.MapGet("/api/images/sku/{id:guid}/back/small", async (
     return stream is null ? Results.NotFound() : Results.Stream(stream, "image/jpeg");
 });
 
+// ── Wishlist item images by wishlist item ID ───────────────────────────────────
+
+app.MapGet("/api/images/wishlist/{id:int}/front/large", async (
+    int id,
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
+{
+    var stream = await svc.GetLargeFrontFaceImageAsync(id, cancel);
+    return stream is null ? Results.NotFound() : Results.Stream(stream, "image/jpeg");
+});
+
+app.MapGet("/api/images/wishlist/{id:int}/front/small", async (
+    int id,
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
+{
+    var stream = await svc.GetSmallFrontFaceImageAsync(id, cancel);
+    return stream is null ? Results.NotFound() : Results.Stream(stream, "image/jpeg");
+});
+
+app.MapGet("/api/images/wishlist/{id:int}/back/large", async (
+    int id,
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
+{
+    var stream = await svc.GetLargeBackFaceImageAsync(id, cancel);
+    return stream is null ? Results.NotFound() : Results.Stream(stream, "image/jpeg");
+});
+
+app.MapGet("/api/images/wishlist/{id:int}/back/small", async (
+    int id,
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
+{
+    var stream = await svc.GetSmallBackFaceImageAsync(id, cancel);
+    return stream is null ? Results.NotFound() : Results.Stream(stream, "image/jpeg");
+});
+
 // ── Scryfall identifiers ──────────────────────────────────────────────────────
 
 app.MapGet("/api/identifiers/isEmpty", async (

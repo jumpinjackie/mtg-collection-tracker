@@ -20,7 +20,6 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
 {
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
-    private readonly CardImageCache? _imageCache;
 
     readonly Func<DialogViewModel> _dialog;
     readonly Func<EditWishlistItemViewModel> _editWishlistItem;
@@ -47,7 +46,6 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
     }
 
     public WishlistViewModel(ICollectionTrackingService service,
-        CardImageCache imageCache,
         Func<DialogViewModel> dialog,
         Func<EditWishlistItemViewModel> editWishlistItem,
         Func<AddCardsToWishlistViewModel> addCardsToWishlist,
@@ -59,7 +57,6 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
     {
         _service = service;
         _scryfallApiClient = scryfallApiClient;
-        _imageCache = imageCache;
         _dialog = dialog;
         _editWishlistItem = editWishlistItem;
         _addCardsToWishlist = addCardsToWishlist;
@@ -122,7 +119,7 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
             var items = await _service.GetWishlistItemsAsync(filter, CancellationToken.None);
             foreach (var item in items)
             {
-                this.Cards.Add(_wishlistItem().WithImageCache(_imageCache!).WithData(item));
+                this.Cards.Add(_wishlistItem().WithData(item));
             }
             await this.ApplySummaryAsync();
         }
