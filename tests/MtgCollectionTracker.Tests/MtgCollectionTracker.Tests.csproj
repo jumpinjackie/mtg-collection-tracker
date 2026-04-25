@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\src\MtgCollectionTracker.ApiClient\MtgCollectionTracker.ApiClient.csproj" />
     <ProjectReference Include="..\..\src\MtgCollectionTracker.Core\MtgCollectionTracker.Core.csproj" />
     <ProjectReference Include="..\..\src\MtgCollectionTracker\MtgCollectionTracker.csproj" />
   </ItemGroup>

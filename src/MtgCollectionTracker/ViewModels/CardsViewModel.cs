@@ -165,6 +165,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     IMessenger IViewModelWithBusyState.Messenger => this.Messenger;
 
     private CancellationTokenSource? _refreshCts;
+    private bool _hasPerformedSearch;
 
     protected override void OnActivated()
     {
@@ -227,8 +228,6 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
         this.CardTotal = totals.CardTotal;
         this.ProxyTotal = totals.ProxyTotal;
         this.SkuTotal = totals.SkuTotal;
-
-        this.ShowFirstTimeMessage = !this.IsEmptyCollection;
     }
 
     public string CollectionSummary => $"{this.CardTotal} cards ({this.ProxyTotal} proxies) across {this.SkuTotal} skus";
@@ -236,11 +235,13 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CollectionSummary))]
     [NotifyPropertyChangedFor(nameof(IsEmptyCollection))]
+    [NotifyPropertyChangedFor(nameof(ShowFirstTimeMessage))]
     private int _cardTotal = 0;
 
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CollectionSummary))]
     [NotifyPropertyChangedFor(nameof(IsEmptyCollection))]
+    [NotifyPropertyChangedFor(nameof(ShowFirstTimeMessage))]
     private int _proxyTotal = 0;
 
     [ObservableProperty]
@@ -254,10 +255,9 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     private bool _showSearchResults = false;
 
     [ObservableProperty]
-    private bool _showFirstTimeMessage = false;
-
-    [ObservableProperty]
     private bool _showEmptyMessage = false;
+
+    public bool ShowFirstTimeMessage => !this.IsEmptyCollection && !_hasPerformedSearch;
 
     public MultiModeCardListBehavior<CardSkuItemViewModel> Behavior { get; }
 
@@ -340,7 +340,8 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
 
         using (((IViewModelWithBusyState)this).StartBusyState())
         {
-            this.ShowFirstTimeMessage = false;
+            _hasPerformedSearch = true;
+            this.OnPropertyChanged(nameof(ShowFirstTimeMessage));
             this.ShowSearchResults = true;
 
             await Task.Delay(500);

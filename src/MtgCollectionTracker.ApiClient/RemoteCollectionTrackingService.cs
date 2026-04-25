@@ -405,93 +405,46 @@ public class RemoteCollectionTrackingService : ICollectionTrackingService
 
     // ── Card images ───────────────────────────────────────────────────────────
 
-    public async ValueTask<Stream?> GetLargeFrontFaceImageAsync(string scryfallId)
+    private async ValueTask<Stream?> GetImageAsync(string requestUri, CancellationToken cancellationToken = default)
     {
-        try
-        {
-            var resp = await _http.GetAsync(
-                $"/api/images/{scryfallId}/front/large", HttpCompletionOption.ResponseHeadersRead);
-            return resp.IsSuccessStatusCode ? await resp.Content.ReadAsStreamAsync() : null;
-        }
-        catch { return null; }
+        using var response = await _http.GetAsync(
+            requestUri,
+            HttpCompletionOption.ResponseHeadersRead,
+            cancellationToken);
+
+        if (!response.IsSuccessStatusCode)
+            return null;
+
+        await using var responseStream = await response.Content.ReadAsStreamAsync(cancellationToken);
+        var imageStream = MemoryStreamPool.GetStream(nameof(RemoteCollectionTrackingService));
+        await responseStream.CopyToAsync(imageStream, cancellationToken);
+        imageStream.Position = 0;
+        return imageStream;
     }
+
+    public async ValueTask<Stream?> GetLargeFrontFaceImageAsync(string scryfallId)
+        => await GetImageAsync($"/api/images/{scryfallId}/front/large");
 
     public async ValueTask<Stream?> GetSmallFrontFaceImageAsync(string scryfallId)
-    {
-        try
-        {
-            var resp = await _http.GetAsync(
-                $"/api/images/{scryfallId}/front/small", HttpCompletionOption.ResponseHeadersRead);
-            return resp.IsSuccessStatusCode ? await resp.Content.ReadAsStreamAsync() : null;
-        }
-        catch { return null; }
-    }
+        => await GetImageAsync($"/api/images/{scryfallId}/front/small");
 
     public async ValueTask<Stream?> GetLargeBackFaceImageAsync(string scryfallId)
-    {
-        try
-        {
-            var resp = await _http.GetAsync(
-                $"/api/images/{scryfallId}/back/large", HttpCompletionOption.ResponseHeadersRead);
-            return resp.IsSuccessStatusCode ? await resp.Content.ReadAsStreamAsync() : null;
-        }
-        catch { return null; }
-    }
+        => await GetImageAsync($"/api/images/{scryfallId}/back/large");
 
     public async ValueTask<Stream?> GetSmallBackFaceImageAsync(string scryfallId)
-    {
-        try
-        {
-            var resp = await _http.GetAsync(
-                $"/api/images/{scryfallId}/back/small", HttpCompletionOption.ResponseHeadersRead);
-            return resp.IsSuccessStatusCode ? await resp.Content.ReadAsStreamAsync() : null;
-        }
-        catch { return null; }
-    }
+        => await GetImageAsync($"/api/images/{scryfallId}/back/small");
 
     public async ValueTask<Stream?> GetLargeFrontFaceImageAsync(Guid cardSkuId)
-    {
-        try
-        {
-            var resp = await _http.GetAsync(
-                $"/api/images/sku/{cardSkuId}/front/large", HttpCompletionOption.ResponseHeadersRead);
-            return resp.IsSuccessStatusCode ? await resp.Content.ReadAsStreamAsync() : null;
-        }
-        catch { return null; }
-    }
+        => await GetImageAsync($"/api/images/sku/{cardSkuId}/front/large");
 
     public async ValueTask<Stream?> GetSmallFrontFaceImageAsync(Guid cardSkuId)
-    {
-        try
-        {
-            var resp = await _http.GetAsync(
-                $"/api/images/sku/{cardSkuId}/front/small", HttpCompletionOption.ResponseHeadersRead);
-            return resp.IsSuccessStatusCode ? await resp.Content.ReadAsStreamAsync() : null;
-        }
-        catch { return null; }
-    }
+        => await GetImageAsync($"/api/images/sku/{cardSkuId}/front/small");
 
     public async ValueTask<Stream?> GetLargeBackFaceImageAsync(Guid cardSkuId)
-    {
-        try
-        {
-            var resp = await _http.GetAsync(
-                $"/api/images/sku/{cardSkuId}/back/large", HttpCompletionOption.ResponseHeadersRead);
-            return resp.IsSuccessStatusCode ? await resp.Content.ReadAsStreamAsync() : null;
-        }
-        catch { return null; }
-    }
+        => await GetImageAsync($"/api/images/sku/{cardSkuId}/back/large");
 
     public async ValueTask<Stream?> GetSmallBackFaceImageAsync(Guid cardSkuId)
-    {
-        try
-        {
-            var resp = await _http.GetAsync(
-                $"/api/images/sku/{cardSkuId}/back/small", HttpCompletionOption.ResponseHeadersRead);
-            return resp.IsSuccessStatusCode ? await resp.Content.ReadAsStreamAsync() : null;
-        }
-        catch { return null; }
-    }
+        => await GetImageAsync($"/api/images/sku/{cardSkuId}/back/small");
 
     // ── Scryfall identifiers ──────────────────────────────────────────────────
 
@@ -562,4 +515,3 @@ public class RemoteCollectionTrackingService : ICollectionTrackingService
             && JsonSerializer.Deserialize<bool>(payload, JsonOpts);
     }
 }
-
