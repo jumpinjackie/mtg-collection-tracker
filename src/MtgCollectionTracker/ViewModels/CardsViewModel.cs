@@ -184,14 +184,21 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
 
     private async Task LoadInitialStateAsync()
     {
-        var totals = await _service.GetCollectionSummaryAsync(CancellationToken.None);
-        ApplyTotals(totals);
-
-        var tags = await _service.GetTagsAsync(CancellationToken.None);
-        this.Tags.Clear();
-        foreach (var t in tags)
+        try
         {
-            this.Tags.Add(t);
+            var totals = await _service.GetCollectionSummaryAsync(CancellationToken.None);
+            ApplyTotals(totals);
+
+            var tags = await _service.GetTagsAsync(CancellationToken.None);
+            this.Tags.Clear();
+            foreach (var t in tags)
+            {
+                this.Tags.Add(t);
+            }
+        }
+        catch (Exception ex)
+        {
+            Messenger.ToastNotify($"Error loading collection data: {ex.Message}", Avalonia.Controls.Notifications.NotificationType.Error);
         }
     }
 

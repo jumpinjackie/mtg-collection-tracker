@@ -94,27 +94,41 @@ public partial class WishlistViewModel : RecipientViewModelBase, IViewModelWithB
 
     private async Task LoadInitialDataAsync()
     {
-        if (this.Tags.Count == 0)
+        try
         {
-            foreach (var t in await _service.GetTagsAsync(CancellationToken.None))
+            if (this.Tags.Count == 0)
             {
-                this.Tags.Add(t);
+                foreach (var t in await _service.GetTagsAsync(CancellationToken.None))
+                {
+                    this.Tags.Add(t);
+                }
             }
-        }
 
-        await LoadWishlistAsync();
+            await LoadWishlistAsync();
+        }
+        catch (Exception ex)
+        {
+            Messenger.ToastNotify($"Error loading wishlist data: {ex.Message}", Avalonia.Controls.Notifications.NotificationType.Error);
+        }
     }
 
     private async Task LoadWishlistAsync()
     {
-        this.Cards.Clear();
-        var filter = new WishlistItemFilter(this.SelectedTags.Count > 0 ? this.SelectedTags : null);
-        var items = await _service.GetWishlistItemsAsync(filter, CancellationToken.None);
-        foreach (var item in items)
+        try
         {
-            this.Cards.Add(_wishlistItem().WithImageCache(_imageCache!).WithData(item));
+            this.Cards.Clear();
+            var filter = new WishlistItemFilter(this.SelectedTags.Count > 0 ? this.SelectedTags : null);
+            var items = await _service.GetWishlistItemsAsync(filter, CancellationToken.None);
+            foreach (var item in items)
+            {
+                this.Cards.Add(_wishlistItem().WithImageCache(_imageCache!).WithData(item));
+            }
+            await this.ApplySummaryAsync();
         }
-        await this.ApplySummaryAsync();
+        catch (Exception ex)
+        {
+            Messenger.ToastNotify($"Error loading wishlist: {ex.Message}", Avalonia.Controls.Notifications.NotificationType.Error);
+        }
     }
 
     bool IViewModelWithBusyState.IsBusy

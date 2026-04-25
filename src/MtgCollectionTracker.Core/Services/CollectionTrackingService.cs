@@ -200,7 +200,7 @@ public class CollectionTrackingService : ICollectionTrackingService
     public async ValueTask<IReadOnlyList<ContainerSummaryModel>> GetContainersAsync(CancellationToken cancel)
     {
         using var db = _db.Invoke();
-        return db.Value
+        return await db.Value
             .Containers
             .OrderBy(c => c.Name)
             .Select(c => new ContainerSummaryModel
@@ -210,7 +210,7 @@ public class CollectionTrackingService : ICollectionTrackingService
                 Description = c.Description,
                 Total = c.Cards.Sum(c => c.Quantity)
             })
-            .ToList();
+            .ToListAsync(cancel);
     }
 
     public async ValueTask<IReadOnlyList<DeckSummaryModel>> GetDecksAsync(DeckFilterModel? filter, CancellationToken cancel)
