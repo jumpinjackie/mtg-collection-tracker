@@ -16,5 +16,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MtgCollectionTracker\MtgCollectionTracker.csproj" />
+    <ProjectReference Include="..\MtgCollectionTracker.Server\MtgCollectionTracker.Server.csproj"
+                      ReferenceOutputAssembly="true" />
   </ItemGroup>
 </Project>

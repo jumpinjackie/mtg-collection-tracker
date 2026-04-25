@@ -33,6 +33,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MtgCollectionTracker.Core\MtgCollectionTracker.Core.csproj" />
+    <ProjectReference Include="..\MtgCollectionTracker.ApiClient\MtgCollectionTracker.ApiClient.csproj" />
   </ItemGroup>
 
   <ItemGroup>

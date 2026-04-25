@@ -50,9 +50,9 @@ public partial class CardVisualViewModel : ViewModelBase, ICardSkuItem, ISendabl
 
     private async Task<Bitmap?> GetSmallFrontFaceImageAsync()
     {
-        if (this.ScryfallId != null)
+        if (this.Id != Guid.Empty)
         {
-            using var stream = await _service.GetSmallFrontFaceImageAsync(this.ScryfallId);
+            using var stream = await _service.GetSmallFrontFaceImageAsync(this.Id);
             if (stream != null)
                 return new Bitmap(stream);
         }
@@ -61,9 +61,9 @@ public partial class CardVisualViewModel : ViewModelBase, ICardSkuItem, ISendabl
 
     private async Task<Bitmap?> GetSmallBackFaceImageAsync()
     {
-        if (this.ScryfallId != null)
+        if (this.Id != Guid.Empty)
         {
-            using var stream = await _service.GetSmallBackFaceImageAsync(this.ScryfallId);
+            using var stream = await _service.GetSmallBackFaceImageAsync(this.Id);
             if (stream != null)
                 return new Bitmap(stream);
         }
@@ -82,9 +82,9 @@ public partial class CardVisualViewModel : ViewModelBase, ICardSkuItem, ISendabl
 
     private async Task<Bitmap?> GetLargeFrontFaceImageAsync()
     {
-        if (this.ScryfallId != null)
+        if (this.Id != Guid.Empty)
         {
-            using var stream = await _service.GetLargeFrontFaceImageAsync(this.ScryfallId);
+            using var stream = await _service.GetLargeFrontFaceImageAsync(this.Id);
             if (stream != null)
                 return new Bitmap(stream);
         }
@@ -93,9 +93,9 @@ public partial class CardVisualViewModel : ViewModelBase, ICardSkuItem, ISendabl
 
     private async Task<Bitmap?> GetLargeBackFaceImageAsync()
     {
-        if (this.ScryfallId != null)
+        if (this.Id != Guid.Empty)
         {
-            using var stream = await _service.GetLargeBackFaceImageAsync(this.ScryfallId);
+            using var stream = await _service.GetLargeBackFaceImageAsync(this.Id);
             if (stream != null)
                 return new Bitmap(stream);
         }

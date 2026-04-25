@@ -41,7 +41,8 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
                          Func<PlaytestingViewModel> playtesting,
                          ICollectionTrackingService service,
                          Func<DialogViewModel> dialog,
-                         Func<ImportCardIdentifiersViewModel> importCardIdentifiers)
+                         Func<ImportCardIdentifiersViewModel> importCardIdentifiers,
+                         AppSettings appSettings)
     {
         this.Cards = cards();
         this.Decks = decks();
@@ -54,6 +55,11 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
         _service = service;
         _dialog = dialog;
         _importCardIdentifiers = importCardIdentifiers;
+        _remoteServerUrl = appSettings.RemoteServerUrl;
+        IsServerMode = appSettings.Mode == AppMode.Server;
+        IsRemoteClientMode = appSettings.Mode == AppMode.RemoteClient;
+        ServerPort = appSettings.ServerPort;
+        this.RemoteStatusText = GetConnectedStatusText(_remoteServerUrl);
         this.IsActive = true;
 
         // Defer the startup check until after the window is shown
@@ -83,6 +89,7 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
     private readonly ICollectionTrackingService _service;
     private readonly Func<DialogViewModel> _dialog;
     private readonly Func<ImportCardIdentifiersViewModel> _importCardIdentifiers;
+    private readonly string _remoteServerUrl = "http://localhost:5757";
 
     public IDialogPopupPositioner DialogPositioner { get; } = new DialogPopupPositioner();
 
@@ -203,10 +210,32 @@ public partial class MainViewModel : RecipientViewModelBase, IRecipient<OpenDial
     void IRecipient<GlobalBusyMessage>.Receive(GlobalBusyMessage message)
     {
         this.IsBusy = message.IsBusy;
+        this.RemoteStatusText = message.IsBusy ? "Working…" : GetConnectedStatusText(_remoteServerUrl);
     }
 
     [ObservableProperty]
     private bool _isBusy;
+
+    /// <summary>Status text shown in the remote-client status bar.</summary>
+    [ObservableProperty]
+    private string _remoteStatusText = "Connected to remote server";
+
+    private static string GetConnectedStatusText(string? remoteServerUrl)
+    {
+        var endpoint = string.IsNullOrWhiteSpace(remoteServerUrl)
+            ? "http://localhost:5757"
+            : remoteServerUrl.Trim().TrimEnd('/');
+        return $"Connected to server: {endpoint}";
+    }
+
+    /// <summary>True when this app instance is running as a sharing server.</summary>
+    public bool IsServerMode { get; }
+
+    /// <summary>True when this app instance is connected to a remote server.</summary>
+    public bool IsRemoteClientMode { get; }
+
+    /// <summary>Port the embedded server is listening on (valid when <see cref="IsServerMode"/> is true).</summary>
+    public int ServerPort { get; }
 
     public WindowNotificationManager? NotificationManager { get; set; }
 }

@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.EntityFrameworkCore;
+using MtgCollectionTracker.ApiClient;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Data;
 using MtgCollectionTracker.ViewModels;
@@ -52,7 +53,6 @@ namespace MtgCollectionTracker;
 [Register(typeof(ImportCardIdentifiersViewModel), Scope.InstancePerResolution)]
 [Register(typeof(CardPriceHistoryViewModel), Scope.InstancePerResolution)]
 [Register(typeof(CardsDbContext), Scope.InstancePerResolution)]
-[Register(typeof(CollectionTrackingService), Scope.InstancePerResolution, typeof(ICollectionTrackingService))]
 [Register(typeof(CardImageCache), Scope.InstancePerResolution)]
 [Register(typeof(PriceCache), Scope.SingleInstance)]
 [Register(typeof(SendCardsToContainerOrDeckSelectionState), Scope.SingleInstance)]
@@ -61,10 +61,37 @@ public partial class Container : IContainer<MainViewModel>
 #pragma warning restore SI1103 // Return type of delegate has a single instance scope and so will always have the same value
 {
     readonly Visual _root;
+    readonly AppSettings _settings;
 
     public Container(Visual root)
     {
         _root = root;
+        _settings = AppSettings.Load();
+    }
+
+    /// <summary>The active application mode loaded at startup.</summary>
+    public AppMode Mode => _settings.Mode;
+
+    [Factory(Scope.SingleInstance)]
+    public AppSettings GetAppSettings() => _settings;
+
+    [Factory(Scope.SingleInstance)]
+    public ICollectionTrackingService CreateCollectionTrackingService(
+        Func<Owned<CardsDbContext>> db,
+        CardImageCache cache,
+        PriceCache priceCache)
+    {
+        if (_settings.Mode == AppMode.RemoteClient)
+        {
+            var url = _settings.RemoteServerUrl;
+            if (string.IsNullOrWhiteSpace(url))
+                url = "http://localhost:5757";
+            var http = new HttpClient { BaseAddress = new Uri(url) };
+            if (!string.IsNullOrEmpty(_settings.RemoteApiKey))
+                http.DefaultRequestHeaders.Add("X-Api-Key", _settings.RemoteApiKey);
+            return new RemoteCollectionTrackingService(http);
+        }
+        return new CollectionTrackingService(db, cache, priceCache);
     }
 
     [Factory(Scope.SingleInstance)]
@@ -79,8 +106,11 @@ public partial class Container : IContainer<MainViewModel>
     [Factory]
     public DbContextOptions<CardsDbContext> CreateDbContextOptions()
     {
+        var connectionString = _settings.DbPath != null
+            ? $"Data Source={_settings.DbPath}"
+            : "Data Source=collection.sqlite";
         return new DbContextOptionsBuilder<CardsDbContext>()
-            .UseSqlite("Data Source=collection.sqlite")
+            .UseSqlite(connectionString)
             .Options;
     }
 

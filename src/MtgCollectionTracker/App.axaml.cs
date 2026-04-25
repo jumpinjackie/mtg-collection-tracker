@@ -1,15 +1,29 @@
 ﻿using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
+using Avalonia.Threading;
+using CommunityToolkit.Mvvm.Messaging;
 using Microsoft.EntityFrameworkCore;
 using MtgCollectionTracker.Data;
+using MtgCollectionTracker.Services.Messaging;
+using MtgCollectionTracker.ViewModels;
 using MtgCollectionTracker.Views;
 using System;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace MtgCollectionTracker;
 
 public partial class App : Application
 {
+    /// <summary>
+    /// Optional hook set by the host (e.g. <c>Program.cs</c>) that is called with the chosen
+    /// <see cref="AppSettings"/> after the user confirms their mode selection.  Use this to
+    /// start platform-specific services (such as the embedded sharing server) before the main
+    /// window opens.
+    /// </summary>
+    public static Action<AppSettings>? AfterModeSelected { get; set; }
+
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
@@ -17,43 +31,89 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        Action<Container>? init = null;
-        Visual? root = null;
+        // Install global unhandled exception handlers so errors are shown in a dialog
+        // rather than crashing the app.
+        Dispatcher.UIThread.UnhandledException += OnUiThreadUnhandledException;
+        TaskScheduler.UnobservedTaskException += OnUnobservedTaskException;
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            root = new MainWindow() { WindowState = Avalonia.Controls.WindowState.Maximized };
-            init = (cnt) =>
+            var startupVm = new StartupModeViewModel();
+            var startupWindow = new StartupWindow { DataContext = startupVm };
+
+            startupVm.LaunchRequested += (_, settings) =>
             {
-                root.DataContext = cnt.Resolve().Value;
-                desktop.MainWindow = (MainWindow)root;
+                AfterModeSelected?.Invoke(settings);
+
+                var mainWindow = new MainWindow { WindowState = Avalonia.Controls.WindowState.Maximized };
+                var cnt = new Container(mainWindow);
+
+                if (!Avalonia.Controls.Design.IsDesignMode && cnt.Mode != AppMode.RemoteClient)
+                {
+                    using var db = new CardsDbContext(cnt.CreateDbContextOptions());
+                    db.Database.Migrate();
+                }
+
+                mainWindow.DataContext = cnt.Resolve().Value;
+                desktop.MainWindow = mainWindow;
+                mainWindow.Show();
+                startupWindow.Close();
             };
+
+            desktop.MainWindow = startupWindow;
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
         {
-            root = new MainView();
-            init = cnt =>
+            var root = new MainView();
+            var cnt = new Container(root);
+
+            if (!Avalonia.Controls.Design.IsDesignMode && cnt.Mode != AppMode.RemoteClient)
             {
-                root.DataContext = cnt.Resolve().Value;
-                singleViewPlatform.MainView = (MainView)root;
-            };
+                using var db = new CardsDbContext(cnt.CreateDbContextOptions());
+                db.Database.Migrate();
+            }
+
+            root.DataContext = cnt.Resolve().Value;
+            singleViewPlatform.MainView = root;
         }
-        if (root is null || init is null)
+        else
         {
             throw new InvalidOperationException("Unsupported application lifetime.");
         }
 
-        var cnt = new Container(root);
-        if (!Avalonia.Controls.Design.IsDesignMode)
-        {
-            using (var db = new CardsDbContext(cnt.CreateDbContextOptions()))
-            {
-                //Stdout("Creating database and applying migrations if required");
-                db.Database.Migrate();
-            }
-        }
-
-        init?.Invoke(cnt);
-
         base.OnFrameworkInitializationCompleted();
+    }
+
+    private static void OnUiThreadUnhandledException(object sender, DispatcherUnhandledExceptionEventArgs e)
+    {
+        e.Handled = true;
+        ShowExceptionDialog(e.Exception);
+    }
+
+    private static void OnUnobservedTaskException(object? sender, UnobservedTaskExceptionEventArgs e)
+    {
+        e.SetObserved();
+        var ex = e.Exception.InnerException ?? e.Exception;
+        Dispatcher.UIThread.Post(() => ShowExceptionDialog(ex));
+    }
+
+    // 0 = no dialog open, 1 = dialog already open.  Use Interlocked for thread-safe compare-and-swap.
+    private static int _exceptionDialogVisible;
+
+    private static void ShowExceptionDialog(Exception ex)
+    {
+        // Only ever show one error dialog at a time – drop subsequent exceptions while one is open.
+        if (Interlocked.CompareExchange(ref _exceptionDialogVisible, 1, 0) != 0)
+            return;
+
+        var errorVm = new UnhandledExceptionViewModel
+        {
+            Message = ex.Message,
+            Details = ex.ToString(),
+            OnClosed = () => Interlocked.Exchange(ref _exceptionDialogVisible, 0)
+        };
+        var dialogVm = new DialogViewModel();
+        dialogVm.WithContent("An error occurred", errorVm);
+        WeakReferenceMessenger.Default.Send(new OpenDialogMessage { ViewModel = dialogVm });
     }
 }

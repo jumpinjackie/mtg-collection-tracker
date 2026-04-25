@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>MtgCollectionTracker.Server</RootNamespace>
+    <!-- Generate the OpenAPI document next to the ApiClient project so it can be committed -->
+    <OpenApiGenerateDocuments Condition="'$(RuntimeIdentifier)' == ''">true</OpenApiGenerateDocuments>
+    <OpenApiGenerateDocuments Condition="'$(RuntimeIdentifier)' != ''">false</OpenApiGenerateDocuments>
+    <OpenApiDocumentsDirectory>$(MSBuildThisFileDirectory)../MtgCollectionTracker.ApiClient</OpenApiDocumentsDirectory>
+    <OpenApiDocumentName>openapi</OpenApiDocumentName>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.Extensions.ApiDescription.Server">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" />
+    <PackageReference Include="Scalar.AspNetCore" />
+    <PackageReference Include="ScryfallAPI.Client" />
+    <PackageReference Include="Microsoft.IO.RecyclableMemoryStream" />
+    <PackageReference Include="StrongInject" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\MtgCollectionTracker.Core\MtgCollectionTracker.Core.csproj" />
+  </ItemGroup>
+</Project>

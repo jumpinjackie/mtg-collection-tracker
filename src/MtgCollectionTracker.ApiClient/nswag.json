@@ -1,0 +1,47 @@
+{
+  "runtime": "Net100",
+  "defaultVariables": null,
+  "documentGenerator": {
+    "fromDocument": {
+      "url": "MtgCollectionTracker.Server.json",
+      "output": null,
+      "newLineBehavior": "Auto"
+    }
+  },
+  "codeGenerators": {
+    "openApiToCSharpClient": {
+      "clientBaseClass": null,
+      "generateClientClasses": true,
+      "generateClientInterfaces": true,
+      "injectHttpClient": true,
+      "disposeHttpClient": false,
+      "generateExceptionClasses": true,
+      "exceptionClass": "ApiException",
+      "wrapDtoExceptions": true,
+      "useHttpClientCreationMethod": false,
+      "httpClientType": "System.Net.Http.HttpClient",
+      "useBaseUrl": false,
+      "generateBaseUrlProperty": false,
+      "generateSyncMethods": false,
+      "exposeJsonSerializerSettings": false,
+      "clientClassAccessModifier": "public",
+      "typeAccessModifier": "public",
+      "generateOptionalParameters": true,
+      "generateContractsOutput": false,
+      "namespace": "MtgCollectionTracker.ApiClient.Generated",
+      "additionalNamespaceUsages": [
+        "MtgCollectionTracker.Core.Model",
+        "MtgCollectionTracker.Core.Services",
+        "MtgCollectionTracker.Data",
+        "ScryfallApi.Client"
+      ],
+      "generateDataClasses": false,
+      "jsonLibrary": "SystemTextJson",
+      "className": "MtgCollectionTrackerApiClient",
+      "operationGenerationMode": "SingleClientFromOperationId",
+      "wrapResponses": false,
+      "output": "Generated/MtgCollectionTrackerApiClient.g.cs",
+      "newLineBehavior": "Auto"
+    }
+  }
+}

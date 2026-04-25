@@ -13,32 +13,54 @@
          to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
 		<vm:MainViewModel />
 	</Design.DataContext>
-	<dialogHost:DialogHost PopupPositioner="{Binding DialogPositioner}" DisableOpeningAnimation="True" CloseOnClickAway="False">
-		<TabControl IsEnabled="{Binding !IsBusy}" Margin="5">
-			<TabItem Header="Cards">
-				<views:CardsView DataContext="{Binding Cards}" />
-			</TabItem>
-			<TabItem Header="Containers">
-				<views:ContainerSetView DataContext="{Binding Containers}" />
-			</TabItem>
-			<TabItem Header="Decks">
-				<views:DeckCollectionView DataContext="{Binding Decks}" />
-			</TabItem>
-			<TabItem Header="Wishlist">
-				<views:WishlistView DataContext="{Binding Wishlist}" />
-			</TabItem>
-			<TabItem Header="Can I Build?">
-				<views:CanIBuildThisDeckView DataContext="{Binding CanIBuild}" />
-			</TabItem>
-			<TabItem Header="Notes">
-				<views:NotesView DataContext="{Binding Notes}" />
-			</TabItem>
-			<TabItem Header="Playtesting">
-				<views:PlaytestingView DataContext="{Binding Playtesting}" />
-			</TabItem>
-			<TabItem Header="Settings">
-				<views:SettingsView DataContext="{Binding Settings}" />
-			</TabItem>
-		</TabControl>
-	</dialogHost:DialogHost>
+	<DockPanel>
+		<!-- Status bar shown only in Server or RemoteClient mode -->
+		<Border DockPanel.Dock="Bottom"
+		        IsVisible="{Binding IsServerMode}"
+		        Background="#1E5F2A" Padding="6,3">
+			<TextBlock Foreground="White" FontSize="11"
+			           Text="{Binding ServerPort, StringFormat='Sharing active — port {0}'}" />
+		</Border>
+		<Border DockPanel.Dock="Bottom"
+		        IsVisible="{Binding IsRemoteClientMode}"
+		        Background="#1A4A7A" Padding="6,3">
+			<StackPanel Orientation="Horizontal" Spacing="6">
+				<ProgressBar IsIndeterminate="True"
+				             IsVisible="{Binding IsBusy}"
+				             Width="14" Height="14"
+				             Foreground="White" />
+				<TextBlock Foreground="White" FontSize="11"
+				           VerticalAlignment="Center"
+				           Text="{Binding RemoteStatusText}" />
+			</StackPanel>
+		</Border>
+		<dialogHost:DialogHost PopupPositioner="{Binding DialogPositioner}" DisableOpeningAnimation="True" CloseOnClickAway="False">
+			<TabControl IsEnabled="{Binding !IsBusy}" Margin="5">
+				<TabItem Header="Cards">
+					<views:CardsView DataContext="{Binding Cards}" />
+				</TabItem>
+				<TabItem Header="Containers">
+					<views:ContainerSetView DataContext="{Binding Containers}" />
+				</TabItem>
+				<TabItem Header="Decks">
+					<views:DeckCollectionView DataContext="{Binding Decks}" />
+				</TabItem>
+				<TabItem Header="Wishlist">
+					<views:WishlistView DataContext="{Binding Wishlist}" />
+				</TabItem>
+				<TabItem Header="Can I Build?">
+					<views:CanIBuildThisDeckView DataContext="{Binding CanIBuild}" />
+				</TabItem>
+				<TabItem Header="Notes">
+					<views:NotesView DataContext="{Binding Notes}" />
+				</TabItem>
+				<TabItem Header="Playtesting">
+					<views:PlaytestingView DataContext="{Binding Playtesting}" />
+				</TabItem>
+				<TabItem Header="Settings">
+					<views:SettingsView DataContext="{Binding Settings}" />
+				</TabItem>
+			</TabControl>
+		</dialogHost:DialogHost>
+	</DockPanel>
 </UserControl>

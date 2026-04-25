@@ -26,11 +26,14 @@ public partial class SettingsViewModel : RecipientViewModelBase, IRecipient<Glob
 
     public DatabaseMaintenanceViewModel Maintenance { get; }
 
+    public ConnectionSettingsViewModel Connection { get; }
+
     public SettingsViewModel(ICollectionTrackingService service, IScryfallApiClient client, IMessenger messenger)
         : base(messenger)
     {
         _service = service;
         this.Maintenance = new(service, client, messenger);
+        this.Connection = new(messenger);
         this.IsActive = true;
     }
 
@@ -40,6 +43,7 @@ public partial class SettingsViewModel : RecipientViewModelBase, IRecipient<Glob
         this.ThrowIfNotDesignMode();
         _service = new StubCollectionTrackingService();
         this.Maintenance = new();
+        this.Connection = new();
         this.IsActive = true;
     }
 

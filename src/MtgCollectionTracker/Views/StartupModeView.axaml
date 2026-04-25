@@ -1,0 +1,67 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             mc:Ignorable="d" d:DesignWidth="520" d:DesignHeight="460"
+             x:Class="MtgCollectionTracker.Views.StartupModeView"
+             xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
+             x:DataType="vm:StartupModeViewModel">
+    <Design.DataContext>
+        <vm:StartupModeViewModel />
+    </Design.DataContext>
+    <StackPanel Margin="24" Spacing="20">
+        <TextBlock FontWeight="Bold" FontSize="18">How would you like to connect?</TextBlock>
+        <TextBlock TextWrapping="Wrap" Foreground="Gray" FontSize="12">
+            Choose a connection mode each time you start the application.
+            Your previous choice is pre-selected below.
+        </TextBlock>
+
+        <!-- Mode selection -->
+        <StackPanel Spacing="6">
+            <TextBlock>Mode</TextBlock>
+            <ComboBox SelectedItem="{Binding Mode}" ItemsSource="{Binding Modes}" Width="260" />
+            <TextBlock TextWrapping="Wrap" Foreground="Gray" FontSize="11" MaxWidth="460"
+                       HorizontalAlignment="Left" Text="{Binding ModeDescription}" />
+        </StackPanel>
+
+        <!-- Remote client settings -->
+        <Border IsVisible="{Binding IsRemoteClientMode}" BorderBrush="Gray" BorderThickness="1" CornerRadius="4" Padding="12">
+            <StackPanel Spacing="10">
+                <TextBlock FontWeight="SemiBold">Remote Server Settings</TextBlock>
+                <StackPanel Spacing="4">
+                    <TextBlock>Server URL</TextBlock>
+                    <TextBox Text="{Binding RemoteServerUrl}" Watermark="http://192.168.1.10:5757" Width="340" HorizontalAlignment="Left" />
+                </StackPanel>
+                <StackPanel Spacing="4">
+                    <TextBlock>API Key</TextBlock>
+                    <TextBox Text="{Binding RemoteApiKey}" Watermark="Leave empty if no key is required" Width="340" HorizontalAlignment="Left" />
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Command="{Binding TestConnectionCommand}" IsEnabled="{Binding !IsTestingConnection}">Test Connection</Button>
+                    <TextBlock VerticalAlignment="Center" Text="{Binding ConnectionTestResult}" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Server host settings -->
+        <Border IsVisible="{Binding IsServerMode}" BorderBrush="Gray" BorderThickness="1" CornerRadius="4" Padding="12">
+            <StackPanel Spacing="10">
+                <TextBlock FontWeight="SemiBold">Server Host Settings</TextBlock>
+                <TextBlock TextWrapping="Wrap" Foreground="Gray" FontSize="11">
+                    An embedded sharing server will start on the configured port.
+                    Other devices can connect using Remote Client mode.
+                </TextBlock>
+                <StackPanel Spacing="4">
+                    <TextBlock>Port</TextBlock>
+                    <NumericUpDown Value="{Binding ServerPort}" Minimum="1024" Maximum="65535" Width="140" HorizontalAlignment="Left" />
+                </StackPanel>
+                <StackPanel Spacing="4">
+                    <TextBlock>API Key (optional)</TextBlock>
+                    <TextBox Text="{Binding HostApiKey}" Watermark="Leave empty to allow unauthenticated access" Width="340" HorizontalAlignment="Left" />
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <Button Command="{Binding LaunchCommand}" HorizontalAlignment="Right" FontSize="14" Padding="16,8">Launch</Button>
+    </StackPanel>
+</UserControl>

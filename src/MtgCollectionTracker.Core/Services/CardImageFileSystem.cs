@@ -14,8 +14,12 @@ public class CardImageFileSystem(string baseDir) : ICardImageFileSystem
         var file = Path.Combine(baseDir, $"{scryfallId}_{tag}.jpg");
         if (!File.Exists(file))
             return null;
-        // Read all bytes into a MemoryStream so the file handle is released immediately,
-        // avoiding file locking and contention when multiple callers access the same image.
-        return new MemoryStream(File.ReadAllBytes(file));
+        // Copy into a recyclable memory stream so the file handle is released immediately
+        // without churning fresh MemoryStream allocations for every image read.
+        using var fileStream = File.OpenRead(file);
+        var stream = MemoryStreamPool.GetStream(nameof(CardImageFileSystem));
+        fileStream.CopyTo(stream);
+        stream.Position = 0;
+        return stream;
     }
 }

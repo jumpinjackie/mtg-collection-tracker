@@ -2,6 +2,8 @@
 using CommunityToolkit.Mvvm.ComponentModel;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
+using System;
+using System.Diagnostics;
 using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.ViewModels;
@@ -84,9 +86,9 @@ public partial class DeckViewModel : ViewModelBase
         this.ContainerName = deck.ContainerName;
         this.Maindeck = $"MD: {deck.MaindeckTotal}";
         this.Sideboard = $"SB: {deck.SideboardTotal}";
-        this.HasBanner = deck.BannerScryfallId != null && _service != null;
+        this.HasBanner = deck.BannerCardId != null && _service != null;
         this.Banner = this.HasBanner
-            ? LoadBannerImageAsync(deck.BannerScryfallId!)
+            ? LoadBannerImageAsync(deck.BannerCardId!.Value)
             : Task.FromResult<Bitmap?>(null);
         this.IsCommander = deck.IsCommander;
         this.CommanderName = deck.CommanderName;
@@ -107,11 +109,22 @@ public partial class DeckViewModel : ViewModelBase
         return this;
     }
 
-    private async Task<Bitmap?> LoadBannerImageAsync(string scryfallId)
+    private async Task<Bitmap?> LoadBannerImageAsync(Guid cardSkuId)
     {
-        using var stream = await _service!.GetSmallFrontFaceImageAsync(scryfallId);
-        if (stream != null)
-            return new Bitmap(stream);
+        try
+        {
+            using var stream = await _service!.GetSmallFrontFaceImageAsync(cardSkuId);
+            if (stream != null)
+                return new Bitmap(stream);
+        }
+        catch (Exception ex)
+        {
+            // Image data could not be decoded (e.g. corrupted cache entry).
+            Debug.WriteLine($"[DeckViewModel] Failed to decode banner image for sku {cardSkuId}: {ex.Message}");
+        }
+
+        // Fall back to the stock deckbox icon by clearing the banner flag.
+        HasBanner = false;
         return null;
     }
 }
