@@ -37,7 +37,7 @@ class Program
         }
         finally
         {
-            serverHost?.DisposeAsync().AsTask().GetAwaiter().GetResult();
+            serverHost?.Dispose();
         }
     }
 
@@ -48,4 +48,3 @@ class Program
             .WithInterFont()
             .LogToTrace();
 }
-

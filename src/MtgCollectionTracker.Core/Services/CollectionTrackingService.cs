@@ -116,7 +116,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         return errors;
     }
 
-    public IEnumerable<CardLanguageModel> GetLanguages()
+    public async ValueTask<IReadOnlyList<CardLanguageModel>> GetLanguagesAsync(CancellationToken cancel)
     {
         using var db = _db.Invoke();
         return db.Value.Set<CardLanguage>().Select(lang => new CardLanguageModel(lang.Code, lang.PrintedCode, lang.Name)).ToList();
@@ -130,7 +130,7 @@ public class CollectionTrackingService : ICollectionTrackingService
     /// <param name="noProxies">If true, excludes proxies and non-legal sets from the card search</param>
     /// <param name="sparesOnly">If true, excludes from the card search skus that are part of an existing deck</param>
     /// <returns>If positive, there is a shortfall in your collection. If 0 or negative, the requested <paramref name="wantQty"/> can be met by your collection</returns>
-    public async ValueTask<CheckQuantityResult> CheckQuantityShortfallAsync(string cardName, int wantQty, bool noProxies, bool sparesOnly)
+    public async ValueTask<CheckQuantityResult> CheckQuantityShortfallAsync(string cardName, int wantQty, bool noProxies, bool sparesOnly, CancellationToken cancel)
     {
         using var db = _db.Invoke();
 
@@ -197,10 +197,10 @@ public class CollectionTrackingService : ICollectionTrackingService
         return new(wantQty - availableTotal, fromDeckNames, fromContainerNames, suggestedName, wishlistTotal);
     }
 
-    public IEnumerable<ContainerSummaryModel> GetContainers()
+    public async ValueTask<IReadOnlyList<ContainerSummaryModel>> GetContainersAsync(CancellationToken cancel)
     {
         using var db = _db.Invoke();
-        return db.Value
+        return await db.Value
             .Containers
             .OrderBy(c => c.Name)
             .Select(c => new ContainerSummaryModel
@@ -210,10 +210,10 @@ public class CollectionTrackingService : ICollectionTrackingService
                 Description = c.Description,
                 Total = c.Cards.Sum(c => c.Quantity)
             })
-            .ToList();
+            .ToListAsync(cancel);
     }
 
-    public IEnumerable<DeckSummaryModel> GetDecks(DeckFilterModel? filter)
+    public async ValueTask<IReadOnlyList<DeckSummaryModel>> GetDecksAsync(DeckFilterModel? filter, CancellationToken cancel)
     {
         Expression<Func<Deck, bool>> predicate = (filter == null || !filter.Formats.Any())
             ? d => true
@@ -288,7 +288,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         return CardSkuToModel(sku);
     }
 
-    public IEnumerable<CardSkuModel> GetCards(CardQueryModel query)
+    public async ValueTask<IReadOnlyList<CardSkuModel>> GetCardsAsync(CardQueryModel query, CancellationToken cancel)
     {
         using var db = _db.Invoke();
         IQueryable<CardSku> queryable = db.Value
@@ -488,7 +488,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         return results;
     }
 
-    public PaginatedCardSkuModel GetCardsForContainer(int containerId, FetchContainerPageModel options)
+    public async ValueTask<PaginatedCardSkuModel> GetCardsForContainerAsync(int containerId, FetchContainerPageModel options, CancellationToken cancel)
     {
         using var db = _db.Invoke();
         IQueryable<CardSku> queryable = db.Value
@@ -518,7 +518,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         };
     }
 
-    public async ValueTask<IEnumerable<WishlistItemModel>> UpdateWishlistMetadataAsync(ICollection<int> ids, IScryfallApiClient scryfallApiClient, UpdateCardMetadataProgressCallback? callback, CancellationToken cancel)
+    public async ValueTask<IReadOnlyList<WishlistItemModel>> UpdateWishlistMetadataAsync(ICollection<int> ids, IScryfallApiClient scryfallApiClient, UpdateCardMetadataProgressCallback? callback, CancellationToken cancel)
     {
         using var db = _db.Invoke();
         var cards = new List<WishlistItemModel>(ids.Count);
@@ -549,7 +549,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         return cards;
     }
 
-    public async ValueTask<IEnumerable<CardSkuModel>> UpdateCardMetadataAsync(ICollection<Guid> ids, IScryfallApiClient scryfallApiClient, UpdateCardMetadataProgressCallback? callback, CancellationToken cancel)
+    public async ValueTask<IReadOnlyList<CardSkuModel>> UpdateCardMetadataAsync(ICollection<Guid> ids, IScryfallApiClient scryfallApiClient, UpdateCardMetadataProgressCallback? callback, CancellationToken cancel)
     {
         using var db = _db.Invoke();
         var cards = new List<CardSkuModel>(ids.Count);
@@ -582,7 +582,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         return cards;
     }
 
-    public async ValueTask<(CardSkuModel sku, bool wasMerged)> RemoveFromDeckAsync(RemoveFromDeckInputModel model)
+    public async ValueTask<(CardSkuModel sku, bool wasMerged)> RemoveFromDeckAsync(RemoveFromDeckInputModel model, CancellationToken cancel)
     {
         using var db = _db.Invoke();
         bool wasMerged = false;
@@ -649,7 +649,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         return (CardSkuToModel(theSku), wasMerged);
     }
 
-    public async ValueTask<CardSkuModel> AddToDeckAsync(AddToDeckInputModel model)
+    public async ValueTask<CardSkuModel> AddToDeckAsync(AddToDeckInputModel model, CancellationToken cancel)
     {
         if (model.Quantity < 0)
             throw new ArgumentException("Quantity is less than zero");
@@ -765,7 +765,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         };
     }
 
-    public IEnumerable<WishlistItemModel> GetWishlistItems(WishlistItemFilter filter)
+    public async ValueTask<IReadOnlyList<WishlistItemModel>> GetWishlistItemsAsync(WishlistItemFilter filter, CancellationToken cancel)
     {
         using var db = _db.Invoke();
 
@@ -813,7 +813,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             }).ToList();
     }
 
-    public async ValueTask<ICollection<WishlistItemModel>> AddMultipleToWishlistAsync(IEnumerable<AddToWishlistInputModel> items, IScryfallApiClient? scryfallClient)
+    public async ValueTask<IReadOnlyList<WishlistItemModel>> AddMultipleToWishlistAsync(IEnumerable<AddToWishlistInputModel> items, IScryfallApiClient? scryfallClient, CancellationToken cancel)
     {
         var cards = items.Select(model => new WishlistItem
         {
@@ -832,7 +832,6 @@ public class CollectionTrackingService : ICollectionTrackingService
         var resolver = new ScryfallMetadataResolver(db.Value, scryfallClient);
 
         var witems = new List<WishlistItem>();
-        var cancel = CancellationToken.None;
         foreach (var sku in cards)
         {
             await sku.ApplyScryfallMetadataAsync(resolver, false, cancel);
@@ -851,7 +850,8 @@ public class CollectionTrackingService : ICollectionTrackingService
         int? containerId,
         int? deckId,
         IEnumerable<AddToDeckOrContainerInputModel> items,
-        IScryfallApiClient? scryfallClient)
+        IScryfallApiClient? scryfallClient,
+        CancellationToken cancel)
     {
         Container? cnt = null;
         Deck? dck = null;
@@ -886,7 +886,6 @@ public class CollectionTrackingService : ICollectionTrackingService
         var resolver = new ScryfallMetadataResolver(db.Value, scryfallClient);
 
         var skus = new List<CardSku>();
-        var cancel = CancellationToken.None;
         foreach (var sku in cards)
         {
             await sku.ApplyScryfallMetadataAsync(resolver, false, cancel);
@@ -901,7 +900,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         return (skus.Sum(s => s.Quantity), skus.Where(s => s.Edition == "PROXY").Sum(s => s.Quantity), skus.Count);
     }
 
-    public async ValueTask<CardSkuModel> AddToDeckOrContainerAsync(int? containerId, int? deckId, AddToDeckOrContainerInputModel model)
+    public async ValueTask<CardSkuModel> AddToDeckOrContainerAsync(int? containerId, int? deckId, AddToDeckOrContainerInputModel model, CancellationToken cancel)
     {
         var c = new CardSku
         {
@@ -929,7 +928,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         return CardSkuToModel(c);
     }
 
-    public async ValueTask<ContainerSummaryModel> CreateContainerAsync(string name, string? description)
+    public async ValueTask<ContainerSummaryModel> CreateContainerAsync(string name, string? description, CancellationToken cancel)
     {
         using var db = _db.Invoke();
         if (await db.Value.Containers.AnyAsync(c => c.Name == name))
@@ -952,7 +951,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         };
     }
 
-    public async ValueTask<ContainerSummaryModel> UpdateContainerAsync(int id, string name, string? description)
+    public async ValueTask<ContainerSummaryModel> UpdateContainerAsync(int id, string name, string? description, CancellationToken cancel)
     {
         using var db = _db.Invoke();
         if (await db.Value.Containers.AnyAsync(c => c.Name == name))
@@ -979,7 +978,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         };
     }
 
-    public async ValueTask<DeckSummaryModel> CreateDeckAsync(string name, string? format, int? containerId, bool isCommander = false)
+    public async ValueTask<DeckSummaryModel> CreateDeckAsync(string name, string? format, int? containerId, bool isCommander, CancellationToken cancel)
     {
         Container? cnt = null;
         using var db = _db.Invoke();
@@ -1010,10 +1009,10 @@ public class CollectionTrackingService : ICollectionTrackingService
         await db.Value.Decks.AddAsync(d);
         await db.Value.SaveChangesAsync();
 
-        return this.GetDecks(new DeckFilterModel { Ids = [d.Id], Formats = [] }).Single();
+        return (await this.GetDecksAsync(new DeckFilterModel { Ids = [d.Id], Formats = [] }, cancel)).Single();
     }
 
-    public async ValueTask<DeckSummaryModel> UpdateDeckAsync(int id, string name, string? format, int? containerId, bool isCommander = false)
+    public async ValueTask<DeckSummaryModel> UpdateDeckAsync(int id, string name, string? format, int? containerId, bool isCommander, CancellationToken cancel)
     {
         Container? cnt = null;
         using var db = _db.Invoke();
@@ -1057,10 +1056,10 @@ public class CollectionTrackingService : ICollectionTrackingService
 
         await db.Value.SaveChangesAsync();
 
-        return this.GetDecks(new DeckFilterModel { Ids = [d.Id], Formats = [] }).Single();
+        return (await this.GetDecksAsync(new DeckFilterModel { Ids = [d.Id], Formats = [] }, cancel)).Single();
     }
 
-    public async ValueTask<DeckSummaryModel> SetDeckBannerAsync(int deckId, Guid? cardSkuId)
+    public async ValueTask<DeckSummaryModel> SetDeckBannerAsync(int deckId, Guid? cardSkuId, CancellationToken cancel)
     {
         using var db = _db.Invoke();
         var deck = await db.Value.Decks
@@ -1076,10 +1075,10 @@ public class CollectionTrackingService : ICollectionTrackingService
         deck.BannerCardId = cardSkuId;
         await db.Value.SaveChangesAsync();
 
-        return this.GetDecks(new DeckFilterModel { Ids = [deck.Id], Formats = [] }).Single();
+        return (await this.GetDecksAsync(new DeckFilterModel { Ids = [deck.Id], Formats = [] }, cancel)).Single();
     }
 
-    public async ValueTask<DeckSummaryModel> SetDeckCommanderAsync(int deckId, Guid? commanderSkuId)
+    public async ValueTask<DeckSummaryModel> SetDeckCommanderAsync(int deckId, Guid? commanderSkuId, CancellationToken cancel)
     {
         using var db = _db.Invoke();
         var deck = await db.Value.Decks
@@ -1110,7 +1109,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         deck.CommanderId = commanderSkuId;
         await db.Value.SaveChangesAsync();
 
-        return this.GetDecks(new DeckFilterModel { Ids = [deck.Id], Formats = [] }).Single();
+        return (await this.GetDecksAsync(new DeckFilterModel { Ids = [deck.Id], Formats = [] }, cancel)).Single();
     }
 
     public async ValueTask<CommanderValidationResult> ValidateCommanderDeckAsync(int deckId, CancellationToken cancel)
@@ -1142,7 +1141,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         return result;
     }
 
-    public string PrintDeck(int deckId, DeckPrintOptions options)
+    public async ValueTask<string> PrintDeckAsync(int deckId, DeckPrintOptions options, CancellationToken cancel)
     {
         using var db = _db.Invoke();
         var deck = db.Value.Decks.Include(d => d.Cards).FirstOrDefault(d => d.Id == deckId);
@@ -1157,7 +1156,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         return text.ToString();
     }
 
-    public async ValueTask<CardSkuModel> DeleteCardSkuAsync(Guid skuId)
+    public async ValueTask<CardSkuModel> DeleteCardSkuAsync(Guid skuId, CancellationToken cancel)
     {
         using var db = _db.Invoke();
         var sku = await db.Value.Cards.FindAsync(skuId);
@@ -1170,7 +1169,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         return CardSkuToModel(sku);
     }
 
-    public async ValueTask<DismantleDeckResult> DismantleDeckAsync(DismantleDeckInputModel model)
+    public async ValueTask<DismantleDeckResult> DismantleDeckAsync(DismantleDeckInputModel model, CancellationToken cancel)
     {
         Deck? deck = null;
         Container? container = null;
@@ -1218,7 +1217,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         };
     }
 
-    public async ValueTask<DeleteContainerResult> DeleteContainerAsync(DeleteContainerInputModel model)
+    public async ValueTask<DeleteContainerResult> DeleteContainerAsync(DeleteContainerInputModel model, CancellationToken cancel)
     {
         using var db = _db.Invoke();
         var container = await db.Value.Containers
@@ -1243,7 +1242,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         };
     }
 
-    public async Task<CardSkuModel> SplitCardSkuAsync(SplitCardSkuInputModel model)
+    public async ValueTask<CardSkuModel> SplitCardSkuAsync(SplitCardSkuInputModel model, CancellationToken cancel)
     {
         using var db = _db.Invoke();
         var sku = await db.Value
@@ -1358,7 +1357,7 @@ public class CollectionTrackingService : ICollectionTrackingService
     record struct CardIdentityKey(string name, string edition, string? language, CardCondition? condition, string? comments);
     record struct ContainerIdentityKey(string containerId, string deckId);
 
-    public async ValueTask<(int skusUpdated, int skusRemoved)> ConsolidateCardSkusAsync(ConsolidateCardSkusInputModel model)
+    public async ValueTask<(int skusUpdated, int skusRemoved)> ConsolidateCardSkusAsync(ConsolidateCardSkusInputModel model, CancellationToken cancel)
     {
         using var db = _db.Invoke();
         IQueryable<CardSku> cards = db.Value.Cards;
@@ -1407,7 +1406,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         return (skusUpdated, skusRemoved);
     }
 
-    public bool IsBasicLand(string cardName)
+    public async ValueTask<bool> IsBasicLandAsync(string cardName, CancellationToken cancel)
     {
         switch (cardName.ToLower())
         {
@@ -1427,7 +1426,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         return false;
     }
 
-    public CollectionSummaryModel GetCollectionSummary()
+    public async ValueTask<CollectionSummaryModel> GetCollectionSummaryAsync(CancellationToken cancel)
     {
         using var db = _db.Invoke();
         return new CollectionSummaryModel
@@ -1440,11 +1439,11 @@ public class CollectionTrackingService : ICollectionTrackingService
         };
     }
 
-    public async ValueTask<(int created, int deleted)> ApplyVendorsAsync(ApplyVendorsInputModel model)
+    public async ValueTask<(int created, int deleted)> ApplyVendorsAsync(ApplyVendorsInputModel model, CancellationToken cancel)
     {
         var toRemove = new List<int>();
         var toAdd = new List<Vendor>();
-        var currentVendors = GetVendors();
+        var currentVendors = await GetVendorsAsync(cancel);
         foreach (var name in model.Names)
         {
             if (!currentVendors.Any(v => v.Name == name))
@@ -1464,13 +1463,13 @@ public class CollectionTrackingService : ICollectionTrackingService
         return (toAdd.Count, toRemove.Count);
     }
 
-    public IEnumerable<VendorModel> GetVendors()
+    public async ValueTask<IReadOnlyList<VendorModel>> GetVendorsAsync(CancellationToken cancel)
     {
         using var db = _db.Invoke();
         return db.Value.Vendors.Select(v => new VendorModel { Id = v.Id, Name = v.Name }).ToList();
     }
 
-    public async ValueTask<WishlistItemModel> DeleteWishlistItemAsync(int id)
+    public async ValueTask<WishlistItemModel> DeleteWishlistItemAsync(int id, CancellationToken cancel)
     {
         using var db = _db.Invoke();
         var item = await db.Value.WishlistItems.FindAsync(id);
@@ -1571,7 +1570,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         return WishListItemToModel(wi);
     }
 
-    public WishlistSpendSummaryModel GetWishlistSpend()
+    public async ValueTask<WishlistSpendSummaryModel> GetWishlistSpendAsync(CancellationToken cancel)
     {
         using var db = _db.Invoke();
         var items = db.Value.Set<WishlistItem>()
@@ -1713,7 +1712,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             || sku.Scryfall.ManaValue == null;
     }
 
-    public async ValueTask<MoveWishlistItemsToCollectionResult> MoveWishlistItemsToCollectionAsync(MoveWishlistItemsToCollectionInputModel model)
+    public async ValueTask<MoveWishlistItemsToCollectionResult> MoveWishlistItemsToCollectionAsync(MoveWishlistItemsToCollectionInputModel model, CancellationToken cancel)
     {
         if (model.Items.Length == 0)
             return new MoveWishlistItemsToCollectionResult { CreatedSkus = [] };
@@ -1761,13 +1760,13 @@ public class CollectionTrackingService : ICollectionTrackingService
         return new MoveWishlistItemsToCollectionResult { CreatedSkus = converted.Select(c => new WishlistItemMoveResult(c.id, CardSkuToModel(c.sku))).ToArray() };
     }
 
-    public IEnumerable<NotesModel> GetNotes()
+    public async ValueTask<IReadOnlyList<NotesModel>> GetNotesAsync(CancellationToken cancel)
     {
         using var db = _db.Invoke();
         return db.Value.Notes.Select(n => new NotesModel { Id = n.Id, Notes = n.Text, Title = n.Title }).ToList();
     }
 
-    public async ValueTask<NotesModel> UpdateNotesAsync(int? id, string? title, string notes)
+    public async ValueTask<NotesModel> UpdateNotesAsync(int? id, string? title, string notes, CancellationToken cancel)
     {
         Notes? n = null;
         using var db = _db.Invoke();
@@ -1793,7 +1792,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         };
     }
 
-    public async ValueTask<bool> DeleteNotesAsync(int id)
+    public async ValueTask<bool> DeleteNotesAsync(int id, CancellationToken cancel)
     {
         using var db = _db.Invoke();
         var n = await db.Value.Notes.FindAsync(id);
@@ -1804,12 +1803,11 @@ public class CollectionTrackingService : ICollectionTrackingService
         return true;
     }
 
-    public async ValueTask<Dictionary<string, ScryfallResolvedCard>> ResolveEditionsForCardsAsync(IEnumerable<string> cardNames, IScryfallApiClient client)
+    public async ValueTask<Dictionary<string, ScryfallResolvedCard>> ResolveEditionsForCardsAsync(IEnumerable<string> cardNames, IScryfallApiClient client, CancellationToken cancel)
     {
         using var db = _db.Invoke();
         var resolved = new Dictionary<string, ScryfallResolvedCard>();
         var sfMetaResolver = new ScryfallMetadataResolver(db.Value, client);
-        var cancel = CancellationToken.None;
         bool bSave = false;
         foreach (var cardName in cardNames.Distinct())
         {
@@ -1827,7 +1825,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         return resolved;
     }
 
-    public WishlistBuyingListModel GenerateBuyingList()
+    public async ValueTask<WishlistBuyingListModel> GenerateBuyingListAsync(CancellationToken cancel)
     {
         using var db = _db.Invoke();
         var ret = new WishlistBuyingListModel();
@@ -1851,36 +1849,16 @@ public class CollectionTrackingService : ICollectionTrackingService
         }
         return ret;
     }
-    public IEnumerable<string> GetDeckFormats()
+    public async ValueTask<IReadOnlyList<string>> GetDeckFormatsAsync(CancellationToken cancel)
     {
         using var db = _db.Invoke();
-        return db.Value.Decks.Where(d => d.Format != null).Select(d => d.Format).Distinct().ToList();
+        return db.Value.Decks.Where(d => d.Format != null).Select(d => d.Format!).Distinct().ToList();
     }
 
-    public bool HasOtherDecksInFormat(string format)
+    public async ValueTask<bool> HasOtherDecksInFormatAsync(string format, CancellationToken cancel)
     {
         using var db = _db.Invoke();
         return db.Value.Decks.Any(d => d.Format == format);
-    }
-
-    public async ValueTask<Stream?> GetLargeFrontFaceImageAsync(string scryfallId)
-    {
-        return await _cache.GetLargeFrontFaceImageAsync(scryfallId);
-    }
-
-    public async ValueTask<Stream?> GetLargeBackFaceImageAsync(string scryfallId)
-    {
-        return await _cache.GetLargeBackFaceImageAsync(scryfallId);
-    }
-
-    public async ValueTask<Stream?> GetSmallFrontFaceImageAsync(string scryfallId)
-    {
-        return await _cache.GetSmallFrontFaceImageAsync(scryfallId);
-    }
-
-    public async ValueTask<Stream?> GetSmallBackFaceImageAsync(string scryfallId)
-    {
-        return await _cache.GetSmallBackFaceImageAsync(scryfallId);
     }
 
     private async ValueTask<string?> GetScryfallIdForSkuAsync(Guid cardSkuId)
@@ -1892,31 +1870,31 @@ public class CollectionTrackingService : ICollectionTrackingService
             .FirstOrDefaultAsync();
     }
 
-    public async ValueTask<Stream?> GetLargeFrontFaceImageAsync(Guid cardSkuId)
+    public async ValueTask<Stream?> GetLargeFrontFaceImageAsync(Guid cardSkuId, CancellationToken cancel)
     {
         var scryfallId = await GetScryfallIdForSkuAsync(cardSkuId);
         return scryfallId is null ? null : await _cache.GetLargeFrontFaceImageAsync(scryfallId);
     }
 
-    public async ValueTask<Stream?> GetLargeBackFaceImageAsync(Guid cardSkuId)
+    public async ValueTask<Stream?> GetLargeBackFaceImageAsync(Guid cardSkuId, CancellationToken cancel)
     {
         var scryfallId = await GetScryfallIdForSkuAsync(cardSkuId);
         return scryfallId is null ? null : await _cache.GetLargeBackFaceImageAsync(scryfallId);
     }
 
-    public async ValueTask<Stream?> GetSmallFrontFaceImageAsync(Guid cardSkuId)
+    public async ValueTask<Stream?> GetSmallFrontFaceImageAsync(Guid cardSkuId, CancellationToken cancel)
     {
         var scryfallId = await GetScryfallIdForSkuAsync(cardSkuId);
         return scryfallId is null ? null : await _cache.GetSmallFrontFaceImageAsync(scryfallId);
     }
 
-    public async ValueTask<Stream?> GetSmallBackFaceImageAsync(Guid cardSkuId)
+    public async ValueTask<Stream?> GetSmallBackFaceImageAsync(Guid cardSkuId, CancellationToken cancel)
     {
         var scryfallId = await GetScryfallIdForSkuAsync(cardSkuId);
         return scryfallId is null ? null : await _cache.GetSmallBackFaceImageAsync(scryfallId);
     }
 
-    public IEnumerable<string> GetTags()
+    public async ValueTask<IReadOnlyList<string>> GetTagsAsync(CancellationToken cancel)
     {
         using var db = _db.Invoke();
         return db.Value.Set<Tag>().Select(t => t.Name).ToList();
@@ -2026,7 +2004,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         var results = new List<LowestPriceCheckItem>();
         foreach (var item in options.Items)
         {
-            bool isBasic = this.IsBasicLand(item.CardName);
+            bool isBasic = await this.IsBasicLandAsync(item.CardName, cancel);
             bool isSnowBasic = isBasic && item.CardName.ToLower().StartsWith("snow-covered ");
             if ((options.SkipBasicLands && isBasic && !isSnowBasic) || (options.SkipSnowBasicLands && isSnowBasic))
             {
@@ -2112,7 +2090,7 @@ public class CollectionTrackingService : ICollectionTrackingService
         }
     }
 
-    public string PrintContainer(int containerId, ContainerPrintOptions options)
+    public async ValueTask<string> PrintContainerAsync(int containerId, ContainerPrintOptions options, CancellationToken cancel)
     {
         using var db = _db.Invoke();
         var container = db.Value.Containers.Include(d => d.Cards).FirstOrDefault(d => d.Id == containerId);

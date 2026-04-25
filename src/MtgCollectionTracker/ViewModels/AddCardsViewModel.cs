@@ -31,7 +31,8 @@ public partial class AddCardsViewModel : DialogContentViewModel
     readonly IScryfallApiClient? _scryfallApiClient;
     readonly Func<DialogViewModel>? _dialog;
     readonly Func<LoadCardsViewModel>? _loadCardsDialog;
-    readonly LanguageViewModel[] _languages;
+    private LanguageViewModel[] _languages = [];
+    private bool _isInitialized;
 
     public AddCardsViewModel()
     {
@@ -70,9 +71,27 @@ public partial class AddCardsViewModel : DialogContentViewModel
         _scryfallApiClient = scryfallApiClient;
         _dialog = dialog;
         _loadCardsDialog = loadCardsDialog;
-        _languages = service.GetLanguages().Select(lang => new LanguageViewModel(lang.Code, lang.PrintedCode, lang.Name)).ToArray();
+    }
 
-        this.AvailableContainers = service.GetContainers().Select(c => new ContainerViewModel().WithData(c));
+    public async Task<AddCardsViewModel> InitializeAsync()
+    {
+        if (_isInitialized)
+            return this;
+
+        var languagesTask = _service.GetLanguagesAsync(System.Threading.CancellationToken.None).AsTask();
+        var containersTask = _service.GetContainersAsync(System.Threading.CancellationToken.None).AsTask();
+        await Task.WhenAll(languagesTask, containersTask);
+        var languages = await languagesTask;
+        var containers = await containersTask;
+
+        _languages = languages
+            .Select(lang => new LanguageViewModel(lang.Code, lang.PrintedCode, lang.Name))
+            .ToArray();
+        this.AvailableContainers = containers
+            .Select(c => new ContainerViewModel().WithData(c))
+            .ToList();
+        _isInitialized = true;
+        return this;
     }
 
     public ObservableCollection<AddCardSkuViewModel> Cards { get; } = new();
@@ -140,16 +159,15 @@ public partial class AddCardsViewModel : DialogContentViewModel
         if (_storage == null)
             return;
 
-        var selectedFiles = await _storage.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            AllowMultiple = false,
-            Title = "Load rows from CSV",
-            FileTypeFilter = [new FilePickerFileType("CSV Files") { Patterns = ["*.csv"] }]
-        });
-
         try
         {
             this.IsImporting = true;
+            var selectedFiles = await _storage.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                AllowMultiple = false,
+                Title = "Load rows from CSV",
+                FileTypeFilter = [new FilePickerFileType("CSV Files") { Patterns = ["*.csv"] }]
+            });
             if (selectedFiles?.Count == 1)
             {
                 var stream = await selectedFiles[0].OpenReadAsync();
@@ -200,6 +218,10 @@ public partial class AddCardsViewModel : DialogContentViewModel
                     Cards.Add(inr);
                 }
             }
+        }
+        catch (Exception ex) when (DesktopIntegrationExceptionHelper.IsServiceUnavailable(ex))
+        {
+            Messenger.ToastNotify("File picker is unavailable in this desktop session.", Avalonia.Controls.Notifications.NotificationType.Warning);
         }
         finally
         {
@@ -266,7 +288,7 @@ public partial class AddCardsViewModel : DialogContentViewModel
     [NotifyCanExecuteChangedFor(nameof(AddCardsCommand))]
     private ContainerViewModel? _selectedContainer;
 
-    public IEnumerable<ContainerViewModel>? AvailableContainers { get; internal set; }
+    public IEnumerable<ContainerViewModel>? AvailableContainers { get; internal set; } = [];
 
     private int? _targetDeckId;
     private string? _targetDeckName;
@@ -291,42 +313,42 @@ public partial class AddCardsViewModel : DialogContentViewModel
         IsAddingCards = true;
         try
         {
-        int? containerId = null;
-        int? deckId = null;
+            int? containerId = null;
+            int? deckId = null;
 
-        if (this.SelectedContainer != null)
-        {
-            containerId = this.SelectedContainer.Id;
-        }
+            if (this.SelectedContainer != null)
+            {
+                containerId = this.SelectedContainer.Id;
+            }
 
-        if (_targetDeckId.HasValue)
-        {
-            deckId = _targetDeckId.Value;
-        }
+            if (_targetDeckId.HasValue)
+            {
+                deckId = _targetDeckId.Value;
+            }
 
-        var addToSideboard = deckId.HasValue && this.AddToSideboard;
+            var addToSideboard = deckId.HasValue && this.AddToSideboard;
 
-        var adds = this.Cards.Select(c => new AddToDeckOrContainerInputModel
-        {
-            CardName = c.CardName,
-            Comments = c.Comments,
-            Condition = c.Condition,
-            IsFoil = c.IsFoil,
-            Language = c.Language?.Code ?? "en",
-            CollectorNumber = c.CollectorNumber,
-            Quantity = c.Qty,
-            Edition = c.Edition,
-            IsSideboard = addToSideboard
-        });
+            var adds = this.Cards.Select(c => new AddToDeckOrContainerInputModel
+            {
+                CardName = c.CardName,
+                Comments = c.Comments,
+                Condition = c.Condition,
+                IsFoil = c.IsFoil,
+                Language = c.Language?.Code ?? "en",
+                CollectorNumber = c.CollectorNumber,
+                Quantity = c.Qty,
+                Edition = c.Edition,
+                IsSideboard = addToSideboard
+            });
 
-        var (total, proxyTotal, rows) = await _service.AddMultipleToContainerOrDeckAsync(containerId, deckId, adds, _scryfallApiClient);
-        Messenger.Send(new CardsAddedMessage { CardsTotal = total, ProxyTotal = proxyTotal, SkuTotal = rows });
-        if (deckId.HasValue)
-        {
-            Messenger.Send(new DeckTotalsChangedMessage([deckId.Value]));
-            Messenger.Send(new CardsAddedToDeckMessage(deckId.Value));
-        }
-        Messenger.Send(new CloseDialogMessage());
+            var (total, proxyTotal, rows) = await _service.AddMultipleToContainerOrDeckAsync(containerId, deckId, adds, _scryfallApiClient, System.Threading.CancellationToken.None);
+            Messenger.Send(new CardsAddedMessage { CardsTotal = total, ProxyTotal = proxyTotal, SkuTotal = rows });
+            if (deckId.HasValue)
+            {
+                Messenger.Send(new DeckTotalsChangedMessage([deckId.Value]));
+                Messenger.Send(new CardsAddedToDeckMessage(deckId.Value));
+            }
+            Messenger.Send(new CloseDialogMessage());
         }
         finally
         {

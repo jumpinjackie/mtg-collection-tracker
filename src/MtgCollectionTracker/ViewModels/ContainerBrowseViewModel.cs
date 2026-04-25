@@ -84,23 +84,23 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
 
     partial void OnShowOnlyMissingMetadataChanged(bool value)
     {
-        FetchPage(this.PageNumber);
+        _ = FetchPageAsync(this.PageNumber);
     }
 
     public MultiModeCardListBehavior<CardSkuItemViewModel> Behavior { get; }
 
-    private void FetchPage(int oneBasedPageNumber)
+    private async Task FetchPageAsync(int oneBasedPageNumber)
     {
         using (((IViewModelWithBusyState)this).StartBusyState())
         {
-            var page = _service.GetCardsForContainer(_containerId.Value, new()
+            var page = await _service.GetCardsForContainerAsync(_containerId.Value, new()
             {
                 ShowOnlyMissingMetadata = this.ShowOnlyMissingMetadata,
                 // TODO: Dynamically compute desired page size based on screen real estate
                 // right now it is hard-coded to 16
                 PageSize = 16,
                 PageNumber = oneBasedPageNumber - 1
-            });
+            }, CancellationToken.None);
             Behavior.SelectedItems.Clear();
             Behavior.SelectedRow = null;
             this.CurrentPage.Clear();
@@ -123,7 +123,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
     {
         if (oldValue != newValue && newValue > 0 && _containerId.HasValue)
         {
-            FetchPage(newValue);
+            _ = FetchPageAsync(newValue);
         }
     }
 
@@ -140,22 +140,24 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
     }
 
     [RelayCommand]
-    private void EditSelectedSku()
+    private async Task EditSelectedSku()
     {
         if (Behavior.SelectedItems.Count == 1)
         {
+            var vm = await _editCardSku().WithSkuAsync(Behavior.SelectedItems[0]);
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 600,
-                ViewModel = _dialog().WithContent("Edit Sku", _editCardSku().WithSku(Behavior.SelectedItems[0]))
+                ViewModel = _dialog().WithContent("Edit Sku", vm)
             });
         }
         else if (Behavior.SelectedItems.Count > 1)
         {
+            var vm = await _editCardSku().WithSkusAsync(Behavior.SelectedItems);
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 600,
-                ViewModel = _dialog().WithContent("Edit Skus", _editCardSku().WithSkus(Behavior.SelectedItems))
+                ViewModel = _dialog().WithContent("Edit Skus", vm)
             });
         }
     }
@@ -171,7 +173,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
 
     public bool PreviousEnabled => this.CanGoPrevious && !Behavior.IsBusy;
 
-    
+
     [ObservableProperty]
     private string? _containerSummary;
 
@@ -187,9 +189,9 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
     public ObservableCollection<CardSkuItemViewModel> CurrentPage { get; } = new();
 
     [RelayCommand]
-    private void AddSkus()
+    private async Task AddSkus()
     {
-        var vm = _addCards();
+        var vm = await _addCards().InitializeAsync();
         if (_containerId.HasValue)
             vm = vm.WithTargetContainer(_containerId.Value);
 
@@ -207,14 +209,15 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
     }
 
     [RelayCommand]
-    private void SendSkusToContainer()
+    private async Task SendSkusToContainer()
     {
         if (Behavior.SelectedItems.Count > 0)
         {
+            var vm = await _sendToContainer().WithCardsAsync(Behavior.SelectedItems);
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 800,
-                ViewModel = _dialog().WithContent("Send Cards To Deck or Container", _sendToContainer().WithCards(Behavior.SelectedItems))
+                ViewModel = _dialog().WithContent("Send Cards To Deck or Container", vm)
             });
         }
     }
@@ -301,16 +304,21 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
     {
         // This item was moved out of this container, so refresh current page
         if (this.PageNumber > 0)
-            FetchPage(this.PageNumber);
+            _ = FetchPageAsync(this.PageNumber);
     }
 
     void IRecipient<CardSkuSplitMessage>.Receive(CardSkuSplitMessage message)
+    {
+        _ = HandleCardSkuSplitAsync(message);
+    }
+
+    private async Task HandleCardSkuSplitAsync(CardSkuSplitMessage message)
     {
         var toUpdate = this.CurrentPage
                 .Where(r => r.Id == message.SplitSkuId)
                 .Select(r => r.Id)
                 .ToList();
-        var updatedSkus = _service.GetCards(new() { CardSkuIds = toUpdate });
+        var updatedSkus = await _service.GetCardsAsync(new() { CardSkuIds = toUpdate }, CancellationToken.None);
         foreach (var sku in updatedSkus)
         {
             var item = this.CurrentPage.FirstOrDefault(r => r.Id == sku.Id);
@@ -319,7 +327,7 @@ public partial class ContainerBrowseViewModel : DialogContentViewModel, IViewMod
                 item.WithData(sku);
                 var idx = this.CurrentPage.IndexOf(item);
                 // Add the new split sku as well
-                var newSku = _service.GetCards(new() { CardSkuIds = [message.NewSkuId] }).ToList();
+                var newSku = (await _service.GetCardsAsync(new() { CardSkuIds = [message.NewSkuId] }, CancellationToken.None)).ToList();
                 if (newSku.Count == 1)
                 {
                     this.CurrentPage.Insert(idx, _cardSku().WithData(newSku[0]));

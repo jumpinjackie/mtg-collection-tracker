@@ -4,6 +4,8 @@ using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.ViewModels;
 using ScryfallApi.Client;
+using System.Collections.Generic;
+using System.Threading;
 
 namespace MtgCollectionTracker.Tests;
 
@@ -13,13 +15,20 @@ namespace MtgCollectionTracker.Tests;
 /// </summary>
 public class PlaytestingViewModelTests
 {
+    private static ICollectionTrackingService CreateDefaultService()
+    {
+        var mock = new Mock<ICollectionTrackingService>();
+        mock.Setup(s => s.GetDecksAsync(null, It.IsAny<CancellationToken>())).ReturnsAsync(new List<DeckSummaryModel>());
+        return mock.Object;
+    }
+
     private static PlaytestingViewModel CreateViewModel(
         ICollectionTrackingService? service = null,
         IScryfallApiClient? scryfallClient = null,
         Func<PlaytestGameStateViewModel>? gameStateFactory = null)
     {
         var messenger = new WeakReferenceMessenger();
-        service ??= new Mock<ICollectionTrackingService>().Object;
+        service ??= CreateDefaultService();
         scryfallClient ??= new Mock<IScryfallApiClient>().Object;
         gameStateFactory ??= () =>
         {
@@ -86,9 +95,9 @@ public class PlaytestingViewModelTests
         // The constructor triggers OnActivated which calls RefreshDecks when the list is empty.
         // Use SetupSequence so the first (automatic) call returns empty and the explicit test call
         // returns the full list.
-        mockService.SetupSequence(s => s.GetDecks(null))
-            .Returns([])
-            .Returns([
+        mockService.SetupSequence(s => s.GetDecksAsync(null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<DeckSummaryModel>())
+            .ReturnsAsync([
                 new DeckSummaryModel { Id = 3, Name = "Zoo", DeckName = "Zoo" },
                 new DeckSummaryModel { Id = 1, Name = "Burn", DeckName = "Burn" },
                 new DeckSummaryModel { Id = 2, Name = "Control", DeckName = "Control" },
@@ -109,10 +118,10 @@ public class PlaytestingViewModelTests
         var mockService = new Mock<ICollectionTrackingService>();
         // First call is from the automatic OnActivated → returns empty.
         // Subsequent calls are explicit test invocations.
-        mockService.SetupSequence(s => s.GetDecks(null))
-            .Returns([])
-            .Returns([new DeckSummaryModel { Id = 1, Name = "First Deck", DeckName = "First Deck" }])
-            .Returns([new DeckSummaryModel { Id = 2, Name = "Second Deck", DeckName = "Second Deck" }]);
+        mockService.SetupSequence(s => s.GetDecksAsync(null, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new List<DeckSummaryModel>())
+            .ReturnsAsync([new DeckSummaryModel { Id = 1, Name = "First Deck", DeckName = "First Deck" }])
+            .ReturnsAsync([new DeckSummaryModel { Id = 2, Name = "Second Deck", DeckName = "Second Deck" }]);
 
         var vm = CreateViewModel(service: mockService.Object);
 

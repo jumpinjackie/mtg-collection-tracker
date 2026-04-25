@@ -144,15 +144,14 @@ public class RemoteCollectionTrackingService : ICollectionTrackingService
 
     // ── Languages ─────────────────────────────────────────────────────────────
 
-    public IEnumerable<CardLanguageModel> GetLanguages()
-        => MapMany<CardLanguageModel>(
-            _client.LanguagesAsync().ConfigureAwait(false).GetAwaiter().GetResult());
+    public async ValueTask<IReadOnlyList<CardLanguageModel>> GetLanguagesAsync(CancellationToken cancel)
+        => MapMany<CardLanguageModel>(await _client.LanguagesAsync(cancel));
 
     // ── Cards ─────────────────────────────────────────────────────────────────
 
-    public IEnumerable<CardSkuModel> GetCards(CardQueryModel query)
+    public async ValueTask<IReadOnlyList<CardSkuModel>> GetCardsAsync(CardQueryModel query, CancellationToken cancel)
         => MapMany<CardSkuModel>(
-            _client.CardsAllAsync(
+            await _client.CardsAllAsync(
                 searchFilter: string.IsNullOrWhiteSpace(query.SearchFilter) ? null : query.SearchFilter,
                 notInDecks: query.NotInDecks ? true : null,
                 noProxies: query.NoProxies ? true : null,
@@ -163,40 +162,40 @@ public class RemoteCollectionTrackingService : ICollectionTrackingService
                 containerIds: query.ContainerIds,
                 tags: query.Tags,
                 colors: query.Colors,
-                cardTypes: query.CardTypes)
-            .ConfigureAwait(false).GetAwaiter().GetResult());
+                cardTypes: query.CardTypes,
+                cancellationToken: cancel));
 
     public async ValueTask<CardSkuModel> GetCardSkuByIdAsync(Guid id, CancellationToken cancel)
         => Map<CardSkuModel>(await _client.CardsGETAsync(id, cancel));
 
-    public PaginatedCardSkuModel GetCardsForContainer(int containerId, FetchContainerPageModel options)
+    public async ValueTask<PaginatedCardSkuModel> GetCardsForContainerAsync(int containerId, FetchContainerPageModel options, CancellationToken cancel)
         => Map<PaginatedCardSkuModel>(
-            _client.ContainerAsync(
+            await _client.ContainerAsync(
                 containerId,
                 options.PageNumber,
                 options.PageSize,
-                options.ShowOnlyMissingMetadata ? true : null)
-            .ConfigureAwait(false).GetAwaiter().GetResult()!);
+                options.ShowOnlyMissingMetadata ? true : null,
+                cancel)!);
 
-    public bool IsBasicLand(string cardName)
-        => _client.IsBasicLandAsync(cardName).ConfigureAwait(false).GetAwaiter().GetResult();
+    public async ValueTask<bool> IsBasicLandAsync(string cardName, CancellationToken cancel)
+        => await _client.IsBasicLandAsync(cardName, cancel);
 
-    public async ValueTask<CardSkuModel> AddToDeckAsync(AddToDeckInputModel model)
-        => Map<CardSkuModel>(await _client.AddToDeckAsync(Map<Gen.AddToDeckInputModel>(model)));
+    public async ValueTask<CardSkuModel> AddToDeckAsync(AddToDeckInputModel model, CancellationToken cancel)
+        => Map<CardSkuModel>(await _client.AddToDeckAsync(Map<Gen.AddToDeckInputModel>(model), cancel));
 
     public async ValueTask<CardSkuModel> AddToDeckOrContainerAsync(
-        int? containerId, int? deckId, AddToDeckOrContainerInputModel model)
-        => Map<CardSkuModel>(await _client.AddAsync(Map<Gen.AddToDeckOrContainerInputModel>(model), containerId, deckId));
+        int? containerId, int? deckId, AddToDeckOrContainerInputModel model, CancellationToken cancel)
+        => Map<CardSkuModel>(await _client.AddAsync(Map<Gen.AddToDeckOrContainerInputModel>(model), containerId, deckId, cancel));
 
     public async ValueTask<(int total, int proxyTotal, int rows)> AddMultipleToContainerOrDeckAsync(
         int? containerId, int? deckId, IEnumerable<AddToDeckOrContainerInputModel> items,
-        IScryfallApiClient? scryfallClient)
+        IScryfallApiClient? scryfallClient, CancellationToken cancel)
     {
         var batch = new Gen.AddBatchRequest();
         batch.ContainerId = containerId;
         batch.DeckId = deckId;
         batch.Items = items.Select(i => Map<Gen.AddToDeckOrContainerInputModel>(i)).ToList();
-        var result = await _client.AddBatchAsync(batch);
+        var result = await _client.AddBatchAsync(batch, cancel);
         return (result.Total, result.ProxyTotal, result.Rows);
     }
 
@@ -204,30 +203,30 @@ public class RemoteCollectionTrackingService : ICollectionTrackingService
         UpdateCardSkuInputModel model, IScryfallApiClient? scryfallApiClient, CancellationToken cancel)
         => Map<UpdateCardSkuResult>(await _client.CardsPUTAsync(model.Ids.First(), Map<Gen.UpdateCardSkuInputModel>(model), cancel));
 
-    public async Task<CardSkuModel> SplitCardSkuAsync(SplitCardSkuInputModel model)
-        => Map<CardSkuModel>(await _client.SplitAsync(model.CardSkuId, Map<Gen.SplitCardSkuInputModel>(model)));
+    public async ValueTask<CardSkuModel> SplitCardSkuAsync(SplitCardSkuInputModel model, CancellationToken cancel)
+        => Map<CardSkuModel>(await _client.SplitAsync(model.CardSkuId, Map<Gen.SplitCardSkuInputModel>(model), cancel));
 
-    public async ValueTask<CardSkuModel> DeleteCardSkuAsync(Guid skuId)
-        => Map<CardSkuModel>(await _client.DeleteAsync(skuId));
+    public async ValueTask<CardSkuModel> DeleteCardSkuAsync(Guid skuId, CancellationToken cancel)
+        => Map<CardSkuModel>(await _client.DeleteAsync(skuId, cancel));
 
     public async ValueTask<(CardSkuModel sku, bool wasMerged)> RemoveFromDeckAsync(
-        RemoveFromDeckInputModel model)
+        RemoveFromDeckInputModel model, CancellationToken cancel)
     {
-        var result = await _client.RemoveFromDeckAsync(Map<Gen.RemoveFromDeckInputModel>(model));
+        var result = await _client.RemoveFromDeckAsync(Map<Gen.RemoveFromDeckInputModel>(model), cancel);
         return (Map<CardSkuModel>(result.Sku), result.WasMerged);
     }
 
     public async ValueTask<(int skusUpdated, int skusRemoved)> ConsolidateCardSkusAsync(
-        ConsolidateCardSkusInputModel model)
+        ConsolidateCardSkusInputModel model, CancellationToken cancel)
     {
-        var result = await _client.ConsolidateAsync(Map<Gen.ConsolidateCardSkusInputModel>(model));
+        var result = await _client.ConsolidateAsync(Map<Gen.ConsolidateCardSkusInputModel>(model), cancel);
         return (result.SkusUpdated, result.SkusRemoved);
     }
 
     public async ValueTask<Dictionary<string, ScryfallResolvedCard>> ResolveEditionsForCardsAsync(
-        IEnumerable<string> cardNames, IScryfallApiClient client)
+        IEnumerable<string> cardNames, IScryfallApiClient client, CancellationToken cancel)
     {
-        var result = await _client.ResolveEditionsAsync(cardNames.ToArray());
+        var result = await _client.ResolveEditionsAsync(cardNames.ToArray(), cancel);
         // Map each value from the generated ScryfallResolvedCard to the ScryfallApi.Client version.
         var dict = new Dictionary<string, ScryfallResolvedCard>(result.Count);
         foreach (var kv in result)
@@ -237,102 +236,95 @@ public class RemoteCollectionTrackingService : ICollectionTrackingService
 
     // ── Containers ────────────────────────────────────────────────────────────
 
-    public IEnumerable<ContainerSummaryModel> GetContainers()
-        => MapMany<ContainerSummaryModel>(
-            _client.ContainersAllAsync().ConfigureAwait(false).GetAwaiter().GetResult());
+    public async ValueTask<IReadOnlyList<ContainerSummaryModel>> GetContainersAsync(CancellationToken cancel)
+        => MapMany<ContainerSummaryModel>(await _client.ContainersAllAsync(cancel));
 
-    public async ValueTask<ContainerSummaryModel> CreateContainerAsync(string name, string? description)
-        => Map<ContainerSummaryModel>(await _client.ContainersPOSTAsync(new Gen.CreateContainerRequest { Name = name, Description = description }));
+    public async ValueTask<ContainerSummaryModel> CreateContainerAsync(string name, string? description, CancellationToken cancel)
+        => Map<ContainerSummaryModel>(await _client.ContainersPOSTAsync(new Gen.CreateContainerRequest { Name = name, Description = description }, cancel));
 
     public async ValueTask<ContainerSummaryModel> UpdateContainerAsync(
-        int id, string name, string? description)
-        => Map<ContainerSummaryModel>(await _client.ContainersPUTAsync(id, new Gen.CreateContainerRequest { Name = name, Description = description }));
+        int id, string name, string? description, CancellationToken cancel)
+        => Map<ContainerSummaryModel>(await _client.ContainersPUTAsync(id, new Gen.CreateContainerRequest { Name = name, Description = description }, cancel));
 
-    public async ValueTask<DeleteContainerResult> DeleteContainerAsync(DeleteContainerInputModel model)
-        => Map<DeleteContainerResult>(await _client.Delete2Async(model.ContainerId, Map<Gen.DeleteContainerInputModel>(model)));
+    public async ValueTask<DeleteContainerResult> DeleteContainerAsync(DeleteContainerInputModel model, CancellationToken cancel)
+        => Map<DeleteContainerResult>(await _client.Delete2Async(model.ContainerId, Map<Gen.DeleteContainerInputModel>(model), cancel));
 
-    public string PrintContainer(int containerId, ContainerPrintOptions options)
+    public async ValueTask<string> PrintContainerAsync(int containerId, ContainerPrintOptions options, CancellationToken cancel)
     {
         var reportProxyUsage = options.ReportProxyUsage ? "true" : "false";
-        return _http.GetStringAsync($"/api/containers/{containerId}/print?reportProxyUsage={reportProxyUsage}")
-            .ConfigureAwait(false).GetAwaiter().GetResult();
+        return await _http.GetStringAsync($"/api/containers/{containerId}/print?reportProxyUsage={reportProxyUsage}", cancel);
     }
 
     // ── Decks ─────────────────────────────────────────────────────────────────
 
-    public IEnumerable<DeckSummaryModel> GetDecks(DeckFilterModel? filter)
+    public async ValueTask<IReadOnlyList<DeckSummaryModel>> GetDecksAsync(DeckFilterModel? filter, CancellationToken cancel)
         => MapMany<DeckSummaryModel>(
-            _client.DecksAllAsync(formats: filter?.Formats, deckIds: filter?.Ids)
-            .ConfigureAwait(false).GetAwaiter().GetResult());
+            await _client.DecksAllAsync(formats: filter?.Formats, deckIds: filter?.Ids, cancellationToken: cancel));
 
     public async ValueTask<DeckModel> GetDeckAsync(
         int deckId, IScryfallApiClient? scryfallApiClient, CancellationToken cancel)
         => Map<DeckModel>(await _client.DecksGETAsync(deckId, cancel));
 
     public async ValueTask<DeckSummaryModel> CreateDeckAsync(
-        string name, string? format, int? containerId, bool isCommander = false)
-        => Map<DeckSummaryModel>(await _client.DecksPOSTAsync(new Gen.CreateDeckRequest { Name = name, Format = format, ContainerId = containerId, IsCommander = isCommander }));
+        string name, string? format, int? containerId, bool isCommander, CancellationToken cancel)
+        => Map<DeckSummaryModel>(await _client.DecksPOSTAsync(new Gen.CreateDeckRequest { Name = name, Format = format, ContainerId = containerId, IsCommander = isCommander }, cancel));
 
     public async ValueTask<DeckSummaryModel> UpdateDeckAsync(
-        int id, string name, string? format, int? containerId, bool isCommander = false)
-        => Map<DeckSummaryModel>(await _client.DecksPUTAsync(id, new Gen.CreateDeckRequest { Name = name, Format = format, ContainerId = containerId, IsCommander = isCommander }));
+        int id, string name, string? format, int? containerId, bool isCommander, CancellationToken cancel)
+        => Map<DeckSummaryModel>(await _client.DecksPUTAsync(id, new Gen.CreateDeckRequest { Name = name, Format = format, ContainerId = containerId, IsCommander = isCommander }, cancel));
 
-    public async ValueTask<DeckSummaryModel> SetDeckBannerAsync(int deckId, Guid? cardSkuId)
-        => Map<DeckSummaryModel>(await _client.BannerAsync(deckId, new Gen.SetBannerRequest { CardSkuId = cardSkuId }));
+    public async ValueTask<DeckSummaryModel> SetDeckBannerAsync(int deckId, Guid? cardSkuId, CancellationToken cancel)
+        => Map<DeckSummaryModel>(await _client.BannerAsync(deckId, new Gen.SetBannerRequest { CardSkuId = cardSkuId }, cancel));
 
-    public async ValueTask<DeckSummaryModel> SetDeckCommanderAsync(int deckId, Guid? commanderSkuId)
-        => Map<DeckSummaryModel>(await _client.CommanderAsync(deckId, new Gen.SetCommanderRequest { CommanderSkuId = commanderSkuId }));
+    public async ValueTask<DeckSummaryModel> SetDeckCommanderAsync(int deckId, Guid? commanderSkuId, CancellationToken cancel)
+        => Map<DeckSummaryModel>(await _client.CommanderAsync(deckId, new Gen.SetCommanderRequest { CommanderSkuId = commanderSkuId }, cancel));
 
-    public async ValueTask<DismantleDeckResult> DismantleDeckAsync(DismantleDeckInputModel model)
-        => Map<DismantleDeckResult>(await _client.DismantleAsync(model.DeckId, Map<Gen.DismantleDeckInputModel>(model)));
+    public async ValueTask<DismantleDeckResult> DismantleDeckAsync(DismantleDeckInputModel model, CancellationToken cancel)
+        => Map<DismantleDeckResult>(await _client.DismantleAsync(model.DeckId, Map<Gen.DismantleDeckInputModel>(model), cancel));
 
     public async ValueTask<CommanderValidationResult> ValidateCommanderDeckAsync(
         int deckId, CancellationToken cancel)
         => Map<CommanderValidationResult>(await _client.ValidateAsync(deckId, cancel));
 
-    public IEnumerable<string> GetDeckFormats()
-        => _client.FormatsAsync().ConfigureAwait(false).GetAwaiter().GetResult() ?? [];
+    public async ValueTask<IReadOnlyList<string>> GetDeckFormatsAsync(CancellationToken cancel)
+        => (await _client.FormatsAsync(cancel))?.ToArray() ?? [];
 
-    public bool HasOtherDecksInFormat(string format)
-        => _client.HasOtherFormatsAsync(format).ConfigureAwait(false).GetAwaiter().GetResult();
+    public async ValueTask<bool> HasOtherDecksInFormatAsync(string format, CancellationToken cancel)
+        => await _client.HasOtherFormatsAsync(format, cancel);
 
-    public string PrintDeck(int deckId, DeckPrintOptions options)
+    public async ValueTask<string> PrintDeckAsync(int deckId, DeckPrintOptions options, CancellationToken cancel)
     {
         var reportProxyUsage = options.ReportProxyUsage ? "true" : "false";
-        return _http.GetStringAsync($"/api/decks/{deckId}/print?reportProxyUsage={reportProxyUsage}")
-            .ConfigureAwait(false).GetAwaiter().GetResult();
+        return await _http.GetStringAsync($"/api/decks/{deckId}/print?reportProxyUsage={reportProxyUsage}", cancel);
     }
 
     // ── Wishlist ──────────────────────────────────────────────────────────────
 
-    public IEnumerable<WishlistItemModel> GetWishlistItems(WishlistItemFilter filter)
-        => MapMany<WishlistItemModel>(
-            _client.WishlistAllGETAsync(filter.Tags)
-            .ConfigureAwait(false).GetAwaiter().GetResult());
+    public async ValueTask<IReadOnlyList<WishlistItemModel>> GetWishlistItemsAsync(WishlistItemFilter filter, CancellationToken cancel)
+        => MapMany<WishlistItemModel>(await _client.WishlistAllGETAsync(filter.Tags, cancel));
 
-    public async ValueTask<ICollection<WishlistItemModel>> AddMultipleToWishlistAsync(
-        IEnumerable<AddToWishlistInputModel> items, IScryfallApiClient? scryfallClient)
-        => MapMany<WishlistItemModel>(await _client.WishlistAllPOSTAsync(items.Select(i => Map<Gen.AddToWishlistInputModel>(i)).ToArray()));
+    public async ValueTask<IReadOnlyList<WishlistItemModel>> AddMultipleToWishlistAsync(
+        IEnumerable<AddToWishlistInputModel> items, IScryfallApiClient? scryfallClient, CancellationToken cancel)
+        => MapMany<WishlistItemModel>(await _client.WishlistAllPOSTAsync(items.Select(i => Map<Gen.AddToWishlistInputModel>(i)).ToArray(), cancel));
 
     public async ValueTask<WishlistItemModel> UpdateWishlistItemAsync(
         UpdateWishlistItemInputModel model, IScryfallApiClient? scryfallApiClient, CancellationToken cancel)
         => Map<WishlistItemModel>(await _client.WishlistAsync(model.Id, Map<Gen.UpdateWishlistItemInputModel>(model), cancel));
 
-    public async ValueTask<WishlistItemModel> DeleteWishlistItemAsync(int id)
-        => Map<WishlistItemModel>(await _client.Delete3Async(id));
+    public async ValueTask<WishlistItemModel> DeleteWishlistItemAsync(int id, CancellationToken cancel)
+        => Map<WishlistItemModel>(await _client.Delete3Async(id, cancel));
 
     public async ValueTask<MoveWishlistItemsToCollectionResult> MoveWishlistItemsToCollectionAsync(
-        MoveWishlistItemsToCollectionInputModel model)
-        => Map<MoveWishlistItemsToCollectionResult>(await _client.MoveToCollectionAsync(Map<Gen.MoveWishlistItemsToCollectionInputModel>(model)));
+        MoveWishlistItemsToCollectionInputModel model, CancellationToken cancel)
+        => Map<MoveWishlistItemsToCollectionResult>(await _client.MoveToCollectionAsync(Map<Gen.MoveWishlistItemsToCollectionInputModel>(model), cancel));
 
-    public WishlistSpendSummaryModel GetWishlistSpend()
-        => Map<WishlistSpendSummaryModel>(
-            _client.SpendAsync().ConfigureAwait(false).GetAwaiter().GetResult()!);
+    public async ValueTask<WishlistSpendSummaryModel> GetWishlistSpendAsync(CancellationToken cancel)
+        => Map<WishlistSpendSummaryModel>(await _client.SpendAsync(cancel)!);
 
-    public WishlistBuyingListModel GenerateBuyingList()
+    public async ValueTask<WishlistBuyingListModel> GenerateBuyingListAsync(CancellationToken cancel)
     {
         var entries = MapMany<BuyingListVendorEntry>(
-            _client.BuyingListAsync().ConfigureAwait(false).GetAwaiter().GetResult());
+            await _client.BuyingListAsync(cancel));
         var model = new WishlistBuyingListModel();
         foreach (var entry in entries)
             foreach (var item in entry.Items)
@@ -342,32 +334,30 @@ public class RemoteCollectionTrackingService : ICollectionTrackingService
 
     // ── Notes ─────────────────────────────────────────────────────────────────
 
-    public IEnumerable<NotesModel> GetNotes()
-        => MapMany<NotesModel>(
-            _client.NotesAllAsync().ConfigureAwait(false).GetAwaiter().GetResult());
+    public async ValueTask<IReadOnlyList<NotesModel>> GetNotesAsync(CancellationToken cancel)
+        => MapMany<NotesModel>(await _client.NotesAllAsync(cancel));
 
-    public async ValueTask<NotesModel> UpdateNotesAsync(int? id, string? title, string notes)
-        => Map<NotesModel>(await _client.NotesPOSTAsync(new Gen.UpdateNotesRequest { Id = id, Title = title, Notes = notes }));
+    public async ValueTask<NotesModel> UpdateNotesAsync(int? id, string? title, string notes, CancellationToken cancel)
+        => Map<NotesModel>(await _client.NotesPOSTAsync(new Gen.UpdateNotesRequest { Id = id, Title = title, Notes = notes }, cancel));
 
-    public async ValueTask<bool> DeleteNotesAsync(int id)
-        => await _client.NotesDELETEAsync(id);
+    public async ValueTask<bool> DeleteNotesAsync(int id, CancellationToken cancel)
+        => await _client.NotesDELETEAsync(id, cancel);
 
     // ── Vendors ───────────────────────────────────────────────────────────────
 
-    public IEnumerable<VendorModel> GetVendors()
-        => MapMany<VendorModel>(
-            _client.VendorsAllAsync().ConfigureAwait(false).GetAwaiter().GetResult());
+    public async ValueTask<IReadOnlyList<VendorModel>> GetVendorsAsync(CancellationToken cancel)
+        => MapMany<VendorModel>(await _client.VendorsAllAsync(cancel));
 
-    public async ValueTask<(int created, int deleted)> ApplyVendorsAsync(ApplyVendorsInputModel model)
+    public async ValueTask<(int created, int deleted)> ApplyVendorsAsync(ApplyVendorsInputModel model, CancellationToken cancel)
     {
-        var result = await _client.VendorsAsync(Map<Gen.ApplyVendorsInputModel>(model));
+        var result = await _client.VendorsAsync(Map<Gen.ApplyVendorsInputModel>(model), cancel);
         return (result.Created, result.Deleted);
     }
 
     // ── Tags ──────────────────────────────────────────────────────────────────
 
-    public IEnumerable<string> GetTags()
-        => _client.TagsAllAsync().ConfigureAwait(false).GetAwaiter().GetResult() ?? [];
+    public async ValueTask<IReadOnlyList<string>> GetTagsAsync(CancellationToken cancel)
+        => (await _client.TagsAllAsync(cancel))?.ToArray() ?? [];
 
     public async ValueTask<ApplyTagsResult> ApplyTagsAsync(
         IEnumerable<string> tags, CancellationToken cancel)
@@ -375,13 +365,12 @@ public class RemoteCollectionTrackingService : ICollectionTrackingService
 
     // ── Collection ────────────────────────────────────────────────────────────
 
-    public CollectionSummaryModel GetCollectionSummary()
-        => Map<CollectionSummaryModel>(
-            _client.SummaryAsync().ConfigureAwait(false).GetAwaiter().GetResult()!);
+    public async ValueTask<CollectionSummaryModel> GetCollectionSummaryAsync(CancellationToken cancel)
+        => Map<CollectionSummaryModel>(await _client.SummaryAsync(cancel)!);
 
     public async ValueTask<CheckQuantityResult> CheckQuantityShortfallAsync(
-        string cardName, int wantQty, bool noProxies, bool sparesOnly)
-        => Map<CheckQuantityResult>(await _client.CheckQuantityAsync(cardName, wantQty, noProxies, sparesOnly));
+        string cardName, int wantQty, bool noProxies, bool sparesOnly, CancellationToken cancel)
+        => Map<CheckQuantityResult>(await _client.CheckQuantityAsync(cardName, wantQty, noProxies, sparesOnly, cancel));
 
     // ── Prices ────────────────────────────────────────────────────────────────
 
@@ -422,29 +411,17 @@ public class RemoteCollectionTrackingService : ICollectionTrackingService
         return imageStream;
     }
 
-    public async ValueTask<Stream?> GetLargeFrontFaceImageAsync(string scryfallId)
-        => await GetImageAsync($"/api/images/{scryfallId}/front/large");
+    public async ValueTask<Stream?> GetLargeFrontFaceImageAsync(Guid cardSkuId, CancellationToken cancel)
+        => await GetImageAsync($"/api/images/sku/{cardSkuId}/front/large", cancel);
 
-    public async ValueTask<Stream?> GetSmallFrontFaceImageAsync(string scryfallId)
-        => await GetImageAsync($"/api/images/{scryfallId}/front/small");
+    public async ValueTask<Stream?> GetSmallFrontFaceImageAsync(Guid cardSkuId, CancellationToken cancel)
+        => await GetImageAsync($"/api/images/sku/{cardSkuId}/front/small", cancel);
 
-    public async ValueTask<Stream?> GetLargeBackFaceImageAsync(string scryfallId)
-        => await GetImageAsync($"/api/images/{scryfallId}/back/large");
+    public async ValueTask<Stream?> GetLargeBackFaceImageAsync(Guid cardSkuId, CancellationToken cancel)
+        => await GetImageAsync($"/api/images/sku/{cardSkuId}/back/large", cancel);
 
-    public async ValueTask<Stream?> GetSmallBackFaceImageAsync(string scryfallId)
-        => await GetImageAsync($"/api/images/{scryfallId}/back/small");
-
-    public async ValueTask<Stream?> GetLargeFrontFaceImageAsync(Guid cardSkuId)
-        => await GetImageAsync($"/api/images/sku/{cardSkuId}/front/large");
-
-    public async ValueTask<Stream?> GetSmallFrontFaceImageAsync(Guid cardSkuId)
-        => await GetImageAsync($"/api/images/sku/{cardSkuId}/front/small");
-
-    public async ValueTask<Stream?> GetLargeBackFaceImageAsync(Guid cardSkuId)
-        => await GetImageAsync($"/api/images/sku/{cardSkuId}/back/large");
-
-    public async ValueTask<Stream?> GetSmallBackFaceImageAsync(Guid cardSkuId)
-        => await GetImageAsync($"/api/images/sku/{cardSkuId}/back/small");
+    public async ValueTask<Stream?> GetSmallBackFaceImageAsync(Guid cardSkuId, CancellationToken cancel)
+        => await GetImageAsync($"/api/images/sku/{cardSkuId}/back/small", cancel);
 
     // ── Scryfall identifiers ──────────────────────────────────────────────────
 
@@ -457,7 +434,7 @@ public class RemoteCollectionTrackingService : ICollectionTrackingService
 
     // ── Metadata operations (long-running, SSE) ───────────────────────────────
 
-    public async ValueTask<IEnumerable<CardSkuModel>> UpdateCardMetadataAsync(
+    public async ValueTask<IReadOnlyList<CardSkuModel>> UpdateCardMetadataAsync(
         ICollection<Guid> ids,
         IScryfallApiClient scryfallApiClient,
         UpdateCardMetadataProgressCallback? callback,
@@ -474,7 +451,7 @@ public class RemoteCollectionTrackingService : ICollectionTrackingService
             : JsonSerializer.Deserialize<CardSkuModel[]>(payload, JsonOpts) ?? [];
     }
 
-    public async ValueTask<IEnumerable<WishlistItemModel>> UpdateWishlistMetadataAsync(
+    public async ValueTask<IReadOnlyList<WishlistItemModel>> UpdateWishlistMetadataAsync(
         ICollection<int> ids,
         IScryfallApiClient scryfallApiClient,
         UpdateCardMetadataProgressCallback? callback,

@@ -62,10 +62,15 @@ public partial class SettingsViewModel : RecipientViewModelBase, IRecipient<Glob
         }
         else
         {
-            var t = string.Join(Environment.NewLine, _service.GetTags()); ;
-            _origTags = t;
-            this.Tags = t;
+            _ = LoadTagsAsync();
         }
+    }
+
+    private async Task LoadTagsAsync()
+    {
+        var t = string.Join(Environment.NewLine, await _service.GetTagsAsync(CancellationToken.None));
+        _origTags = t;
+        this.Tags = t;
     }
 
     [ObservableProperty]

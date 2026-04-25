@@ -25,7 +25,7 @@ public class RemoteCollectionTrackingServiceTests
         var service = new RemoteCollectionTrackingService(httpClient);
 
         // Act
-        using var stream = await service.GetSmallFrontFaceImageAsync("12345678-1234-1234-1234-123456789abc");
+        using var stream = await service.GetSmallFrontFaceImageAsync(Guid.Parse("12345678-1234-1234-1234-123456789abc"), CancellationToken.None);
 
         // Assert
         Assert.NotNull(stream);
@@ -42,7 +42,7 @@ public class RemoteCollectionTrackingServiceTests
         var service = new RemoteCollectionTrackingService(httpClient);
 
         // Act
-        var stream = await service.GetLargeFrontFaceImageAsync(Guid.NewGuid());
+        var stream = await service.GetLargeFrontFaceImageAsync(Guid.NewGuid(), CancellationToken.None);
 
         // Assert
         Assert.Null(stream);

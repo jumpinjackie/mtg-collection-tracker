@@ -146,7 +146,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
 
     private Guid? _bannerCardId;
 
-    partial void OnModeChanged(DeckViewMode value) => UpdateView(value);
+    partial void OnModeChanged(DeckViewMode value) => _ = UpdateViewAsync(value);
 
     public bool IsVisualMode => this.Mode == DeckViewMode.VisualByCardName || this.Mode == DeckViewMode.VisualBySku;
 
@@ -175,15 +175,15 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
 
     partial void OnReportProxyUsageChanged(bool value)
     {
-        this.DeckListText = _service.PrintDeck(_origDeck.Id, new DeckPrintOptions(value));
+        _ = RefreshDeckTextAsync(value);
     }
 
-    private void UpdateView(DeckViewMode mode)
+    private async Task UpdateViewAsync(DeckViewMode mode)
     {
         switch (mode)
         {
             case DeckViewMode.Text:
-                this.DeckListText = _service.PrintDeck(_origDeck.Id, new DeckPrintOptions(false));
+                await RefreshDeckTextAsync(this.ReportProxyUsage);
                 break;
             case DeckViewMode.VisualByCardName:
                 UpdateVisual(_service, _origDeck, null, ref _mainDeckByCardName, this.MainDeck, ref _sideboardByCardName, this.Sideboard, c => c.CardName);
@@ -198,6 +198,11 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
                 UpdateTable(_service, _origDeck, _bannerCardId, ref _mainDeckBySku, ref _sideboardBySku, this.TableList, c => c.SkuId);
                 break;
         }
+    }
+
+    private async Task RefreshDeckTextAsync(bool reportProxyUsage)
+    {
+        this.DeckListText = await _service.PrintDeckAsync(_origDeck.Id, new DeckPrintOptions(reportProxyUsage), CancellationToken.None);
     }
 
     private List<CardVisualViewModel>? _mainDeckBySku;
@@ -319,7 +324,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
         this.MainDeckSize = _origDeck.MainDeck.Count;
         this.SideboardSize = _origDeck.Sideboard.Count;
 
-        this.UpdateView(this.Mode);
+        _ = this.UpdateViewAsync(this.Mode);
 
         return this;
     }
@@ -338,8 +343,8 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
                     _bannerCardId = selected.Id;
                     _origDeck.BannerCardId = selected.Id;
 
-                    await _service.SetDeckBannerAsync(_origDeck.Id, selected.Id);
-                    updatedDeck = await _service.SetDeckCommanderAsync(_origDeck.Id, selected.Id);
+                    await _service.SetDeckBannerAsync(_origDeck.Id, selected.Id, System.Threading.CancellationToken.None);
+                    updatedDeck = await _service.SetDeckCommanderAsync(_origDeck.Id, selected.Id, System.Threading.CancellationToken.None);
 
                     var selectedCommander = _origDeck.MainDeck.FirstOrDefault(c => c.SkuId == selected.Id)
                         ?? _origDeck.Sideboard.FirstOrDefault(c => c.SkuId == selected.Id);
@@ -349,7 +354,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
                 {
                     // Toggle: if this card is already the banner, clear it; otherwise set it
                     var newBannerId = selected.Id == _bannerCardId ? (Guid?)null : selected.Id;
-                    updatedDeck = await _service.SetDeckBannerAsync(_origDeck.Id, newBannerId);
+                    updatedDeck = await _service.SetDeckBannerAsync(_origDeck.Id, newBannerId, System.Threading.CancellationToken.None);
                     _bannerCardId = newBannerId;
                     _origDeck.BannerCardId = newBannerId;
                 }
@@ -403,22 +408,24 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
     }
 
     [RelayCommand]
-    private void SendSkusToContainer()
+    private async Task SendSkusToContainer()
     {
         if (Behavior.SelectedItems.Count > 0)
         {
+            var vm = await _sendToContainer().WithCardsAsync(Behavior.SelectedItems.ToList());
             Messenger.Send(new OpenDialogMessage
             {
                 DrawerWidth = 800,
-                ViewModel = _dialog().WithContent("Send Cards To Deck or Container", _sendToContainer().WithCards(Behavior.SelectedItems.ToList()))
+                ViewModel = _dialog().WithContent("Send Cards To Deck or Container", vm)
             });
         }
     }
 
     [RelayCommand]
-    private void AddNewCards()
+    private async Task AddNewCards()
     {
-        var vm = _addCards().WithTargetDeck(_origDeck.Id, _origDeck.Name);
+        var vm = await _addCards().InitializeAsync();
+        vm = vm.WithTargetDeck(_origDeck.Id, _origDeck.Name);
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 800,
@@ -502,7 +509,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
         this.MainDeckSize = _origDeck.MainDeck.Count;
         this.SideboardSize = _origDeck.Sideboard.Count;
         _mainDeckByCardName = _mainDeckBySku = _sideboardByCardName = _sideboardBySku = null;
-        UpdateView(this.Mode);
+        _ = UpdateViewAsync(this.Mode);
     }
 
     void IRecipient<CardSkuSplitMessage>.Receive(CardSkuSplitMessage message)

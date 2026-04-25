@@ -130,7 +130,7 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
             try
             {
                 var wishlistItems = new List<(int qty, string cardName, string edition)>();
-                var resolved = await _service.ResolveEditionsForCardsAsync(shortOnly.Select(c => c.CardName), _client!);
+                var resolved = await _service.ResolveEditionsForCardsAsync(shortOnly.Select(c => c.CardName), _client!, System.Threading.CancellationToken.None);
                 foreach (var c in shortOnly)
                 {
                     var deficit = c.Short - c.WishlistTotal;
@@ -163,11 +163,11 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
     {
         var items = _deckListCardItems.Select(i => new PriceCheckItem(i.CardName, i.Requested));
         var priceList = await _service.GetLowestPricesAsync(new(items, true, false), _client!, cancel);
-        
+
         Messenger.Send(new OpenDialogMessage
         {
             DrawerWidth = 800,
-            ViewModel = _dialog().WithContent("Lowest Price Check", 
+            ViewModel = _dialog().WithContent("Lowest Price Check",
                 _lowestPriceCheck()
                     .WithCards(priceList))
         });
@@ -208,11 +208,11 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
 
         foreach (var card in list)
         {
-            if (this.IgnoreBasicLands && _service.IsBasicLand(card.CardName))
+            if (this.IgnoreBasicLands && await _service.IsBasicLandAsync(card.CardName, System.Threading.CancellationToken.None))
                 continue;
 
             //Stdout($"Checking availability of: {card.CardName}");
-            var (shortAmt, fromDecks, fromContainers, suggestedName, wishlistAmt) = await _service.CheckQuantityShortfallAsync(card.CardName, card.Count, this.NoProxies, this.SparesOnly);
+            var (shortAmt, fromDecks, fromContainers, suggestedName, wishlistAmt) = await _service.CheckQuantityShortfallAsync(card.CardName, card.Count, this.NoProxies, this.SparesOnly, System.Threading.CancellationToken.None);
             if (shortAmt > 0)
                 this.HasShort = true;
 
@@ -259,15 +259,14 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
         if (_storageProvider == null)
             return;
 
-        var selectedFiles = await _storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            AllowMultiple = false,
-            Title = "Load decklist",
-            FileTypeFilter = [new FilePickerFileType(null) { Patterns = ["*.txt"] }]
-        });
-
         try
         {
+            var selectedFiles = await _storageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                AllowMultiple = false,
+                Title = "Load decklist",
+                FileTypeFilter = [new FilePickerFileType(null) { Patterns = ["*.txt"] }]
+            });
             if (selectedFiles?.Count == 1)
             {
                 var filePath = selectedFiles[0].TryGetLocalPath();
@@ -279,6 +278,10 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
                     Messenger.ToastNotify("Decklist loaded", Avalonia.Controls.Notifications.NotificationType.Information);
                 }
             }
+        }
+        catch (Exception ex) when (DesktopIntegrationExceptionHelper.IsServiceUnavailable(ex))
+        {
+            Messenger.ToastNotify("File picker is unavailable in this desktop session.", Avalonia.Controls.Notifications.NotificationType.Warning);
         }
         catch (Exception ex)
         {
@@ -299,7 +302,7 @@ public partial class CanIBuildThisDeckViewModel : RecipientViewModelBase
 
         foreach (var card in _deckListCardItems)
         {
-            if (this.ShowShortOnly) 
+            if (this.ShowShortOnly)
             {
                 if (card.Short > 0)
                 {

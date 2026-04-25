@@ -148,10 +148,10 @@ public class ViewModelTests
     }
 
     [Fact]
-    public void DismantleDeckViewModel_WithDeck_SetsMessageAndLoadsContainers()
+    public async Task DismantleDeckViewModel_WithDeck_SetsMessageAndLoadsContainers()
     {
         var mockService = new Mock<ICollectionTrackingService>();
-        mockService.Setup(s => s.GetContainers()).Returns([
+        mockService.Setup(s => s.GetContainersAsync(It.IsAny<System.Threading.CancellationToken>())).ReturnsAsync([
             new ContainerSummaryModel { Id = 1, Name = "Main Binder" },
             new ContainerSummaryModel { Id = 2, Name = "Shoe Box" }
         ]);
@@ -159,7 +159,7 @@ public class ViewModelTests
         var messenger = new WeakReferenceMessenger();
         var vm = new DismantleDeckViewModel(messenger, mockService.Object, () => new ContainerViewModel());
 
-        vm.WithDeck(42, "Legacy Burn", _ => ValueTask.CompletedTask);
+        await vm.WithDeckAsync(42, "Legacy Burn", _ => ValueTask.CompletedTask);
 
         Assert.Equal("Are you sure you want to dismantle (Legacy Burn)?", vm.Message);
         Assert.NotNull(vm.AvailableContainers);
@@ -175,15 +175,15 @@ public class ViewModelTests
     }
 
     [Fact]
-    public void DismantleDeckViewModel_WithDeck_NoContainers_OnlyUnparentedSentinel()
+    public async Task DismantleDeckViewModel_WithDeck_NoContainers_OnlyUnparentedSentinel()
     {
         var mockService = new Mock<ICollectionTrackingService>();
-        mockService.Setup(s => s.GetContainers()).Returns([]);
+        mockService.Setup(s => s.GetContainersAsync(It.IsAny<System.Threading.CancellationToken>())).ReturnsAsync([]);
 
         var messenger = new WeakReferenceMessenger();
         var vm = new DismantleDeckViewModel(messenger, mockService.Object, () => new ContainerViewModel());
 
-        vm.WithDeck(1, "Deck With No Containers", _ => ValueTask.CompletedTask);
+        await vm.WithDeckAsync(1, "Deck With No Containers", _ => ValueTask.CompletedTask);
 
         Assert.NotNull(vm.AvailableContainers);
         // Only the sentinel "(Unparented)" entry
@@ -195,13 +195,13 @@ public class ViewModelTests
     public async Task DismantleDeckViewModel_Confirm_InvokesCallbackWithNullContainerWhenUnparentedSelected()
     {
         var mockService = new Mock<ICollectionTrackingService>();
-        mockService.Setup(s => s.GetContainers()).Returns([]);
+        mockService.Setup(s => s.GetContainersAsync(It.IsAny<System.Threading.CancellationToken>())).ReturnsAsync([]);
 
         var messenger = new WeakReferenceMessenger();
         int? capturedContainerId = -1; // sentinel: -1 means callback was not called
 
         var vm = new DismantleDeckViewModel(messenger, mockService.Object, () => new ContainerViewModel());
-        vm.WithDeck(1, "My Deck", containerId =>
+        await vm.WithDeckAsync(1, "My Deck", containerId =>
         {
             capturedContainerId = containerId;
             return ValueTask.CompletedTask;
@@ -222,13 +222,13 @@ public class ViewModelTests
         };
 
         var mockService = new Mock<ICollectionTrackingService>();
-        mockService.Setup(s => s.GetContainers()).Returns(containers);
+        mockService.Setup(s => s.GetContainersAsync(It.IsAny<System.Threading.CancellationToken>())).ReturnsAsync(containers);
 
         var messenger = new WeakReferenceMessenger();
         int? capturedContainerId = -1;
 
         var vm = new DismantleDeckViewModel(messenger, mockService.Object, () => new ContainerViewModel());
-        vm.WithDeck(1, "My Deck", containerId =>
+        await vm.WithDeckAsync(1, "My Deck", containerId =>
         {
             capturedContainerId = containerId;
             return ValueTask.CompletedTask;
@@ -251,13 +251,13 @@ public class ViewModelTests
         };
 
         var mockService = new Mock<ICollectionTrackingService>();
-        mockService.Setup(s => s.GetContainers()).Returns(containers);
+        mockService.Setup(s => s.GetContainersAsync(It.IsAny<System.Threading.CancellationToken>())).ReturnsAsync(containers);
 
         var messenger = new WeakReferenceMessenger();
         int? capturedContainerId = -1;
 
         var vm = new DismantleDeckViewModel(messenger, mockService.Object, () => new ContainerViewModel());
-        vm.WithDeck(1, "My Deck", containerId =>
+        await vm.WithDeckAsync(1, "My Deck", containerId =>
         {
             capturedContainerId = containerId;
             return ValueTask.CompletedTask;
@@ -276,7 +276,7 @@ public class ViewModelTests
     public void DismantleDeckViewModel_Cancel_ExecutesWithoutError()
     {
         var mockService = new Mock<ICollectionTrackingService>();
-        mockService.Setup(s => s.GetContainers()).Returns([]);
+        mockService.Setup(s => s.GetContainersAsync(It.IsAny<System.Threading.CancellationToken>())).ReturnsAsync([]);
 
         // Use a real messenger so that Send<CloseDialogMessage> doesn't throw
         var messenger = new WeakReferenceMessenger();

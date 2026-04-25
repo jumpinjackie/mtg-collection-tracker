@@ -1,7 +1,10 @@
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Input.Platform;
+using CommunityToolkit.Mvvm.Messaging;
+using MtgCollectionTracker.Services;
 using MtgCollectionTracker.ViewModels;
+using System;
 
 namespace MtgCollectionTracker.Views
 {
@@ -20,7 +23,15 @@ namespace MtgCollectionTracker.Views
                 var clipboard = TopLevel.GetTopLevel(this)?.Clipboard;
                 if (clipboard != null)
                 {
-                    await clipboard.SetTextAsync(text);
+                    try
+                    {
+                        await clipboard.SetTextAsync(text);
+                    }
+                    catch (Exception ex) when (DesktopIntegrationExceptionHelper.IsServiceUnavailable(ex))
+                    {
+                        WeakReferenceMessenger.Default.ToastNotify("Clipboard access is unavailable in this desktop session.", Avalonia.Controls.Notifications.NotificationType.Warning);
+                        return;
+                    }
 
                     var vm = this.DataContext as DeckDetailsViewModel;
                     if (vm != null)

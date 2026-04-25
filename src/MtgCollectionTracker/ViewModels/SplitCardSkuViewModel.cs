@@ -49,7 +49,7 @@ public partial class SplitCardSkuViewModel : DialogContentViewModel
             {
                 CardSkuId = this.CardSkuId,
                 Quantity = this.SplitQuantity
-            });
+            }, System.Threading.CancellationToken.None);
             Messenger.Send(new CardSkuSplitMessage { Quantity = this.SplitQuantity, NewSkuId = res.Id, SplitSkuId = this.CardSkuId, ContainerId = res.ContainerId, DeckId = res.DeckId });
             Messenger.ToastNotify("Card SKU split", Avalonia.Controls.Notifications.NotificationType.Success);
             Messenger.Send(new CloseDialogMessage());

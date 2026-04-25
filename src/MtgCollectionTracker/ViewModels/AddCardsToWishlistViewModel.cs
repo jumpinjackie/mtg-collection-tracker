@@ -12,6 +12,7 @@ using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Messaging;
 using MtgCollectionTracker.Services.Stubs;
 using ScryfallApi.Client;
+using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Globalization;
@@ -26,7 +27,8 @@ public partial class AddCardsToWishlistViewModel : DialogContentViewModel
     readonly IStorageProvider? _storage;
     readonly ICollectionTrackingService _service;
     readonly IScryfallApiClient? _scryfallApiClient;
-    readonly LanguageViewModel[] _languages;
+    private LanguageViewModel[] _languages = [];
+    private bool _isInitialized;
     bool _autoCheckCardNamesOnOpen;
 
     public AddCardsToWishlistViewModel()
@@ -58,7 +60,18 @@ public partial class AddCardsToWishlistViewModel : DialogContentViewModel
         _storage = storage;
         _service = service;
         _scryfallApiClient = scryfallApiClient;
-        _languages = service.GetLanguages().Select(lang => new LanguageViewModel(lang.Code, lang.PrintedCode, lang.Name)).ToArray();
+    }
+
+    public async Task<AddCardsToWishlistViewModel> InitializeAsync()
+    {
+        if (_isInitialized)
+            return this;
+
+        _languages = (await _service.GetLanguagesAsync(System.Threading.CancellationToken.None))
+            .Select(lang => new LanguageViewModel(lang.Code, lang.PrintedCode, lang.Name))
+            .ToArray();
+        _isInitialized = true;
+        return this;
     }
 
     public AddCardsToWishlistViewModel WithCards(IEnumerable<(int qty, string cardName, string edition)> cards)
@@ -75,6 +88,12 @@ public partial class AddCardsToWishlistViewModel : DialogContentViewModel
             });
         }
         return this;
+    }
+
+    public async Task<AddCardsToWishlistViewModel> WithCardsAsync(IEnumerable<(int qty, string cardName, string edition)> cards)
+    {
+        await InitializeAsync();
+        return WithCards(cards);
     }
 
     public AddCardsToWishlistViewModel WithAutoCheckCardNamesOnOpen()
@@ -154,16 +173,15 @@ public partial class AddCardsToWishlistViewModel : DialogContentViewModel
         if (_storage == null)
             return;
 
-        var selectedFiles = await _storage.OpenFilePickerAsync(new FilePickerOpenOptions
-        {
-            AllowMultiple = false,
-            Title = "Load rows from CSV",
-            FileTypeFilter = [new FilePickerFileType("CSV Files") { Patterns = ["*.csv"] }]
-        });
-
         try
         {
             this.IsImporting = true;
+            var selectedFiles = await _storage.OpenFilePickerAsync(new FilePickerOpenOptions
+            {
+                AllowMultiple = false,
+                Title = "Load rows from CSV",
+                FileTypeFilter = [new FilePickerFileType("CSV Files") { Patterns = ["*.csv"] }]
+            });
             if (selectedFiles?.Count == 1)
             {
                 using var stream = await selectedFiles[0].OpenReadAsync();
@@ -192,6 +210,10 @@ public partial class AddCardsToWishlistViewModel : DialogContentViewModel
                     Cards.Add(inr);
                 }
             }
+        }
+        catch (Exception ex) when (DesktopIntegrationExceptionHelper.IsServiceUnavailable(ex))
+        {
+            Messenger.ToastNotify("File picker is unavailable in this desktop session.", Avalonia.Controls.Notifications.NotificationType.Warning);
         }
         finally
         {
@@ -238,7 +260,7 @@ public partial class AddCardsToWishlistViewModel : DialogContentViewModel
                 Edition = c.Edition
             });
 
-            var added = await _service.AddMultipleToWishlistAsync(adds, _scryfallApiClient);
+            var added = await _service.AddMultipleToWishlistAsync(adds, _scryfallApiClient, System.Threading.CancellationToken.None);
             Messenger.Send(new CardsAddedToWishlistMessage { Added = added });
             Messenger.Send(new CloseDialogMessage());
         }

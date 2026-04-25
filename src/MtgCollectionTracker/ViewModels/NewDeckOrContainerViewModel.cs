@@ -75,18 +75,18 @@ public partial class NewDeckOrContainerViewModel : DialogContentViewModel
     private bool CanSave() => !string.IsNullOrWhiteSpace(this.Name);
 
     [RelayCommand(CanExecute = nameof(CanSave))]
-    private async Task Save() 
+    private async Task Save()
     {
         switch (this.Type)
         {
             case DeckOrContainer.Deck:
-                var di = await _service.CreateDeckAsync(this.Name, this.DeckFormat, null, this.IsCommander);
+                var di = await _service.CreateDeckAsync(this.Name, this.DeckFormat, null, this.IsCommander, System.Threading.CancellationToken.None);
                 this.Messenger.Send(new DeckCreatedMessage(di));
                 this.Messenger.ToastNotify($"Deck created ({this.Name})", Avalonia.Controls.Notifications.NotificationType.Success);
                 this.Messenger.Send(new CloseDialogMessage());
                 break;
             case DeckOrContainer.Container:
-                var ci = await _service.CreateContainerAsync(this.Name, this.ContainerDescription);
+                var ci = await _service.CreateContainerAsync(this.Name, this.ContainerDescription, System.Threading.CancellationToken.None);
                 this.Messenger.Send(new ContainerCreatedMessage(ci));
                 this.Messenger.ToastNotify($"Container created ({this.Name})", Avalonia.Controls.Notifications.NotificationType.Success);
                 this.Messenger.Send(new CloseDialogMessage());

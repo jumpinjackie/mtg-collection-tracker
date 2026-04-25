@@ -131,11 +131,17 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
     [MemberNotNullWhen(true, nameof(SelectedContainer), nameof(SelectedDeck), nameof(Cards))]
     private bool CanSendCards() => this.Cards?.Any() == true && (this.SelectedContainer != null || this.SelectedDeck != null || this.UnSetContainer || this.UnSetDeck || this.MarkAsSideboard.HasValue);
 
-    public SendCardsToContainerOrDeckViewModel WithCards(IEnumerable<ISendableCardItem> cards)
+    public async Task<SendCardsToContainerOrDeckViewModel> WithCardsAsync(IEnumerable<ISendableCardItem> cards)
     {
         this.Cards = cards;
-        var availableContainers = _service.GetContainers().Select(c => _container().WithData(c)).ToList();
-        var availableDecks = _service.GetDecks(null).Select(d => _deck().WithData(d)).ToList();
+        var containersTask = _service.GetContainersAsync(CancellationToken.None).AsTask();
+        var decksTask = _service.GetDecksAsync(null, CancellationToken.None).AsTask();
+        await Task.WhenAll(containersTask, decksTask);
+        var containers = await containersTask;
+        var decks = await decksTask;
+
+        var availableContainers = containers.Select(c => _container().WithData(c)).ToList();
+        var availableDecks = decks.Select(d => _deck().WithData(d)).ToList();
 
         this.AvailableContainers = availableContainers;
         this.AvailableDecks = availableDecks;
