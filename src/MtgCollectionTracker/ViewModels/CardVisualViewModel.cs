@@ -234,6 +234,10 @@ public partial class CardVisualViewModel : ViewModelBase, ICardSkuItem, ISendabl
 
     public bool HasLatestPrice => !IsProxy && LatestPriceValue != null;
 
+    public int? SourceContainerId { get; set; }
+
+    public int? SourceDeckId { get; set; }
+
     public CardVisualViewModel ApplyQuantities()
     {
         if (IsProxy)

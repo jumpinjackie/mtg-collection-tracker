@@ -1,6 +1,7 @@
-﻿using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
+using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services;
 using MtgCollectionTracker.Services.Contracts;
@@ -22,9 +23,42 @@ public interface ISendableCardItem
 
     int Quantity { get; }
 
+    int? SourceContainerId { get; }
+
+    int? SourceDeckId { get; }
+
     string CardName { get; }
 
     string Edition { get; }
+}
+
+public partial class SendableCardTransferItemViewModel : ObservableObject
+{
+    public required Guid Id { get; init; }
+
+    public required int AvailableQuantity { get; init; }
+
+    public int? SourceContainerId { get; init; }
+
+    public int? SourceDeckId { get; init; }
+
+    [ObservableProperty]
+    private string _cardName = string.Empty;
+
+    [ObservableProperty]
+    private string _edition = string.Empty;
+
+    [ObservableProperty]
+    private int _quantityToSend;
+
+    partial void OnQuantityToSendChanged(int value)
+    {
+        var clamped = Math.Clamp(value, 1, this.AvailableQuantity);
+        if (clamped != value)
+        {
+            this.QuantityToSend = clamped;
+        }
+    }
 }
 
 public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewModel
@@ -35,8 +69,6 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
 
     readonly Func<ContainerViewModel> _container;
     readonly Func<DeckViewModel> _deck;
-
-    record MockSendableCard(Guid Id, int Quantity, string CardName, string Edition) : ISendableCardItem;
 
     public SendCardsToContainerOrDeckViewModel(IMessenger messenger,
                                                Func<ContainerViewModel> container,
@@ -66,15 +98,15 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
             new ContainerViewModel().WithData(new() { Id = 3, Name = "Shoe Box" })
         ];
         this.Cards = [
-            new MockSendableCard(Guid.NewGuid(), 1, "Black Lotus", "LEB"),
-            new MockSendableCard(Guid.NewGuid(), 1, "Mox Jet", "LEB"),
-            new MockSendableCard(Guid.NewGuid(), 1, "Mox Ruby", "LEB"),
-            new MockSendableCard(Guid.NewGuid(), 1, "Mox Emerald", "LEB"),
-            new MockSendableCard(Guid.NewGuid(), 1, "Mox Pearl", "LEB"),
-            new MockSendableCard(Guid.NewGuid(), 1, "Mox Sapphire", "LEB"),
-            new MockSendableCard(Guid.NewGuid(), 1, "Ancestral Recall", "LEB"),
-            new MockSendableCard(Guid.NewGuid(), 1, "Time Walk", "LEB"),
-            new MockSendableCard(Guid.NewGuid(), 1, "Timetwister", "LEB")
+            new SendableCardTransferItemViewModel { Id = Guid.NewGuid(), AvailableQuantity = 1, QuantityToSend = 1, CardName = "Black Lotus", Edition = "LEB" },
+            new SendableCardTransferItemViewModel { Id = Guid.NewGuid(), AvailableQuantity = 1, QuantityToSend = 1, CardName = "Mox Jet", Edition = "LEB" },
+            new SendableCardTransferItemViewModel { Id = Guid.NewGuid(), AvailableQuantity = 1, QuantityToSend = 1, CardName = "Mox Ruby", Edition = "LEB" },
+            new SendableCardTransferItemViewModel { Id = Guid.NewGuid(), AvailableQuantity = 1, QuantityToSend = 1, CardName = "Mox Emerald", Edition = "LEB" },
+            new SendableCardTransferItemViewModel { Id = Guid.NewGuid(), AvailableQuantity = 1, QuantityToSend = 1, CardName = "Mox Pearl", Edition = "LEB" },
+            new SendableCardTransferItemViewModel { Id = Guid.NewGuid(), AvailableQuantity = 1, QuantityToSend = 1, CardName = "Mox Sapphire", Edition = "LEB" },
+            new SendableCardTransferItemViewModel { Id = Guid.NewGuid(), AvailableQuantity = 1, QuantityToSend = 1, CardName = "Ancestral Recall", Edition = "LEB" },
+            new SendableCardTransferItemViewModel { Id = Guid.NewGuid(), AvailableQuantity = 1, QuantityToSend = 1, CardName = "Time Walk", Edition = "LEB" },
+            new SendableCardTransferItemViewModel { Id = Guid.NewGuid(), AvailableQuantity = 1, QuantityToSend = 1, CardName = "Timetwister", Edition = "LEB" }
         ];
         this.AvailableDecks = [
             new DeckViewModel().WithData(new() { Id = 1, Format = "Vintage", Name = "[Vintage] My Vintage Deck", DeckName = "My Vintage Deck"}),
@@ -126,14 +158,23 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
 
     public IEnumerable<DeckViewModel>? AvailableDecks { get; internal set; }
 
-    public IEnumerable<ISendableCardItem>? Cards { get; internal set; }
+    public IEnumerable<SendableCardTransferItemViewModel>? Cards { get; internal set; }
 
     [MemberNotNullWhen(true, nameof(SelectedContainer), nameof(SelectedDeck), nameof(Cards))]
     private bool CanSendCards() => this.Cards?.Any() == true && (this.SelectedContainer != null || this.SelectedDeck != null || this.UnSetContainer || this.UnSetDeck || this.MarkAsSideboard.HasValue);
 
     public async Task<SendCardsToContainerOrDeckViewModel> WithCardsAsync(IEnumerable<ISendableCardItem> cards)
     {
-        this.Cards = cards;
+        this.Cards = cards.Select(c => new SendableCardTransferItemViewModel
+        {
+            Id = c.Id,
+            AvailableQuantity = c.Quantity,
+            QuantityToSend = c.Quantity,
+            SourceContainerId = c.SourceContainerId,
+            SourceDeckId = c.SourceDeckId,
+            CardName = c.CardName,
+            Edition = c.Edition
+        }).ToList();
         var containersTask = _service.GetContainersAsync(CancellationToken.None).AsTask();
         var decksTask = _service.GetDecksAsync(null, CancellationToken.None).AsTask();
         await Task.WhenAll(containersTask, decksTask);
@@ -180,7 +221,33 @@ public partial class SendCardsToContainerOrDeckViewModel : DialogContentViewMode
             _selectionState.LastContainerId = this.SelectedContainer?.Id;
             _selectionState.LastDeckId = this.SelectedDeck?.DeckId;
 
-            var skuIds = this.Cards.Select(c => c.Id).ToList();
+            var cardsToSend = this.Cards.Where(c => c.QuantityToSend >= 1).ToList();
+            var skuIds = new List<Guid>(cardsToSend.Count);
+            foreach (var card in cardsToSend)
+            {
+                if (card.QuantityToSend < card.AvailableQuantity)
+                {
+                    var splitSku = await _service.SplitCardSkuAsync(new SplitCardSkuInputModel
+                    {
+                        CardSkuId = card.Id,
+                        Quantity = card.QuantityToSend
+                    }, CancellationToken.None);
+                    skuIds.Add(splitSku.Id);
+                    Messenger.Send(new CardSkuSplitMessage
+                    {
+                        SplitSkuId = card.Id,
+                        NewSkuId = splitSku.Id,
+                        Quantity = card.QuantityToSend,
+                        ContainerId = card.SourceContainerId,
+                        DeckId = card.SourceDeckId
+                    });
+                }
+                else
+                {
+                    skuIds.Add(card.Id);
+                }
+            }
+
             var res = await _service.UpdateCardSkuAsync(new()
             {
                 Ids = skuIds,
