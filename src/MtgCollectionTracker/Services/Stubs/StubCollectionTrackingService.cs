@@ -226,6 +226,26 @@ public class StubCollectionTrackingService : ICollectionTrackingService
         throw new System.NotImplementedException();
     }
 
+    public ValueTask<Stream?> GetLargeFrontFaceImageAsync(int wishlistItemId, CancellationToken cancel)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public ValueTask<Stream?> GetLargeBackFaceImageAsync(int wishlistItemId, CancellationToken cancel)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public ValueTask<Stream?> GetSmallFrontFaceImageAsync(int wishlistItemId, CancellationToken cancel)
+    {
+        throw new System.NotImplementedException();
+    }
+
+    public ValueTask<Stream?> GetSmallBackFaceImageAsync(int wishlistItemId, CancellationToken cancel)
+    {
+        throw new System.NotImplementedException();
+    }
+
     public ValueTask<IReadOnlyList<WishlistItemModel>> UpdateWishlistMetadataAsync(ICollection<int> ids, IScryfallApiClient scryfallApiClient, UpdateCardMetadataProgressCallback? callback, CancellationToken cancel)
     {
         throw new System.NotImplementedException();

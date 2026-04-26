@@ -245,6 +245,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
                 {
                     IsGrouped = true,
                     Id = card.SkuId,
+                    SourceDeckId = deck.Id,
                     ScryfallId = card.ScryfallId,
                     IsDoubleFaced = card.IsDoubleFaced,
                     Quantity = grp.Count(),
@@ -273,6 +274,7 @@ public partial class DeckDetailsViewModel : DialogContentViewModel, IMultiModeCa
                 {
                     IsGrouped = true,
                     Id = card.SkuId,
+                    SourceDeckId = deck.Id,
                     ScryfallId = card.ScryfallId,
                     IsDoubleFaced = card.IsDoubleFaced,
                     Quantity = grp.Count(),

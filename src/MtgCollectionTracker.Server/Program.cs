@@ -236,7 +236,13 @@ app.MapPut("/api/cards/{id:guid}", async (
     IScryfallApiClient scryfallApi,
     CancellationToken cancel) =>
 {
-    model.Ids = new[] { id };
+    // Preserve any batched ids supplied in the body for remote callers. The route id remains a
+    // fallback for older single-item clients that do not populate model.Ids.
+    if (!model.Ids.Any())
+    {
+        model.Ids = new[] { id };
+    }
+
     var result = await svc.UpdateCardSkuAsync(model, scryfallApi, cancel);
     return TypedResults.Ok(result);
 });
@@ -624,6 +630,44 @@ app.MapGet("/api/images/sku/{id:guid}/back/large", async (
 
 app.MapGet("/api/images/sku/{id:guid}/back/small", async (
     Guid id,
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
+{
+    var stream = await svc.GetSmallBackFaceImageAsync(id, cancel);
+    return stream is null ? Results.NotFound() : Results.Stream(stream, "image/jpeg");
+});
+
+// ── Wishlist item images by wishlist item ID ───────────────────────────────────
+
+app.MapGet("/api/images/wishlist/{id:int}/front/large", async (
+    int id,
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
+{
+    var stream = await svc.GetLargeFrontFaceImageAsync(id, cancel);
+    return stream is null ? Results.NotFound() : Results.Stream(stream, "image/jpeg");
+});
+
+app.MapGet("/api/images/wishlist/{id:int}/front/small", async (
+    int id,
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
+{
+    var stream = await svc.GetSmallFrontFaceImageAsync(id, cancel);
+    return stream is null ? Results.NotFound() : Results.Stream(stream, "image/jpeg");
+});
+
+app.MapGet("/api/images/wishlist/{id:int}/back/large", async (
+    int id,
+    ICollectionTrackingService svc,
+    CancellationToken cancel) =>
+{
+    var stream = await svc.GetLargeBackFaceImageAsync(id, cancel);
+    return stream is null ? Results.NotFound() : Results.Stream(stream, "image/jpeg");
+});
+
+app.MapGet("/api/images/wishlist/{id:int}/back/small", async (
+    int id,
     ICollectionTrackingService svc,
     CancellationToken cancel) =>
 {

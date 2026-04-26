@@ -1870,6 +1870,15 @@ public class CollectionTrackingService : ICollectionTrackingService
             .FirstOrDefaultAsync();
     }
 
+    private async ValueTask<string?> GetScryfallIdForWishlistItemAsync(int wishlistItemId)
+    {
+        using var db = _db.Invoke();
+        return await db.Value.WishlistItems
+            .Where(w => w.Id == wishlistItemId)
+            .Select(w => w.ScryfallId)
+            .FirstOrDefaultAsync();
+    }
+
     public async ValueTask<Stream?> GetLargeFrontFaceImageAsync(Guid cardSkuId, CancellationToken cancel)
     {
         var scryfallId = await GetScryfallIdForSkuAsync(cardSkuId);
@@ -1891,6 +1900,30 @@ public class CollectionTrackingService : ICollectionTrackingService
     public async ValueTask<Stream?> GetSmallBackFaceImageAsync(Guid cardSkuId, CancellationToken cancel)
     {
         var scryfallId = await GetScryfallIdForSkuAsync(cardSkuId);
+        return scryfallId is null ? null : await _cache.GetSmallBackFaceImageAsync(scryfallId);
+    }
+
+    public async ValueTask<Stream?> GetLargeFrontFaceImageAsync(int wishlistItemId, CancellationToken cancel)
+    {
+        var scryfallId = await GetScryfallIdForWishlistItemAsync(wishlistItemId);
+        return scryfallId is null ? null : await _cache.GetLargeFrontFaceImageAsync(scryfallId);
+    }
+
+    public async ValueTask<Stream?> GetLargeBackFaceImageAsync(int wishlistItemId, CancellationToken cancel)
+    {
+        var scryfallId = await GetScryfallIdForWishlistItemAsync(wishlistItemId);
+        return scryfallId is null ? null : await _cache.GetLargeBackFaceImageAsync(scryfallId);
+    }
+
+    public async ValueTask<Stream?> GetSmallFrontFaceImageAsync(int wishlistItemId, CancellationToken cancel)
+    {
+        var scryfallId = await GetScryfallIdForWishlistItemAsync(wishlistItemId);
+        return scryfallId is null ? null : await _cache.GetSmallFrontFaceImageAsync(scryfallId);
+    }
+
+    public async ValueTask<Stream?> GetSmallBackFaceImageAsync(int wishlistItemId, CancellationToken cancel)
+    {
+        var scryfallId = await GetScryfallIdForWishlistItemAsync(wishlistItemId);
         return scryfallId is null ? null : await _cache.GetSmallBackFaceImageAsync(scryfallId);
     }
 

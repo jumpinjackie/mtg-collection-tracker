@@ -290,6 +290,8 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
     public bool HasLatestPrice => OriginalEdition != "PROXY" && LatestPriceValue != null;
 
     int ISendableCardItem.Quantity => CardListPrinter.IsProxyEdition(this.OriginalEdition ?? string.Empty) ? this.ProxyQty : this.RealQty;
+    int? ISendableCardItem.SourceContainerId => this.ContainerId;
+    int? ISendableCardItem.SourceDeckId => this.DeckId;
 
     partial void OnCardImageChanged(Task<Bitmap?> value)
     {

@@ -17,7 +17,6 @@ namespace MtgCollectionTracker.ViewModels;
 public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
 {
     readonly ICollectionTrackingService _service;
-    private CardImageCache? _imageCache;
     int _smallImageLoadVersion;
     int _largeImageLoadVersion;
 
@@ -69,9 +68,9 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
 
     private async Task<Bitmap?> GetSmallFrontFaceImageAsync()
     {
-        if (this.ScryfallId != null && _imageCache != null)
+        if (this.Id > 0)
         {
-            using var stream = await _imageCache.GetSmallFrontFaceImageAsync(this.ScryfallId);
+            using var stream = await _service.GetSmallFrontFaceImageAsync(this.Id, System.Threading.CancellationToken.None);
             if (stream != null)
                 return new Bitmap(stream);
         }
@@ -80,9 +79,9 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
 
     private async Task<Bitmap?> GetSmallBackFaceImageAsync()
     {
-        if (this.ScryfallId != null && _imageCache != null)
+        if (this.Id > 0)
         {
-            using var stream = await _imageCache.GetSmallBackFaceImageAsync(this.ScryfallId);
+            using var stream = await _service.GetSmallBackFaceImageAsync(this.Id, System.Threading.CancellationToken.None);
             if (stream != null)
                 return new Bitmap(stream);
         }
@@ -101,9 +100,9 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
 
     private async Task<Bitmap?> GetLargeFrontFaceImageAsync()
     {
-        if (this.ScryfallId != null && _imageCache != null)
+        if (this.Id > 0)
         {
-            using var stream = await _imageCache.GetLargeFrontFaceImageAsync(this.ScryfallId);
+            using var stream = await _service.GetLargeFrontFaceImageAsync(this.Id, System.Threading.CancellationToken.None);
             if (stream != null)
                 return new Bitmap(stream);
         }
@@ -112,9 +111,9 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
 
     private async Task<Bitmap?> GetLargeBackFaceImageAsync()
     {
-        if (this.ScryfallId != null && _imageCache != null)
+        if (this.Id > 0)
         {
-            using var stream = await _imageCache.GetLargeBackFaceImageAsync(this.ScryfallId);
+            using var stream = await _service.GetLargeBackFaceImageAsync(this.Id, System.Threading.CancellationToken.None);
             if (stream != null)
                 return new Bitmap(stream);
         }
@@ -333,12 +332,6 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
         this.Tags = string.Join(Environment.NewLine, this.TagList);
         this.TagsText = $"{this.TagList.Length} tag(s)";
         this.SwitchToFront();
-        return this;
-    }
-
-    public WishlistItemViewModel WithImageCache(CardImageCache imageCache)
-    {
-        _imageCache = imageCache;
         return this;
     }
 

@@ -115,6 +115,18 @@ namespace MtgCollectionTracker.Core.Services
 
         /// <summary>Fetches the small back-face image for the card SKU with the given id.</summary>
         ValueTask<Stream?> GetSmallBackFaceImageAsync(Guid cardSkuId, CancellationToken cancel);
+
+        /// <summary>Fetches the large front-face image for the wishlist item with the given id.</summary>
+        ValueTask<Stream?> GetLargeFrontFaceImageAsync(int wishlistItemId, CancellationToken cancel);
+
+        /// <summary>Fetches the large back-face image for the wishlist item with the given id.</summary>
+        ValueTask<Stream?> GetLargeBackFaceImageAsync(int wishlistItemId, CancellationToken cancel);
+
+        /// <summary>Fetches the small front-face image for the wishlist item with the given id.</summary>
+        ValueTask<Stream?> GetSmallFrontFaceImageAsync(int wishlistItemId, CancellationToken cancel);
+
+        /// <summary>Fetches the small back-face image for the wishlist item with the given id.</summary>
+        ValueTask<Stream?> GetSmallBackFaceImageAsync(int wishlistItemId, CancellationToken cancel);
         ValueTask<IReadOnlyList<string>> GetTagsAsync(CancellationToken cancel);
         ValueTask<ApplyTagsResult> ApplyTagsAsync(IEnumerable<string> tags, CancellationToken cancel);
         ValueTask AddMissingMetadataAsync(UpdateCardMetadataProgressCallback callback, IScryfallApiClient scryfallApiClient, CancellationToken cancel);

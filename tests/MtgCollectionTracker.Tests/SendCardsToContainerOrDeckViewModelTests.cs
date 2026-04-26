@@ -13,18 +13,22 @@ namespace MtgCollectionTracker.Tests;
 /// </summary>
 public class SendCardsToContainerOrDeckViewModelTests
 {
-    private static SendCardsToContainerOrDeckViewModel CreateViewModel()
+    private static (SendCardsToContainerOrDeckViewModel ViewModel, Mock<ICollectionTrackingService> Service, WeakReferenceMessenger Messenger) CreateViewModel()
     {
         var messenger = new WeakReferenceMessenger();
         var mockService = new Mock<ICollectionTrackingService>();
         var mockClient = new Mock<ScryfallApi.Client.IScryfallApiClient>();
-        return new SendCardsToContainerOrDeckViewModel(
+        mockService.Setup(s => s.GetContainersAsync(It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+        mockService.Setup(s => s.GetDecksAsync(It.IsAny<DeckFilterModel?>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
+        return (new SendCardsToContainerOrDeckViewModel(
             messenger,
             () => new ContainerViewModel(),
             () => new DeckViewModel(),
             new SendCardsToContainerOrDeckSelectionState(),
             mockService.Object,
-            mockClient.Object);
+            mockClient.Object), mockService, messenger);
     }
 
     private static DeckViewModel MakeDeck(int id = 1, string deckName = "Test Deck") =>
@@ -36,7 +40,7 @@ public class SendCardsToContainerOrDeckViewModelTests
     [Fact]
     public void IsUnSetDeckEnabled_IsTrue_WhenNoDeckSelected()
     {
-        var vm = CreateViewModel();
+        var (vm, _, _) = CreateViewModel();
 
         Assert.True(vm.IsUnSetDeckEnabled);
     }
@@ -44,7 +48,7 @@ public class SendCardsToContainerOrDeckViewModelTests
     [Fact]
     public void IsUnSetContainerEnabled_IsTrue_WhenNoContainerSelected()
     {
-        var vm = CreateViewModel();
+        var (vm, _, _) = CreateViewModel();
 
         Assert.True(vm.IsUnSetContainerEnabled);
     }
@@ -52,7 +56,7 @@ public class SendCardsToContainerOrDeckViewModelTests
     [Fact]
     public void IsUnSetDeckEnabled_IsFalse_WhenDeckIsSelected()
     {
-        var vm = CreateViewModel();
+        var (vm, _, _) = CreateViewModel();
 
         vm.SelectedDeck = MakeDeck();
 
@@ -62,7 +66,7 @@ public class SendCardsToContainerOrDeckViewModelTests
     [Fact]
     public void IsUnSetDeckEnabled_IsTrue_WhenDeckSelectionCleared()
     {
-        var vm = CreateViewModel();
+        var (vm, _, _) = CreateViewModel();
         vm.SelectedDeck = MakeDeck();
 
         vm.SelectedDeck = null;
@@ -73,7 +77,7 @@ public class SendCardsToContainerOrDeckViewModelTests
     [Fact]
     public void IsUnSetContainerEnabled_IsFalse_WhenContainerIsSelected()
     {
-        var vm = CreateViewModel();
+        var (vm, _, _) = CreateViewModel();
 
         vm.SelectedContainer = MakeContainer();
 
@@ -83,7 +87,7 @@ public class SendCardsToContainerOrDeckViewModelTests
     [Fact]
     public void IsUnSetContainerEnabled_IsTrue_WhenContainerSelectionCleared()
     {
-        var vm = CreateViewModel();
+        var (vm, _, _) = CreateViewModel();
         vm.SelectedContainer = MakeContainer();
 
         vm.SelectedContainer = null;
@@ -94,7 +98,7 @@ public class SendCardsToContainerOrDeckViewModelTests
     [Fact]
     public void SelectingDeck_ClearsUnSetDeck_WhenItWasChecked()
     {
-        var vm = CreateViewModel();
+        var (vm, _, _) = CreateViewModel();
         vm.UnSetDeck = true;
 
         vm.SelectedDeck = MakeDeck();
@@ -105,7 +109,7 @@ public class SendCardsToContainerOrDeckViewModelTests
     [Fact]
     public void SelectingDeck_DoesNotAffectUnSetContainer()
     {
-        var vm = CreateViewModel();
+        var (vm, _, _) = CreateViewModel();
         vm.UnSetContainer = true;
 
         vm.SelectedDeck = MakeDeck();
@@ -116,7 +120,7 @@ public class SendCardsToContainerOrDeckViewModelTests
     [Fact]
     public void SelectingContainer_ClearsUnSetContainer_WhenItWasChecked()
     {
-        var vm = CreateViewModel();
+        var (vm, _, _) = CreateViewModel();
         vm.UnSetContainer = true;
 
         vm.SelectedContainer = MakeContainer();
@@ -127,7 +131,7 @@ public class SendCardsToContainerOrDeckViewModelTests
     [Fact]
     public void SelectingContainer_DoesNotAffectUnSetDeck()
     {
-        var vm = CreateViewModel();
+        var (vm, _, _) = CreateViewModel();
         vm.UnSetDeck = true;
 
         vm.SelectedContainer = MakeContainer();
@@ -138,7 +142,7 @@ public class SendCardsToContainerOrDeckViewModelTests
     [Fact]
     public void ClearingDeckSelection_DoesNotRestoreUnSetDeck()
     {
-        var vm = CreateViewModel();
+        var (vm, _, _) = CreateViewModel();
         vm.UnSetDeck = true;
         vm.SelectedDeck = MakeDeck(); // clears UnSetDeck
 
@@ -151,7 +155,7 @@ public class SendCardsToContainerOrDeckViewModelTests
     [Fact]
     public void ClearingContainerSelection_DoesNotRestoreUnSetContainer()
     {
-        var vm = CreateViewModel();
+        var (vm, _, _) = CreateViewModel();
         vm.UnSetContainer = true;
         vm.SelectedContainer = MakeContainer(); // clears UnSetContainer
 
@@ -160,4 +164,49 @@ public class SendCardsToContainerOrDeckViewModelTests
         // UnSetContainer remains false after clearing selection (user must re-check manually)
         Assert.False(vm.UnSetContainer);
     }
+
+    [Fact]
+    public async Task SendCards_SplitsPartialQuantity_BeforeTransfer()
+    {
+        var (vm, service, messenger) = CreateViewModel();
+        var sourceSkuId = Guid.NewGuid();
+        var splitSkuId = Guid.NewGuid();
+
+        await vm.WithCardsAsync([
+            new TestSendableCard(sourceSkuId, 4, 12, null, "Black Lotus", "LEA")
+        ]);
+
+        var card = vm.Cards!.Single();
+        card.QuantityToSend = 2;
+        vm.SelectedContainer = MakeContainer(7, "Trade Binder");
+
+        service.Setup(s => s.SplitCardSkuAsync(
+                It.Is<SplitCardSkuInputModel>(m => m.CardSkuId == sourceSkuId && m.Quantity == 2),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new CardSkuModel
+            {
+                Id = splitSkuId,
+                CardName = "Black Lotus",
+                Edition = "LEA",
+                Quantity = 2,
+                Tags = []
+            });
+        service.Setup(s => s.UpdateCardSkuAsync(
+                It.Is<UpdateCardSkuInputModel>(m => m.Ids.SequenceEqual(new[] { splitSkuId }) && m.ContainerId == 7),
+                It.IsAny<ScryfallApi.Client.IScryfallApiClient?>(),
+                It.IsAny<CancellationToken>()))
+            .ReturnsAsync(new UpdateCardSkuResult(1, [new SkuUpdateInfo(splitSkuId, 2, 2, null, null, 12, 7)]));
+
+        await vm.SendCardsCommand.ExecuteAsync(null);
+
+        service.VerifyAll();
+    }
+
+    private sealed record TestSendableCard(
+        Guid Id,
+        int Quantity,
+        int? SourceContainerId,
+        int? SourceDeckId,
+        string CardName,
+        string Edition) : ISendableCardItem;
 }
