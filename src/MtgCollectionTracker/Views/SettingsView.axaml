@@ -23,10 +23,16 @@
 			</DockPanel>
 		</TabItem>
 		<TabItem Header="Database">
-			<views:DatabaseMaintenanceView DataContext="{Binding Maintenance}" />
-		</TabItem>
-		<TabItem Header="Connection">
-			<views:ConnectionSettingsView DataContext="{Binding Connection}" />
+			<Grid>
+				<Grid IsVisible="{Binding !IsRemoteClientMode}">
+					<views:DatabaseMaintenanceView DataContext="{Binding Maintenance}" />
+				</Grid>
+				<TextBlock IsVisible="{Binding IsRemoteClientMode}"
+						   Margin="16"
+						   TextWrapping="Wrap">
+					Database maintenance controls are not available in Remote Client mode.
+				</TextBlock>
+			</Grid>
 		</TabItem>
 	</TabControl>
 </UserControl>
