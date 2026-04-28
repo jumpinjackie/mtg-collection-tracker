@@ -406,8 +406,8 @@
 								<TextBlock Grid.Column="1" Text="{Binding BattlefieldCardScale, StringFormat='{}{0:P0}'}" FontSize="9" VerticalAlignment="Center" Margin="0,0,4,0" ToolTip.Tip="Battlefield card scale" />
 								<Slider Grid.Column="2" Value="{Binding BattlefieldCardScale}" Minimum="0.5" Maximum="2.5" TickFrequency="0.1" IsSnapToTickEnabled="True" VerticalAlignment="Center" ToolTip.Tip="Battlefield card scale" />
 							</Grid>
-							<ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Padding="40,0,0,0">
-							<StackPanel Spacing="5">
+							<ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+							<StackPanel Spacing="5" Margin="60,0,0,0">
 							<TextBlock Text="(Empty)" Opacity="0.5" HorizontalAlignment="Center" FontSize="10"
 							           IsVisible="{Binding !BattlefieldNonlands.Count}" />
 							<ItemsControl ItemsSource="{Binding BattlefieldNonlands}">
@@ -512,8 +512,8 @@
 								<TextBlock Grid.Column="1" Text="{Binding LandsCardScale, StringFormat='{}{0:P0}'}" FontSize="9" VerticalAlignment="Center" Margin="0,0,4,0" ToolTip.Tip="Lands card scale" />
 								<Slider Grid.Column="2" Value="{Binding LandsCardScale}" Minimum="0.5" Maximum="2.5" TickFrequency="0.1" IsSnapToTickEnabled="True" VerticalAlignment="Center" ToolTip.Tip="Lands card scale" />
 							</Grid>
-							<ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto" Padding="40,0,0,0">
-							<StackPanel Spacing="5">
+							<ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+							<StackPanel Spacing="5" Margin="60,0,0,0">
 							<TextBlock Text="(Empty)" Opacity="0.5" HorizontalAlignment="Center" FontSize="10"
 							           IsVisible="{Binding !BattlefieldLands.Count}" />
 							<ItemsControl ItemsSource="{Binding BattlefieldLands}">
