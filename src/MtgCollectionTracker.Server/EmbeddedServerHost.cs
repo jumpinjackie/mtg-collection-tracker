@@ -1,6 +1,8 @@
 using System;
 using System.Diagnostics;
 using System.IO;
+using System.Runtime.InteropServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace MtgCollectionTracker.Server;
@@ -63,12 +65,35 @@ public sealed class EmbeddedServerHost : IDisposable, IAsyncDisposable
         return null;
     }
 
+    /// <summary>
+    /// Sends SIGTERM on Unix so ASP.NET Core can run its graceful-shutdown hooks
+    /// (e.g. closing SQLite connections) before the process exits.
+    /// On Windows this is a no-op; the caller falls back to <see cref="Process.Kill"/>.
+    /// </summary>
+    private void RequestGracefulShutdown()
+    {
+        if (_process is null || _process.HasExited)
+            return;
+
+        if (!OperatingSystem.IsWindows())
+        {
+            try { NativeMethods.SendSigTerm(_process.Id); }
+            catch { /* best-effort */ }
+        }
+    }
+
     /// <inheritdoc />
     public void Dispose()
     {
         if (_process is { HasExited: false })
         {
-            try { _process.Kill(entireProcessTree: true); }
+            try
+            {
+                RequestGracefulShutdown();
+                // Give the server up to 5 s to shut down cleanly before hard-killing it.
+                if (!_process.WaitForExit(5_000))
+                    _process.Kill(entireProcessTree: true);
+            }
             catch { /* best-effort */ }
         }
 
@@ -76,9 +101,32 @@ public sealed class EmbeddedServerHost : IDisposable, IAsyncDisposable
     }
 
     /// <inheritdoc />
-    public ValueTask DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
-        Dispose();
-        return ValueTask.CompletedTask;
+        if (_process is { HasExited: false })
+        {
+            try
+            {
+                RequestGracefulShutdown();
+                using var cts = new CancellationTokenSource(TimeSpan.FromSeconds(5));
+                await _process.WaitForExitAsync(cts.Token).ConfigureAwait(false);
+            }
+            catch
+            {
+                try { _process?.Kill(entireProcessTree: true); } catch { /* best-effort */ }
+            }
+        }
+
+        _process?.Dispose();
+    }
+
+    private static class NativeMethods
+    {
+        private const int Sigterm = 15;
+
+        [DllImport("libc", SetLastError = true, EntryPoint = "kill")]
+        private static extern int Kill(int pid, int sig);
+
+        internal static void SendSigTerm(int pid) => Kill(pid, Sigterm);
     }
 }

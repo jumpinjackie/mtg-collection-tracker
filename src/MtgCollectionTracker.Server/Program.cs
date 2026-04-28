@@ -943,6 +943,10 @@ app.MapGet("/api/operations/{operationId}/events", async (
     }
 });
 
+// Ensure pooled SQLite connections are closed during graceful shutdown so that the WAL
+// journal is checkpointed and the .wal/.shm side-files are removed before the process exits.
+app.Lifetime.ApplicationStopping.Register(Microsoft.Data.Sqlite.SqliteConnection.ClearAllPools);
+
 app.Run();
 
 // ── Helper types ──────────────────────────────────────────────────────────────
