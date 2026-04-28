@@ -1176,8 +1176,20 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Move all selected battlefield cards to the specified zone
+    /// Transform a double-faced card and log the action
     /// </summary>
+    public void TransformCard(PlaytestCardViewModel card)
+    {
+        if (!card.IsDoubleFaced)
+            return;
+
+        var fromName = card.DisplayName;
+        card.Transform();
+        var toName = card.DisplayName;
+        AddLogEntry($"Player transforms {fromName} to {toName}");
+    }
+
+    /// <summary>
     public void MoveSelectedBattlefieldCardsTo(GameZone targetZone, CardMoveOrder order = CardMoveOrder.AsSelected)
     {
         PruneSelectedBattlefieldCards();

@@ -407,7 +407,7 @@
 								<Slider Grid.Column="2" Value="{Binding BattlefieldCardScale}" Minimum="0.5" Maximum="2.5" TickFrequency="0.1" IsSnapToTickEnabled="True" VerticalAlignment="Center" ToolTip.Tip="Battlefield card scale" />
 							</Grid>
 							<ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-							<StackPanel Spacing="5">
+							<StackPanel Spacing="5" Margin="40,30,0,0">
 							<TextBlock Text="(Empty)" Opacity="0.5" HorizontalAlignment="Center" FontSize="10"
 							           IsVisible="{Binding !BattlefieldNonlands.Count}" />
 							<ItemsControl ItemsSource="{Binding BattlefieldNonlands}">
@@ -513,7 +513,7 @@
 								<Slider Grid.Column="2" Value="{Binding LandsCardScale}" Minimum="0.5" Maximum="2.5" TickFrequency="0.1" IsSnapToTickEnabled="True" VerticalAlignment="Center" ToolTip.Tip="Lands card scale" />
 							</Grid>
 							<ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-							<StackPanel Spacing="5">
+							<StackPanel Spacing="5" Margin="40,30,0,0">
 							<TextBlock Text="(Empty)" Opacity="0.5" HorizontalAlignment="Center" FontSize="10"
 							           IsVisible="{Binding !BattlefieldLands.Count}" />
 							<ItemsControl ItemsSource="{Binding BattlefieldLands}">
@@ -678,7 +678,7 @@
 				<!-- Column 3: Details/Log tabs (top) and Actions Panel (bottom) -->
 				<Grid Grid.Column="3" Grid.Row="0" Grid.RowSpan="4" RowDefinitions="*,Auto" Margin="5,0,0,0">
 					<!-- Details and Log as tabs -->
-					<TabControl Grid.Row="0" Margin="0,0,0,5">
+					<TabControl Grid.Row="0" Margin="0,0,0,5" BorderBrush="Gray" BorderThickness="2">
 						<TabItem Header="Details">
 							<ScrollViewer VerticalScrollBarVisibility="Auto">
 							<StackPanel Spacing="8" DataContext="{Binding GameState}" Margin="8">
@@ -711,15 +711,17 @@
 							</ScrollViewer>
 						</TabItem>
 						<TabItem Header="Log">
-							<ScrollViewer VerticalScrollBarVisibility="Auto" Padding="4">
-								<ItemsControl ItemsSource="{Binding GameState.GameLog}">
-									<ItemsControl.ItemTemplate>
-										<DataTemplate>
-											<TextBlock Text="{Binding DisplayText}" FontSize="10" TextWrapping="Wrap" Margin="0,2" />
-										</DataTemplate>
-									</ItemsControl.ItemTemplate>
-								</ItemsControl>
-							</ScrollViewer>
+							<ListBox ItemsSource="{Binding GameState.GameLog}"
+							         ScrollViewer.VerticalScrollBarVisibility="Auto"
+							         Background="Transparent"
+							         BorderThickness="0"
+							         Padding="4">
+								<ListBox.ItemTemplate>
+									<DataTemplate>
+										<TextBlock Text="{Binding DisplayText}" FontSize="10" TextWrapping="Wrap" Margin="0,2" />
+									</DataTemplate>
+								</ListBox.ItemTemplate>
+							</ListBox>
 						</TabItem>
 					</TabControl>
 

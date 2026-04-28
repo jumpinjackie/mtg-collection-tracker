@@ -1811,4 +1811,41 @@ public class PlaytestGameStateViewModelTests
 
         Assert.Empty(game.GameLog);
     }
+
+    [Fact]
+    public void TransformCard_DoubleFaced_AddsTransformLogEntry()
+    {
+        var game = CreateGameState();
+        var card = CreateCardVm();
+        card.InitializeFrom(new PlaytestCard
+        {
+            CardName = "Delver of Secrets // Insectile Aberration",
+            IsDoubleFaced = true,
+            Zone = GameZone.Battlefield,
+            IsFrontFace = true,
+        });
+
+        game.TransformCard(card);
+
+        Assert.False(card.IsFrontFace);
+        Assert.Contains(game.GameLog, e => e.Message == "Player transforms Delver of Secrets to Insectile Aberration");
+    }
+
+    [Fact]
+    public void TransformCard_NotDoubleFaced_NoLogEntry()
+    {
+        var game = CreateGameState();
+        var card = CreateCardVm();
+        card.InitializeFrom(new PlaytestCard
+        {
+            CardName = "Lightning Bolt",
+            IsDoubleFaced = false,
+            Zone = GameZone.Battlefield,
+            IsFrontFace = true,
+        });
+
+        game.TransformCard(card);
+
+        Assert.Empty(game.GameLog);
+    }
 }

@@ -349,7 +349,11 @@ public partial class PlaytestingView : UserControl
             await AnimateCardFlipAsync(border);
         }
 
-        card.Transform();
+        var gameState = GetActiveGameState();
+        if (gameState is not null)
+            gameState.TransformCard(card);
+        else
+            card.Transform();
     }
 
     private void MoveBattlefieldCard(object? sender, GameZone destination)
