@@ -407,7 +407,7 @@
 								<Slider Grid.Column="2" Value="{Binding BattlefieldCardScale}" Minimum="0.5" Maximum="2.5" TickFrequency="0.1" IsSnapToTickEnabled="True" VerticalAlignment="Center" ToolTip.Tip="Battlefield card scale" />
 							</Grid>
 							<ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-							<StackPanel Spacing="5" Margin="60,0,0,0">
+							<StackPanel Spacing="5">
 							<TextBlock Text="(Empty)" Opacity="0.5" HorizontalAlignment="Center" FontSize="10"
 							           IsVisible="{Binding !BattlefieldNonlands.Count}" />
 							<ItemsControl ItemsSource="{Binding BattlefieldNonlands}">
@@ -418,7 +418,11 @@
 							</ItemsControl.ItemsPanel>
 							<ItemsControl.ItemTemplate>
 								<DataTemplate>
-								<Border Width="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState.CardWidth, TargetNullValue=120}" Height="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState.CardHeight, TargetNullValue=168}" Margin="6" CornerRadius="6" BorderBrush="Black" BorderThickness="1" Background="#1E1E1E"
+								<!-- Square outer slot (CardHeight x CardHeight) so the rotated card never overflows its layout bounds -->
+								<Panel Width="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState.CardHeight, TargetNullValue=168}"
+								       Height="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState.CardHeight, TargetNullValue=168}"
+								       Margin="6">
+								<Border Width="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState.CardWidth, TargetNullValue=120}" Height="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState.CardHeight, TargetNullValue=168}" HorizontalAlignment="Center" CornerRadius="6" BorderBrush="Black" BorderThickness="1" Background="#1E1E1E"
 									        PointerEntered="OnCardPointerEntered"
 									        PointerPressed="OnCardPointerPressed"
 									        DoubleTapped="OnBattlefieldCardDoubleTapped">
@@ -489,6 +493,7 @@
 											        CornerRadius="6" IsHitTestVisible="False" />
 										</Grid>
 										</Border>
+								</Panel>
 									</DataTemplate>
 								</ItemsControl.ItemTemplate>
 							</ItemsControl>
@@ -513,7 +518,7 @@
 								<Slider Grid.Column="2" Value="{Binding LandsCardScale}" Minimum="0.5" Maximum="2.5" TickFrequency="0.1" IsSnapToTickEnabled="True" VerticalAlignment="Center" ToolTip.Tip="Lands card scale" />
 							</Grid>
 							<ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-							<StackPanel Spacing="5" Margin="60,0,0,0">
+							<StackPanel Spacing="5">
 							<TextBlock Text="(Empty)" Opacity="0.5" HorizontalAlignment="Center" FontSize="10"
 							           IsVisible="{Binding !BattlefieldLands.Count}" />
 							<ItemsControl ItemsSource="{Binding BattlefieldLands}">
@@ -524,7 +529,11 @@
 							</ItemsControl.ItemsPanel>
 							<ItemsControl.ItemTemplate>
 								<DataTemplate>
-									<Border Width="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState.LandsCardWidth, TargetNullValue=120}" Height="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState.LandsCardHeight, TargetNullValue=168}" Margin="6" CornerRadius="6" BorderBrush="Black" BorderThickness="1" Background="#1E1E1E"
+								<!-- Square outer slot (LandsCardHeight x LandsCardHeight) so the rotated card never overflows its layout bounds -->
+								<Panel Width="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState.LandsCardHeight, TargetNullValue=168}"
+								       Height="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState.LandsCardHeight, TargetNullValue=168}"
+								       Margin="6">
+									<Border Width="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState.LandsCardWidth, TargetNullValue=120}" Height="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState.LandsCardHeight, TargetNullValue=168}" HorizontalAlignment="Center" CornerRadius="6" BorderBrush="Black" BorderThickness="1" Background="#1E1E1E"
 										        PointerEntered="OnCardPointerEntered"
 										        PointerPressed="OnCardPointerPressed"
 										        DoubleTapped="OnBattlefieldCardDoubleTapped">
@@ -595,6 +604,7 @@
 												        CornerRadius="6" IsHitTestVisible="False" />
 											</Grid>
 										</Border>
+										</Panel>
 									</DataTemplate>
 								</ItemsControl.ItemTemplate>
 							</ItemsControl>
