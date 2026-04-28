@@ -22,11 +22,16 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
     private readonly IMessenger _messenger;
     private readonly Func<PlaytestCardViewModel> _cardVmFactory;
     private readonly Random _random = new();
+    private readonly AppSettings? _appSettings;
 
-    public PlaytestGameStateViewModel(IMessenger messenger, Func<PlaytestCardViewModel> cardVmFactory)
+    public PlaytestGameStateViewModel(IMessenger messenger, Func<PlaytestCardViewModel> cardVmFactory, AppSettings appSettings)
     {
         _messenger = messenger;
         _cardVmFactory = cardVmFactory;
+        _appSettings = appSettings;
+        _battlefieldCardScale = appSettings.PlaytestBattlefieldCardScale;
+        _landsCardScale = appSettings.PlaytestLandsCardScale;
+        _handCardScale = appSettings.PlaytestHandCardScale;
         WireCollectionObservers();
     }
 
@@ -135,22 +140,74 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
     [ObservableProperty]
     private int _mulliganCount = 0;
 
-    // Card scaling (1.0 = 100x140 base size)
-    // TODO: Could be made smarter based on display resolution, DPI, etc.
+    // Per-zone card scaling (1.0 = 100x140 base size)
     [ObservableProperty]
     [NotifyPropertyChangedFor(nameof(CardWidth), nameof(CardHeight), nameof(CardFontSizeName), nameof(CardFontSizeText), nameof(CardFontSizePT), nameof(CardFontSizeMana), nameof(DetailsImageMaxHeight), nameof(StackCardWidth), nameof(StackCardHeight))]
-    private double _cardScale = 1.25;
+    private double _battlefieldCardScale = 1.25;
 
-    // Computed scaled dimensions (base: 100x140)
-    public double CardWidth => 100 * CardScale;
-    public double CardHeight => 140 * CardScale;
-    public double CardFontSizeName => 8 * CardScale;
-    public double CardFontSizeText => 7 * CardScale;
-    public double CardFontSizePT => 8 * CardScale;
-    public double CardFontSizeMana => 8 * CardScale;
-    public double DetailsImageMaxHeight => 250 * CardScale;
-    public double StackCardWidth => 40 * CardScale;
-    public double StackCardHeight => 56 * CardScale;
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(LandsCardWidth), nameof(LandsCardHeight), nameof(LandsFontSizeName), nameof(LandsFontSizeText), nameof(LandsFontSizePT))]
+    private double _landsCardScale = 1.25;
+
+    [ObservableProperty]
+    [NotifyPropertyChangedFor(nameof(HandCardWidth), nameof(HandCardHeight), nameof(HandFontSizeName), nameof(HandFontSizeMana), nameof(HandFontSizePT))]
+    private double _handCardScale = 1.25;
+
+    // Battlefield computed dimensions (base: 100x140)
+    public double CardWidth => 100 * BattlefieldCardScale;
+    public double CardHeight => 140 * BattlefieldCardScale;
+    public double CardFontSizeName => 8 * BattlefieldCardScale;
+    public double CardFontSizeText => 7 * BattlefieldCardScale;
+    public double CardFontSizePT => 8 * BattlefieldCardScale;
+    public double CardFontSizeMana => 8 * BattlefieldCardScale;
+    public double DetailsImageMaxHeight => 250 * BattlefieldCardScale;
+    public double StackCardWidth => 40 * BattlefieldCardScale;
+    public double StackCardHeight => 56 * BattlefieldCardScale;
+
+    // Lands zone computed dimensions
+    public double LandsCardWidth => 100 * LandsCardScale;
+    public double LandsCardHeight => 140 * LandsCardScale;
+    public double LandsFontSizeName => 8 * LandsCardScale;
+    public double LandsFontSizeText => 7 * LandsCardScale;
+    public double LandsFontSizePT => 8 * LandsCardScale;
+
+    // Hand zone computed dimensions
+    public double HandCardWidth => 100 * HandCardScale;
+    public double HandCardHeight => 140 * HandCardScale;
+    public double HandFontSizeName => 8 * HandCardScale;
+    public double HandFontSizeMana => 8 * HandCardScale;
+    public double HandFontSizePT => 8 * HandCardScale;
+
+    // Persist scale changes to app settings
+    partial void OnBattlefieldCardScaleChanged(double value)
+    {
+        if (_appSettings is not null)
+        {
+            _appSettings.PlaytestBattlefieldCardScale = value;
+            _appSettings.Save();
+        }
+    }
+
+    partial void OnLandsCardScaleChanged(double value)
+    {
+        if (_appSettings is not null)
+        {
+            _appSettings.PlaytestLandsCardScale = value;
+            _appSettings.Save();
+        }
+    }
+
+    partial void OnHandCardScaleChanged(double value)
+    {
+        if (_appSettings is not null)
+        {
+            _appSettings.PlaytestHandCardScale = value;
+            _appSettings.Save();
+        }
+    }
+
+    // Game action log
+    public ObservableCollection<GameLogEntry> GameLog { get; } = new();
 
     // Library card count
     public int LibraryCount => Library.Count;
@@ -161,10 +218,18 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
 
     // Counter increment/decrement commands
     [RelayCommand]
-    private void IncrementLife() => LifeTotal++;
+    private void IncrementLife()
+    {
+        LifeTotal++;
+        AddLogEntry($"Player's life is now {LifeTotal} (+1)");
+    }
 
     [RelayCommand]
-    private void DecrementLife() => LifeTotal--;
+    private void DecrementLife()
+    {
+        LifeTotal--;
+        AddLogEntry($"Player's life is now {LifeTotal} (-1)");
+    }
 
     [RelayCommand]
     private void IncrementWhiteMana() => WhiteMana++;
@@ -203,34 +268,84 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
     private void DecrementColorlessMana() => ColorlessMana = Math.Max(0, ColorlessMana - 1);
 
     [RelayCommand]
-    private void IncrementStorm() => StormCount++;
+    private void IncrementStorm()
+    {
+        StormCount++;
+        AddLogEntry($"Player's Storm is now {StormCount} (+1)");
+    }
 
     [RelayCommand]
-    private void DecrementStorm() => StormCount = Math.Max(0, StormCount - 1);
+    private void DecrementStorm()
+    {
+        var prev = StormCount;
+        StormCount = Math.Max(0, StormCount - 1);
+        if (StormCount != prev)
+            AddLogEntry($"Player's Storm is now {StormCount} (-1)");
+    }
 
     [RelayCommand]
-    private void IncrementEnergy() => EnergyCount++;
+    private void IncrementEnergy()
+    {
+        EnergyCount++;
+        AddLogEntry($"Player's Energy is now {EnergyCount} (+1)");
+    }
 
     [RelayCommand]
-    private void DecrementEnergy() => EnergyCount = Math.Max(0, EnergyCount - 1);
+    private void DecrementEnergy()
+    {
+        var prev = EnergyCount;
+        EnergyCount = Math.Max(0, EnergyCount - 1);
+        if (EnergyCount != prev)
+            AddLogEntry($"Player's Energy is now {EnergyCount} (-1)");
+    }
 
     [RelayCommand]
-    private void IncrementPoison() => PoisonCount++;
+    private void IncrementPoison()
+    {
+        PoisonCount++;
+        AddLogEntry($"Player's Poison is now {PoisonCount} (+1)");
+    }
 
     [RelayCommand]
-    private void DecrementPoison() => PoisonCount = Math.Max(0, PoisonCount - 1);
+    private void DecrementPoison()
+    {
+        var prev = PoisonCount;
+        PoisonCount = Math.Max(0, PoisonCount - 1);
+        if (PoisonCount != prev)
+            AddLogEntry($"Player's Poison is now {PoisonCount} (-1)");
+    }
 
     [RelayCommand]
-    private void IncrementCommanderTax() => CommanderTax++;
+    private void IncrementCommanderTax()
+    {
+        CommanderTax++;
+        AddLogEntry($"Player's Commander Tax is now {CommanderTax} (+1)");
+    }
 
     [RelayCommand]
-    private void DecrementCommanderTax() => CommanderTax = Math.Max(0, CommanderTax - 1);
+    private void DecrementCommanderTax()
+    {
+        var prev = CommanderTax;
+        CommanderTax = Math.Max(0, CommanderTax - 1);
+        if (CommanderTax != prev)
+            AddLogEntry($"Player's Commander Tax is now {CommanderTax} (-1)");
+    }
 
     [RelayCommand]
-    private void IncrementCommanderDamage() => CommanderDamage++;
+    private void IncrementCommanderDamage()
+    {
+        CommanderDamage++;
+        AddLogEntry($"Player's Commander Damage is now {CommanderDamage} (+1)");
+    }
 
     [RelayCommand]
-    private void DecrementCommanderDamage() => CommanderDamage = Math.Max(0, CommanderDamage - 1);
+    private void DecrementCommanderDamage()
+    {
+        var prev = CommanderDamage;
+        CommanderDamage = Math.Max(0, CommanderDamage - 1);
+        if (CommanderDamage != prev)
+            AddLogEntry($"Player's Commander Damage is now {CommanderDamage} (-1)");
+    }
 
     /// <summary>
     /// Initialize the game with a deck
@@ -463,6 +578,9 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
         SelectedCard = null;
         OnPropertyChanged(nameof(LibraryCount));
         OnPropertyChanged(nameof(HasSideboard));
+
+        // Clear the game log on reset
+        GameLog.Clear();
     }
 
     /// <summary>
@@ -478,13 +596,14 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
         {
             Library.Add(card);
         }
+
+        AddLogEntry("Player shuffles library");
     }
 
     /// <summary>
-    /// Draw a card from library to hand
+    /// Draw a single card from library to hand. Does not emit a log entry — caller is responsible for logging.
     /// </summary>
-    [RelayCommand]
-    private void DrawCard()
+    private void DrawCardInternal()
     {
         if (Library.Count == 0) return;
 
@@ -496,14 +615,31 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
     }
 
     /// <summary>
+    /// Draw a card command — draws one card from library to hand
+    /// </summary>
+    [RelayCommand]
+    private void DrawCard()
+    {
+        if (Library.Count == 0) return;
+
+        DrawCardInternal();
+        AddLogEntry("Player draws 1 card");
+    }
+
+    /// <summary>
     /// Draw X cards from library
     /// </summary>
     public void DrawCards(int count)
     {
+        int drawn = 0;
         for (int i = 0; i < count && Library.Count > 0; i++)
         {
-            DrawCard();
+            DrawCardInternal();
+            drawn++;
         }
+
+        if (drawn > 0)
+            AddLogEntry($"Player draws {drawn} card{(drawn != 1 ? "s" : "")}");
     }
 
     /// <summary>
@@ -533,6 +669,8 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
             var bottomCount = Math.Min(pendingCount, Hand.Count);
             if (bottomCount == 0)
             {
+                MulliganCount = pendingCount;
+                AddLogEntry($"Player mulligans to {Hand.Count} cards");
                 return;
             }
 
@@ -552,6 +690,7 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
                         }
 
                         OnPropertyChanged(nameof(LibraryCount));
+                        AddLogEntry($"Player mulligans to {Hand.Count} cards");
                     }));
 
             dialog.CanClose = false;
@@ -569,14 +708,19 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
     /// </summary>
     public void MillCards(int count)
     {
+        int milled = 0;
         for (int i = 0; i < count && Library.Count > 0; i++)
         {
             var card = Library[0];
             Library.RemoveAt(0);
             card.Zone = GameZone.Graveyard;
             Graveyard.Insert(0, card);
+            milled++;
         }
         OnPropertyChanged(nameof(LibraryCount));
+
+        if (milled > 0)
+            AddLogEntry($"Player mills {milled} card{(milled != 1 ? "s" : "")}");
     }
 
     public void OpenZoneContentsDialog(GameZone sourceZone)
@@ -593,6 +737,8 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
         {
             return;
         }
+
+        AddLogEntry($"Player is viewing {GetZoneDisplayName(sourceZone)}");
 
         var viewModel = new ZoneContentsViewModel(_messenger).Configure(
             sourceZone,
@@ -621,6 +767,8 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
         if (Sideboard.Count == 0)
             return;
 
+        AddLogEntry($"Player is viewing {GetZoneDisplayName(GameZone.Sideboard)}");
+
         var viewModel = new ZoneContentsViewModel(_messenger).Configure(
             GameZone.Sideboard,
             Sideboard,
@@ -647,6 +795,8 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
     {
         if (CommandZone.Count == 0)
             return;
+
+        AddLogEntry($"Player is viewing {GetZoneDisplayName(GameZone.CommandZone)}");
 
         var viewModel = new CommandZoneViewModel(_messenger).Configure(
             CommandZone,
@@ -724,6 +874,9 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
                     Quantity = qty,
                 });
             }
+
+            var plural = qty != 1 ? "s" : "";
+            AddLogEntry($"Player puts {qty} {name} counter{plural} on {card.CardName}");
         });
 
         var dialog = new DialogViewModel(_messenger).WithContent("Add Counter", viewModel);
@@ -742,6 +895,7 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
             return;
 
         var topCards = Library.Take(topX).ToList();
+        AddLogEntry($"Player views top {topCards.Count} card{(topCards.Count != 1 ? "s" : "")} of [{GetZoneDisplayName(GameZone.Library)}]");
 
         var viewModel = new ViewTopXViewModel(_messenger).Configure(
             topCards,
@@ -869,6 +1023,7 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
             Library.RemoveAt(0);
             card.Zone = GameZone.Exile;
             Exile.Insert(0, card);
+            LogZoneMove(card.CardName, GameZone.Library, GameZone.Exile);
         }
         OnPropertyChanged(nameof(LibraryCount));
     }
@@ -889,6 +1044,7 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
             // Pass - return to Untap
             CurrentPhase = GamePhase.Untap;
             CurrentPhaseIndex = 0;
+            AddLogEntry($"Player advances to phase ({PhaseDisplayName})");
             return;
         }
 
@@ -899,6 +1055,7 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
             CurrentPhaseIndex = 0;
         }
         CurrentPhase = (GamePhase)CurrentPhaseIndex;
+        AddLogEntry($"Player advances to phase ({PhaseDisplayName})");
     }
 
     /// <summary>
@@ -955,6 +1112,8 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
         // Add to target zone
         card.Zone = targetZone;
         AddToZone(card, targetZone);
+
+        LogZoneMove(card.CardName, sourceZone, targetZone);
     }
 
     private static bool ShouldTokenCeaseToExist(PlaytestCardViewModel card, GameZone sourceZone, GameZone targetZone)
@@ -1032,6 +1191,7 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
         foreach (var card in SelectedBattlefieldCards.ToList())
         {
             card.IsTapped = true;
+            AddLogEntry($"Player taps {card.CardName}");
         }
     }
 
@@ -1044,12 +1204,25 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
         foreach (var card in SelectedBattlefieldCards.ToList())
         {
             card.IsTapped = false;
+            AddLogEntry($"Player untaps {card.CardName}");
         }
     }
 
     /// <summary>
-    /// Move all selected battlefield cards to the specified zone
+    /// Transform a double-faced card and log the action
     /// </summary>
+    public void TransformCard(PlaytestCardViewModel card)
+    {
+        if (!card.IsDoubleFaced)
+            return;
+
+        var fromName = card.DisplayName;
+        card.Transform();
+        var toName = card.DisplayName;
+        AddLogEntry($"Player transforms {fromName} to {toName}");
+    }
+
+    /// <summary>
     public void MoveSelectedBattlefieldCardsTo(GameZone targetZone, CardMoveOrder order = CardMoveOrder.AsSelected)
     {
         PruneSelectedBattlefieldCards();
@@ -1092,6 +1265,13 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
 
         counter.Quantity += delta;
 
+        var abs = Math.Abs(delta);
+        var plural = abs != 1 ? "s" : "";
+        if (delta > 0)
+            AddLogEntry($"Player puts {abs} {counterName} counter{plural} on {card.CardName}");
+        else if (delta < 0)
+            AddLogEntry($"Player removes {abs} {counterName} counter{plural} from {card.CardName}");
+
         if (counter.Quantity <= 0)
         {
             card.Counters.Remove(counter);
@@ -1119,6 +1299,8 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
         token.InitializeFrom(tokenModel);
         BattlefieldNonlands.Add(token);
         SelectedCard = token;
+
+        AddLogEntry($"Player creates a token ({name})");
     }
 
     /// <summary>
@@ -1132,6 +1314,7 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
         card.Zone = GameZone.Library;
         Library.Add(card);
         OnPropertyChanged(nameof(LibraryCount));
+        LogZoneMove(card.CardName, GameZone.Hand, GameZone.Library);
     }
 
     /// <summary>
@@ -1145,6 +1328,7 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
         card.Zone = GameZone.Library;
         Library.Insert(0, card);
         OnPropertyChanged(nameof(LibraryCount));
+        LogZoneMove(card.CardName, GameZone.Hand, GameZone.Library);
     }
 
     /// <summary>
@@ -1157,6 +1341,7 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
         Hand.Remove(card);
         card.Zone = GameZone.Graveyard;
         Graveyard.Insert(0, card);
+        LogZoneMove(card.CardName, GameZone.Hand, GameZone.Graveyard);
     }
 
     /// <summary>
@@ -1169,6 +1354,7 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
         Hand.Remove(card);
         card.Zone = GameZone.Exile;
         Exile.Insert(0, card);
+        LogZoneMove(card.CardName, GameZone.Hand, GameZone.Exile);
     }
 
     /// <summary>
@@ -1189,12 +1375,14 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
             // Lands go directly to battlefield
             card.Zone = GameZone.BattlefieldLands;
             BattlefieldLands.Add(card);
+            AddLogEntry($"Player puts {card.CardName} onto the battlefield");
         }
         else
         {
             // Spells go to stack
             card.Zone = GameZone.Stack;
             Stack.Insert(0, card);
+            AddLogEntry($"Player puts {card.CardName} onto the stack");
         }
     }
 
@@ -1209,6 +1397,7 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
         Stack.RemoveAt(0);
         card.Zone = GameZone.Battlefield;
         BattlefieldNonlands.Add(card);
+        AddLogEntry($"Player resolves {card.CardName}");
     }
 
     /// <summary>
@@ -1222,6 +1411,7 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
         Stack.RemoveAt(0);
         card.Zone = GameZone.Graveyard;
         Graveyard.Insert(0, card);
+        LogZoneMove(card.CardName, GameZone.Stack, GameZone.Graveyard);
     }
 
     /// <summary>
@@ -1235,6 +1425,7 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
         Stack.RemoveAt(0);
         card.Zone = GameZone.Hand;
         Hand.Add(card);
+        LogZoneMove(card.CardName, GameZone.Stack, GameZone.Hand);
     }
 
     /// <summary>
@@ -1248,6 +1439,7 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
         Stack.RemoveAt(0);
         card.Zone = GameZone.Exile;
         Exile.Insert(0, card);
+        LogZoneMove(card.CardName, GameZone.Stack, GameZone.Exile);
     }
 
     private void RemoveFromZone(PlaytestCardViewModel card, GameZone zone)
@@ -1330,6 +1522,38 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
             int j = _random.Next(i + 1);
             (list[i], list[j]) = (list[j], list[i]);
         }
+    }
+
+    private void AddLogEntry(string message) => GameLog.Add(new GameLogEntry(message));
+
+    private static string GetZoneDisplayName(GameZone zone) => zone switch
+    {
+        GameZone.Library => "Library",
+        GameZone.Hand => "Hand",
+        GameZone.Graveyard => "Graveyard",
+        GameZone.Exile => "Exile",
+        GameZone.Stack => "Stack",
+        GameZone.BattlefieldLands => "Battlefield (Lands)",
+        GameZone.Battlefield => "Battlefield",
+        GameZone.CommandZone => "Command Zone",
+        GameZone.Sideboard => "Sideboard",
+        _ => zone.ToString()
+    };
+
+    private void LogZoneMove(string cardName, GameZone source, GameZone target)
+    {
+        AddLogEntry($"Player moves {cardName} from [{GetZoneDisplayName(source)}] to [{GetZoneDisplayName(target)}]");
+    }
+
+    /// <summary>
+    /// Toggle the tap state of a battlefield card and log the action.
+    /// </summary>
+    public void ToggleTap(PlaytestCardViewModel card)
+    {
+        card.IsTapped = !card.IsTapped;
+        AddLogEntry(card.IsTapped
+            ? $"Player taps {card.CardName}"
+            : $"Player untaps {card.CardName}");
     }
 
     private void WireCollectionObservers()

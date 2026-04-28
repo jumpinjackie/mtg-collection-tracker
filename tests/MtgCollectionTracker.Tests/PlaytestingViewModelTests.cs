@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Moq;
+using MtgCollectionTracker;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.ViewModels;
@@ -38,7 +39,7 @@ public class PlaytestingViewModelTests
             Func<StrongInject.Owned<MtgCollectionTracker.Data.CardsDbContext>> neverInvoked =
                 () => throw new InvalidOperationException("DB not needed");
             var cache = new CardImageCache(neverInvoked, mockFs.Object, mockClient.Object);
-            return new PlaytestGameStateViewModel(messenger, () => new PlaytestCardViewModel(cache));
+            return new PlaytestGameStateViewModel(messenger, () => new PlaytestCardViewModel(cache), new AppSettings());
         };
         return new PlaytestingViewModel(service, scryfallClient, gameStateFactory, messenger);
     }

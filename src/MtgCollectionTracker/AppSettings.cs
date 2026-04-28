@@ -56,6 +56,17 @@ public class AppSettings
     /// </summary>
     public string? DbPath { get; set; }
 
+    // ── Playtesting ────────────────────────────────────────────────────────────
+
+    /// <summary>Persisted card scale for the non-land battlefield zone.</summary>
+    public double PlaytestBattlefieldCardScale { get; set; } = 1.25;
+
+    /// <summary>Persisted card scale for the lands battlefield zone.</summary>
+    public double PlaytestLandsCardScale { get; set; } = 1.25;
+
+    /// <summary>Persisted card scale for the hand zone.</summary>
+    public double PlaytestHandCardScale { get; set; } = 1.25;
+
     // ── Persistence ───────────────────────────────────────────────────────────
 
     private static string GetSettingsFilePath()

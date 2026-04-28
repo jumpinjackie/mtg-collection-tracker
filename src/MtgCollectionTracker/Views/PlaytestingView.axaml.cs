@@ -100,9 +100,11 @@ public partial class PlaytestingView : UserControl
 
     private void OnBattlefieldCardDoubleTapped(object? sender, TappedEventArgs e)
     {
-        if (sender is Border border && border.DataContext is PlaytestCardViewModel card)
+        var gameState = GetActiveGameState();
+        if (sender is Border border && border.DataContext is PlaytestCardViewModel card &&
+            gameState is not null)
         {
-            card.IsTapped = !card.IsTapped;
+            gameState.ToggleTap(card);
         }
     }
 
@@ -347,7 +349,11 @@ public partial class PlaytestingView : UserControl
             await AnimateCardFlipAsync(border);
         }
 
-        card.Transform();
+        var gameState = GetActiveGameState();
+        if (gameState is not null)
+            gameState.TransformCard(card);
+        else
+            card.Transform();
     }
 
     private void MoveBattlefieldCard(object? sender, GameZone destination)
@@ -647,7 +653,7 @@ public partial class PlaytestingView : UserControl
             return 0;
 
         // Each card occupies card width + horizontal margins + item spacing.
-        var stride = gameState.CardWidth + HandCardTotalMargin + HandCardInterItemSpacing;
+        var stride = gameState.HandCardWidth + HandCardTotalMargin + HandCardInterItemSpacing;
         var hoveredIndex = Math.Max(0, Math.Min((int)(pointerPos.X / stride), hand.Count - 1));
         var localX = pointerPos.X - (hoveredIndex * stride);
         var isRightHalf = localX >= (stride / 2.0);
@@ -1116,12 +1122,12 @@ public partial class PlaytestingView : UserControl
             return;
         }
 
-        var stride = gameState.CardWidth + HandCardTotalMargin + HandCardInterItemSpacing;
+        var stride = gameState.HandCardWidth + HandCardTotalMargin + HandCardInterItemSpacing;
         var safeIndex = Math.Max(0, Math.Min(targetIndex, gameState.Hand.Count));
 
         // Draw at left/right edge of the hovered card. End-of-hand draws at the right edge of the last card.
         var indicatorX = (safeIndex == gameState.Hand.Count)
-            ? ((safeIndex - 1) * stride) + 3 + gameState.CardWidth
+            ? ((safeIndex - 1) * stride) + 3 + gameState.HandCardWidth
             : (safeIndex * stride) + 3;
 
         handDropIndicator.Margin = new Thickness(indicatorX, 3, 0, 0);
