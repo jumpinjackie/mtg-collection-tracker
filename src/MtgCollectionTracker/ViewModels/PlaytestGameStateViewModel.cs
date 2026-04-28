@@ -862,6 +862,7 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
             return;
 
         var topCards = Library.Take(topX).ToList();
+        AddLogEntry($"Player views top {topCards.Count} card{(topCards.Count != 1 ? "s" : "")} of [{GetZoneDisplayName(GameZone.Library)}]");
 
         var viewModel = new ViewTopXViewModel(_messenger).Configure(
             topCards,

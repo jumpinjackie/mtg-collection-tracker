@@ -1777,4 +1777,38 @@ public class PlaytestGameStateViewModelTests
         Assert.Equal(75, game.HandCardWidth);
         Assert.Equal(105, game.HandCardHeight);
     }
+
+    [Fact]
+    public void OpenViewTopXDialog_AddsViewTopXLogEntry()
+    {
+        var game = CreateGameState();
+        AddCardToLibrary(game);
+        AddCardToLibrary(game);
+        AddCardToLibrary(game);
+
+        game.OpenViewTopXDialog(3);
+
+        Assert.Contains(game.GameLog, e => e.Message == "Player views top 3 cards of [Library]");
+    }
+
+    [Fact]
+    public void OpenViewTopXDialog_WhenLibraryHasFewerCards_LogsActualCount()
+    {
+        var game = CreateGameState();
+        AddCardToLibrary(game);
+
+        game.OpenViewTopXDialog(5);
+
+        Assert.Contains(game.GameLog, e => e.Message == "Player views top 1 card of [Library]");
+    }
+
+    [Fact]
+    public void OpenViewTopXDialog_EmptyLibrary_NoLogEntry()
+    {
+        var game = CreateGameState();
+
+        game.OpenViewTopXDialog(3);
+
+        Assert.Empty(game.GameLog);
+    }
 }
