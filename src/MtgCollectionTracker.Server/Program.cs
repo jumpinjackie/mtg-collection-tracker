@@ -40,11 +40,11 @@ services.AddTransient<Func<Owned<CardsDbContext>>>(sp => () =>
     return new Owned<CardsDbContext>(db, () => scope.Dispose());
 });
 
-// Card-image filesystem – singleton, stored alongside the database.
-var dbDir = Path.GetDirectoryName(Path.GetFullPath(dbPath)) ?? Directory.GetCurrentDirectory();
-var imageDir = Path.Combine(dbDir, "card-images");
-Directory.CreateDirectory(imageDir);
-services.AddSingleton<ICardImageFileSystem>(new CardImageFileSystem(imageDir));
+// Card-image filesystem – singleton, stored in appdata
+var appDir = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "mtg-collection-tracker");
+if (!Directory.Exists(appDir))
+    Directory.CreateDirectory(appDir);
+services.AddSingleton<ICardImageFileSystem>(new CardImageFileSystem(appDir));
 
 // Scryfall HTTP client – singleton.
 var scryfallHttp = new HttpClient(new HttpClientHandler())
