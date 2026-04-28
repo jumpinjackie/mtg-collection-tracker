@@ -1,5 +1,6 @@
 using CommunityToolkit.Mvvm.Messaging;
 using Moq;
+using MtgCollectionTracker;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.ViewModels;
@@ -27,7 +28,7 @@ public class PlaytestGameStateViewModelTests
     private PlaytestGameStateViewModel CreateGameState()
     {
         var messenger = new WeakReferenceMessenger();
-        return new PlaytestGameStateViewModel(messenger, CreateCardVm);
+        return new PlaytestGameStateViewModel(messenger, CreateCardVm, new AppSettings());
     }
 
     /// <summary>

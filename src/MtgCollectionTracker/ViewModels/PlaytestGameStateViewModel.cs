@@ -22,11 +22,16 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
     private readonly IMessenger _messenger;
     private readonly Func<PlaytestCardViewModel> _cardVmFactory;
     private readonly Random _random = new();
+    private readonly AppSettings? _appSettings;
 
-    public PlaytestGameStateViewModel(IMessenger messenger, Func<PlaytestCardViewModel> cardVmFactory)
+    public PlaytestGameStateViewModel(IMessenger messenger, Func<PlaytestCardViewModel> cardVmFactory, AppSettings appSettings)
     {
         _messenger = messenger;
         _cardVmFactory = cardVmFactory;
+        _appSettings = appSettings;
+        _battlefieldCardScale = appSettings.PlaytestBattlefieldCardScale;
+        _landsCardScale = appSettings.PlaytestLandsCardScale;
+        _handCardScale = appSettings.PlaytestHandCardScale;
         WireCollectionObservers();
     }
 
@@ -172,6 +177,34 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
     public double HandFontSizeName => 8 * HandCardScale;
     public double HandFontSizeMana => 8 * HandCardScale;
     public double HandFontSizePT => 8 * HandCardScale;
+
+    // Persist scale changes to app settings
+    partial void OnBattlefieldCardScaleChanged(double value)
+    {
+        if (_appSettings is not null)
+        {
+            _appSettings.PlaytestBattlefieldCardScale = value;
+            _appSettings.Save();
+        }
+    }
+
+    partial void OnLandsCardScaleChanged(double value)
+    {
+        if (_appSettings is not null)
+        {
+            _appSettings.PlaytestLandsCardScale = value;
+            _appSettings.Save();
+        }
+    }
+
+    partial void OnHandCardScaleChanged(double value)
+    {
+        if (_appSettings is not null)
+        {
+            _appSettings.PlaytestHandCardScale = value;
+            _appSettings.Save();
+        }
+    }
 
     // Game action log
     public ObservableCollection<GameLogEntry> GameLog { get; } = new();
