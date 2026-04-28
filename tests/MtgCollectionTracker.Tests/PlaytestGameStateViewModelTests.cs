@@ -1543,6 +1543,7 @@ public class PlaytestGameStateViewModelTests
 
         game.DrawCards(3);
 
+        Assert.NotEmpty(game.GameLog);
         var drawEntry = game.GameLog.Last();
         Assert.Equal("Player draws 3 cards", drawEntry.Message);
     }
@@ -1556,6 +1557,7 @@ public class PlaytestGameStateViewModelTests
 
         game.MillCards(2);
 
+        Assert.NotEmpty(game.GameLog);
         var millEntry = game.GameLog.Last();
         Assert.Equal("Player mills 2 cards", millEntry.Message);
     }

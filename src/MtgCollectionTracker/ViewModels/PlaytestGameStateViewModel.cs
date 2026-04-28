@@ -568,7 +568,7 @@ public partial class PlaytestGameStateViewModel : ViewModelBase
     }
 
     /// <summary>
-    /// Draw a single card from library to hand (moves one card without emitting a separate log — use DrawCards for batched logging)
+    /// Draw a single card from library to hand. Does not emit a log entry — caller is responsible for logging.
     /// </summary>
     private void DrawCardInternal()
     {

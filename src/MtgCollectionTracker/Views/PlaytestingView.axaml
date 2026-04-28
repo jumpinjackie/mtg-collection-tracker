@@ -403,8 +403,8 @@
 							<!-- Zone header with title and per-zone scale slider -->
 							<Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,80" Margin="0,0,0,4">
 								<TextBlock Grid.Column="0" Text="Battlefield" FontWeight="Bold" HorizontalAlignment="Center" FontSize="12" />
-								<TextBlock Grid.Column="1" Text="{Binding BattlefieldCardScale, StringFormat='{}{0:P0}'}" FontSize="9" VerticalAlignment="Center" Margin="0,0,4,0" />
-								<Slider Grid.Column="2" Value="{Binding BattlefieldCardScale}" Minimum="0.5" Maximum="2.5" TickFrequency="0.1" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
+								<TextBlock Grid.Column="1" Text="{Binding BattlefieldCardScale, StringFormat='{}{0:P0}'}" FontSize="9" VerticalAlignment="Center" Margin="0,0,4,0" ToolTip.Tip="Battlefield card scale" />
+								<Slider Grid.Column="2" Value="{Binding BattlefieldCardScale}" Minimum="0.5" Maximum="2.5" TickFrequency="0.1" IsSnapToTickEnabled="True" VerticalAlignment="Center" ToolTip.Tip="Battlefield card scale" />
 							</Grid>
 							<ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
 							<StackPanel Spacing="5">
@@ -509,8 +509,8 @@
 							<!-- Zone header with title and per-zone scale slider -->
 							<Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,80" Margin="0,0,0,4">
 								<TextBlock Grid.Column="0" Text="Lands" FontWeight="Bold" HorizontalAlignment="Center" FontSize="12" />
-								<TextBlock Grid.Column="1" Text="{Binding LandsCardScale, StringFormat='{}{0:P0}'}" FontSize="9" VerticalAlignment="Center" Margin="0,0,4,0" />
-								<Slider Grid.Column="2" Value="{Binding LandsCardScale}" Minimum="0.5" Maximum="2.5" TickFrequency="0.1" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
+								<TextBlock Grid.Column="1" Text="{Binding LandsCardScale, StringFormat='{}{0:P0}'}" FontSize="9" VerticalAlignment="Center" Margin="0,0,4,0" ToolTip.Tip="Lands card scale" />
+								<Slider Grid.Column="2" Value="{Binding LandsCardScale}" Minimum="0.5" Maximum="2.5" TickFrequency="0.1" IsSnapToTickEnabled="True" VerticalAlignment="Center" ToolTip.Tip="Lands card scale" />
 							</Grid>
 							<ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
 							<StackPanel Spacing="5">
@@ -612,8 +612,8 @@
 							<!-- Zone header with title and per-zone scale slider -->
 							<Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,80" Margin="0,0,0,4">
 								<TextBlock Grid.Column="0" Text="Hand" FontWeight="Bold" HorizontalAlignment="Left" FontSize="12" />
-								<TextBlock Grid.Column="1" Text="{Binding HandCardScale, StringFormat='{}{0:P0}'}" FontSize="9" VerticalAlignment="Center" Margin="0,0,4,0" />
-								<Slider Grid.Column="2" Value="{Binding HandCardScale}" Minimum="0.5" Maximum="2.5" TickFrequency="0.1" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
+								<TextBlock Grid.Column="1" Text="{Binding HandCardScale, StringFormat='{}{0:P0}'}" FontSize="9" VerticalAlignment="Center" Margin="0,0,4,0" ToolTip.Tip="Hand card scale" />
+								<Slider Grid.Column="2" Value="{Binding HandCardScale}" Minimum="0.5" Maximum="2.5" TickFrequency="0.1" IsSnapToTickEnabled="True" VerticalAlignment="Center" ToolTip.Tip="Hand card scale" />
 							</Grid>
 							<ScrollViewer x:Name="HandScrollViewer" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
 							<StackPanel Spacing="5">
