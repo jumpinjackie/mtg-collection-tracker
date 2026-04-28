@@ -798,10 +798,10 @@ public class PlaytestGameStateViewModelTests
     }
 
     [Fact]
-    public void CardWidth_IsScaledByCardScale()
+    public void CardWidth_IsScaledByBattlefieldCardScale()
     {
         var game = CreateGameState();
-        game.CardScale = 1.5;
+        game.BattlefieldCardScale = 1.5;
 
         Assert.Equal(150, game.CardWidth);   // 100 * 1.5
         Assert.Equal(210, game.CardHeight);  // 140 * 1.5
@@ -1517,5 +1517,262 @@ public class PlaytestGameStateViewModelTests
 
         Assert.Empty(game.SelectedBattlefieldCards);
         Assert.False(card.IsSelected);
+    }
+
+    // ─── Game Log ─────────────────────────────────────────────────────────────
+
+    [Fact]
+    public void DrawCard_AddsDrawLogEntry()
+    {
+        var game = CreateGameState();
+        AddCardToLibrary(game);
+
+        game.DrawCardCommand.Execute(null);
+
+        Assert.Single(game.GameLog);
+        Assert.Equal("Player draws 1 card", game.GameLog[0].Message);
+    }
+
+    [Fact]
+    public void DrawCards_AddsDrawLogEntryWithCount()
+    {
+        var game = CreateGameState();
+        AddCardToLibrary(game);
+        AddCardToLibrary(game);
+        AddCardToLibrary(game);
+
+        game.DrawCards(3);
+
+        var drawEntry = game.GameLog.Last();
+        Assert.Equal("Player draws 3 cards", drawEntry.Message);
+    }
+
+    [Fact]
+    public void MillCards_AddsMillLogEntry()
+    {
+        var game = CreateGameState();
+        AddCardToLibrary(game);
+        AddCardToLibrary(game);
+
+        game.MillCards(2);
+
+        var millEntry = game.GameLog.Last();
+        Assert.Equal("Player mills 2 cards", millEntry.Message);
+    }
+
+    [Fact]
+    public void PlayCardFromHand_LandCard_AddsBattlefieldLogEntry()
+    {
+        var game = CreateGameState();
+        var card = MakeCardInHand(game, isLand: true);
+
+        game.PlayCardFromHand(card);
+
+        Assert.Contains(game.GameLog, e => e.Message == $"Player puts {card.CardName} onto the battlefield");
+    }
+
+    [Fact]
+    public void PlayCardFromHand_NonLandCard_AddsStackLogEntry()
+    {
+        var game = CreateGameState();
+        var card = MakeCardInHand(game, isLand: false);
+
+        game.PlayCardFromHand(card);
+
+        Assert.Contains(game.GameLog, e => e.Message == $"Player puts {card.CardName} onto the stack");
+    }
+
+    [Fact]
+    public void ResolveStack_AddsResolveLogEntry()
+    {
+        var game = CreateGameState();
+        var card = MakeCardInHand(game, isLand: false);
+        game.PlayCardFromHand(card);
+
+        game.ResolveStack();
+
+        Assert.Contains(game.GameLog, e => e.Message == $"Player resolves {card.CardName}");
+    }
+
+    [Fact]
+    public void MoveCard_AddsGenericZoneMoveLogEntry()
+    {
+        var game = CreateGameState();
+        var card = MakeCardInHand(game);
+
+        game.DiscardFromHand(card);
+
+        Assert.Contains(game.GameLog, e => e.Message == $"Player moves {card.CardName} from [Hand] to [Graveyard]");
+    }
+
+    [Fact]
+    public void ShuffleLibrary_AddsShuffleLogEntry()
+    {
+        var game = CreateGameState();
+
+        game.ShuffleLibraryCommand.Execute(null);
+
+        Assert.Contains(game.GameLog, e => e.Message == "Player shuffles library");
+    }
+
+    [Fact]
+    public void AdvancePhase_AddsPhaseLogEntry()
+    {
+        var game = CreateGameState();
+
+        game.AdvancePhaseCommand.Execute(null); // Move to Upkeep
+
+        Assert.Contains(game.GameLog, e => e.Message.StartsWith("Player advances to phase ("));
+    }
+
+    [Fact]
+    public void ToggleTap_TapsCard_AddsTapLogEntry()
+    {
+        var game = CreateGameState();
+        var card = CreateCardVm();
+        card.InitializeFrom(new PlaytestCard
+        {
+            CardName = "Sol Ring",
+            CardType = "Artifact",
+            Zone = GameZone.Battlefield,
+            IsFrontFace = true,
+        });
+
+        game.ToggleTap(card);
+
+        Assert.True(card.IsTapped);
+        Assert.Contains(game.GameLog, e => e.Message == "Player taps Sol Ring");
+    }
+
+    [Fact]
+    public void ToggleTap_UntapsCard_AddsUntapLogEntry()
+    {
+        var game = CreateGameState();
+        var card = CreateCardVm();
+        card.InitializeFrom(new PlaytestCard
+        {
+            CardName = "Sol Ring",
+            CardType = "Artifact",
+            Zone = GameZone.Battlefield,
+            IsTapped = true,
+            IsFrontFace = true,
+        });
+
+        game.ToggleTap(card);
+
+        Assert.False(card.IsTapped);
+        Assert.Contains(game.GameLog, e => e.Message == "Player untaps Sol Ring");
+    }
+
+    [Fact]
+    public void IncrementLife_AddsLifeLogEntry()
+    {
+        var game = CreateGameState();
+
+        game.IncrementLifeCommand.Execute(null);
+
+        Assert.Contains(game.GameLog, e => e.Message == "Player's life is now 21 (+1)");
+    }
+
+    [Fact]
+    public void DecrementLife_AddsLifeLogEntry()
+    {
+        var game = CreateGameState();
+
+        game.DecrementLifeCommand.Execute(null);
+
+        Assert.Contains(game.GameLog, e => e.Message == "Player's life is now 19 (-1)");
+    }
+
+    [Fact]
+    public void IncrementStorm_AddsStormLogEntry()
+    {
+        var game = CreateGameState();
+
+        game.IncrementStormCommand.Execute(null);
+
+        Assert.Contains(game.GameLog, e => e.Message == "Player's Storm is now 1 (+1)");
+    }
+
+    [Fact]
+    public void ResetGame_ClearsGameLog()
+    {
+        var game = CreateGameState();
+        AddCardToLibrary(game);
+        game.DrawCardCommand.Execute(null); // Creates a log entry
+
+        Assert.NotEmpty(game.GameLog);
+
+        game.ResetGameCommand.Execute(null);
+
+        Assert.Empty(game.GameLog);
+    }
+
+    [Fact]
+    public void AdjustCounter_Increment_AddsCounterLogEntry()
+    {
+        var game = CreateGameState();
+        var card = CreateCardVm();
+        card.InitializeFrom(new PlaytestCard
+        {
+            CardName = "Scute Swarm",
+            CardType = "Creature",
+            Zone = GameZone.Battlefield,
+            IsFrontFace = true,
+        });
+        card.Counters.Add(new CardCounterViewModel { CounterName = "+1/+1", Quantity = 1 });
+
+        game.AdjustCounter(card, "+1/+1", 2);
+
+        Assert.Contains(game.GameLog, e => e.Message == "Player puts 2 +1/+1 counters on Scute Swarm");
+    }
+
+    [Fact]
+    public void AdjustCounter_Decrement_AddsRemoveCounterLogEntry()
+    {
+        var game = CreateGameState();
+        var card = CreateCardVm();
+        card.InitializeFrom(new PlaytestCard
+        {
+            CardName = "Scute Swarm",
+            CardType = "Creature",
+            Zone = GameZone.Battlefield,
+            IsFrontFace = true,
+        });
+        card.Counters.Add(new CardCounterViewModel { CounterName = "+1/+1", Quantity = 3 });
+
+        game.AdjustCounter(card, "+1/+1", -1);
+
+        Assert.Contains(game.GameLog, e => e.Message == "Player removes 1 +1/+1 counter from Scute Swarm");
+    }
+
+    [Fact]
+    public void PerZoneScales_InitializeToSameDefault()
+    {
+        var game = CreateGameState();
+
+        Assert.Equal(1.25, game.BattlefieldCardScale);
+        Assert.Equal(1.25, game.LandsCardScale);
+        Assert.Equal(1.25, game.HandCardScale);
+    }
+
+    [Fact]
+    public void LandsCardWidth_UsesLandsCardScale()
+    {
+        var game = CreateGameState();
+        game.LandsCardScale = 2.0;
+
+        Assert.Equal(200, game.LandsCardWidth);
+        Assert.Equal(280, game.LandsCardHeight);
+    }
+
+    [Fact]
+    public void HandCardWidth_UsesHandCardScale()
+    {
+        var game = CreateGameState();
+        game.HandCardScale = 0.75;
+
+        Assert.Equal(75, game.HandCardWidth);
+        Assert.Equal(105, game.HandCardHeight);
     }
 }

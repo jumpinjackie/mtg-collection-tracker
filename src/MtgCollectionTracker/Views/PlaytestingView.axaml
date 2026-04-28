@@ -399,8 +399,15 @@
 					        PointerReleased="OnDropToBattlefield"
 					        PointerMoved="OnDropZonePointerMoved"
 					        PointerExited="OnDropZonePointerExited">
-						<StackPanel Spacing="5" DataContext="{Binding GameState}">
-							<TextBlock Text="Battlefield" FontWeight="Bold" HorizontalAlignment="Center" FontSize="12" />
+						<DockPanel DataContext="{Binding GameState}">
+							<!-- Zone header with title and per-zone scale slider -->
+							<Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,80" Margin="0,0,0,4">
+								<TextBlock Grid.Column="0" Text="Battlefield" FontWeight="Bold" HorizontalAlignment="Center" FontSize="12" />
+								<TextBlock Grid.Column="1" Text="{Binding BattlefieldCardScale, StringFormat='{}{0:P0}'}" FontSize="9" VerticalAlignment="Center" Margin="0,0,4,0" />
+								<Slider Grid.Column="2" Value="{Binding BattlefieldCardScale}" Minimum="0.5" Maximum="2.5" TickFrequency="0.1" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
+							</Grid>
+							<ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+							<StackPanel Spacing="5">
 							<TextBlock Text="(Empty)" Opacity="0.5" HorizontalAlignment="Center" FontSize="10"
 							           IsVisible="{Binding !BattlefieldNonlands.Count}" />
 							<ItemsControl ItemsSource="{Binding BattlefieldNonlands}">
@@ -486,6 +493,8 @@
 								</ItemsControl.ItemTemplate>
 							</ItemsControl>
 						</StackPanel>
+						</ScrollViewer>
+						</DockPanel>
 					</Border>
 
 					<!-- Splitter -->
@@ -496,8 +505,15 @@
 					        PointerReleased="OnDropToBattlefieldLands"
 					        PointerMoved="OnDropZonePointerMoved"
 					        PointerExited="OnDropZonePointerExited">
-						<StackPanel Spacing="5" DataContext="{Binding GameState}">
-							<TextBlock Text="Lands" FontWeight="Bold" HorizontalAlignment="Center" FontSize="12" />
+						<DockPanel DataContext="{Binding GameState}">
+							<!-- Zone header with title and per-zone scale slider -->
+							<Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,80" Margin="0,0,0,4">
+								<TextBlock Grid.Column="0" Text="Lands" FontWeight="Bold" HorizontalAlignment="Center" FontSize="12" />
+								<TextBlock Grid.Column="1" Text="{Binding LandsCardScale, StringFormat='{}{0:P0}'}" FontSize="9" VerticalAlignment="Center" Margin="0,0,4,0" />
+								<Slider Grid.Column="2" Value="{Binding LandsCardScale}" Minimum="0.5" Maximum="2.5" TickFrequency="0.1" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
+							</Grid>
+							<ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+							<StackPanel Spacing="5">
 							<TextBlock Text="(Empty)" Opacity="0.5" HorizontalAlignment="Center" FontSize="10"
 							           IsVisible="{Binding !BattlefieldLands.Count}" />
 							<ItemsControl ItemsSource="{Binding BattlefieldLands}">
@@ -508,7 +524,7 @@
 							</ItemsControl.ItemsPanel>
 							<ItemsControl.ItemTemplate>
 								<DataTemplate>
-									<Border Width="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState.CardWidth, TargetNullValue=120}" Height="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState.CardHeight, TargetNullValue=168}" Margin="6" CornerRadius="6" BorderBrush="Black" BorderThickness="1" Background="#1E1E1E"
+									<Border Width="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState.LandsCardWidth, TargetNullValue=120}" Height="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState.LandsCardHeight, TargetNullValue=168}" Margin="6" CornerRadius="6" BorderBrush="Black" BorderThickness="1" Background="#1E1E1E"
 										        PointerEntered="OnCardPointerEntered"
 										        PointerPressed="OnCardPointerPressed"
 										        DoubleTapped="OnBattlefieldCardDoubleTapped">
@@ -540,17 +556,17 @@
 												<Image Source="{Binding CardImage^}" Stretch="UniformToFill" IsVisible="{Binding !IsToken}" />
 												<Border Background="#2A2A2A" IsVisible="{Binding IsToken}">
 													<Grid RowDefinitions="Auto,*,Auto">
-														<TextBlock Grid.Row="0" Text="{Binding DisplayName}" FontSize="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState?.CardFontSizeName, TargetNullValue=10}" FontWeight="Bold" Foreground="#F5F5F5" Margin="8,6,8,4" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" />
-														<TextBlock Grid.Row="1" Text="{Binding OracleText}" FontSize="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState?.CardFontSizeText, TargetNullValue=10}" Foreground="#E0E0E0" Margin="10,8" TextWrapping="Wrap" VerticalAlignment="Center" TextAlignment="Center" />
-														<TextBlock Grid.Row="2" Text="{Binding PT}" FontSize="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState?.CardFontSizePT, TargetNullValue=10}" FontWeight="Bold" Foreground="#F5F5F5" Margin="8,4,8,6" HorizontalAlignment="Right" />
+														<TextBlock Grid.Row="0" Text="{Binding DisplayName}" FontSize="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState?.LandsFontSizeName, TargetNullValue=10}" FontWeight="Bold" Foreground="#F5F5F5" Margin="8,6,8,4" TextTrimming="CharacterEllipsis" HorizontalAlignment="Left" />
+														<TextBlock Grid.Row="1" Text="{Binding OracleText}" FontSize="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState?.LandsFontSizeText, TargetNullValue=10}" Foreground="#E0E0E0" Margin="10,8" TextWrapping="Wrap" VerticalAlignment="Center" TextAlignment="Center" />
+														<TextBlock Grid.Row="2" Text="{Binding PT}" FontSize="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState?.LandsFontSizePT, TargetNullValue=10}" FontWeight="Bold" Foreground="#F5F5F5" Margin="8,4,8,6" HorizontalAlignment="Right" />
 													</Grid>
 												</Border>
 												<Border Background="#66000000" VerticalAlignment="Top" Padding="6,2" IsVisible="{Binding !IsToken}">
-													<TextBlock Text="{Binding DisplayName}" FontSize="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState?.CardFontSizeName, TargetNullValue=10}" Foreground="White" TextTrimming="CharacterEllipsis" />
+													<TextBlock Text="{Binding DisplayName}" FontSize="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState?.LandsFontSizeName, TargetNullValue=10}" Foreground="White" TextTrimming="CharacterEllipsis" />
 												</Border>
 												<Border Background="#66000000" VerticalAlignment="Bottom" HorizontalAlignment="Right" Padding="6,2"
 												        IsVisible="{Binding !IsToken}">
-													<TextBlock Text="{Binding PT}" FontSize="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState?.CardFontSizePT, TargetNullValue=10}" Foreground="White" />
+													<TextBlock Text="{Binding PT}" FontSize="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState?.LandsFontSizePT, TargetNullValue=10}" Foreground="White" />
 												</Border>
 												<!-- Counter circles row, just above center -->
 												<ItemsControl ItemsSource="{Binding Counters}"
@@ -583,6 +599,8 @@
 								</ItemsControl.ItemTemplate>
 							</ItemsControl>
 						</StackPanel>
+						</ScrollViewer>
+						</DockPanel>
 					</Border>
 
 					<!-- Hand -->
@@ -590,9 +608,15 @@
 					        PointerReleased="OnDropToHand"
 					        PointerMoved="OnDropZonePointerMoved"
 					        PointerExited="OnDropZonePointerExited">
-						<ScrollViewer x:Name="HandScrollViewer" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
-						<StackPanel Spacing="5" DataContext="{Binding GameState}">
-							<TextBlock Text="Hand" FontWeight="Bold" HorizontalAlignment="Left" FontSize="12" />
+						<DockPanel DataContext="{Binding GameState}">
+							<!-- Zone header with title and per-zone scale slider -->
+							<Grid DockPanel.Dock="Top" ColumnDefinitions="*,Auto,80" Margin="0,0,0,4">
+								<TextBlock Grid.Column="0" Text="Hand" FontWeight="Bold" HorizontalAlignment="Left" FontSize="12" />
+								<TextBlock Grid.Column="1" Text="{Binding HandCardScale, StringFormat='{}{0:P0}'}" FontSize="9" VerticalAlignment="Center" Margin="0,0,4,0" />
+								<Slider Grid.Column="2" Value="{Binding HandCardScale}" Minimum="0.5" Maximum="2.5" TickFrequency="0.1" IsSnapToTickEnabled="True" VerticalAlignment="Center" />
+							</Grid>
+							<ScrollViewer x:Name="HandScrollViewer" HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Disabled">
+							<StackPanel Spacing="5">
 							<TextBlock Text="(Empty hand)" Opacity="0.5" HorizontalAlignment="Left" FontSize="10"
 							           IsVisible="{Binding !Hand.Count}" />
 							<Grid>
@@ -604,7 +628,7 @@
 										</ItemsControl.ItemsPanel>
 										<ItemsControl.ItemTemplate>
 											<DataTemplate>
-											<Border Width="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState.CardWidth, TargetNullValue=120}" Height="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState.CardHeight, TargetNullValue=168}" Margin="3" CornerRadius="5" BorderBrush="Black" BorderThickness="1" Background="#1E1E1E"
+											<Border Width="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState.HandCardWidth, TargetNullValue=120}" Height="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState.HandCardHeight, TargetNullValue=168}" Margin="3" CornerRadius="5" BorderBrush="Black" BorderThickness="1" Background="#1E1E1E"
 													PointerEntered="OnCardPointerEntered"
 													PointerPressed="OnCardPointerPressed"
 													DoubleTapped="OnHandCardDoubleTapped">
@@ -619,15 +643,15 @@
 												<Grid>
 													<Image Source="{Binding CardImage^}" Stretch="UniformToFill" />
 													<Border Background="#66000000" VerticalAlignment="Top" Padding="6,2">
-														<TextBlock Text="{Binding CardName}" FontSize="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState?.CardFontSizeName, TargetNullValue=10}" Foreground="White" TextTrimming="CharacterEllipsis" />
+														<TextBlock Text="{Binding CardName}" FontSize="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState?.HandFontSizeName, TargetNullValue=10}" Foreground="White" TextTrimming="CharacterEllipsis" />
 													</Border>
 													<Border Background="#66000000" VerticalAlignment="Center" HorizontalAlignment="Center" Padding="6,2"
 													        IsVisible="{Binding HasManaCost}">
-														<TextBlock Text="{Binding ManaCost}" FontSize="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState?.CardFontSizeMana, TargetNullValue=10}" Foreground="White" />
+														<TextBlock Text="{Binding ManaCost}" FontSize="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState?.HandFontSizeMana, TargetNullValue=10}" Foreground="White" />
 													</Border>
 													<Border Background="#66000000" VerticalAlignment="Bottom" HorizontalAlignment="Right" Padding="6,2"
 													        IsVisible="{Binding PT, Converter={x:Static ObjectConverters.IsNotNull}}">
-														<TextBlock Text="{Binding PT}" FontSize="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState?.CardFontSizePT, TargetNullValue=10}" Foreground="White" />
+														<TextBlock Text="{Binding PT}" FontSize="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.GameState?.HandFontSizePT, TargetNullValue=10}" Foreground="White" />
 													</Border>
 												</Grid>
 												</Border>
@@ -636,7 +660,7 @@
 									</ItemsControl>
 									<Border x:Name="HandDropIndicator"
 									        Width="3"
-								        Height="{Binding CardHeight}"
+								        Height="{Binding HandCardHeight}"
 									        Margin="0,3,0,0"
 									        HorizontalAlignment="Left"
 									        VerticalAlignment="Top"
@@ -647,17 +671,18 @@
 								</Grid>
 							</StackPanel>
 						</ScrollViewer>
+						</DockPanel>
 					</Border>
 				</Grid>
 
-				<!-- Column 3: Details Panel (top) and Actions Panel (bottom) -->
+				<!-- Column 3: Details/Log tabs (top) and Actions Panel (bottom) -->
 				<Grid Grid.Column="3" Grid.Row="0" Grid.RowSpan="4" RowDefinitions="*,Auto" Margin="5,0,0,0">
-					<!-- (11) Details Panel -->
-					<Border Grid.Row="0" BorderBrush="Gray" BorderThickness="2" Padding="8" Margin="0,0,0,5">
-						<ScrollViewer VerticalScrollBarVisibility="Auto">
-						<StackPanel Spacing="8" DataContext="{Binding GameState}">
-							<TextBlock Text="Details" FontWeight="Bold" HorizontalAlignment="Center" FontSize="12" />
-							<StackPanel DataContext="{Binding SelectedCard}"
+					<!-- Details and Log as tabs -->
+					<TabControl Grid.Row="0" Margin="0,0,0,5">
+						<TabItem Header="Details">
+							<ScrollViewer VerticalScrollBarVisibility="Auto">
+							<StackPanel Spacing="8" DataContext="{Binding GameState}" Margin="8">
+								<StackPanel DataContext="{Binding SelectedCard}"
 								            IsVisible="{Binding ., Converter={x:Static ObjectConverters.IsNotNull}}"
 								            Spacing="5">
 										<TextBlock Text="{Binding CardName}"
@@ -683,60 +708,83 @@
 								<TextBlock Text="No card selected" Opacity="0.5" HorizontalAlignment="Center" FontSize="10"
 							           IsVisible="{Binding SelectedCard, Converter={x:Static ObjectConverters.IsNull}}" />
 							</StackPanel>
-						</ScrollViewer>
-					</Border>
+							</ScrollViewer>
+						</TabItem>
+						<TabItem Header="Log">
+							<ScrollViewer VerticalScrollBarVisibility="Auto" Padding="4">
+								<ItemsControl ItemsSource="{Binding GameState.GameLog}">
+									<ItemsControl.ItemTemplate>
+										<DataTemplate>
+											<TextBlock Text="{Binding DisplayText}" FontSize="10" TextWrapping="Wrap" Margin="0,2" />
+										</DataTemplate>
+									</ItemsControl.ItemTemplate>
+								</ItemsControl>
+							</ScrollViewer>
+						</TabItem>
+					</TabControl>
 
-					<!-- (12) Actions Panel -->
+					<!-- Actions Panel -->
 					<Border Grid.Row="1" BorderBrush="Gray" BorderThickness="2" Padding="8">
 						<StackPanel DataContext="{Binding GameState}" Spacing="5">
 							<TextBlock Text="Actions" FontWeight="Bold" HorizontalAlignment="Center" FontSize="12" />
-							<Button Content="Create Token"
-							        Click="OnBattlefieldCreateTokenClick"
-							        HorizontalAlignment="Stretch"
-							        FontSize="10"
-							        Padding="4,3" />
-							<Button Content="Command Zone"
-							        Click="OnCommandZoneClick"
-							        IsVisible="{Binding HasCommandZone}"
-							        HorizontalAlignment="Stretch"
-							        FontSize="10"
-							        Padding="4,3" />
-							<Button Content="View Sideboard"
-							        Click="OnViewSideboardClick"
-							        IsVisible="{Binding HasSideboard}"
-							        HorizontalAlignment="Stretch"
-							        FontSize="10"
-							        Padding="4,3" />
-							<Button Content="Draw Card"
-							        Command="{Binding DrawCardCommand}"
-							        HorizontalAlignment="Stretch"
-							        FontSize="10"
-							        Padding="4,3" />
-							<Button Content="Shuffle"
-							        Command="{Binding ShuffleLibraryCommand}"
-							        HorizontalAlignment="Stretch"
-							        FontSize="10"
-							        Padding="4,3" />
-							<Button Content="Mulligan"
-							        Command="{Binding MulliganCommand}"
-							        HorizontalAlignment="Stretch"
-							        FontSize="10"
-							        Padding="4,3" />
-							<Button Content="Next Phase"
-							        Command="{Binding AdvancePhaseCommand}"
-							        HorizontalAlignment="Stretch"
-							        FontSize="10"
-							        Padding="4,3" />
-							<Button Content="Reset Game"
-							        Command="{Binding ResetGameCommand}"
-							        HorizontalAlignment="Stretch"
-							        FontSize="10"
-							        Padding="4,3" />
-							<Button Content="Select Deck"
+							<UniformGrid Columns="2" HorizontalAlignment="Stretch">
+								<Button Content="Create Token"
+								        Click="OnBattlefieldCreateTokenClick"
+								        HorizontalAlignment="Stretch"
+								        FontSize="10"
+								        Padding="4,3"
+								        Margin="0,0,2,2" />
+								<Button Content="Command Zone"
+								        Click="OnCommandZoneClick"
+								        IsVisible="{Binding HasCommandZone}"
+								        HorizontalAlignment="Stretch"
+								        FontSize="10"
+								        Padding="4,3"
+								        Margin="2,0,0,2" />
+								<Button Content="View Sideboard"
+								        Click="OnViewSideboardClick"
+								        IsVisible="{Binding HasSideboard}"
+								        HorizontalAlignment="Stretch"
+								        FontSize="10"
+								        Padding="4,3"
+								        Margin="0,0,2,2" />
+								<Button Content="Draw Card"
+								        Command="{Binding DrawCardCommand}"
+								        HorizontalAlignment="Stretch"
+								        FontSize="10"
+								        Padding="4,3"
+								        Margin="2,0,0,2" />
+								<Button Content="Shuffle"
+								        Command="{Binding ShuffleLibraryCommand}"
+								        HorizontalAlignment="Stretch"
+								        FontSize="10"
+								        Padding="4,3"
+								        Margin="0,0,2,2" />
+								<Button Content="Mulligan"
+								        Command="{Binding MulliganCommand}"
+								        HorizontalAlignment="Stretch"
+								        FontSize="10"
+								        Padding="4,3"
+								        Margin="2,0,0,2" />
+								<Button Content="Next Phase"
+								        Command="{Binding AdvancePhaseCommand}"
+								        HorizontalAlignment="Stretch"
+								        FontSize="10"
+								        Padding="4,3"
+								        Margin="0,0,2,2" />
+								<Button Content="Reset Game"
+								        Command="{Binding ResetGameCommand}"
+								        HorizontalAlignment="Stretch"
+								        FontSize="10"
+								        Padding="4,3"
+								        Margin="2,0,0,2" />
+								<Button Content="Select Deck"
 								        Command="{Binding $parent[UserControl]?.((vm:PlaytestingViewModel)Tag)?.SelectDeckCommand, FallbackValue={x:Null}}"
-							        HorizontalAlignment="Stretch"
-							        FontSize="10"
-							        Padding="4,3" />
+								        HorizontalAlignment="Stretch"
+								        FontSize="10"
+								        Padding="4,3"
+								        Margin="0,0,2,2" />
+							</UniformGrid>
 						</StackPanel>
 					</Border>
 				</Grid>
@@ -744,39 +792,12 @@
 
 			<!-- Status Bar -->
 			<Border Grid.Row="1" BorderBrush="Gray" BorderThickness="2" Padding="8,6" Margin="10,5,10,10">
-				<Grid ColumnDefinitions="*,Auto,Auto,120">
-					<TextBlock Grid.Column="0"
-					           DataContext="{Binding SelectedDeck}"
-					           Text="{Binding Name, StringFormat='Playtesting: {0}'}"
-					           FontSize="12"
-					           FontWeight="Bold"
-					           VerticalAlignment="Center"
-					           HorizontalAlignment="Left" />
-					<TextBlock Grid.Column="1" 
-					           Text="Card Scale:"
-					           FontSize="11"
-					           VerticalAlignment="Center"
-					           IsVisible="{Binding IsInGame}"
-					           Margin="0,0,8,0" />
-					<TextBlock Grid.Column="2"
-					           DataContext="{Binding GameState}"
-					           Text="{Binding CardScale, StringFormat='{}{0:P0}'}"
-					           FontSize="11"
-					           VerticalAlignment="Center"
-					           MinWidth="40"
-					           TextAlignment="Right"
-					           IsVisible="{Binding $parent[Grid].((vm:PlaytestingViewModel)Tag)?.IsInGame, TargetNullValue=False}"
-					           Margin="0,0,8,0" />
-					<Slider Grid.Column="3"
-					        DataContext="{Binding GameState}"
-					        Value="{Binding CardScale}"
-					        Minimum="0.5"
-					        Maximum="2.5"
-					        TickFrequency="0.1"
-					        IsSnapToTickEnabled="True"
-					        IsVisible="{Binding $parent[Grid].((vm:PlaytestingViewModel)Tag)?.IsInGame, TargetNullValue=False}"
-					        VerticalAlignment="Center" />
-				</Grid>
+				<TextBlock DataContext="{Binding SelectedDeck}"
+				           Text="{Binding Name, StringFormat='Playtesting: {0}'}"
+				           FontSize="12"
+				           FontWeight="Bold"
+				           VerticalAlignment="Center"
+				           HorizontalAlignment="Left" />
 			</Border>
 		</Grid>
 
