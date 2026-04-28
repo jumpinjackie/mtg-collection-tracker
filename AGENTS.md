@@ -8,6 +8,7 @@ The repository contains a cross‑platform MTG collection manager built with .NE
 - `MtgCollectionTracker.Data` – EF Core DbContext and migrations.
 - `MtgCollectionTracker.Desktop`, `.Android`, `.iOS`, `.Browser` – UI front‑ends.
 - `MtgCollectionTracker.Console` – CLI utilities.
+- `MtgCollectionTracker.Server` - Provides a REST API server to an app instance's collection database. Allows the card collection database to be shareable to other instances through a basic client/server model by having the server "sharer" instance spin up this server and having client "sharee" instances connect to this server instead of creating/managing their own local collection databases.
 
 All code is written in **C# 12** (preview) using nullable reference types. The repository uses **dotnet format**, **stylecop.json**, and **editorconfig** for formatting, but the CI workflow does not run a dedicated linter step; instead `dotnet build` will surface most style warnings.
 
