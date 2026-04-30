@@ -103,6 +103,7 @@
 					<TextBlock VerticalAlignment="Center">View as:</TextBlock>
 					<RadioButton GroupName="View Mode" IsChecked="{Binding Behavior.ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:CardItemViewMode.VisualList}}" Content="Visual List"/>
 					<RadioButton GroupName="View Mode" IsChecked="{Binding Behavior.ViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter={x:Static vm:CardItemViewMode.Table}}" Content="Table"/>
+					<TextBlock VerticalAlignment="Center" IsVisible="{Binding ShowSearchResults}" Text="{Binding SearchResultCount, StringFormat='({0} result(s))'}" Foreground="{DynamicResource SystemBaseMediumColor}" />
 				</StackPanel>
 				<ListBox IsEnabled="{Binding !Behavior.IsBusy}" ItemsSource="{Binding SearchResults}" SelectionMode="Multiple" SelectedItems="{Binding Behavior.SelectedItems}" Background="Transparent" Margin="0 20">
 					<ListBox.IsVisible>

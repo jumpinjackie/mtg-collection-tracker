@@ -277,7 +277,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
 
     public MultiModeCardListBehavior<CardSkuItemViewModel> Behavior { get; }
 
-    public ObservableCollection<CardSkuItemViewModel> SearchResults { get; } = new();
+    public RangeObservableCollection<CardSkuItemViewModel> SearchResults { get; } = new();
 
     bool IViewModelWithBusyState.IsBusy
     {
@@ -293,6 +293,9 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
 
     [ObservableProperty]
     private bool _hasNoResults;
+
+    [ObservableProperty]
+    private int _searchResultCount;
 
     public ObservableCollection<string> Tags { get; } = new();
 
@@ -373,11 +376,9 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
                 MissingMetadata = this.MissingMetadata,
                 IncludeScryfallMetadata = true
             }, System.Threading.CancellationToken.None);
-            this.SearchResults.Clear();
-            foreach (var sku in cards)
-            {
-                this.SearchResults.Add(_cardSku().WithData(sku));
-            }
+            var newItems = cards.Select(sku => _cardSku().WithData(sku)).ToList();
+            this.SearchResults.ReplaceAll(newItems);
+            this.SearchResultCount = newItems.Count;
             this.HasNoResults = !this.ShowFirstTimeMessage && this.SearchResults.Count == 0;
         }
     }
