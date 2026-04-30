@@ -13,6 +13,7 @@ using ScryfallApi.Client;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -302,6 +303,10 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     [ObservableProperty]
     private int _searchResultCount;
 
+    /// <summary>Duration of the most recent search in milliseconds; displayed alongside the result count.</summary>
+    [ObservableProperty]
+    private long _searchElapsedMs;
+
     public ObservableCollection<string> Tags { get; } = new();
 
     public ObservableCollection<string> SelectedTags { get; } = new();
@@ -369,6 +374,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
             this.ShowSearchResults = true;
 
             await Task.Delay(500);
+            var sw = Stopwatch.StartNew();
             var cards = await _service.GetCardsAsync(new Core.Model.CardQueryModel
             {
                 SearchFilter = this.SearchText,
@@ -382,8 +388,10 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
                 IncludeScryfallMetadata = true
             }, System.Threading.CancellationToken.None);
             var newItems = cards.Select(sku => _cardSku().WithData(sku)).ToList();
+            sw.Stop();
             this.SearchResults.ReplaceAll(newItems);
             this.SearchResultCount = newItems.Count;
+            this.SearchElapsedMs = sw.ElapsedMilliseconds;
             this.HasNoResults = !this.ShowFirstTimeMessage && this.SearchResults.Count == 0;
         }
     }
