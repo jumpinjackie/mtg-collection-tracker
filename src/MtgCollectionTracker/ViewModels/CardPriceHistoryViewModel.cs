@@ -105,6 +105,8 @@ public partial class CardPriceHistoryViewModel : DialogContentViewModel
 
     // ── Card-details panel (shown to the right of the chart) ────────────────
 
+    private static readonly Task<Bitmap?> s_noImage = Task.FromResult<Bitmap?>(null);
+
     private ICardSkuItem? _cardSku;
     private INotifyPropertyChanged? _cardSkuNotifier;
 
@@ -113,7 +115,7 @@ public partial class CardPriceHistoryViewModel : DialogContentViewModel
     private bool _hasCardDetails;
 
     /// <summary>Large card image, delegated to the supplied card sku.</summary>
-    public Task<Bitmap?> CardImageLarge => _cardSku?.CardImageLarge ?? Task.FromResult<Bitmap?>(null);
+    public Task<Bitmap?> CardImageLarge => _cardSku?.CardImageLarge ?? s_noImage;
 
     /// <summary>Whether the large card image is currently loading.</summary>
     public bool IsCardImageLargeLoading => _cardSku?.IsCardImageLargeLoading ?? false;
@@ -188,6 +190,18 @@ public partial class CardPriceHistoryViewModel : DialogContentViewModel
                 break;
             case nameof(ICardSkuItem.SwitchLabel):
                 OnPropertyChanged(nameof(SwitchLabel));
+                break;
+            case nameof(ICardSkuItem.CastingCost):
+                OnPropertyChanged(nameof(CastingCost));
+                break;
+            case nameof(ICardSkuItem.OracleText):
+                OnPropertyChanged(nameof(OracleText));
+                break;
+            case nameof(ICardSkuItem.CardType):
+                OnPropertyChanged(nameof(CardType));
+                break;
+            case nameof(ICardSkuItem.PT):
+                OnPropertyChanged(nameof(PT));
                 break;
         }
     }
