@@ -277,6 +277,10 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
 
     public MultiModeCardListBehavior<CardSkuItemViewModel> Behavior { get; }
 
+    /// <summary>
+    /// Search results displayed in the card list. Uses <see cref="RangeObservableCollection{T}"/> so the entire
+    /// collection can be replaced with a single <c>Reset</c> notification instead of per-item notifications.
+    /// </summary>
     public RangeObservableCollection<CardSkuItemViewModel> SearchResults { get; } = new();
 
     bool IViewModelWithBusyState.IsBusy
@@ -294,6 +298,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
     [ObservableProperty]
     private bool _hasNoResults;
 
+    /// <summary>Total number of items in the most recent search; displayed in the UI as "(N result(s))".</summary>
     [ObservableProperty]
     private int _searchResultCount;
 
