@@ -481,11 +481,11 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
         if (Behavior.SelectedItems.Count == 1)
         {
             var selected = Behavior.SelectedItems[0];
-            var vm = _cardPriceHistory();
+            var vm = _cardPriceHistory().WithCardSku(selected);
             var title = $"Price History: {selected.CardName} ({selected.Edition})";
             Messenger.Send(new OpenDialogMessage
             {
-                DrawerWidth = 800,
+                DrawerWidth = 1240,
                 ViewModel = _dialog().WithContent(title, vm)
             });
             await vm.LoadAsync(selected.Id, cancel);
