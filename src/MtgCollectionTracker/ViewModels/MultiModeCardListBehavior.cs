@@ -39,6 +39,9 @@ public interface ICardSkuItem
     string? CardType { get; }
 
     string? PT { get; }
+
+    /// <summary>Ensures the large card image starts loading; should be called when the item is selected for detail display.</summary>
+    void EnsureLargeImageLoaded();
 }
 
 public partial class MultiModeCardListBehavior<T> : ObservableObject where T : class, ICardSkuItem
@@ -94,6 +97,11 @@ public partial class MultiModeCardListBehavior<T> : ObservableObject where T : c
         this.HasSelectedCardSku = this.SelectedItems.Count == 1;
         this.HasAtLeastOneSelectedCardSku = this.SelectedItems.Count > 0;
         OnPropertyChanged(nameof(SelectedCardImageLargeLoading));
+        if (this.SelectedItems.Count == 1)
+        {
+            // Trigger large-image loading on demand so it is not started eagerly for every result item.
+            this.SelectedItems[0].EnsureLargeImageLoaded();
+        }
         CardDetails.SetItem(this.SelectedItems.Count == 1 ? this.SelectedItems[0] : null);
     }
 

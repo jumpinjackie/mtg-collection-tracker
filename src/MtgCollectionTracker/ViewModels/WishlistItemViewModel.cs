@@ -19,6 +19,7 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
     readonly ICollectionTrackingService _service;
     int _smallImageLoadVersion;
     int _largeImageLoadVersion;
+    bool _largeImageLoaded;
 
     public WishlistItemViewModel(ICollectionTrackingService service)
     {
@@ -135,7 +136,8 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
     private void SwitchToFront()
     {
         this.CardImage = this.FrontFaceImageSmall;
-        this.CardImageLarge = this.FrontFaceImageLarge;
+        if (_largeImageLoaded)
+            this.CardImageLarge = this.FrontFaceImageLarge;
         this.IsFrontFace = true;
         this.SwitchLabel = "Switch to Back";
     }
@@ -143,7 +145,8 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
     private void SwitchToBack()
     {
         this.CardImage = this.BackFaceImageSmall;
-        this.CardImageLarge = this.BackFaceImageLarge;
+        if (_largeImageLoaded)
+            this.CardImageLarge = this.BackFaceImageLarge;
         this.IsFrontFace = false;
         this.SwitchLabel = "Switch to Front";
     }
@@ -258,8 +261,20 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
         }
     }
 
+    /// <inheritdoc />
+    public void EnsureLargeImageLoaded()
+    {
+        if (!_largeImageLoaded)
+        {
+            _largeImageLoaded = true;
+            this.CardImageLarge = this.IsFrontFace ? this.FrontFaceImageLarge : this.BackFaceImageLarge;
+        }
+    }
+
     public WishlistItemViewModel WithData(WishlistItemModel item)
     {
+        _largeImageLoaded = false;
+        this.CardImageLarge = Task.FromResult<Bitmap?>(null);
         this.Id = item.Id;
         this.ScryfallId = item.ScryfallId;
 

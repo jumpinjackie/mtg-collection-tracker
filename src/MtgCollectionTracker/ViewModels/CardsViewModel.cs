@@ -13,6 +13,7 @@ using ScryfallApi.Client;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -277,7 +278,11 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
 
     public MultiModeCardListBehavior<CardSkuItemViewModel> Behavior { get; }
 
-    public ObservableCollection<CardSkuItemViewModel> SearchResults { get; } = new();
+    /// <summary>
+    /// Search results displayed in the card list. Uses <see cref="RangeObservableCollection{T}"/> so the entire
+    /// collection can be replaced with a single <c>Reset</c> notification instead of per-item notifications.
+    /// </summary>
+    public RangeObservableCollection<CardSkuItemViewModel> SearchResults { get; } = new();
 
     bool IViewModelWithBusyState.IsBusy
     {
@@ -293,6 +298,14 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
 
     [ObservableProperty]
     private bool _hasNoResults;
+
+    /// <summary>Total number of items in the most recent search; displayed in the UI as "(N result(s))".</summary>
+    [ObservableProperty]
+    private int _searchResultCount;
+
+    /// <summary>Duration of the most recent search in milliseconds; displayed alongside the result count.</summary>
+    [ObservableProperty]
+    private long _searchElapsedMs;
 
     public ObservableCollection<string> Tags { get; } = new();
 
@@ -361,6 +374,7 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
             this.ShowSearchResults = true;
 
             await Task.Delay(500);
+            var sw = Stopwatch.StartNew();
             var cards = await _service.GetCardsAsync(new Core.Model.CardQueryModel
             {
                 SearchFilter = this.SearchText,
@@ -373,11 +387,11 @@ public partial class CardsViewModel : RecipientViewModelBase, IRecipient<CardsAd
                 MissingMetadata = this.MissingMetadata,
                 IncludeScryfallMetadata = true
             }, System.Threading.CancellationToken.None);
-            this.SearchResults.Clear();
-            foreach (var sku in cards)
-            {
-                this.SearchResults.Add(_cardSku().WithData(sku));
-            }
+            var newItems = cards.Select(sku => _cardSku().WithData(sku)).ToList();
+            sw.Stop();
+            this.SearchResults.ReplaceAll(newItems);
+            this.SearchResultCount = newItems.Count;
+            this.SearchElapsedMs = sw.ElapsedMilliseconds;
             this.HasNoResults = !this.ShowFirstTimeMessage && this.SearchResults.Count == 0;
         }
     }
