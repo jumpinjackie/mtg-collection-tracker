@@ -4,7 +4,6 @@ using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services.Stubs;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
@@ -99,6 +98,23 @@ public partial class CardPriceHistoryViewModel : DialogContentViewModel
 
     [ObservableProperty]
     private double _chartPlotHeight = 200.0;
+
+    // ── Card-details panel (shown to the right of the chart) ────────────────
+
+    /// <summary>Card-details panel ViewModel; populated when a card sku is provided via <see cref="WithCardSku"/>.</summary>
+    public CardDetailsPanelViewModel CardDetails { get; } = new();
+
+    /// <summary>
+    /// Attaches card-sku data so the card-details panel can display the image,
+    /// oracle text and other metadata alongside the pricing chart.
+    /// </summary>
+    public CardPriceHistoryViewModel WithCardSku(ICardSkuItem sku)
+    {
+        CardDetails.SetItem(sku);
+        return this;
+    }
+
+    // ────────────────────────────────────────────────────────────────────────
 
     /// <summary>Y-axis tick labels (price values) from top to bottom.</summary>
     public ObservableCollection<YAxisLabelViewModel> YAxisLabels { get; } = new();
