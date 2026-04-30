@@ -1,14 +1,10 @@
-using Avalonia.Media.Imaging;
 using CommunityToolkit.Mvvm.ComponentModel;
-using CommunityToolkit.Mvvm.Input;
 using CommunityToolkit.Mvvm.Messaging;
 using MtgCollectionTracker.Core.Model;
 using MtgCollectionTracker.Core.Services;
 using MtgCollectionTracker.Services.Stubs;
 using System;
-using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.ComponentModel;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -105,41 +101,8 @@ public partial class CardPriceHistoryViewModel : DialogContentViewModel
 
     // ── Card-details panel (shown to the right of the chart) ────────────────
 
-    private static readonly Task<Bitmap?> s_noImage = Task.FromResult<Bitmap?>(null);
-
-    private ICardSkuItem? _cardSku;
-    private INotifyPropertyChanged? _cardSkuNotifier;
-
-    /// <summary>Whether the card-details panel should be shown (i.e. a card sku was supplied).</summary>
-    [ObservableProperty]
-    private bool _hasCardDetails;
-
-    /// <summary>Large card image, delegated to the supplied card sku.</summary>
-    public Task<Bitmap?> CardImageLarge => _cardSku?.CardImageLarge ?? s_noImage;
-
-    /// <summary>Whether the large card image is currently loading.</summary>
-    public bool IsCardImageLargeLoading => _cardSku?.IsCardImageLargeLoading ?? false;
-
-    /// <summary>Whether the card has a back face.</summary>
-    public bool IsDoubleFaced => _cardSku?.IsDoubleFaced ?? false;
-
-    /// <summary>Label for the face-switch button (e.g. "Switch to Back").</summary>
-    public string? SwitchLabel => _cardSku?.SwitchLabel;
-
-    /// <summary>Command that flips to the other face of a double-faced card.</summary>
-    public IRelayCommand? SwitchFaceCommand => _cardSku?.SwitchFaceCommand;
-
-    /// <summary>Mana cost string for the card.</summary>
-    public string? CastingCost => _cardSku?.CastingCost;
-
-    /// <summary>Oracle text for the card.</summary>
-    public string? OracleText => _cardSku?.OracleText;
-
-    /// <summary>Type line of the card.</summary>
-    public string? CardType => _cardSku?.CardType;
-
-    /// <summary>Power/toughness string (e.g. "3/3") or null if not applicable.</summary>
-    public string? PT => _cardSku?.PT;
+    /// <summary>Card-details panel ViewModel; populated when a card sku is provided via <see cref="WithCardSku"/>.</summary>
+    public CardDetailsPanelViewModel CardDetails { get; } = new();
 
     /// <summary>
     /// Attaches card-sku data so the card-details panel can display the image,
@@ -147,63 +110,8 @@ public partial class CardPriceHistoryViewModel : DialogContentViewModel
     /// </summary>
     public CardPriceHistoryViewModel WithCardSku(ICardSkuItem sku)
     {
-        if (_cardSkuNotifier != null)
-        {
-            _cardSkuNotifier.PropertyChanged -= OnCardSkuPropertyChanged;
-            _cardSkuNotifier = null;
-        }
-
-        _cardSku = sku;
-        HasCardDetails = true;
-
-        if (sku is INotifyPropertyChanged notifier)
-        {
-            _cardSkuNotifier = notifier;
-            _cardSkuNotifier.PropertyChanged += OnCardSkuPropertyChanged;
-        }
-
-        OnPropertyChanged(nameof(CardImageLarge));
-        OnPropertyChanged(nameof(IsCardImageLargeLoading));
-        OnPropertyChanged(nameof(IsDoubleFaced));
-        OnPropertyChanged(nameof(SwitchLabel));
-        OnPropertyChanged(nameof(SwitchFaceCommand));
-        OnPropertyChanged(nameof(CastingCost));
-        OnPropertyChanged(nameof(OracleText));
-        OnPropertyChanged(nameof(CardType));
-        OnPropertyChanged(nameof(PT));
-
+        CardDetails.SetItem(sku);
         return this;
-    }
-
-    private void OnCardSkuPropertyChanged(object? sender, PropertyChangedEventArgs e)
-    {
-        switch (e.PropertyName)
-        {
-            case nameof(ICardSkuItem.IsCardImageLargeLoading):
-                OnPropertyChanged(nameof(IsCardImageLargeLoading));
-                break;
-            case nameof(ICardSkuItem.CardImageLarge):
-                OnPropertyChanged(nameof(CardImageLarge));
-                break;
-            case nameof(ICardSkuItem.IsDoubleFaced):
-                OnPropertyChanged(nameof(IsDoubleFaced));
-                break;
-            case nameof(ICardSkuItem.SwitchLabel):
-                OnPropertyChanged(nameof(SwitchLabel));
-                break;
-            case nameof(ICardSkuItem.CastingCost):
-                OnPropertyChanged(nameof(CastingCost));
-                break;
-            case nameof(ICardSkuItem.OracleText):
-                OnPropertyChanged(nameof(OracleText));
-                break;
-            case nameof(ICardSkuItem.CardType):
-                OnPropertyChanged(nameof(CardType));
-                break;
-            case nameof(ICardSkuItem.PT):
-                OnPropertyChanged(nameof(PT));
-                break;
-        }
     }
 
     // ────────────────────────────────────────────────────────────────────────

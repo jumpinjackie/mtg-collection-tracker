@@ -52,6 +52,9 @@ public partial class MultiModeCardListBehavior<T> : ObservableObject where T : c
         this.SelectedItems.CollectionChanged += SelectedCardSkus_CollectionChanged;
     }
 
+    /// <summary>Card-details panel ViewModel, updated automatically when the selection changes.</summary>
+    public CardDetailsPanelViewModel CardDetails { get; } = new();
+
     public Task<Bitmap?> SelectedCardImageLarge => this.SelectedItems.Count > 0
         ? this.SelectedItems[0].CardImageLarge : Task.FromResult<Bitmap?>(null);
 
@@ -91,6 +94,7 @@ public partial class MultiModeCardListBehavior<T> : ObservableObject where T : c
         this.HasSelectedCardSku = this.SelectedItems.Count == 1;
         this.HasAtLeastOneSelectedCardSku = this.SelectedItems.Count > 0;
         OnPropertyChanged(nameof(SelectedCardImageLargeLoading));
+        CardDetails.SetItem(this.SelectedItems.Count == 1 ? this.SelectedItems[0] : null);
     }
 
     private void RefreshSelectedItemSubscription()

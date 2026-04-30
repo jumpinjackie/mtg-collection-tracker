@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
+             xmlns:views="clr-namespace:MtgCollectionTracker.Views"
              mc:Ignorable="d" d:DesignWidth="1200" d:DesignHeight="650"
              x:Class="MtgCollectionTracker.Views.CardPriceHistoryView"
              x:DataType="vm:CardPriceHistoryViewModel">
@@ -133,44 +134,12 @@
 
         <!-- ── Right: card details panel ─────────────────────────────────── -->
         <ScrollViewer Grid.Column="1"
-                      IsVisible="{Binding HasCardDetails}"
+                      IsVisible="{Binding CardDetails.HasCard}"
                       VerticalScrollBarVisibility="Auto"
                       HorizontalScrollBarVisibility="Disabled"
                       Width="420"
                       Margin="8 0 0 0">
-            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center" Spacing="4">
-                <TextBlock TextAlignment="Center" TextWrapping="Wrap">
-                    <Run Text="{Binding CardName}" />
-                    <Run Text=" - " />
-                    <Run Text="{Binding CastingCost}" />
-                    <LineBreak />
-                    <Run Text="{Binding CardType}" />
-                    <LineBreak />
-                    <Run Text="{Binding PT}" />
-                    <LineBreak />
-                    <Run Text="{Binding Edition}" />
-                </TextBlock>
-                <TextBlock Margin="8" TextWrapping="WrapWithOverflow" Text="{Binding OracleText}" />
-                <Canvas Width="400" Height="560">
-                    <Panel Canvas.Left="0" Canvas.Top="0" Canvas.Bottom="0" Canvas.Right="0" Background="#7FFF22DD">
-                        <!-- TODO: If this is even possible, do a flip animation for double-faced cards -->
-                        <Image Width="400" Stretch="Uniform" Source="{Binding CardImageLarge^}" />
-                        <Panel Height="560" IsVisible="{Binding IsCardImageLargeLoading}">
-                            <ProgressBar Width="120" IsIndeterminate="True" VerticalAlignment="Center" />
-                        </Panel>
-                        <Panel Height="560">
-                            <Panel.IsVisible>
-                                <MultiBinding Converter="{x:Static BoolConverters.And}">
-                                    <Binding Path="!IsCardImageLargeLoading" />
-                                    <Binding Path="CardImageLarge^" Converter="{x:Static ObjectConverters.IsNull}" />
-                                </MultiBinding>
-                            </Panel.IsVisible>
-                            <PathIcon Height="75" Width="75" Data="{StaticResource card}" />
-                        </Panel>
-                    </Panel>
-                </Canvas>
-                <Button IsVisible="{Binding IsDoubleFaced}" HorizontalAlignment="Center" Content="{Binding SwitchLabel}" Command="{Binding SwitchFaceCommand}" />
-            </StackPanel>
+            <views:CardDetailsPanelView DataContext="{Binding CardDetails}" />
         </ScrollViewer>
     </Grid>
 </UserControl>

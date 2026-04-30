@@ -3,6 +3,7 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
 			 xmlns:vm="clr-namespace:MtgCollectionTracker.ViewModels"
+			 xmlns:views="clr-namespace:MtgCollectionTracker.Views"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="MtgCollectionTracker.Views.ContainerBrowseView"
 			 x:DataType="vm:ContainerBrowseViewModel">
@@ -50,33 +51,7 @@
 				</ListBox>
 				<SplitView IsPaneOpen="True" PanePlacement="Right" IsVisible="{Binding Behavior.IsTableMode}" OpenPaneLength="400">
 					<SplitView.Pane>
-						<!-- 
-						TODO: I'm sure there's a way to templatize this content to avoid current
-						XAML duplication with CardSkuItemView.axaml
-						
-						I'm just not expert enough yet
-						-->
-						<StackPanel IsVisible="{Binding Behavior.HasSelectedCardSku}" VerticalAlignment="Center" HorizontalAlignment="Center">
-							<Canvas Width="400" Height="560">
-								<Panel Canvas.Left="0" Canvas.Top="0" Canvas.Bottom="0" Canvas.Right="0" Background="#7FFF22DD">
-									<!-- TODO: If this is even possible, do a flip animation for double-faced cards -->
-									<Image Width="400" Stretch="Uniform" Source="{Binding Behavior.SelectedCardImageLarge^}" />
-									<Panel Height="560" IsVisible="{Binding Behavior.SelectedCardImageLargeLoading}">
-										<ProgressBar Width="120" IsIndeterminate="True" VerticalAlignment="Center" />
-									</Panel>
-									<Panel Height="560">
-										<Panel.IsVisible>
-											<MultiBinding Converter="{x:Static BoolConverters.And}">
-												<Binding Path="!Behavior.SelectedCardImageLargeLoading" />
-												<Binding Path="Behavior.SelectedCardImageLarge^" Converter="{x:Static ObjectConverters.IsNull}" />
-											</MultiBinding>
-										</Panel.IsVisible>
-										<PathIcon Height="75" Width="75" Data="{StaticResource card}" />
-									</Panel>
-								</Panel>
-							</Canvas>
-							<Button IsVisible="{Binding Behavior.SelectedIsDoubleFaced}" Grid.Column="0" HorizontalAlignment="Center" Content="{Binding Behavior.SelectedSwitchLabel}" Command="{Binding Behavior.SelectedSwitchFaceCommand}" />
-						</StackPanel>
+						<views:CardDetailsPanelView DataContext="{Binding Behavior.CardDetails}" />
 					</SplitView.Pane>
 					<Grid>
 						<!-- 
