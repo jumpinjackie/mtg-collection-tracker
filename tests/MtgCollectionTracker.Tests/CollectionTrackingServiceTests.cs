@@ -268,6 +268,33 @@ public class CollectionTrackingServiceTests : IDisposable
     }
 
     [Fact]
+    public async Task SplitCardSkuAsync_PreservesLanguageId_OnNewSku()
+    {
+        // Arrange
+        var service = CreateService();
+        var created = await service.AddToDeckOrContainerAsync(null, null, new()
+        {
+            CardName = "Lightning Bolt",
+            Edition = "M10",
+            Quantity = 3,
+            Language = "ja",
+        });
+
+        // Act
+        var split = await service.SplitCardSkuAsync(new SplitCardSkuInputModel
+        {
+            CardSkuId = created.Id,
+            Quantity = 1,
+        }, CancellationToken.None);
+
+        // Assert
+        Assert.Equal("ja", split.Language);
+
+        var original = await service.GetCardSkuByIdAsync(created.Id, CancellationToken.None);
+        Assert.Equal("ja", original.Language);
+    }
+
+    [Fact]
     public async Task DismantleDeckAsync_WithNoContainer_ReturnsCardsToUnparented()
     {
         var service = CreateService();

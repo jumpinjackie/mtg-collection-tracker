@@ -179,6 +179,7 @@ public class CardSku : IScryfallMetaLinkable, IDeckPrintableSlot
             IsFoil = this.IsFoil,
             IsLand = this.IsLand,
             IsSideboard = this.IsSideboard,
+            LanguageId = this.LanguageId,
             Language = this.Language,
         };
 
