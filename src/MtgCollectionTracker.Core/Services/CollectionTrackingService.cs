@@ -744,7 +744,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             IsFoil = c.IsFoil,
             IsLand = c.IsLand,
             IsSideboard = c.IsSideboard,
-            Language = c.Language?.Code ?? "en",
+            Language = c.Language?.Code ?? c.LanguageId ?? "en",
             CollectorNumber = c.CollectorNumber,
             Quantity = c.Quantity,
             ScryfallId = c.ScryfallId,
