@@ -32,6 +32,7 @@
                     </TextBox.KeyBindings>
                 </TextBox>
                 <Button Command="{Binding SearchCommand}">Search</Button>
+                <CheckBox VerticalAlignment="Center" IsChecked="{Binding ExcludeProxies}">Exclude proxies</CheckBox>
             </StackPanel>
             <!-- No results message -->
             <TextBlock DockPanel.Dock="Top" IsVisible="{Binding HasNoResults}" Foreground="Gray" Margin="0,0,0,6">No cards found. Try a different search term.</TextBlock>

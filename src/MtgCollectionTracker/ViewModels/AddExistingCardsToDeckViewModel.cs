@@ -69,6 +69,9 @@ public partial class AddExistingCardsToDeckViewModel : DialogContentViewModel
     [ObservableProperty]
     private bool _addToSideboard;
 
+    [ObservableProperty]
+    private bool _excludeProxies;
+
     public ObservableCollection<SearchResultViewModel> SearchResults { get; } = new();
 
     public ObservableCollection<PendingItemViewModel> PendingItems { get; } = new();
@@ -81,7 +84,8 @@ public partial class AddExistingCardsToDeckViewModel : DialogContentViewModel
         var results = await _service.GetCardsAsync(new CardQueryModel
         {
             SearchFilter = this.SearchFilter,
-            NotInDecks = true
+            NotInDecks = true,
+            NoProxies = this.ExcludeProxies
         }, System.Threading.CancellationToken.None);
 
         this.SearchResults.Clear();
