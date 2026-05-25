@@ -27,10 +27,10 @@ public partial class AddExistingCardsToDeckViewModel : DialogContentViewModel
     {
         this.ThrowIfNotDesignMode();
         _service = new StubCollectionTrackingService();
-        this.SearchResults.Add(new SearchResultViewModel { SkuId = Guid.NewGuid(), CardName = "Black Lotus", Edition = "LEB", Quantity = 1, Location = "Main Binder" });
-        this.SearchResults.Add(new SearchResultViewModel { SkuId = Guid.NewGuid(), CardName = "Mox Pearl", Edition = "LEB", Quantity = 2, Location = "Main Binder" });
+        this.SearchResults.Add(new SearchResultViewModel { SkuId = Guid.NewGuid(), CardName = "Black Lotus", Edition = "LEB", Language = "EN", Quantity = 1, Location = "Main Binder" });
+        this.SearchResults.Add(new SearchResultViewModel { SkuId = Guid.NewGuid(), CardName = "Mox Pearl", Edition = "LEB", Language = "IT", Quantity = 2, Location = "Main Binder" });
         this.HasSearchResults = true;
-        this.PendingItems.Add(new PendingItemViewModel { SkuId = Guid.NewGuid(), CardName = "Ancestral Recall", Edition = "LEB", AvailableQty = 1, QtyToAdd = 1, Location = "Main Binder" });
+        this.PendingItems.Add(new PendingItemViewModel { SkuId = Guid.NewGuid(), CardName = "Ancestral Recall", Edition = "LEB", AvailableQty = 1, QtyToAdd = 1, Language = "EN", Location = "Main Binder" });
         this.HasPendingItems = true;
     }
 
@@ -92,6 +92,7 @@ public partial class AddExistingCardsToDeckViewModel : DialogContentViewModel
                 SkuId = sku.Id,
                 CardName = sku.CardName,
                 Edition = sku.Edition,
+                Language = sku.Language ?? "(any)",
                 Quantity = sku.Quantity,
                 Location = sku.ContainerName ?? "(unparented)"
             });
@@ -113,6 +114,7 @@ public partial class AddExistingCardsToDeckViewModel : DialogContentViewModel
             SkuId = item.SkuId,
             CardName = item.CardName,
             Edition = item.Edition,
+            Language = item.Language,
             AvailableQty = item.Quantity,
             QtyToAdd = 1,
             Location = item.Location
@@ -198,6 +200,9 @@ public partial class SearchResultViewModel : ObservableObject
     private string _edition = string.Empty;
 
     [ObservableProperty]
+    private string _language = "(any)";
+
+    [ObservableProperty]
     private int _quantity;
 
     [ObservableProperty]
@@ -213,6 +218,9 @@ public partial class PendingItemViewModel : ObservableObject
 
     [ObservableProperty]
     private string _edition = string.Empty;
+
+    [ObservableProperty]
+    private string _language = "(any)";
 
     [ObservableProperty]
     private int _availableQty;
