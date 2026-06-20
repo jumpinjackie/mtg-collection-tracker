@@ -25,6 +25,8 @@ public class WishlistItemModel
 
     public int Quantity { get; set; }
 
+    public int InTransitQuantity { get; set; }
+
     public required string CardName { get; set; }
 
     public required string Edition { get; set; }

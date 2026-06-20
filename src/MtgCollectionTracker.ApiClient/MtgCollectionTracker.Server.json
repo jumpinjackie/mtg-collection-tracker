@@ -3974,6 +3974,18 @@
             ],
             "format": "int32"
           },
+          "inTransitQuantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "applyInTransit": {
+            "type": "boolean"
+          },
           "edition": {
             "type": [
               "null",
@@ -4133,6 +4145,14 @@
             ]
           },
           "quantity": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "inTransitQuantity": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",
             "type": [
               "integer",

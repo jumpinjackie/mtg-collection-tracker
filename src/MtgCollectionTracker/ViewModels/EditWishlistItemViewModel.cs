@@ -96,6 +96,7 @@ public partial class EditWishlistItemViewModel : DialogContentViewModel
         this.Edition = wm.Edition;
         this.Language = this.Languages.FirstOrDefault(lang => lang.Code == wm.Language);
         this.Quantity = wm.RealQty;
+        this.InTransitQuantity = wm.InTransitQuantityNum;
         this.AvailableVendors = (await _service.GetVendorsAsync(CancellationToken.None))
             .Select(v => new VendorViewModel { Id = v.Id, Name = v.Name })
             .ToList();
@@ -166,6 +167,14 @@ public partial class EditWishlistItemViewModel : DialogContentViewModel
     private int? _quantity;
 
     [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
+    private bool _applyInTransit;
+
+    [ObservableProperty]
+    [NotifyCanExecuteChangedFor(nameof(SaveCommand))]
+    private int? _inTransitQuantity;
+
+    [ObservableProperty]
     private string? _collectorNumber;
 
     [ObservableProperty]
@@ -179,6 +188,7 @@ public partial class EditWishlistItemViewModel : DialogContentViewModel
             || this.ApplyEdition
             || this.ApplyLanguage
             || this.ApplyQuantity
+            || this.ApplyInTransit
             || this.ApplyTags
             || this.ApplyOffers
             || this.IsFoil.HasValue;
@@ -213,6 +223,9 @@ public partial class EditWishlistItemViewModel : DialogContentViewModel
             m.Edition = Edition;
         if (Quantity > 0 && ApplyQuantity)
             m.Quantity = Quantity;
+        if (ApplyInTransit)
+            m.InTransitQuantity = InTransitQuantity;
+        m.ApplyInTransit = ApplyInTransit;
         if (Language != null && ApplyLanguage)
             m.Language = Language.Code;
         if (!string.IsNullOrEmpty(CollectorNumber) && ApplyCollector)
