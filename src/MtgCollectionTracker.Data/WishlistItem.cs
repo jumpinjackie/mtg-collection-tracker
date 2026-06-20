@@ -16,6 +16,12 @@ public class WishlistItem : IScryfallMetaLinkable
     public int Quantity { get; set; }
 
     /// <summary>
+    /// The quantity of this wishlist item that is currently in transit (ordered/shipped but not yet received).
+    /// Always ≤ <see cref="Quantity"/>. Only displayed when > 0.
+    /// </summary>
+    public int InTransitQuantity { get; set; }
+
+    /// <summary>
     /// The name of the card
     /// </summary>
     [MaxLength(256)]

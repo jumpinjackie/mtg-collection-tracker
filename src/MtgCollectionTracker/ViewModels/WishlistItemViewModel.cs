@@ -55,6 +55,9 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
     private int _quantityNum = 1;
 
     [ObservableProperty]
+    private int _inTransitQuantityNum;
+
+    [ObservableProperty]
     private string _condition = CardCondition.NearMint.ToString();
 
     [ObservableProperty]
@@ -305,8 +308,11 @@ public partial class WishlistItemViewModel : ViewModelBase, ICardSkuItem
             this.ProxyQty = item.Quantity;
         }
         this.Condition = (item.Condition ?? CardCondition.NearMint).ToString();
-        this.Quantity = $"Qty: {item.Quantity}";
+        this.Quantity = item.InTransitQuantity > 0
+            ? $"Qty: {item.Quantity} ({item.InTransitQuantity})"
+            : $"Qty: {item.Quantity}";
         this.QuantityNum = item.Quantity;
+        this.InTransitQuantityNum = item.InTransitQuantity;
         this.Language = item.Language?.Length > 0 ? item.Language : "en";
         this.Offers = item.Offers.Select(o => new VendorOfferViewModel
         {

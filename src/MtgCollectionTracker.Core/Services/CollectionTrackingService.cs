@@ -702,6 +702,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             Language = w.Language?.Code ?? "en",
             CollectorNumber = w.CollectorNumber,
             Quantity = w.Quantity,
+            InTransitQuantity = w.InTransitQuantity,
             ScryfallId = w.ScryfallId,
             CardType = w.Scryfall != null ? w.Scryfall.CardType : null,
             Power = w.Scryfall != null ? w.Scryfall.Power : null,
@@ -1487,6 +1488,9 @@ public class CollectionTrackingService : ICollectionTrackingService
         if (model.Quantity.HasValue && model.Quantity <= 0)
             throw new Exception("Quantity cannot be 0");
 
+        if (model.InTransitQuantity.HasValue && model.InTransitQuantity < 0)
+            throw new Exception("In-transit quantity cannot be negative");
+
         using var db = _db.Invoke();
         var wi = await db.Value.WishlistItems
             .Include(w => w.Scryfall)
@@ -1517,6 +1521,18 @@ public class CollectionTrackingService : ICollectionTrackingService
             wi.CollectorNumber = model.CollectorNumber;
         if (model.IsFoil.HasValue)
             wi.IsFoil = model.IsFoil.Value;
+
+        if (model.ApplyInTransit && model.InTransitQuantity.HasValue)
+        {
+            var newInTransit = model.InTransitQuantity.Value;
+            if (newInTransit > wi.Quantity)
+                throw new Exception("In-transit quantity cannot exceed the wishlist item quantity");
+            wi.InTransitQuantity = newInTransit;
+        }
+
+        // Auto-clamp InTransitQuantity if Quantity was reduced below it
+        if (wi.InTransitQuantity > wi.Quantity)
+            wi.InTransitQuantity = wi.Quantity;
 
         if (model.ApplyTags)
             wi.SyncTags(model.Tags ?? []);
@@ -1584,7 +1600,8 @@ public class CollectionTrackingService : ICollectionTrackingService
 
         foreach (var item in items)
         {
-            var (subTotal, v, c) = item.OfferedPrices.ComputeBestPrice(item.Quantity);
+            var effectiveQty = Math.Max(0, item.Quantity - item.InTransitQuantity);
+            var (subTotal, v, c) = item.OfferedPrices.ComputeBestPrice(effectiveQty);
             vendors.UnionWith(v.Select(vndr => vndr.Name));
             total += subTotal;
             if (!c)
@@ -1834,7 +1851,8 @@ public class CollectionTrackingService : ICollectionTrackingService
                 .ThenInclude(o => o.Vendor);
         foreach (var item in wishlist)
         {
-            var (subTotal, vendors, isComplete) = item.OfferedPrices.ComputeBestPrice(item.Quantity);
+            var effectiveQty = Math.Max(0, item.Quantity - item.InTransitQuantity);
+            var (subTotal, vendors, isComplete) = item.OfferedPrices.ComputeBestPrice(effectiveQty);
             if (vendors.Count > 0)
             {
                 foreach (var vendor in vendors)
@@ -1844,7 +1862,7 @@ public class CollectionTrackingService : ICollectionTrackingService
             }
             else
             {
-                ret.Add("<other>", new BuyingListItem(item.Quantity, item.CardName, null, null));
+                ret.Add("<other>", new BuyingListItem(effectiveQty, item.CardName, null, null));
             }
         }
         return ret;

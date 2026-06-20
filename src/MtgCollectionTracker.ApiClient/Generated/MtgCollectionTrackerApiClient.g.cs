@@ -7291,6 +7291,13 @@ namespace MtgCollectionTracker.ApiClient.Generated
         [System.ComponentModel.DataAnnotations.RegularExpression(@"^-?(?:0|[1-9]\d*)$")]
         public int? Quantity { get; set; }
 
+        [System.Text.Json.Serialization.JsonPropertyName("inTransitQuantity")]
+        [System.ComponentModel.DataAnnotations.RegularExpression(@"^-?(?:0|[1-9]\d*)$")]
+        public int? InTransitQuantity { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("applyInTransit")]
+        public bool ApplyInTransit { get; set; }
+
         [System.Text.Json.Serialization.JsonPropertyName("edition")]
         public string Edition { get; set; }
 
@@ -7416,6 +7423,10 @@ namespace MtgCollectionTracker.ApiClient.Generated
         [System.Text.Json.Serialization.JsonPropertyName("quantity")]
         [System.ComponentModel.DataAnnotations.RegularExpression(@"^-?(?:0|[1-9]\d*)$")]
         public int Quantity { get; set; }
+
+        [System.Text.Json.Serialization.JsonPropertyName("inTransitQuantity")]
+        [System.ComponentModel.DataAnnotations.RegularExpression(@"^-?(?:0|[1-9]\d*)$")]
+        public int InTransitQuantity { get; set; }
 
         [System.Text.Json.Serialization.JsonPropertyName("cardName")]
         [System.ComponentModel.DataAnnotations.Required(AllowEmptyStrings = true)]

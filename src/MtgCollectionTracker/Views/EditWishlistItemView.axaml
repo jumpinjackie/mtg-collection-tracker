@@ -32,6 +32,12 @@
 				<NumericUpDown Grid.Row="1" Grid.ColumnSpan="2" FormatString="0" IsEnabled="{Binding ApplyQuantity}" Value="{Binding Quantity}" />
 			</Grid>
 			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="30, *">
+				<CheckBox Grid.Row="0" Grid.ColumnSpan="2" IsChecked="{Binding ApplyInTransit}">
+					<TextBlock VerticalAlignment="Center">In Transit</TextBlock>
+				</CheckBox>
+				<NumericUpDown Grid.Row="1" Grid.ColumnSpan="2" FormatString="0" Minimum="0" IsEnabled="{Binding ApplyInTransit}" Value="{Binding InTransitQuantity}" />
+			</Grid>
+			<Grid RowDefinitions="Auto, Auto" ColumnDefinitions="30, *">
 				<CheckBox Grid.Row="0" Grid.ColumnSpan="2" IsChecked="{Binding ApplyEdition}">
 					<TextBlock VerticalAlignment="Center">Edition</TextBlock>
 				</CheckBox>

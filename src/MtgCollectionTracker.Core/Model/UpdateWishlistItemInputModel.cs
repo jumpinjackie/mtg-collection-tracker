@@ -21,6 +21,10 @@ public class UpdateWishlistItemInputModel
 
     public int? Quantity { get; set; }
 
+    public int? InTransitQuantity { get; set; }
+
+    public bool ApplyInTransit { get; set; }
+
     public string? Edition { get; set; }
 
     public string? Language { get; set; }
