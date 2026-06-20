@@ -789,6 +789,7 @@ public class CollectionTrackingService : ICollectionTrackingService
                 Language = w.Language!.Code ?? "en",
                 CollectorNumber = w.CollectorNumber,
                 Quantity = w.Quantity,
+                InTransitQuantity = w.InTransitQuantity,
                 ScryfallId = w.ScryfallId,
                 CardType = w.Scryfall != null ? w.Scryfall.CardType : null,
                 Power = w.Scryfall != null ? w.Scryfall.Power : null,
