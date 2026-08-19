@@ -2,6 +2,7 @@
 using System.IO;
 
 using Avalonia;
+using XamlMcp.Avalonia;
 
 using MtgCollectionTracker;
 using MtgCollectionTracker.Server;
@@ -46,5 +47,6 @@ class Program
         => AppBuilder.Configure<App>()
             .UsePlatformDetect()
             .WithInterFont()
-            .LogToTrace();
+            .LogToTrace()
+            .AttachXamlMcp();
 }
