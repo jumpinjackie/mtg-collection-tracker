@@ -16,6 +16,9 @@ env:
   VERSION: "0.1.0"
   VERSION_PUPNET: "0.1.0-1"
 
+permissions:
+  contents: write
+
 jobs:
   build:
 
