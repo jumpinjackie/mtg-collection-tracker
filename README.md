@@ -4,6 +4,22 @@
 
 `mtg-collection-tracker` is a multi-platform application for managing for your Magic: The Gathering card collection
 
+![](content/search.jpg)
+
+![](content/price_history.jpg)
+
+![](content/decks.jpg)
+
+![](content/deck_view.jpg)
+
+![](content/can_i_build.jpg)
+
+![](content/wishlist.jpg)
+
+![](content/playtest.jpg)
+
+![](content/notes.jpg)
+
 # How to build
 
  1. Clone this repo
