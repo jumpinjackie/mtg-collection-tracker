@@ -13,8 +13,8 @@ on:
     branches: [ "master" ]
 
 env:
-  VERSION: "0.1.0"
-  VERSION_PUPNET: "0.1.0-1"
+  VERSION: "0.1.1"
+  VERSION_PUPNET: "0.1.1-1"
 
 permissions:
   contents: write
