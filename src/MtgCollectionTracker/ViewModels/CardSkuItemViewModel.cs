@@ -286,11 +286,11 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
     /// Formatted display string for the most recent tracked price.
     /// Shows "N/A" for proxies, "$X.XX (provider)" when a price exists, or "None" otherwise.
     /// </summary>
-    public string? LatestPrice => OriginalEdition == "PROXY"
+    public string? LatestPrice => CardListPrinter.IsProxyEdition(this.OriginalEdition ?? string.Empty)
         ? "N/A"
         : (LatestPriceValue.HasValue ? $"${LatestPriceValue:F2} ({LatestPriceProvider})" : "None");
 
-    public bool HasLatestPrice => OriginalEdition != "PROXY" && LatestPriceValue != null;
+    public bool HasLatestPrice => !CardListPrinter.IsProxyEdition(this.OriginalEdition ?? string.Empty) && LatestPriceValue != null;
 
     int ISendableCardItem.Quantity => CardListPrinter.IsProxyEdition(this.OriginalEdition ?? string.Empty) ? this.ProxyQty : this.RealQty;
     int? ISendableCardItem.SourceContainerId => this.ContainerId;
@@ -401,8 +401,9 @@ public partial class CardSkuItemViewModel : ViewModelBase, ICardSkuItem, ISendab
         this.CollectorNumber = sku.CollectorNumber;
         this.OriginalCardName = sku.CardName;
         this.OriginalEdition = sku.Edition;
-        this.CardName = sku.Edition == "PROXY" ? "[Proxy] " + sku.CardName : sku.CardName;
-        if (sku.Edition != "PROXY")
+        var isProxy = CardListPrinter.IsProxyEdition(sku.Edition);
+        this.CardName = isProxy ? "[Proxy] " + sku.CardName : sku.CardName;
+        if (!isProxy)
         {
             this.Edition = sku.Edition;
             this.RealQty = sku.Quantity;

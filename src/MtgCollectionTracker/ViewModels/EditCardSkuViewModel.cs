@@ -110,7 +110,7 @@ public partial class EditCardSkuViewModel : DialogContentViewModel
         this.CollectorNumber = sku.CollectorNumber;
         this.Edition = sku.OriginalEdition;
         this.Language = this.Languages.FirstOrDefault(lang => lang.Code == sku.Language);
-        this.Quantity = sku.OriginalEdition == "PROXY" ? sku.ProxyQty : sku.RealQty;
+        this.Quantity = CardListPrinter.IsProxyEdition(sku.OriginalEdition ?? string.Empty) ? sku.ProxyQty : sku.RealQty;
         this.Comments = sku.Comments;
 
         this.Tags.Clear();

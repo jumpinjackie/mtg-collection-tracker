@@ -64,4 +64,25 @@ public class CardSkuItemViewModelTests
 
         Assert.Equal(4, ((ISendableCardItem)vm).Quantity);
     }
+
+    [Theory]
+    [InlineData("30A")]
+    [InlineData("CED")]
+    [InlineData("PTC")]
+    public void SendableCardItem_Quantity_ReturnsProxyQty_ForNonLiteralProxyEditions(string edition)
+    {
+        var vm = CreateViewModel();
+        var sku = new CardSkuModel
+        {
+            Id = Guid.NewGuid(),
+            CardName = "Black Lotus",
+            Edition = edition,
+            Quantity = 4,
+            Tags = []
+        };
+
+        vm.WithData(sku);
+
+        Assert.Equal(4, ((ISendableCardItem)vm).Quantity);
+    }
 }
