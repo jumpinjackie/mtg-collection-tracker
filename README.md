@@ -62,4 +62,4 @@ For Codex/Copilot and other MCP clients, see the
 
 # User Guide
 
-TBD
+You can view the user guide [here](USERGUIDE.md)
